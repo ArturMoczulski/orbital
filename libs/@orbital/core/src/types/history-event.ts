@@ -45,9 +45,9 @@ export class HistoryEvent
   eventId!: string;
   participants!: string[];
   outcome?: string;
-  timestamp: Date = new Date();
+  timestamp!: Date;
   locationId?: string;
-  coordinates: Position = { x: 0, y: 0, z: 0 };
+  coordinates!: Position;
 
   /** Generate a fake HistoryEvent with random data */
   static mock(overrides: Partial<HistoryEventProps> = {}): HistoryEvent {

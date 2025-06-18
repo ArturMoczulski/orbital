@@ -9,7 +9,7 @@ module.exports = {
     "<rootDir>/jest.setup.js",
     "<rootDir>/jest.setup.unit.js",
   ],
-  testMatch: ["**/unit/**/*.spec.ts"],
+  testMatch: ["<rootDir>/src/types/**/*.spec.ts"],
   testPathIgnorePatterns: [
     "/node_modules/",
     "/dist/",
