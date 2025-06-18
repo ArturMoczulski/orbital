@@ -5,3 +5,4 @@ export * from "./types/area";
 export * from "./types/base-object";
 export * from "./types/identifiable-object";
 export * from "./world-history";
+export * from "./decorators";

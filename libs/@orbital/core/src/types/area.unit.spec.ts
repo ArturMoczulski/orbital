@@ -40,7 +40,7 @@ describe("Area", () => {
       const override = {
         name: "Override Area",
         parentId: "override-parent",
-        position: { x: 1, y: 2, z: 3 },
+        position: new Position({ x: 1, y: 2, z: 3 }),
       };
       const mockArea = Area.mock(override);
       expect(mockArea.name).toBe("Override Area");

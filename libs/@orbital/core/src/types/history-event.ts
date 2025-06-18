@@ -3,6 +3,7 @@ import { faker } from "@faker-js/faker";
 import { Position, PositionSchema } from "./position";
 import { IdentifiableObject } from "./identifiable-object";
 import { BaseObject } from "./base-object";
+import { ZodSchema } from "../decorators/zod-schema.decorator";
 
 /**
  * Represents a historical event in the world.
@@ -28,26 +29,36 @@ export interface HistoryEventProps {
 }
 
 /** Zod schema for HistoryEvent */
-export const HistoryEventSchema = z.object({
-  eventId: z.string(),
-  participants: z.array(z.string()),
-  outcome: z.string().optional(),
-  timestamp: z.date(),
-  locationId: z.string().optional(),
-  coordinates: PositionSchema,
-});
+export const HistoryEventSchema = z
+  .object({
+    eventId: z.string().describe("Unique identifier for the event"),
+    participants: z
+      .array(z.string())
+      .describe("IDs of participants involved in the event"),
+    outcome: z.string().optional().describe("Optional outcome description"),
+    timestamp: z.date().describe("Timestamp when the event occurred"),
+    locationId: z
+      .string()
+      .optional()
+      .describe("Optional reference to location identifier"),
+    coordinates: PositionSchema.describe(
+      "Coordinates where the event took place"
+    ),
+  })
+  .describe("A historical event in the world");
 
 /** Represents a historical event in the world as a class with auto-assign and validation */
+@ZodSchema(HistoryEventSchema)
 export class HistoryEvent
   extends BaseObject<HistoryEvent>
   implements HistoryEventProps
 {
-  eventId!: string;
-  participants!: string[];
+  eventId: string = "";
+  participants: string[] = [];
   outcome?: string;
-  timestamp!: Date;
+  timestamp: Date = new Date();
   locationId?: string;
-  coordinates!: Position;
+  coordinates: Position = new Position();
 
   /** Generate a fake HistoryEvent with random data */
   static mock(overrides: Partial<HistoryEventProps> = {}): HistoryEvent {
@@ -63,7 +74,11 @@ export class HistoryEvent
   }
 
   constructor(data: unknown) {
+    // Validate the data
     const validated = HistoryEventSchema.parse(data);
+
+    // Pass empty data to the parent constructor
+    super();
 
     // Ensure coordinates is properly instantiated as a Position class
     const coordinatesData = validated.coordinates;
@@ -72,16 +87,12 @@ export class HistoryEvent
         ? coordinatesData
         : new Position(coordinatesData);
 
-    // Create a clean object with properly instantiated properties
-    const cleanData: Partial<HistoryEventProps> = {
-      eventId: validated.eventId,
-      participants: validated.participants,
-      outcome: validated.outcome,
-      timestamp: validated.timestamp,
-      locationId: validated.locationId,
-      coordinates: coordinates,
-    };
-
-    super(cleanData);
+    // Assign properties directly
+    this.eventId = validated.eventId;
+    this.participants = validated.participants;
+    this.outcome = validated.outcome;
+    this.timestamp = validated.timestamp;
+    this.locationId = validated.locationId;
+    this.coordinates = coordinates;
   }
 }

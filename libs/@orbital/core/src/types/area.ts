@@ -6,6 +6,7 @@ import {
   IdentifiableObjectProps,
 } from "./identifiable-object";
 import { Position, PositionSchema } from "./position";
+import { ZodSchema } from "../decorators/zod-schema.decorator";
 
 /**
  * Represents a named area with a position.
@@ -22,23 +23,31 @@ export interface AreaProps {
 }
 
 /** Zod schema for Area */
-export const AreaSchema = z.object({
-  id: z.string().optional(),
-  parentId: z.string().optional(),
-  name: z.string(),
-  position: PositionSchema,
-});
+export const AreaSchema = z
+  .object({
+    id: z.string().optional().describe("Unique identifier for the area"),
+    parentId: z
+      .string()
+      .optional()
+      .describe("Identifier of the parent area, if any"),
+    name: z.string().describe("Descriptive name of the area"),
+    position: PositionSchema.describe(
+      "Central position of the area in 3D space"
+    ),
+  })
+  .describe("A named area in the game world with a specific position");
 
 /**
  * Domain class for Area with auto-assignment and validation.
  */
+@ZodSchema(AreaSchema)
 export class Area
   extends IdentifiableObject
   implements AreaProps, IdentifiableObjectProps
 {
   parentId?: string;
   name: string = "";
-  position: Position = { x: 0, y: 0, z: 0 };
+  position: Position = new Position();
 
   /** Create a fake Area instance with randomized data */
   static mock(overrides: Partial<AreaProps> = {}): Area {
@@ -51,10 +60,16 @@ export class Area
   }
 
   constructor(data: unknown) {
+    // Validate the data
     const validated = AreaSchema.parse(data);
-    super({
+
+    // Create a clean object with properly instantiated properties
+    const cleanData = {
       id: (validated as any).id || randomUUID(),
-    });
+    };
+
+    // Pass the clean data to the parent constructor
+    super(cleanData);
 
     // Ensure position is properly instantiated as a Position class
     const positionData = validated.position;
@@ -63,7 +78,7 @@ export class Area
         ? positionData
         : new Position(positionData);
 
-    // Assign other properties
+    // Assign properties directly
     this.name = validated.name;
     this.parentId = validated.parentId;
     this.position = position;

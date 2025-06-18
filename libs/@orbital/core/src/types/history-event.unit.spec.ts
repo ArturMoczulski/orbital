@@ -49,7 +49,7 @@ describe("HistoryEvent", () => {
         outcome: "ov",
         timestamp: new Date("2020-01-01"),
         locationId: "loc-x",
-        coordinates: { x: 9, y: 8, z: 7 },
+        coordinates: new Position({ x: 9, y: 8, z: 7 }),
       };
       const mock = HistoryEvent.mock(override);
       expect(mock.eventId).toBe("override-evt");

@@ -4,6 +4,7 @@ import { randomUUID } from "crypto";
 import { BaseObject } from "./base-object";
 import { Area, AreaSchema } from "./area";
 import { Position, PositionSchema } from "./position";
+import { ZodSchema } from "../decorators/zod-schema.decorator";
 
 /**
  * Represents a location with an area and position.
@@ -20,19 +21,25 @@ export interface LocationProps {
 }
 
 /** Zod schema for Location */
-export const LocationSchema = z.object({
-  area: AreaSchema,
-  position: PositionSchema,
-  name: z.string(),
-  description: z.string().optional(),
-});
+export const LocationSchema = z
+  .object({
+    area: AreaSchema.describe("Area this location belongs to"),
+    position: PositionSchema.describe("Position of this location"),
+    name: z.string().describe("Name of the location"),
+    description: z
+      .string()
+      .optional()
+      .describe("Optional description of the location"),
+  })
+  .describe("A location with an area and position");
 
 /**
  * Domain class for Location with auto-assignment and validation.
  */
+@ZodSchema(LocationSchema)
 export class Location extends BaseObject<Location> implements LocationProps {
-  area!: Area;
-  position: Position = { x: 0, y: 0, z: 0 };
+  area: Area = new Area({ name: "", position: new Position() });
+  position: Position = new Position();
   name: string = "";
   description?: string;
 
@@ -48,7 +55,10 @@ export class Location extends BaseObject<Location> implements LocationProps {
   }
 
   constructor(data: unknown) {
+    // Validate the data
     const validated = LocationSchema.parse(data);
+
+    // Pass empty data to the parent constructor
     super();
 
     // Ensure area is properly instantiated as an Area class
@@ -62,7 +72,7 @@ export class Location extends BaseObject<Location> implements LocationProps {
         ? positionData
         : new Position(positionData);
 
-    // Assign properties
+    // Assign properties directly
     this.area = area;
     this.position = position;
     this.name = validated.name;

@@ -1,6 +1,8 @@
 import { randomUUID } from "crypto";
 import { faker } from "@faker-js/faker";
 import { BaseObject } from "./base-object";
+import { z } from "zod";
+import { ZodSchema } from "../decorators/zod-schema.decorator";
 
 /**
  * Interface for objects that have a unique identifier
@@ -10,9 +12,17 @@ export interface IdentifiableObjectProps {
   id: string;
 }
 
+/** Zod schema for IdentifiableObject */
+export const IdentifiableObjectSchema = z
+  .object({
+    id: z.string().describe("Unique identifier for the object"),
+  })
+  .describe("An object with a unique identifier");
+
 /**
  * IdentifiableObject provides id generation and assignment on top of BaseObject.
  */
+@ZodSchema(IdentifiableObjectSchema)
 export class IdentifiableObject
   extends BaseObject<IdentifiableObjectProps>
   implements IdentifiableObjectProps

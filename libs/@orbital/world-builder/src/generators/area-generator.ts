@@ -1,17 +1,12 @@
-import { z } from "zod";
-import { PromptTemplate } from "@langchain/core/prompts";
-import { StructuredOutputParser } from "langchain/output_parsers";
-import { RunnableSequence } from "@langchain/core/runnables";
+import { HumanMessage, SystemMessage } from "@langchain/core/messages";
 import { BaseLanguageModel } from "@langchain/core/language_models/base";
 import { Area, Position } from "@orbital/core";
-
-/**
- * Configuration options for the AreaGenerator
- */
-export interface AreaGeneratorOptions {
-  /** The language model to use for generation */
-  model: BaseLanguageModel;
-}
+import { LLMObjectGenerationService, LLMPromptMessages } from "@orbital/llm";
+import {
+  GeneratedAreaSchema,
+  GeneratedAreaData,
+  createExampleAreaData,
+} from "./area-schemas";
 
 /**
  * Schema for area generation prompt
@@ -28,59 +23,64 @@ export interface AreaGenerationPrompt {
 }
 
 /**
- * Class for generating game areas using LangChain and LLMs
+ * Class for generating game areas using LLMs
  */
 export class AreaGenerator {
   private model: BaseLanguageModel;
-  private areaGenerationChain: RunnableSequence;
+  private generationService: LLMObjectGenerationService;
 
   /**
    * Creates a new AreaGenerator instance
-   * @param options Configuration options
+   * @param model The language model to use for generation
+   * @param generationService The service to use for LLM object generation
    */
-  constructor(options: AreaGeneratorOptions) {
-    // Use the provided language model
-    this.model = options.model;
+  constructor(
+    model: BaseLanguageModel,
+    generationService: LLMObjectGenerationService
+  ) {
+    this.model = model;
+    this.generationService = generationService;
+  }
 
-    // Create the output parser for structured area data
-    const outputParser = StructuredOutputParser.fromZodSchema(
-      z.object({
-        name: z.string().describe("The name of the area"),
-        description: z.string().describe("A detailed description of the area"),
-        position: z
-          .object({
-            x: z.number().describe("X coordinate"),
-            y: z.number().describe("Y coordinate"),
-            z: z.number().describe("Z coordinate"),
-          })
-          .describe("The 3D position of the area"),
-        landmarks: z
-          .array(z.string())
-          .describe("Notable landmarks or features in this area"),
-        connections: z
-          .array(z.string())
-          .describe("Names of other areas this area connects to"),
-      })
-    );
+  /**
+   * Builds the messages for area generation
+   * @param prompt The area generation prompt
+   * @param retryCount Current retry count
+   * @returns System and human messages for the LLM
+   */
+  private buildAreaMessages(
+    prompt: Required<AreaGenerationPrompt>,
+    retryCount: number
+  ): LLMPromptMessages {
+    // Create example data
+    const exampleData = createExampleAreaData();
+    const exampleJson = JSON.stringify(exampleData, null, 2);
 
-    // Create the prompt template
-    const promptTemplate = PromptTemplate.fromTemplate(`
-      You are a creative video game world designer. Generate a detailed area for a video game based on the following parameters:
-      
-      Theme: {theme}
-      Mood: {mood}
-      Purpose: {purpose}
-      Additional Details: {additionalDetails}
-      
-      ${outputParser.getFormatInstructions()}
-    `);
+    // Create system message with instructions
+    const systemContent =
+      retryCount > 0
+        ? "You are a creative video game world designer. Generate detailed areas for video games. Your previous response did not match the required schema. Please try again and ensure your response follows the format instructions exactly. IMPORTANT: Your response must be a valid JSON object WITHOUT any markdown formatting. Do not use ```json code blocks or any other markdown. Return ONLY the raw JSON object."
+        : "You are a creative video game world designer. Generate detailed areas for video games. IMPORTANT: Your response must be a valid JSON object WITHOUT any markdown formatting. Do not use ```json code blocks or any other markdown. Return ONLY the raw JSON object.";
 
-    // Create the generation chain
-    this.areaGenerationChain = RunnableSequence.from([
-      promptTemplate,
-      this.model,
-      outputParser,
-    ]);
+    // Create human message with the prompt
+    const humanContent = `Generate a detailed area for a video game based on the following parameters:
+
+Theme: ${prompt.theme}
+Mood: ${prompt.mood}
+Purpose: ${prompt.purpose}
+Additional Details: ${prompt.additionalDetails}
+
+Here is an example of a valid response:
+
+\`\`\`json
+${exampleJson}
+\`\`\`
+`;
+
+    return {
+      system: new SystemMessage(systemContent),
+      human: new HumanMessage(humanContent),
+    };
   }
 
   /**
@@ -97,15 +97,23 @@ export class AreaGenerator {
       additionalDetails: prompt.additionalDetails || "",
     };
 
-    // Generate the area data using the LLM chain
-    const result = await this.areaGenerationChain.invoke(fullPrompt);
+    // Generate the area data using the LLM generation service
+    const result =
+      await this.generationService.generateObject<GeneratedAreaData>(
+        GeneratedAreaSchema,
+        (retryCount: number) => this.buildAreaMessages(fullPrompt, retryCount)
+      );
 
-    // Create a new Area instance from the generated data
-    return new Area({
+    // Create a Position instance
+    const position = new Position(result.position);
+
+    // Create an Area instance
+    const area = new Area({
       name: result.name,
-      position: new Position(result.position),
-      // Additional metadata could be stored in a custom field if Area supports it
+      position: position,
     });
+
+    return area;
   }
 
   /**
@@ -118,38 +126,43 @@ export class AreaGenerator {
     basePrompt: AreaGenerationPrompt,
     count: number = 5
   ): Promise<Area[]> {
-    const areas: Area[] = [];
-
     // Generate the first area
     const firstArea = await this.generateArea(basePrompt);
-    areas.push(firstArea);
 
-    // Generate additional connected areas
+    // Create an array to hold all areas
+    const areas: Area[] = [firstArea];
+
+    // Generate additional areas
     for (let i = 1; i < count; i++) {
-      // Modify the prompt to ensure connection to existing areas
+      // Create a connected prompt
       const connectedPrompt: AreaGenerationPrompt = {
         ...basePrompt,
-        additionalDetails: `${basePrompt.additionalDetails || ""} 
+        additionalDetails: `${basePrompt.additionalDetails || ""}
           This area should connect to "${
-            areas[i - 1].name
+            firstArea.name
           }" and maintain the overall theme and mood.
-          Position this area relative to the previous one.`,
+          Make sure this area is distinct from the other areas but fits within the same region.`,
       };
 
+      // Generate a new area
       const newArea = await this.generateArea(connectedPrompt);
 
-      // Ensure the new area is positioned near the previous one
-      const prevPosition = areas[i - 1].position;
-      const distance = 100 + Math.random() * 100; // Random distance between 100-200 units
-      const angle = Math.random() * Math.PI * 2; // Random angle
+      // Explicitly set a different position to ensure non-zero distance
+      // We'll use a simple pattern to place areas in a circle around the first area
+      const angle = (i / count) * Math.PI * 2;
+      const radius = 200; // Large enough to ensure visible separation
 
-      // Calculate new position based on distance and angle from previous area
-      newArea.position = new Position({
-        x: prevPosition.x + Math.cos(angle) * distance,
-        y: prevPosition.y + Math.sin(angle) * distance,
-        z: prevPosition.z + (Math.random() - 0.5) * 50, // Small random change in elevation
+      // Create a new Position with explicit coordinates
+      const newPosition = new Position({
+        x: firstArea.position.x + Math.cos(angle) * radius,
+        y: firstArea.position.y + Math.sin(angle) * radius,
+        z: firstArea.position.z + i * 10, // Increase height with each area
       });
 
+      // Set the position on the area
+      newArea.position = newPosition;
+
+      // Add to the array
       areas.push(newArea);
     }
 

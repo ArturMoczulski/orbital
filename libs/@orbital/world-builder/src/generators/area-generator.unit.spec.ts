@@ -2,6 +2,7 @@ import { AreaGenerator, AreaGenerationPrompt } from "./area-generator";
 import { Area, Position } from "@orbital/core";
 import { BaseLanguageModel } from "@langchain/core/language_models/base";
 import { FakeListChatModel } from "@langchain/core/utils/testing";
+import { LLMObjectGenerationService } from "@orbital/llm";
 
 // Create a mock language model that can be used for testing
 const createMockLLM = () => {
@@ -30,13 +31,12 @@ jest.mock("@langchain/core/prompts", () => {
   };
 });
 
-// Mock the StructuredOutputParser
-jest.mock("langchain/output_parsers", () => {
+// Mock the LLMObjectGenerationService
+jest.mock("@orbital/llm", () => {
   return {
-    StructuredOutputParser: {
-      fromZodSchema: jest.fn().mockReturnValue({
-        getFormatInstructions: jest.fn().mockReturnValue("Format instructions"),
-        parse: jest.fn().mockImplementation(async (text) => {
+    LLMObjectGenerationService: jest.fn().mockImplementation(() => {
+      return {
+        generateObject: jest.fn().mockImplementation(async () => {
           return {
             name: "Ancient Ruins",
             description:
@@ -46,8 +46,9 @@ jest.mock("langchain/output_parsers", () => {
             connections: ["Forest Path", "Mountain Pass"],
           };
         }),
-      }),
-    },
+      };
+    }),
+    LLMPromptMessages: jest.requireActual("@orbital/llm").LLMPromptMessages,
   };
 });
 
@@ -73,19 +74,19 @@ jest.mock("@langchain/core/runnables", () => {
 
 describe("AreaGenerator", () => {
   let mockLLM: BaseLanguageModel;
+  let mockGenerationService: LLMObjectGenerationService;
   let generator: AreaGenerator;
 
   beforeEach(() => {
     mockLLM = createMockLLM();
-    generator = new AreaGenerator({
-      model: mockLLM,
-    });
+    mockGenerationService = new LLMObjectGenerationService(mockLLM);
+    generator = new AreaGenerator(mockLLM, mockGenerationService);
   });
 
   describe("constructor", () => {
-    it("should create an instance with a language model", () => {
+    it("should create an instance with a language model and generation service", () => {
       // Act
-      const instance = new AreaGenerator({ model: mockLLM });
+      const instance = new AreaGenerator(mockLLM, mockGenerationService);
 
       // Assert
       expect(instance).toBeInstanceOf(AreaGenerator);
