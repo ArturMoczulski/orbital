@@ -1341,6 +1341,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@faker-js/faker@npm:^9.8.0":
+  version: 9.8.0
+  resolution: "@faker-js/faker@npm:9.8.0"
+  checksum: 10c0/f5db1125c1ea0115b9142fb4d4cb37cac2da4cd12ed02afb1cabf3b9600bd365bf480386250975a4fb200d77c00e8364dc8f61ac273a9dcdd2f2f42c3b29b0ec
+  languageName: node
+  linkType: hard
+
 "@inquirer/checkbox@npm:^4.1.8":
   version: 4.1.8
   resolution: "@inquirer/checkbox@npm:4.1.8"
@@ -2237,6 +2244,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@orbital/core@workspace:libs/@orbital/core"
   dependencies:
+    "@faker-js/faker": "npm:^9.8.0"
     "@jest/globals": "npm:^29.0.0"
     "@types/jest": "npm:^29.0.0"
     "@types/node": "npm:^20.0.0"

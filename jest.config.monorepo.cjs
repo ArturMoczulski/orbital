@@ -1,5 +1,5 @@
 const { internalPackages } = require("./orb.json");
-const commonConfig = require("./jest.common.js");
+const commonConfig = require("./jest.common.cjs");
 
 /**
  * Aggregate each internal package's Jest config path

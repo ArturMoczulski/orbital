@@ -6,9 +6,9 @@
   "scripts": {
     "build": "tsc -b",
     "clean": "rimraf dist",
-    "test:unit": "jest --selectProjects \"@orbital/plop-plugin:unit\"",
-    "test:integration": "jest --selectProjects \"@orbital/plop-plugin:integration\"",
-    "test:e2e": "jest --selectProjects \"@orbital/plop-plugin:e2e\"",
+    "test:unit": "jest --config jest.unit.config.js",
+    "test:integration": "jest --config jest.integration.config.js",
+    "test:e2e": "jest --config jest.e2e.config.js",
     "test": "jest --coverage"
   },
   "dependencies": {
