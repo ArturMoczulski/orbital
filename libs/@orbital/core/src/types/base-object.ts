@@ -1,15 +1,18 @@
-import { randomUUID } from "crypto";
+import { faker } from "@faker-js/faker";
+
 /**
  * BaseObject provides automatic assignment of partial data into instance properties.
  */
 export class BaseObject<T> {
-  /** Unique identifier, defaults to a random UUID */
-  public id: string;
-  constructor(data?: Partial<T & { id: string }>) {
-    // Initialize id first, allowing override from data
-    this.id = data?.id ?? randomUUID();
+  constructor(data?: Partial<T>) {
     if (data) {
-      Object.assign(this, data);
+      // Use direct property assignment instead of Object.assign
+      // to ensure proper assignment in test environment
+      for (const key in data) {
+        if (Object.prototype.hasOwnProperty.call(data, key)) {
+          (this as any)[key] = data[key];
+        }
+      }
     }
   }
 }

@@ -6,12 +6,13 @@
   "scripts": {
     "build": "tsc -b",
     "clean": "rimraf dist",
-    "test:unit": "jest --selectProjects unit",
-    "test:integration": "jest --selectProjects integration",
-    "test:e2e": "jest --selectProjects e2e",
+    "test:unit": "jest --selectProjects \"@orbital/core:unit\"",
+    "test:integration": "jest --selectProjects \"@orbital/core:integration\"",
+    "test:e2e": "jest --selectProjects \"@orbital/core:e2e\"",
     "test": "jest --coverage"
   },
   "dependencies": {
+    "@faker-js/faker": "^9.8.0",
     "dotenv": "^16.3.1",
     "zod": "^3.25.67"
   },

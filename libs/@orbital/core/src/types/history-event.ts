@@ -1,5 +1,7 @@
 import { z } from "zod";
+import { faker } from "@faker-js/faker";
 import { Position, PositionSchema } from "./position";
+import { IdentifiableObject } from "./identifiable-object";
 import { BaseObject } from "./base-object";
 
 /**
@@ -36,19 +38,50 @@ export const HistoryEventSchema = z.object({
 });
 
 /** Represents a historical event in the world as a class with auto-assign and validation */
-export class HistoryEventProps
-  extends BaseObject<HistoryEventProps>
+export class HistoryEvent
+  extends BaseObject<HistoryEvent>
   implements HistoryEventProps
 {
-  eventId: string = "";
-  participants: string[] = [];
+  eventId!: string;
+  participants!: string[];
   outcome?: string;
   timestamp: Date = new Date();
   locationId?: string;
-  coordinates: Position = new Position({});
+  coordinates: Position = { x: 0, y: 0, z: 0 };
+
+  /** Generate a fake HistoryEvent with random data */
+  static mock(overrides: Partial<HistoryEventProps> = {}): HistoryEvent {
+    const base: Partial<HistoryEventProps> = {
+      eventId: faker.string.uuid(),
+      participants: [faker.string.uuid()],
+      outcome: faker.lorem.sentence(),
+      timestamp: faker.date.past(),
+      locationId: faker.string.uuid(),
+      coordinates: Position.mock(),
+    };
+    return new HistoryEvent({ ...base, ...overrides });
+  }
 
   constructor(data: unknown) {
     const validated = HistoryEventSchema.parse(data);
-    super(validated as Partial<HistoryEventProps>);
+
+    // Ensure coordinates is properly instantiated as a Position class
+    const coordinatesData = validated.coordinates;
+    const coordinates =
+      coordinatesData instanceof Position
+        ? coordinatesData
+        : new Position(coordinatesData);
+
+    // Create a clean object with properly instantiated properties
+    const cleanData: Partial<HistoryEventProps> = {
+      eventId: validated.eventId,
+      participants: validated.participants,
+      outcome: validated.outcome,
+      timestamp: validated.timestamp,
+      locationId: validated.locationId,
+      coordinates: coordinates,
+    };
+
+    super(cleanData);
   }
 }
