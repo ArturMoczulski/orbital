@@ -1,5 +1,7 @@
 const fs = require("fs");
 const path = require("path");
+const dotenv = require("dotenv");
+dotenv.config({ path: path.join(__dirname, ".env.test") });
 const { internalPackages } = require("./orb.json");
 // Use the CommonJS export from jest.common.js
 const commonConfig = require("./jest.common.cjs");
