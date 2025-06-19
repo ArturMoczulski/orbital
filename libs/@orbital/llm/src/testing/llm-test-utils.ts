@@ -1,6 +1,7 @@
 import { ChatOllama } from "@langchain/community/chat_models/ollama";
 import { BaseLanguageModel } from "@langchain/core/language_models/base";
 import { LLMObjectGenerationService } from "../services/llm-object-generation.service";
+import { Logger } from "@orbital/core";
 
 /**
  * Configuration options for creating a test LLM
@@ -16,6 +17,8 @@ export interface TestLLMOptions {
   maxRetries?: number;
   /** Whether to log errors during generation */
   logErrors?: boolean;
+  /** Logger to use for logging */
+  logger?: Logger;
 }
 
 /**
@@ -77,6 +80,7 @@ export function createLLMObjectGenerationService(
   return new LLMObjectGenerationService(model, {
     maxRetries: mergedOptions.maxRetries,
     logErrors: mergedOptions.logErrors,
+    logger: mergedOptions.logger,
   });
 }
 
@@ -86,13 +90,12 @@ export function createLLMObjectGenerationService(
  * and returns them for use in tests.
  *
  * @param options Configuration options
- * @returns A promise that resolves to an object containing the model and service
+ * @returns A promise that resolves to a BaseLanguageModel
  * @throws Error if Ollama is not available
  */
 export async function setupOllamaTest(
   options: TestLLMOptions = {}
 ): Promise<BaseLanguageModel> {
-  // Check if Ollama is available
   const available = await checkOllamaAvailability(options.baseUrl);
 
   if (!available) {
@@ -103,51 +106,30 @@ export async function setupOllamaTest(
     );
   }
 
-  // Create the Ollama model
   return createOllamaModel(options);
 }
 
 /**
- * Sets up a test environment with Ollama for E2E tests.
- * This function should be called in a beforeAll hook.
- *
- * @example
- * let model: BaseLanguageModel;
- * let service: LLMObjectGenerationService;
- *
- * beforeAll(async () => {
- *   model = await setupOllamaForTest();
- *   service = createLLMObjectGenerationService(model);
- * });
- *
- * @returns A promise that resolves to an initialized BaseLanguageModel
+ * @deprecated Use setupOllamaTest instead
  */
 export async function setupOllamaForTest(
   options: TestLLMOptions = {}
 ): Promise<BaseLanguageModel> {
+  console.warn(
+    "setupOllamaForTest is deprecated. Use setupOllamaTest instead."
+  );
   return await setupOllamaTest(options);
 }
 
 /**
- * Creates an LLMObjectGenerationService for testing.
- * This function should be called after setupOllamaForTest.
- *
- * @example
- * let model: BaseLanguageModel;
- * let service: LLMObjectGenerationService;
- *
- * beforeAll(async () => {
- *   model = await setupOllamaForTest();
- *   service = createLLMServiceForTest(model);
- * });
- *
- * @param model The language model to use
- * @param options Configuration options
- * @returns An initialized LLMObjectGenerationService
+ * @deprecated Use createLLMObjectGenerationService instead
  */
 export function createLLMServiceForTest(
   model: BaseLanguageModel,
   options: TestLLMOptions = {}
 ): LLMObjectGenerationService {
+  console.warn(
+    "createLLMServiceForTest is deprecated. Use createLLMObjectGenerationService instead."
+  );
   return createLLMObjectGenerationService(model, options);
 }

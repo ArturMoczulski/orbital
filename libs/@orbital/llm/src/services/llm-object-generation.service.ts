@@ -2,6 +2,8 @@ import { BaseLanguageModel } from "@langchain/core/language_models/base";
 import { StructuredOutputParser } from "@langchain/core/output_parsers";
 import { HumanMessage, SystemMessage } from "@langchain/core/messages";
 import { ZodSchema } from "zod";
+import { AbstractService, Logger, ConsoleLogger } from "@orbital/core";
+import { GenerationResult } from "../types";
 
 /**
  * Options for generating objects using LLMs
@@ -11,6 +13,8 @@ export interface LLMObjectGenerationOptions {
   maxRetries?: number;
   /** Whether to log errors during generation */
   logErrors?: boolean;
+  /** Logger to use for logging */
+  logger?: Logger;
 }
 
 /**
@@ -26,7 +30,7 @@ export interface LLMPromptMessages {
 /**
  * Service for generating structured objects using LLMs
  */
-export class LLMObjectGenerationService {
+export class LLMObjectGenerationService extends AbstractService {
   private maxRetries: number;
   private logErrors: boolean;
   private model: BaseLanguageModel;
@@ -40,6 +44,8 @@ export class LLMObjectGenerationService {
     model: BaseLanguageModel,
     options: LLMObjectGenerationOptions = {}
   ) {
+    super(options.logger || new ConsoleLogger());
+
     this.model = model;
     this.maxRetries = options.maxRetries ?? 5;
     this.logErrors = options.logErrors ?? true;
@@ -52,11 +58,18 @@ export class LLMObjectGenerationService {
    * @param retryCount Current retry count (used internally)
    * @returns A Promise resolving to the generated object
    */
+  /**
+   * Generates an object using the provided schema and messages
+   * @param schema Zod schema for validating and parsing the LLM output
+   * @param buildMessages Function to build system and human messages
+   * @param retryCount Current retry count (used internally)
+   * @returns A Promise resolving to the generation result containing the generated object and prompt
+   */
   async generateObject<T>(
     schema: ZodSchema<T>,
     buildMessages: (retryCount: number) => LLMPromptMessages,
     retryCount: number = 0
-  ): Promise<T> {
+  ): Promise<GenerationResult<T>> {
     // Create a structured output parser with the schema
     const parser = StructuredOutputParser.fromZodSchema(schema);
 
@@ -73,6 +86,14 @@ export class LLMObjectGenerationService {
         "Do not use ```json code blocks or any other markdown. Return ONLY the raw JSON object."
     );
 
+    // Construct the full prompt for logging and returning
+    const fullPrompt = `SYSTEM: ${system.content}\n\nHUMAN: ${messageWithInstructions.content}`;
+
+    // Log the prompt
+    this.logger.verbose(
+      `LLM Prompt (Attempt ${retryCount + 1}):\n${fullPrompt}`
+    );
+
     try {
       // Generate the object data using the LLM
       const response = await this.model.invoke([
@@ -83,14 +104,22 @@ export class LLMObjectGenerationService {
       // Parse the response using the structured output parser
       const result = await parser.parse(response.content);
 
-      // Return the parsed result
-      return result;
+      // Log the response
+      this.logger.verbose(
+        `LLM Response (Attempt ${retryCount + 1}):\n${response.content}`
+      );
+
+      // Return the parsed result and prompt
+      return {
+        output: result,
+        prompt: fullPrompt,
+      };
     } catch (error) {
       // Log the error if enabled
       if (this.logErrors) {
-        console.error(`Attempt ${retryCount + 1} failed:`, error);
+        this.logger.verbose(`Attempt ${retryCount + 1} failed:`, error);
         if (error instanceof Error) {
-          console.error(`Error message: ${error.message}`);
+          this.logger.verbose(`Error message: ${error.message}`);
         }
       }
 

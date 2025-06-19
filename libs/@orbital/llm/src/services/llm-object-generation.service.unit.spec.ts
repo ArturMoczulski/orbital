@@ -4,6 +4,7 @@ import {
   AIMessage,
 } from "@langchain/core/messages";
 import { z } from "zod";
+import { createTestLogger } from "@orbital/testing";
 import { LLMObjectGenerationService } from "./llm-object-generation.service";
 
 // Create a mock for the BaseLanguageModel
@@ -54,17 +55,27 @@ describe("LLMObjectGenerationService", () => {
       }),
     ]);
 
-    const service = new LLMObjectGenerationService(mockLLM as any);
+    // Create a test logger with context prefix for unit tests
+    const logger = createTestLogger("LLMObjectGeneration-Unit");
+    const service = new LLMObjectGenerationService(mockLLM as any, { logger });
     const result = await service.generateObject<TestObject>(
       TestSchema,
       buildMessages
     );
 
-    expect(result).toEqual({
+    // Check that the result has the expected structure
+    expect(result).toHaveProperty("output");
+    expect(result).toHaveProperty("prompt");
+
+    // Check the output object
+    expect(result.output).toEqual({
       name: "Test User",
       age: 30,
       isActive: true,
     });
+
+    // Check that the prompt is a string
+    expect(typeof result.prompt).toBe("string");
   });
 
   it("should retry when the LLM returns invalid JSON and succeed on a valid response", async () => {
@@ -78,15 +89,23 @@ describe("LLMObjectGenerationService", () => {
       }),
     ]);
 
+    // Create a test logger with context prefix for unit tests
+    const logger = createTestLogger("LLMObjectGeneration-Unit");
     const service = new LLMObjectGenerationService(mockLLM as any, {
       logErrors: false,
+      logger,
     });
     const result = await service.generateObject<TestObject>(
       TestSchema,
       buildMessages
     );
 
-    expect(result).toEqual({
+    // Check that the result has the expected structure
+    expect(result).toHaveProperty("output");
+    expect(result).toHaveProperty("prompt");
+
+    // Check the output object
+    expect(result.output).toEqual({
       name: "Test User",
       age: 30,
       isActive: true,
@@ -97,9 +116,12 @@ describe("LLMObjectGenerationService", () => {
     // Mock LLM that always returns invalid JSON
     const mockLLM = createMockLLM(["Invalid JSON"]);
 
+    // Create a test logger with context prefix for unit tests
+    const logger = createTestLogger("LLMObjectGeneration-Unit");
     const service = new LLMObjectGenerationService(mockLLM as any, {
       maxRetries: 2,
       logErrors: false,
+      logger,
     });
 
     await expect(

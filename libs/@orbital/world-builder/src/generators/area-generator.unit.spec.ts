@@ -2,6 +2,7 @@ import { AreaGenerator, AreaGenerationPrompt } from "./area-generator";
 import { Area, Position } from "@orbital/core";
 import { BaseLanguageModel } from "@langchain/core/language_models/base";
 import { FakeListChatModel } from "@langchain/core/utils/testing";
+import { createTestLogger } from "@orbital/testing";
 import { LLMObjectGenerationService } from "@orbital/llm";
 
 // Create a mock language model that can be used for testing
@@ -38,14 +39,20 @@ jest.mock("@orbital/llm", () => {
       return {
         generateObject: jest.fn().mockImplementation(async () => {
           return {
-            name: "Ancient Ruins",
-            description:
-              "A mysterious set of ancient ruins with magical properties.",
-            position: { x: 100, y: 200, z: 50 },
-            landmarks: ["Broken Tower", "Magic Fountain"],
-            connections: ["Forest Path", "Mountain Pass"],
+            output: {
+              name: "Ancient Ruins",
+              description:
+                "A mysterious set of ancient ruins with magical properties.",
+              position: { x: 100, y: 200, z: 50 },
+              landmarks: ["Broken Tower", "Magic Fountain"],
+              connections: ["Forest Path", "Mountain Pass"],
+            },
+            prompt: "This is a mock prompt for testing",
           };
         }),
+        logger: {
+          verbose: jest.fn(),
+        },
       };
     }),
     LLMPromptMessages: jest.requireActual("@orbital/llm").LLMPromptMessages,
@@ -79,14 +86,21 @@ describe("AreaGenerator", () => {
 
   beforeEach(() => {
     mockLLM = createMockLLM();
-    mockGenerationService = new LLMObjectGenerationService(mockLLM);
-    generator = new AreaGenerator(mockLLM, mockGenerationService);
+    // Create a test logger with context prefix for unit tests
+    const logger = createTestLogger("AreaGenerator-Unit");
+    mockGenerationService = new LLMObjectGenerationService(mockLLM, { logger });
+    generator = new AreaGenerator(mockLLM, mockGenerationService, logger);
   });
 
   describe("constructor", () => {
     it("should create an instance with a language model and generation service", () => {
       // Act
-      const instance = new AreaGenerator(mockLLM, mockGenerationService);
+      const logger = createTestLogger();
+      const instance = new AreaGenerator(
+        mockLLM,
+        mockGenerationService,
+        logger
+      );
 
       // Assert
       expect(instance).toBeInstanceOf(AreaGenerator);

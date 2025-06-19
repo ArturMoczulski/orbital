@@ -1,6 +1,8 @@
 import { AreaGenerator, AreaGenerationPrompt } from "./area-generator";
+// Increase Jest timeout for long-running LLM calls
+jest.setTimeout(60000);
 import { Area, Position } from "@orbital/core";
-import { logVerbose } from "@orbital/testing";
+import { createTestLogger } from "@orbital/testing";
 import { BaseLanguageModel } from "@langchain/core/language_models/base";
 import {
   setupOllamaTest,
@@ -20,13 +22,24 @@ describe("E2E: AreaGenerator", () => {
   let service: LLMObjectGenerationService;
 
   // Set up the test environment with Ollama
-  beforeAll(async () => {
-    // Initialize the model and service
-    model = await setupOllamaTest();
-    service = createLLMObjectGenerationService(model);
+  // Create a logger for test output
+  const testLogger = createTestLogger("AreaGeneratorTest");
 
-    // Create the generator
-    generator = new AreaGenerator(model, service);
+  beforeAll(async () => {
+    // Initialize the model and service with test logger
+    model = await setupOllamaTest();
+
+    // Create a test logger that respects VERBOSE_TEST environment variable
+    // Add a context prefix to identify logs from this test
+    const logger = createTestLogger("AreaGenerator");
+
+    // Create the service with the test logger
+    service = createLLMObjectGenerationService(model, {
+      logger,
+    });
+
+    // Create the generator with the test logger
+    generator = new AreaGenerator(model, service, logger);
   });
 
   it("should generate an area with a real LLM", async () => {
@@ -39,13 +52,13 @@ describe("E2E: AreaGenerator", () => {
     };
 
     const result = await generator.generateArea(prompt);
-    logVerbose("E2E Generated Area", result);
+    testLogger.info("E2E Generated Area:", result);
 
     expect(result).toBeInstanceOf(Area);
     expect(result.name).toBeTruthy();
     expect(result.position).toBeInstanceOf(Position);
 
-    console.log("Generated Area:", {
+    testLogger.info("Generated Area:", {
       name: result.name,
       position: {
         x: result.position.x,
@@ -53,7 +66,7 @@ describe("E2E: AreaGenerator", () => {
         z: result.position.z,
       },
     });
-  }, 30000);
+  }, 60000);
 
   it("should generate a region with a real LLM", async () => {
     const prompt: AreaGenerationPrompt = {
@@ -64,7 +77,7 @@ describe("E2E: AreaGenerator", () => {
     const count = 2;
 
     const result = await generator.generateRegion(prompt, count);
-    logVerbose("E2E Generated Region", result);
+    testLogger.info("E2E Generated Region:", result);
 
     expect(result).toBeInstanceOf(Array);
     expect(result.length).toBe(count);
@@ -74,7 +87,7 @@ describe("E2E: AreaGenerator", () => {
     const distance = calculateDistance(result[0].position, result[1].position);
     expect(distance).toBeGreaterThan(0);
 
-    console.log(
+    testLogger.info(
       "Generated Region:",
       result.map((area: Area) => ({
         name: area.name,

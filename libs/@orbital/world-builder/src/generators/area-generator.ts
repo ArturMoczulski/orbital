@@ -1,6 +1,12 @@
 import { HumanMessage, SystemMessage } from "@langchain/core/messages";
 import { BaseLanguageModel } from "@langchain/core/language_models/base";
-import { Area, Position } from "@orbital/core";
+import {
+  Area,
+  Position,
+  AbstractService,
+  Logger,
+  ConsoleLogger,
+} from "@orbital/core";
 import { LLMObjectGenerationService, LLMPromptMessages } from "@orbital/llm";
 import {
   GeneratedAreaSchema,
@@ -25,7 +31,7 @@ export interface AreaGenerationPrompt {
 /**
  * Class for generating game areas using LLMs
  */
-export class AreaGenerator {
+export class AreaGenerator extends AbstractService {
   private model: BaseLanguageModel;
   private generationService: LLMObjectGenerationService;
 
@@ -33,11 +39,14 @@ export class AreaGenerator {
    * Creates a new AreaGenerator instance
    * @param model The language model to use for generation
    * @param generationService The service to use for LLM object generation
+   * @param logger The logger to use
    */
   constructor(
     model: BaseLanguageModel,
-    generationService: LLMObjectGenerationService
+    generationService: LLMObjectGenerationService,
+    logger: Logger = new ConsoleLogger()
   ) {
+    super(logger);
     this.model = model;
     this.generationService = generationService;
   }
@@ -104,12 +113,15 @@ ${exampleJson}
         (retryCount: number) => this.buildAreaMessages(fullPrompt, retryCount)
       );
 
+    // Log the prompt
+    this.logger.verbose("Area Generation Prompt:", result.prompt);
+
     // Create a Position instance
-    const position = new Position(result.position);
+    const position = new Position(result.output.position);
 
     // Create an Area instance
     const area = new Area({
-      name: result.name,
+      name: result.output.name,
       position: position,
     });
 

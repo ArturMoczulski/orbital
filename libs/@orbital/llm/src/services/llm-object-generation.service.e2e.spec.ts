@@ -1,10 +1,15 @@
 import { BaseLanguageModel } from "@langchain/core/language_models/base";
++(
+  // Increase Jest timeout for long-running LLM calls
+  (+jest.setTimeout(60000))
+);
 import { HumanMessage, SystemMessage } from "@langchain/core/messages";
 import { z } from "zod";
+import { createTestLogger } from "@orbital/testing";
 import { LLMObjectGenerationService } from "./llm-object-generation.service";
 import {
-  setupOllamaForTest,
-  createLLMServiceForTest,
+  setupOllamaTest,
+  createLLMObjectGenerationService,
 } from "../testing/llm-test-utils";
 
 /**
@@ -23,9 +28,14 @@ describe("E2E: LLMObjectGenerationService", () => {
 
   // Set up the test environment with Ollama
   beforeAll(async () => {
-    model = await setupOllamaForTest();
-    service = createLLMServiceForTest(model);
+    model = await setupOllamaTest();
+    // Create a test logger with context prefix to identify logs from this test
+    const logger = createTestLogger("LLMObjectGenerationService");
+    service = createLLMObjectGenerationService(model, { logger });
   });
+
+  // Create a logger for test output
+  const testLogger = createTestLogger("LLMObjectGenerationTest");
 
   // Define a simple test schema
   const PersonSchema = z
@@ -64,18 +74,23 @@ describe("E2E: LLMObjectGenerationService", () => {
 
     // Assert
     expect(result).toBeDefined();
-    expect(typeof result.name).toBe("string");
-    expect(result.name.length).toBeGreaterThan(0);
-    expect(typeof result.age).toBe("number");
-    expect(result.age).toBeGreaterThan(0);
-    expect(typeof result.occupation).toBe("string");
-    expect(result.occupation.length).toBeGreaterThan(0);
-    expect(Array.isArray(result.hobbies)).toBe(true);
-    expect(result.hobbies.length).toBeGreaterThan(0);
+    expect(result.output).toBeDefined();
+    expect(result.prompt).toBeDefined();
 
-    // Log the result
-    console.log("Generated Person:", result);
-  }, 30000); // Increase timeout to 30 seconds for LLM processing
+    // Check the output properties
+    expect(typeof result.output.name).toBe("string");
+    expect(result.output.name.length).toBeGreaterThan(0);
+    expect(typeof result.output.age).toBe("number");
+    expect(result.output.age).toBeGreaterThan(0);
+    expect(typeof result.output.occupation).toBe("string");
+    expect(result.output.occupation.length).toBeGreaterThan(0);
+    expect(Array.isArray(result.output.hobbies)).toBe(true);
+    expect(result.output.hobbies.length).toBeGreaterThan(0);
+
+    // Log the result using the test logger
+    testLogger.info("Generated Person:", result.output);
+    testLogger.debug("Prompt used:", result.prompt);
+  }, 60000); // Increase timeout to 60 seconds for LLM processing
 
   it("should handle complex nested schemas", async () => {
     // Define a more complex schema with nested objects
@@ -142,26 +157,34 @@ describe("E2E: LLMObjectGenerationService", () => {
 
     // Assert
     expect(result).toBeDefined();
-    expect(typeof result.name).toBe("string");
-    expect(typeof result.title).toBe("string");
-    expect(typeof result.department).toBe("string");
-    expect(typeof result.yearsEmployed).toBe("number");
-    expect(Array.isArray(result.skills)).toBe(true);
+    expect(result.output).toBeDefined();
+    expect(result.prompt).toBeDefined();
+
+    // Check the output properties
+    expect(typeof result.output.name).toBe("string");
+    expect(typeof result.output.title).toBe("string");
+    expect(typeof result.output.department).toBe("string");
+    expect(typeof result.output.yearsEmployed).toBe("number");
+    expect(Array.isArray(result.output.skills)).toBe(true);
 
     // Check nested company object
-    expect(result.company).toBeDefined();
-    expect(typeof result.company.name).toBe("string");
-    expect(typeof result.company.industry).toBe("string");
-    expect(typeof result.company.founded).toBe("number");
+    expect(result.output.company).toBeDefined();
+    expect(typeof result.output.company.name).toBe("string");
+    expect(typeof result.output.company.industry).toBe("string");
+    expect(typeof result.output.company.founded).toBe("number");
 
     // Check deeply nested address object
-    expect(result.company.address).toBeDefined();
-    expect(typeof result.company.address.street).toBe("string");
-    expect(typeof result.company.address.city).toBe("string");
-    expect(typeof result.company.address.state).toBe("string");
-    expect(typeof result.company.address.zipCode).toBe("string");
+    expect(result.output.company.address).toBeDefined();
+    expect(typeof result.output.company.address.street).toBe("string");
+    expect(typeof result.output.company.address.city).toBe("string");
+    expect(typeof result.output.company.address.state).toBe("string");
+    expect(typeof result.output.company.address.zipCode).toBe("string");
 
-    // Log the result
-    console.log("Generated Employee:", JSON.stringify(result, null, 2));
+    // Log the result using the test logger
+    testLogger.info(
+      "Generated Employee:",
+      JSON.stringify(result.output, null, 2)
+    );
+    testLogger.debug("Prompt used:", result.prompt);
   }, 60000); // Increase timeout to 60 seconds for complex LLM processing
 });
