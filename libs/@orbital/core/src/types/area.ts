@@ -11,22 +11,7 @@ import { ZodSchema } from "../decorators/zod-schema.decorator";
 /**
  * Represents a named area with a position.
  */
-export interface AreaProps {
-  /** Unique identifier */
-  id?: string;
-  /** Identifier of the parent area */
-  parentId?: string;
-  /** Area name */
-  name: string;
-  /** Central position of the area */
-  position: Position;
-  /** Detailed description of the area */
-  description?: string;
-  /** Notable landmarks or features in this area */
-  landmarks?: string[];
-  /** Names of other areas this area connects to */
-  connections?: string[];
-}
+export type AreaProps = z.infer<typeof AreaSchema>;
 
 /** Zod schema for Area */
 export const AreaSchema = z

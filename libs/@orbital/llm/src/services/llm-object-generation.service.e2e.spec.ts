@@ -67,10 +67,7 @@ describe("E2E: LLMObjectGenerationService", () => {
     };
 
     // Generate the person object
-    const result = await service.generateObject<Person>(
-      PersonSchema,
-      buildMessages
-    );
+    const result = await service.generate<Person>(PersonSchema, buildMessages);
 
     // Assert
     expect(result).toBeDefined();
@@ -150,7 +147,7 @@ describe("E2E: LLMObjectGenerationService", () => {
     };
 
     // Generate the employee object
-    const result = await service.generateObject<Employee>(
+    const result = await service.generate<Employee>(
       EmployeeSchema,
       buildMessages
     );

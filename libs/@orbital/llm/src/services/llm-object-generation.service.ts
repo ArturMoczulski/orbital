@@ -68,6 +68,7 @@ export class LLMObjectGenerationService extends AbstractService {
   async generateObject<T>(
     schema: ZodSchema<T>,
     buildMessages: (retryCount: number) => LLMPromptMessages,
+    example?: T,
     retryCount: number = 0
   ): Promise<GenerationResult<T>> {
     // Create a structured output parser with the schema
@@ -79,12 +80,23 @@ export class LLMObjectGenerationService extends AbstractService {
     // Build the messages for this attempt
     const { system, human } = buildMessages(retryCount);
 
-    // Add format instructions and raw JSON reminder to the human message
-    const messageWithInstructions = new HumanMessage(
-      `${human.content}\n\n${formatInstructions}\n\n` +
-        "IMPORTANT: Your response must be a valid JSON object WITHOUT any markdown formatting. " +
-        "Do not use ```json code blocks or any other markdown. Return ONLY the raw JSON object."
-    );
+    // Start with the human content
+    let enhancedContent = human.content as string;
+
+    // Add example if provided
+    if (example) {
+      const exampleJson = JSON.stringify(example, null, 2);
+      enhancedContent += `\n\nHere is an example of a valid response:\n\n${exampleJson}`;
+    }
+
+    // Add format instructions and raw JSON reminder
+    enhancedContent +=
+      `\n\n${formatInstructions}\n\n` +
+      "IMPORTANT: Your response must be a valid JSON object WITHOUT any markdown formatting. " +
+      "Do not use ```json code blocks or any other markdown. Return ONLY the raw JSON object.";
+
+    // Create the enhanced message
+    const messageWithInstructions = new HumanMessage(enhancedContent);
 
     // Construct the full prompt for logging and returning
     const fullPrompt = `SYSTEM: ${system.content}\n\nHUMAN: ${messageWithInstructions.content}`;
@@ -131,7 +143,12 @@ export class LLMObjectGenerationService extends AbstractService {
       }
 
       // Retry with an incremented retry count
-      return this.generateObject(schema, buildMessages, retryCount + 1);
+      return this.generateObject(
+        schema,
+        buildMessages,
+        example,
+        retryCount + 1
+      );
     }
   }
 }

@@ -9,16 +9,7 @@ import { ZodSchema } from "../decorators/zod-schema.decorator";
 /**
  * Represents a location with an area and position.
  */
-export interface LocationProps {
-  /** Area this location belongs to */
-  area: Area;
-  /** Position of this location */
-  position: Position;
-  /** Name of the location */
-  name: string;
-  /** Optional description */
-  description?: string;
-}
+export type LocationProps = z.infer<typeof LocationSchema>;
 
 /** Zod schema for Location */
 export const LocationSchema = z
@@ -37,7 +28,10 @@ export const LocationSchema = z
  * Domain class for Location with auto-assignment and validation.
  */
 @ZodSchema(LocationSchema)
-export class Location extends BaseObject<Location> implements LocationProps {
+export class Location
+  extends BaseObject<LocationProps>
+  implements LocationProps
+{
   area: Area = new Area({ name: "", position: new Position() });
   position: Position = new Position();
   name: string = "";

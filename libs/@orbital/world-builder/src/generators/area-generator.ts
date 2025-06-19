@@ -1,40 +1,51 @@
 import { HumanMessage, SystemMessage } from "@langchain/core/messages";
 import { BaseLanguageModel } from "@langchain/core/language_models/base";
-import {
-  Area,
-  Position,
-  AbstractService,
-  Logger,
-  ConsoleLogger,
-} from "@orbital/core";
+import { Area, Position, Logger } from "@orbital/core";
 import { LLMObjectGenerationService, LLMPromptMessages } from "@orbital/llm";
 import {
   GeneratedAreaSchema,
   GeneratedAreaData,
   createExampleAreaData,
 } from "./area-schemas";
+import {
+  ObjectGenerator,
+  ObjectGeneratorInputProps,
+  ObjectGeneratorInputSchema,
+} from "./object-generator";
+import { z } from "zod";
 
 /**
- * Schema for area generation prompt
+ * Zod schema for area generation prompt
  */
-export interface AreaGenerationPrompt {
+export const AreaGenerationInputSchema = ObjectGeneratorInputSchema.extend({
   /** Theme or setting of the area (e.g., "medieval castle", "futuristic city") */
-  theme?: string;
+  theme: z.string().default("fantasy").describe("Theme or setting of the area"),
   /** Mood or atmosphere of the area (e.g., "eerie", "cheerful") */
-  mood?: string;
+  mood: z
+    .string()
+    .default("neutral")
+    .describe("Mood or atmosphere of the area"),
   /** Purpose or function of the area (e.g., "marketplace", "boss battle arena") */
-  purpose?: string;
+  purpose: z
+    .string()
+    .default("exploration")
+    .describe("Purpose or function of the area"),
   /** Any additional details or constraints */
-  additionalDetails?: string;
-}
+  additionalDetails: z
+    .string()
+    .default("")
+    .describe("Any additional details or constraints"),
+}).describe("Input schema for area generation");
+
+/**
+ * Type for area generation prompt
+ */
+export type AreaGenerationPrompt = z.infer<typeof AreaGenerationInputSchema>;
 
 /**
  * Class for generating game areas using LLMs
  */
-export class AreaGenerator extends AbstractService {
-  private model: BaseLanguageModel;
-  private generationService: LLMObjectGenerationService;
-
+export class AreaGenerator extends ObjectGenerator<Area, AreaGenerationPrompt> {
   /**
    * Creates a new AreaGenerator instance
    * @param model The language model to use for generation
@@ -44,31 +55,65 @@ export class AreaGenerator extends AbstractService {
   constructor(
     model: BaseLanguageModel,
     generationService: LLMObjectGenerationService,
-    logger: Logger = new ConsoleLogger()
+    logger: Logger
   ) {
-    super(logger);
-    this.model = model;
-    this.generationService = generationService;
+    super(model, generationService, logger);
   }
 
   /**
-   * Builds the messages for area generation
-   * @param prompt The area generation prompt
-   * @param retryCount Current retry count
-   * @returns System and human messages for the LLM
+   * Returns the Zod schema for input validation
+   * @returns The Zod schema for input
    */
-  private buildAreaMessages(
-    prompt: Required<AreaGenerationPrompt>,
-    retryCount: number
-  ): LLMPromptMessages {
-    // Create example data
-    const exampleData = createExampleAreaData();
-    const exampleJson = JSON.stringify(exampleData, null, 2);
+  inputSchemaZ() {
+    return AreaGenerationInputSchema;
+  }
 
+  /**
+   * Returns the Zod schema for output validation
+   * @returns The Zod schema for output
+   */
+  schema() {
+    return GeneratedAreaSchema;
+  }
+
+  /**
+   * Returns an example object for this generator
+   * @returns An example object
+   */
+  example(): Area {
+    // Create an Area instance from the example data
+    const exampleData = createExampleAreaData();
+    const position = new Position(exampleData.position);
+
+    const area = new Area({
+      name: exampleData.name,
+      position,
+      parentId: exampleData.parentId ?? undefined,
+    });
+
+    // Assign all additional generated properties to the area
+    Object.assign(area, {
+      description: exampleData.description,
+      landmarks: exampleData.landmarks,
+      connections: exampleData.connections,
+    });
+
+    return area;
+  }
+
+  /**
+   * Builds the LLM prompt for area generation
+   * @param promptData The prompt data to use
+   * @param retryCount Current retry count
+   * @returns The built prompt string
+   */
+  protected instructions(
+    promptData: AreaGenerationPrompt,
+    retryCount: number = 0
+  ): LLMPromptMessages {
     // Create system message with instructions
     let systemContent =
       "You are a creative video game world designer. Generate detailed areas for video games.";
-    // "You are a creative video game world designer. Generate detailed areas for video games. IMPORTANT: Your response must be a valid JSON object WITHOUT any markdown formatting. Do not use ```json code blocks or any other markdown. Return ONLY the raw JSON object.";
 
     if (retryCount == 1) {
       systemContent +=
@@ -78,15 +123,10 @@ export class AreaGenerator extends AbstractService {
     // Create human message with the prompt
     const humanContent = `Generate a detailed area for a video game based on the following parameters:
 
-Theme: ${prompt.theme}
-Mood: ${prompt.mood}
-Purpose: ${prompt.purpose}
-Additional Details: ${prompt.additionalDetails}
-
-Here is an example of a valid response:
-
-${exampleJson}
-`;
+Theme: ${promptData.theme || "fantasy"}
+Mood: ${promptData.mood || "neutral"}
+Purpose: ${promptData.purpose || "exploration"}
+Additional Details: ${promptData.additionalDetails || ""}`;
 
     return {
       system: new SystemMessage(systemContent),
@@ -96,98 +136,30 @@ ${exampleJson}
 
   /**
    * Generates a new area based on the provided prompt
-   * @param prompt The area generation prompt
+   * @param promptData The area generation prompt
    * @returns A Promise resolving to a new Area instance
    */
-  async generateArea(prompt: AreaGenerationPrompt): Promise<Area> {
-    // Set default values for any missing prompt fields
-    const fullPrompt: Required<AreaGenerationPrompt> = {
-      theme: prompt.theme || "fantasy",
-      mood: prompt.mood || "neutral",
-      purpose: prompt.purpose || "exploration",
-      additionalDetails: prompt.additionalDetails || "",
-    };
-
-    // Generate the area data using the LLM generation service
-    const result =
-      await this.generationService.generateObject<GeneratedAreaData>(
-        GeneratedAreaSchema,
-        (retryCount: number) => this.buildAreaMessages(fullPrompt, retryCount)
-      );
-
-    // Log the prompt
-    this.logger.verbose("Area Generation Prompt:", result.prompt);
+  async generate(promptData: AreaGenerationPrompt): Promise<Area> {
+    // Use the parent class implementation which calls our schema() and example() methods
+    const generatedData = await super.generate(promptData);
 
     // Create a Position instance
-    const position = new Position(result.output.position);
+    const position = new Position(generatedData.position);
 
     // Create an Area instance with all base properties
     const area = new Area({
-      name: result.output.name,
+      name: generatedData.name,
       position,
-      parentId: result.output.parentId ?? undefined,
+      parentId: generatedData.parentId ?? undefined,
     });
 
     // Assign all additional generated properties to the area
     Object.assign(area, {
-      description: result.output.description,
-      landmarks: result.output.landmarks,
-      connections: result.output.connections,
+      description: generatedData.description,
+      landmarks: generatedData.landmarks,
+      connections: generatedData.connections,
     });
 
     return area;
-  }
-
-  /**
-   * Generates multiple connected areas to form a region
-   * @param basePrompt The base prompt for the region
-   * @param count Number of areas to generate
-   * @returns A Promise resolving to an array of connected Area instances
-   */
-  async generateRegion(
-    basePrompt: AreaGenerationPrompt,
-    count: number = 5
-  ): Promise<Area[]> {
-    // Generate the first area
-    const firstArea = await this.generateArea(basePrompt);
-
-    // Create an array to hold all areas
-    const areas: Area[] = [firstArea];
-
-    // Generate additional areas
-    for (let i = 1; i < count; i++) {
-      // Create a connected prompt
-      const connectedPrompt: AreaGenerationPrompt = {
-        ...basePrompt,
-        additionalDetails: `${basePrompt.additionalDetails || ""}
-          This area should connect to "${
-            firstArea.name
-          }" and maintain the overall theme and mood.
-          Make sure this area is distinct from the other areas but fits within the same region.`,
-      };
-
-      // Generate a new area
-      const newArea = await this.generateArea(connectedPrompt);
-
-      // Explicitly set a different position to ensure non-zero distance
-      // We'll use a simple pattern to place areas in a circle around the first area
-      const angle = (i / count) * Math.PI * 2;
-      const radius = 200; // Large enough to ensure visible separation
-
-      // Create a new Position with explicit coordinates
-      const newPosition = new Position({
-        x: firstArea.position.x + Math.cos(angle) * radius,
-        y: firstArea.position.y + Math.sin(angle) * radius,
-        z: firstArea.position.z + i * 10, // Increase height with each area
-      });
-
-      // Set the position on the area
-      newArea.position = newPosition;
-
-      // Add to the array
-      areas.push(newArea);
-    }
-
-    return areas;
   }
 }

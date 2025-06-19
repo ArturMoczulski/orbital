@@ -1,4 +1,5 @@
 import { AreaGenerator, AreaGenerationPrompt } from "./area-generator";
+import { RegionGenerator } from "./region-generator";
 // Increase Jest timeout for long-running LLM calls
 jest.setTimeout(60000);
 import { Area, Position, VerbosityLevel } from "@orbital/core";
@@ -17,17 +18,29 @@ import {
  * 2. Run a model: `ollama run llama3.1` or any other model you prefer
  */
 describe("E2E: AreaGenerator", () => {
-  let generator: AreaGenerator;
+  let areaGenerator: AreaGenerator;
+  let regionGenerator: RegionGenerator;
   let model: BaseLanguageModel;
   let service: LLMObjectGenerationService;
 
   // Set up the test environment with Ollama
-  // Create a logger for test output
   // Create a logger for test output with VERBOSE level
   const testLogger = createTestLogger("AreaGeneratorTest");
 
   // Set logger to VERBOSE level to see all logs
   testLogger.setVerbosityLevel(VerbosityLevel.VERBOSE);
+
+  // Create a null logger to prevent duplicate logging
+  const nullLogger = {
+    error: () => {},
+    warn: () => {},
+    log: () => {},
+    info: () => {},
+    debug: () => {},
+    verbose: () => {},
+    setVerbosityLevel: () => {},
+    getVerbosityLevel: () => 0,
+  };
 
   beforeAll(async () => {
     // Initialize the model and service
@@ -38,18 +51,15 @@ describe("E2E: AreaGenerator", () => {
       logger: testLogger,
     });
 
-    // Create the generator with a null logger to prevent duplicate logging
+    // Create the generators with a null logger to prevent duplicate logging
     // This way only the LLM service will log the prompts and responses
-    generator = new AreaGenerator(model, service, {
-      error: () => {},
-      warn: () => {},
-      log: () => {},
-      info: () => {},
-      debug: () => {},
-      verbose: () => {},
-      setVerbosityLevel: () => {},
-      getVerbosityLevel: () => 0,
-    });
+    areaGenerator = new AreaGenerator(model, service, nullLogger);
+    regionGenerator = new RegionGenerator(
+      model,
+      service,
+      nullLogger,
+      areaGenerator
+    );
   });
 
   it("should generate an area with a real LLM", async () => {
@@ -62,7 +72,7 @@ describe("E2E: AreaGenerator", () => {
     };
 
     // Generate the area
-    const result = await generator.generateArea(prompt);
+    const result = await areaGenerator.generate(prompt);
 
     // Log the final result
     testLogger.info("E2E Generated Area:", result);
@@ -88,7 +98,10 @@ describe("E2E: AreaGenerator", () => {
     const count = 2;
 
     // Generate the region
-    const result = await generator.generateRegion(prompt, count);
+    const result = await regionGenerator.generate({
+      ...prompt,
+      areaCount: count,
+    });
 
     // Log the final result
     testLogger.info("E2E Generated Region:", result);

@@ -8,25 +8,7 @@ import { ZodSchema } from "../decorators/zod-schema.decorator";
 /**
  * Represents a historical event in the world.
  */
-export interface HistoryEventProps {
-  /** Unique identifier for the event */
-  eventId: string;
-
-  /** IDs of participants involved in the event */
-  participants: string[];
-
-  /** Optional outcome description */
-  outcome?: string;
-
-  /** Timestamp when the event occurred */
-  timestamp: Date;
-
-  /** Optional reference to location identifier */
-  locationId?: string;
-
-  /** Coordinates where the event took place */
-  coordinates: Position;
-}
+export type HistoryEventProps = z.infer<typeof HistoryEventSchema>;
 
 /** Zod schema for HistoryEvent */
 export const HistoryEventSchema = z

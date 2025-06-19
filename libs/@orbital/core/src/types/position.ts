@@ -6,11 +6,7 @@ import { ZodSchema } from "../decorators/zod-schema.decorator";
 /**
  * Represents a three-dimensional position in the world.
  */
-export interface Position {
-  x: number;
-  y: number;
-  z: number;
-}
+export type PositionProps = z.infer<typeof PositionSchema>;
 
 /** Zod schema for Position */
 export const PositionSchema = z
@@ -29,12 +25,15 @@ export const PositionSchema = z
  * Domain class for Position with auto-assignment and mock factory.
  */
 @ZodSchema(PositionSchema)
-export class Position extends BaseObject<Position> implements Position {
+export class Position
+  extends BaseObject<PositionProps>
+  implements PositionProps
+{
   x: number = 0;
   y: number = 0;
   z: number = 0;
 
-  constructor(data?: Partial<Position>) {
+  constructor(data?: Partial<PositionProps>) {
     super(data);
 
     // Initialize with default values if not provided
@@ -44,7 +43,7 @@ export class Position extends BaseObject<Position> implements Position {
   }
 
   /** Create a fake Position instance */
-  static mock(overrides: Partial<Position> = {}): Position {
+  static mock(overrides: Partial<PositionProps> = {}): Position {
     return new Position({
       x: faker.number.int({ min: -1000, max: 1000 }),
       y: faker.number.int({ min: -1000, max: 1000 }),

@@ -7,10 +7,7 @@ import { ZodSchema } from "../decorators/zod-schema.decorator";
 /**
  * Interface for objects that have a unique identifier
  */
-export interface IdentifiableObjectProps {
-  /** Unique identifier */
-  id: string;
-}
+export type IdentifiableObjectProps = z.infer<typeof IdentifiableObjectSchema>;
 
 /** Zod schema for IdentifiableObject */
 export const IdentifiableObjectSchema = z
