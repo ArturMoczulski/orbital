@@ -125,9 +125,13 @@ export class LLMObjectGenerationService extends AbstractService {
       const result = await parser.parse(response.content);
 
       // Log the response
-      this.logger.verbose(
-        `LLM Response (Attempt ${retryCount + 1}):\n${response.content}`
-      );
+      // Log the response
+      // Explicitly convert retryCount + 1 to string for logging
+      const attemptNumber = retryCount + 1;
+      const logMessage = `LLM Response (Attempt ${attemptNumber.toString()}):\n${
+        response.content
+      }`;
+      this.logger.verbose(logMessage);
 
       // Return the parsed result and prompt
       return {

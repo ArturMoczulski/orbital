@@ -94,6 +94,7 @@ describe("E2E: AreaGenerator", () => {
       theme: "sci-fi space station",
       mood: "abandoned",
       purpose: "exploration",
+      additionalDetails: "", // Added to satisfy AreaGenerationPrompt type
     };
     const count = 2;
 

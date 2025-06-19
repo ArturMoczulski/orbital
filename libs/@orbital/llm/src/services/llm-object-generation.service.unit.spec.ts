@@ -58,7 +58,7 @@ describe("LLMObjectGenerationService", () => {
     // Create a test logger with context prefix for unit tests
     const logger = createTestLogger("LLMObjectGeneration-Unit");
     const service = new LLMObjectGenerationService(mockLLM as any, { logger });
-    const result = await service.generate<TestObject>(
+    const result = await service.generateObject<TestObject>(
       TestSchema,
       buildMessages
     );
@@ -95,7 +95,7 @@ describe("LLMObjectGenerationService", () => {
       logErrors: false,
       logger,
     });
-    const result = await service.generate<TestObject>(
+    const result = await service.generateObject<TestObject>(
       TestSchema,
       buildMessages
     );
@@ -125,7 +125,7 @@ describe("LLMObjectGenerationService", () => {
     });
 
     await expect(
-      service.generate<TestObject>(TestSchema, buildMessages)
+      service.generateObject<TestObject>(TestSchema, buildMessages)
     ).rejects.toThrow("Failed to generate valid object after 2 attempts");
   });
 });
