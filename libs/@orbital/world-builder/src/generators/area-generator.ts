@@ -116,12 +116,7 @@ export class AreaGenerator extends ObjectGenerator<Area, AreaGenerationPrompt> {
       "You are a creative video game world designer. Generate detailed areas for video games.";
 
     // Create human message with the prompt
-    const humanContent = `Generate a detailed area for a video game based on the following parameters:
-
-Theme: ${promptData.theme || "fantasy"}
-Mood: ${promptData.mood || "neutral"}
-Purpose: ${promptData.purpose || "exploration"}
-Additional Details: ${promptData.additionalDetails || ""}`;
+    const humanContent = `Generate a detailed area for a video game based on the following parameters:`;
 
     return {
       system: new SystemMessage(systemContent),
