@@ -65,7 +65,9 @@ module.exports = {
   moduleFileExtensions: ["ts", "tsx", "js", "json", "node"],
   displayName: "default",
   testMatch: ["**/?(*.)+(spec|test).ts?(x)"],
-  projects: getProjects(),
+  // Multi-project runner; disable projects via JEST_DISABLE_PROJECTS env var
+  projects:
+    process.env.JEST_DISABLE_PROJECTS === "true" ? undefined : getProjects(),
   transform: {
     "^.+\\.(ts|tsx)$": "ts-jest",
   },
