@@ -1,3 +1,7 @@
+// Use require for chalk to ensure CommonJS compatibility
+const chalk = require("chalk");
+// Force colors in terminal output
+chalk.level = 3; // Set to maximum color level
 /**
  * Verbosity levels for logging
  */
@@ -102,8 +106,25 @@ export class ConsoleLogger implements Logger {
    */
   error(message: string, context?: any): void {
     if (this.verbosityLevel >= VerbosityLevel.ERROR) {
-      const formattedMessage = this.formatMessage(message);
-      console.error(formattedMessage, context ? context : "");
+      // Use red color for error messages
+      const coloredMessage = chalk.red(message);
+      let output = this.formatMessage(coloredMessage);
+
+      // Append context on a new line if provided
+      if (context) {
+        try {
+          const contextStr =
+            typeof context === "string"
+              ? context
+              : JSON.stringify(context, null, 2);
+          output += `\n${contextStr}`;
+        } catch (e) {
+          output += `\nContext could not be stringified: ${context}`;
+        }
+      }
+
+      // Use process.stderr.write instead of console.error
+      process.stderr.write(`${output}\n`);
     }
   }
 
@@ -114,8 +135,25 @@ export class ConsoleLogger implements Logger {
    */
   warn(message: string, context?: any): void {
     if (this.verbosityLevel >= VerbosityLevel.WARN) {
-      const formattedMessage = this.formatMessage(message);
-      console.warn(formattedMessage, context ? context : "");
+      // Use yellow color for warning messages
+      const coloredMessage = chalk.yellow(message);
+      let output = this.formatMessage(coloredMessage);
+
+      // Append context on a new line if provided
+      if (context) {
+        try {
+          const contextStr =
+            typeof context === "string"
+              ? context
+              : JSON.stringify(context, null, 2);
+          output += `\n${contextStr}`;
+        } catch (e) {
+          output += `\nContext could not be stringified: ${context}`;
+        }
+      }
+
+      // Use process.stderr.write instead of console.warn
+      process.stderr.write(`${output}\n`);
     }
   }
 
@@ -126,8 +164,25 @@ export class ConsoleLogger implements Logger {
    */
   log(message: string, context?: any): void {
     if (this.verbosityLevel >= VerbosityLevel.INFO) {
-      const formattedMessage = this.formatMessage(message);
-      console.log(formattedMessage, context ? context : "");
+      // Use cyan color for info messages
+      const coloredMessage = chalk.cyan(message);
+      let output = this.formatMessage(coloredMessage);
+
+      // Append context on a new line if provided
+      if (context) {
+        try {
+          const contextStr =
+            typeof context === "string"
+              ? context
+              : JSON.stringify(context, null, 2);
+          output += `\n${contextStr}`;
+        } catch (e) {
+          output += `\nContext could not be stringified: ${context}`;
+        }
+      }
+
+      // Use process.stdout.write instead of console.log
+      process.stdout.write(`${output}\n`);
     }
   }
 
@@ -147,8 +202,25 @@ export class ConsoleLogger implements Logger {
    */
   debug(message: string, context?: any): void {
     if (this.verbosityLevel >= VerbosityLevel.DEBUG) {
-      const formattedMessage = this.formatMessage(message);
-      console.debug(formattedMessage, context ? context : "");
+      // Use green color for debug messages
+      const coloredMessage = chalk.green(message);
+      let output = this.formatMessage(coloredMessage);
+
+      // Append context on a new line if provided
+      if (context) {
+        try {
+          const contextStr =
+            typeof context === "string"
+              ? context
+              : JSON.stringify(context, null, 2);
+          output += `\n${contextStr}`;
+        } catch (e) {
+          output += `\nContext could not be stringified: ${context}`;
+        }
+      }
+
+      // Use process.stdout.write instead of console.debug
+      process.stdout.write(`${output}\n`);
     }
   }
 
@@ -159,8 +231,25 @@ export class ConsoleLogger implements Logger {
    */
   verbose(message: string, context?: any): void {
     if (this.verbosityLevel >= VerbosityLevel.VERBOSE) {
-      const formattedMessage = this.formatMessage(`[VERBOSE] ${message}`);
-      console.debug(formattedMessage, context ? context : "");
+      // Use magenta color for verbose messages
+      const coloredMessage = chalk.magenta(message);
+      let output = `${this.formatMessage(coloredMessage)}`;
+
+      // Append context on a new line if provided
+      if (context) {
+        try {
+          const contextStr =
+            typeof context === "string"
+              ? context
+              : JSON.stringify(context, null, 2);
+          output += `\n${contextStr}`;
+        } catch (e) {
+          output += `\nContext could not be stringified: ${context}`;
+        }
+      }
+
+      // Use process.stdout.write instead of console.log
+      process.stdout.write(`${output}\n`);
     }
   }
 
@@ -170,7 +259,41 @@ export class ConsoleLogger implements Logger {
    * @returns The formatted message
    */
   private formatMessage(message: string): string {
-    return this.contextPrefix ? `[${this.contextPrefix}] ${message}` : message;
+    if (this.contextPrefix) {
+      // Create different background colors based on verbosity level
+      let coloredPrefix;
+
+      // Choose background color based on the context prefix
+      if (
+        this.contextPrefix.includes("Error") ||
+        this.contextPrefix.includes("error")
+      ) {
+        coloredPrefix = chalk.bgRed.white.bold(` [ ${this.contextPrefix} ] `);
+      } else if (
+        this.contextPrefix.includes("Warn") ||
+        this.contextPrefix.includes("warn")
+      ) {
+        coloredPrefix = chalk.bgYellow.black.bold(
+          ` [ ${this.contextPrefix} ] `
+        );
+      } else if (
+        this.contextPrefix.includes("Debug") ||
+        this.contextPrefix.includes("debug")
+      ) {
+        coloredPrefix = chalk.bgGreen.white.bold(` [ ${this.contextPrefix} ] `);
+      } else if (
+        this.contextPrefix.includes("Test") ||
+        this.contextPrefix.includes("test")
+      ) {
+        coloredPrefix = chalk.bgCyan.white.bold(` [ ${this.contextPrefix} ] `);
+      } else {
+        coloredPrefix = chalk.bgBlue.white.bold(` [ ${this.contextPrefix} ] `);
+      }
+
+      // Return the colored prefix with the message
+      return `${coloredPrefix} ${message}`;
+    }
+    return message;
   }
 
   /**

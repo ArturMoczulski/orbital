@@ -122,6 +122,18 @@ describe("AreaGenerator", () => {
       // Assert
       expect(result).toBeInstanceOf(Area);
       expect(result.name).toBe("Ancient Ruins");
+      // Additional generated properties from LLM should be assigned
+      expect((result as any).description).toBe(
+        "A mysterious set of ancient ruins with magical properties."
+      );
+      expect((result as any).landmarks).toEqual([
+        "Broken Tower",
+        "Magic Fountain",
+      ]);
+      expect((result as any).connections).toEqual([
+        "Forest Path",
+        "Mountain Pass",
+      ]);
       // In the mocked environment, we can't expect specific position values
       // since they're generated in the implementation
       expect(result.position).toBeDefined();

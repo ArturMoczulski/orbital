@@ -1,4 +1,4 @@
-import { Logger, ConsoleLogger } from "./logger";
+import { Logger, ConsoleLogger, VerbosityLevel } from "./logger";
 
 /**
  * Abstract base class for services
@@ -11,8 +11,13 @@ export abstract class AbstractService {
    * Creates a new AbstractService
    * @param logger The logger to use
    */
-  constructor(logger: Logger = new ConsoleLogger()) {
-    this.logger = logger;
+  constructor(logger?: Logger) {
+    const levelEnv = process.env.VERBOSITY as keyof typeof VerbosityLevel;
+    const verbosity =
+      levelEnv && VerbosityLevel[levelEnv]
+        ? VerbosityLevel[levelEnv]
+        : VerbosityLevel.INFO;
+    this.logger = logger ?? new ConsoleLogger(verbosity, this.constructor.name);
   }
 
   /**

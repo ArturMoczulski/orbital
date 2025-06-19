@@ -20,6 +20,12 @@ export interface AreaProps {
   name: string;
   /** Central position of the area */
   position: Position;
+  /** Detailed description of the area */
+  description?: string;
+  /** Notable landmarks or features in this area */
+  landmarks?: string[];
+  /** Names of other areas this area connects to */
+  connections?: string[];
 }
 
 /** Zod schema for Area */
@@ -48,6 +54,12 @@ export class Area
   parentId?: string;
   name: string = "";
   position: Position = new Position();
+  /** Detailed description of the area */
+  description: string = "";
+  /** Notable landmarks or features in this area */
+  landmarks: string[] = [];
+  /** Names of other areas this area connects to */
+  connections: string[] = [];
 
   /** Create a fake Area instance with randomized data */
   static mock(overrides: Partial<AreaProps> = {}): Area {
@@ -81,6 +93,10 @@ export class Area
     // Assign properties directly
     this.name = validated.name;
     this.parentId = validated.parentId;
+    // Assign new generated properties
+    this.description = (validated as any).description ?? "";
+    this.landmarks = (validated as any).landmarks ?? [];
+    this.connections = (validated as any).connections ?? [];
     this.position = position;
   }
 }

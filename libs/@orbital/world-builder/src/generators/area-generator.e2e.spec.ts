@@ -1,7 +1,7 @@
 import { AreaGenerator, AreaGenerationPrompt } from "./area-generator";
 // Increase Jest timeout for long-running LLM calls
 jest.setTimeout(60000);
-import { Area, Position } from "@orbital/core";
+import { Area, Position, VerbosityLevel } from "@orbital/core";
 import { createTestLogger } from "@orbital/testing";
 import { BaseLanguageModel } from "@langchain/core/language_models/base";
 import {
@@ -23,23 +23,33 @@ describe("E2E: AreaGenerator", () => {
 
   // Set up the test environment with Ollama
   // Create a logger for test output
+  // Create a logger for test output with VERBOSE level
   const testLogger = createTestLogger("AreaGeneratorTest");
 
-  beforeAll(async () => {
-    // Initialize the model and service with test logger
-    model = await setupOllamaTest();
+  // Set logger to VERBOSE level to see all logs
+  testLogger.setVerbosityLevel(VerbosityLevel.VERBOSE);
 
-    // Create a test logger that respects VERBOSE_TEST environment variable
-    // Add a context prefix to identify logs from this test
-    const logger = createTestLogger("AreaGenerator");
+  beforeAll(async () => {
+    // Initialize the model and service
+    model = await setupOllamaTest();
 
     // Create the service with the test logger
     service = createLLMObjectGenerationService(model, {
-      logger,
+      logger: testLogger,
     });
 
-    // Create the generator with the test logger
-    generator = new AreaGenerator(model, service, logger);
+    // Create the generator with a null logger to prevent duplicate logging
+    // This way only the LLM service will log the prompts and responses
+    generator = new AreaGenerator(model, service, {
+      error: () => {},
+      warn: () => {},
+      log: () => {},
+      info: () => {},
+      debug: () => {},
+      verbose: () => {},
+      setVerbosityLevel: () => {},
+      getVerbosityLevel: () => 0,
+    });
   });
 
   it("should generate an area with a real LLM", async () => {
@@ -51,21 +61,22 @@ describe("E2E: AreaGenerator", () => {
         "This area should have ancient ruins and magical elements.",
     };
 
+    // Generate the area
     const result = await generator.generateArea(prompt);
+
+    // Log the final result
     testLogger.info("E2E Generated Area:", result);
 
     expect(result).toBeInstanceOf(Area);
     expect(result.name).toBeTruthy();
     expect(result.position).toBeInstanceOf(Position);
 
-    testLogger.info("Generated Area:", {
-      name: result.name,
-      position: {
-        x: result.position.x,
-        y: result.position.y,
-        z: result.position.z,
-      },
-    });
+    // Ensure all generated properties are populated
+    expect(typeof (result as any).description).toBe("string");
+    expect(Array.isArray((result as any).landmarks)).toBe(true);
+    expect((result as any).landmarks.length).toBeGreaterThan(0);
+    expect(Array.isArray((result as any).connections)).toBe(true);
+    expect((result as any).connections.length).toBeGreaterThan(0);
   }, 60000);
 
   it("should generate a region with a real LLM", async () => {
@@ -76,7 +87,10 @@ describe("E2E: AreaGenerator", () => {
     };
     const count = 2;
 
+    // Generate the region
     const result = await generator.generateRegion(prompt, count);
+
+    // Log the final result
     testLogger.info("E2E Generated Region:", result);
 
     expect(result).toBeInstanceOf(Array);
@@ -87,17 +101,14 @@ describe("E2E: AreaGenerator", () => {
     const distance = calculateDistance(result[0].position, result[1].position);
     expect(distance).toBeGreaterThan(0);
 
-    testLogger.info(
-      "Generated Region:",
-      result.map((area: Area) => ({
-        name: area.name,
-        position: {
-          x: area.position.x,
-          y: area.position.y,
-          z: area.position.z,
-        },
-      }))
-    );
+    // Ensure generated areas include full properties
+    for (const area of result) {
+      expect(typeof (area as any).description).toBe("string");
+      expect(Array.isArray((area as any).landmarks)).toBe(true);
+      expect((area as any).landmarks.length).toBeGreaterThan(0);
+      expect(Array.isArray((area as any).connections)).toBe(true);
+      expect((area as any).connections.length).toBeGreaterThan(0);
+    }
   }, 60000);
 });
 

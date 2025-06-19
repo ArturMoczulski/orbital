@@ -66,10 +66,14 @@ export class AreaGenerator extends AbstractService {
     const exampleJson = JSON.stringify(exampleData, null, 2);
 
     // Create system message with instructions
-    const systemContent =
-      retryCount > 0
-        ? "You are a creative video game world designer. Generate detailed areas for video games. Your previous response did not match the required schema. Please try again and ensure your response follows the format instructions exactly. IMPORTANT: Your response must be a valid JSON object WITHOUT any markdown formatting. Do not use ```json code blocks or any other markdown. Return ONLY the raw JSON object."
-        : "You are a creative video game world designer. Generate detailed areas for video games. IMPORTANT: Your response must be a valid JSON object WITHOUT any markdown formatting. Do not use ```json code blocks or any other markdown. Return ONLY the raw JSON object.";
+    let systemContent =
+      "You are a creative video game world designer. Generate detailed areas for video games.";
+    // "You are a creative video game world designer. Generate detailed areas for video games. IMPORTANT: Your response must be a valid JSON object WITHOUT any markdown formatting. Do not use ```json code blocks or any other markdown. Return ONLY the raw JSON object.";
+
+    if (retryCount == 1) {
+      systemContent +=
+        "Your previous response did not match the required schema. Please try again and ensure your response follows the format instructions exactly.";
+    }
 
     // Create human message with the prompt
     const humanContent = `Generate a detailed area for a video game based on the following parameters:
@@ -81,9 +85,7 @@ Additional Details: ${prompt.additionalDetails}
 
 Here is an example of a valid response:
 
-\`\`\`json
 ${exampleJson}
-\`\`\`
 `;
 
     return {
@@ -119,10 +121,18 @@ ${exampleJson}
     // Create a Position instance
     const position = new Position(result.output.position);
 
-    // Create an Area instance
+    // Create an Area instance with all base properties
     const area = new Area({
       name: result.output.name,
-      position: position,
+      position,
+      parentId: result.output.parentId ?? undefined,
+    });
+
+    // Assign all additional generated properties to the area
+    Object.assign(area, {
+      description: result.output.description,
+      landmarks: result.output.landmarks,
+      connections: result.output.connections,
     });
 
     return area;
