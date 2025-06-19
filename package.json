@@ -14,6 +14,7 @@
   "scripts": {
     "build": "turbo run build",
     "test": "jest --config jest.config.cjs",
+    "test:unit": "jest --config jest.config.cjs \"unit.spec\"",
     "test:monorepo": "jest --config jest.config.monorepo.cjs",
     "test:plop-modify-json": "yarn workspace @orbital/plop-modify-json test",
     "lint": "turbo run lint",

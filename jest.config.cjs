@@ -1,7 +1,8 @@
 const fs = require("fs");
 const path = require("path");
 const { internalPackages } = require("./orb.json");
-const commonConfig = require("./jest.common.js");
+// Use the CommonJS export from jest.common.js
+const commonConfig = require("./jest.common.cjs");
 
 // Directories to scan for all packages
 const baseDirs = ["libs", "services", "clients", "tools"];
