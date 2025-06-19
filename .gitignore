@@ -13,6 +13,5 @@
 .turbo/
 
 # VSCode settings
-.vscode/
 .DS_Store
 node_modules
