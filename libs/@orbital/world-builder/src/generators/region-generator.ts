@@ -91,7 +91,7 @@ export class RegionGenerator extends ObjectGenerator<
    * Returns the Zod schema for input validation
    * @returns The Zod schema for input
    */
-  inputSchemaZ() {
+  inputSchema() {
     return RegionGenerationInputSchema;
   }
 

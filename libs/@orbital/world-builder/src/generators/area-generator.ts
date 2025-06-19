@@ -64,7 +64,7 @@ export class AreaGenerator extends ObjectGenerator<Area, AreaGenerationPrompt> {
    * Returns the Zod schema for input validation
    * @returns The Zod schema for input
    */
-  inputSchemaZ() {
+  inputSchema() {
     return AreaGenerationInputSchema;
   }
 
@@ -114,11 +114,6 @@ export class AreaGenerator extends ObjectGenerator<Area, AreaGenerationPrompt> {
     // Create system message with instructions
     let systemContent =
       "You are a creative video game world designer. Generate detailed areas for video games.";
-
-    if (retryCount == 1) {
-      systemContent +=
-        "Your previous response did not match the required schema. Please try again and ensure your response follows the format instructions exactly.";
-    }
 
     // Create human message with the prompt
     const humanContent = `Generate a detailed area for a video game based on the following parameters:

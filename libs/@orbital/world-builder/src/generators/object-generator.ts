@@ -44,16 +44,7 @@ export abstract class ObjectGenerator<
    * Returns the Zod schema for input validation
    * @returns The Zod schema for input
    */
-  abstract inputSchemaZ(): ZodSchema<any>;
-
-  /**
-   * Returns the default input schema values
-   * @returns The default input schema
-   */
-  inputSchema(): InputSchema {
-    // Create a default object based on the Zod schema
-    return this.inputSchemaZ().parse({}) as InputSchema;
-  }
+  abstract inputSchema(): ZodSchema<any>;
 
   /**
    * Returns the Zod schema for output validation
@@ -86,7 +77,7 @@ export abstract class ObjectGenerator<
   async generate(inputData: Partial<InputSchema>): Promise<GenerationType> {
     // Validate and parse the input data using the Zod schema
     // This will fill in any missing fields with defaults from the schema
-    const validatedInput = this.inputSchemaZ().parse(inputData);
+    const validatedInput = this.inputSchema().parse(inputData);
 
     // Create a messages builder function that adds input data to the human message
     const messagesBuilder = (retryCount: number) => {

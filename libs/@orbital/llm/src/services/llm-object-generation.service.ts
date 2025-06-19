@@ -78,7 +78,15 @@ export class LLMObjectGenerationService extends AbstractService {
     const formatInstructions = parser.getFormatInstructions();
 
     // Build the messages for this attempt
-    const { system, human } = buildMessages(retryCount);
+    const { system: origSystem, human } = buildMessages(retryCount);
+    // On retry, enhance system instructions globally
+    const system =
+      retryCount > 0
+        ? new SystemMessage(
+            origSystem.content +
+              " Your previous response did not match the required schema. Please retry and ensure your response follows the format instructions exactly."
+          )
+        : origSystem;
 
     // Start with the human content
     let enhancedContent = human.content as string;
