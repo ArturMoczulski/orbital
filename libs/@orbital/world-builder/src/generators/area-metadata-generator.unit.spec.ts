@@ -1,4 +1,7 @@
-import { AreaGenerator, AreaGenerationPrompt } from "./area-generator";
+import {
+  AreaMetadataGenerator,
+  AreaGenerationPrompt,
+} from "./area-metadata-generator";
 import { Area, Position } from "@orbital/core";
 import { BaseLanguageModel } from "@langchain/core/language_models/base";
 import { FakeListChatModel } from "@langchain/core/utils/testing";
@@ -79,45 +82,51 @@ jest.mock("@langchain/core/runnables", () => {
   };
 });
 
-describe("AreaGenerator", () => {
+describe("AreaMetadataGenerator", () => {
   let mockLLM: BaseLanguageModel;
   let mockGenerationService: LLMObjectGenerationService;
-  let generator: AreaGenerator;
+  let generator: AreaMetadataGenerator;
 
   beforeEach(() => {
     mockLLM = createMockLLM();
     // Create a test logger with context prefix for unit tests
-    const logger = createTestLogger("AreaGenerator-Unit");
+    const logger = createTestLogger("AreaMetadataGenerator-Unit"); // Renamed logger context
     mockGenerationService = new LLMObjectGenerationService(mockLLM, { logger });
-    generator = new AreaGenerator(mockLLM, mockGenerationService, logger);
+    generator = new AreaMetadataGenerator(
+      mockLLM,
+      mockGenerationService,
+      logger
+    );
   });
 
   describe("constructor", () => {
     it("should create an instance with a language model and generation service", () => {
       // Act
       const logger = createTestLogger();
-      const instance = new AreaGenerator(
+      const instance = new AreaMetadataGenerator( // Corrected constructor call
         mockLLM,
         mockGenerationService,
         logger
       );
 
       // Assert
-      expect(instance).toBeInstanceOf(AreaGenerator);
+      expect(instance).toBeInstanceOf(AreaMetadataGenerator);
     });
   });
 
-  describe("generateArea", () => {
+  describe("generate", () => {
+    // Renamed describe block
     it("should generate an area based on the provided prompt", async () => {
       // Arrange
       const prompt: AreaGenerationPrompt = {
         theme: "fantasy",
         mood: "mysterious",
         purpose: "exploration",
+        additionalDetails: "", // Added missing property
       };
 
       // Act
-      const result = await generator.generateArea(prompt);
+      const result = await generator.generate(prompt); // Changed method call
 
       // Assert
       expect(result).toBeInstanceOf(Area);
@@ -141,41 +150,20 @@ describe("AreaGenerator", () => {
 
     it("should use default values for missing prompt fields", async () => {
       // Arrange
-      const prompt: AreaGenerationPrompt = {};
+      const prompt: AreaGenerationPrompt = {
+        // Added missing properties with empty strings
+        theme: "",
+        mood: "",
+        purpose: "",
+        additionalDetails: "",
+      };
 
       // Act
-      const result = await generator.generateArea(prompt);
+      const result = await generator.generate(prompt); // Changed method call
 
       // Assert
       expect(result).toBeInstanceOf(Area);
       expect(result.name).toBe("Ancient Ruins");
-    });
-  });
-
-  describe("generateRegion", () => {
-    it("should generate multiple connected areas", async () => {
-      // Arrange
-      const prompt: AreaGenerationPrompt = {
-        theme: "fantasy",
-        mood: "mysterious",
-      };
-      const count = 3;
-
-      // Act
-      const result = await generator.generateRegion(prompt, count);
-
-      // Assert
-      expect(result).toBeInstanceOf(Array);
-      expect(result.length).toBe(count);
-      expect(result[0]).toBeInstanceOf(Area);
-      expect(result[1]).toBeInstanceOf(Area);
-      expect(result[2]).toBeInstanceOf(Area);
-
-      // In the mocked environment, we're not actually calculating distances between positions
-      // So we'll just verify that the positions exist
-      expect(result[0].position).toBeDefined();
-      expect(result[1].position).toBeDefined();
-      expect(result[2].position).toBeDefined();
     });
   });
 });

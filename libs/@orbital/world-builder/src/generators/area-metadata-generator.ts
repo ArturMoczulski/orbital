@@ -45,7 +45,10 @@ export type AreaGenerationPrompt = z.infer<typeof AreaGenerationInputSchema>;
 /**
  * Class for generating game areas using LLMs
  */
-export class AreaGenerator extends ObjectGenerator<Area, AreaGenerationPrompt> {
+export class AreaMetadataGenerator extends ObjectGenerator<
+  Area,
+  AreaGenerationPrompt
+> {
   /**
    * Creates a new AreaGenerator instance
    * @param model The language model to use for generation

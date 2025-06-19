@@ -1,4 +1,7 @@
-import { AreaGenerator, AreaGenerationPrompt } from "./area-generator";
+import {
+  AreaMetadataGenerator,
+  AreaGenerationPrompt,
+} from "./area-metadata-generator";
 import { RegionGenerator } from "./region-generator";
 // Increase Jest timeout for long-running LLM calls
 jest.setTimeout(60000);
@@ -12,20 +15,20 @@ import {
 } from "@orbital/llm";
 
 /**
- * E2E tests for AreaGenerator using a real LLM (Ollama).
+ * E2E tests for AreaMetadataGenerator using a real LLM (Ollama).
  * Prerequisites:
  * 1. Install Ollama: https://ollama.ai/
  * 2. Run a model: `ollama run llama3.1` or any other model you prefer
  */
-describe("E2E: AreaGenerator", () => {
-  let areaGenerator: AreaGenerator;
+describe("E2E: AreaMetadataGenerator", () => {
+  let areaMetadataGenerator: AreaMetadataGenerator; // Renamed variable
   let regionGenerator: RegionGenerator;
   let model: BaseLanguageModel;
   let service: LLMObjectGenerationService;
 
   // Set up the test environment with Ollama
   // Create a logger for test output with VERBOSE level
-  const testLogger = createTestLogger("AreaGeneratorTest");
+  const testLogger = createTestLogger("AreaMetadataGeneratorTest"); // Renamed logger context
 
   // Set logger to VERBOSE level to see all logs
   testLogger.setVerbosityLevel(VerbosityLevel.VERBOSE);
@@ -53,12 +56,16 @@ describe("E2E: AreaGenerator", () => {
 
     // Create the generators with a null logger to prevent duplicate logging
     // This way only the LLM service will log the prompts and responses
-    areaGenerator = new AreaGenerator(model, service, nullLogger);
+    areaMetadataGenerator = new AreaMetadataGenerator( // Correct variable name
+      model,
+      service,
+      nullLogger
+    );
     regionGenerator = new RegionGenerator(
       model,
       service,
       nullLogger,
-      areaGenerator
+      areaMetadataGenerator // Correct variable name
     );
   });
 
@@ -72,7 +79,7 @@ describe("E2E: AreaGenerator", () => {
     };
 
     // Generate the area
-    const result = await areaGenerator.generate(prompt);
+    const result = await areaMetadataGenerator.generate(prompt); // Correct variable name
 
     // Log the final result
     testLogger.info("E2E Generated Area:", result);

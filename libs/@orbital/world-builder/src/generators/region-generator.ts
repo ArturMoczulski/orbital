@@ -68,13 +68,13 @@ export class RegionGenerator extends ObjectGenerator<
    * @param model The language model to use for generation
    * @param generationService The service to use for LLM object generation
    * @param logger The logger to use
-   * @param areaGenerator Optional AreaGenerator to use for generating individual areas
+   * @param areaMetadataGenerator Optional AreaMetadataGenerator to use for generating individual areas
    */
   constructor(
     model: BaseLanguageModel,
     generationService: LLMObjectGenerationService,
     logger: Logger,
-    private areaGenerator?: AreaGenerator // Will be imported later to avoid circular dependency
+    private areaMetadataGenerator?: AreaMetadataGenerator // Will be imported later to avoid circular dependency
   ) {
     super(model, generationService, logger);
   }
@@ -83,8 +83,8 @@ export class RegionGenerator extends ObjectGenerator<
    * Sets the area generator to use
    * @param areaGenerator The area generator to use
    */
-  setAreaGenerator(areaGenerator: AreaGenerator): void {
-    this.areaGenerator = areaGenerator;
+  setAreaMetadataGenerator(areaMetadataGenerator: AreaMetadataGenerator): void {
+    this.areaMetadataGenerator = areaMetadataGenerator;
   }
 
   /**
@@ -147,8 +147,10 @@ Number of Areas: ${promptData.areaCount || 5}
    * @returns A Promise resolving to an array of connected Area instances
    */
   async generate(promptData: RegionGenerationInputProps): Promise<Area[]> {
-    if (!this.areaGenerator) {
-      throw new Error("AreaGenerator must be set before generating regions");
+    if (!this.areaMetadataGenerator) {
+      throw new Error(
+        "AreaMetadataGenerator must be set before generating regions"
+      );
     }
 
     // Set default values for any missing prompt fields
@@ -165,7 +167,7 @@ Number of Areas: ${promptData.areaCount || 5}
     // Generate or use the base area
     const firstArea =
       promptData.baseArea ||
-      (await this.areaGenerator.generate({
+      (await this.areaMetadataGenerator.generate({
         theme: fullPrompt.theme,
         mood: fullPrompt.mood,
         purpose: fullPrompt.purpose,
@@ -186,7 +188,9 @@ Number of Areas: ${promptData.areaCount || 5}
       };
 
       // Generate a new area
-      const newArea = await this.areaGenerator.generate(connectedPrompt);
+      const newArea = await this.areaMetadataGenerator.generate(
+        connectedPrompt
+      );
 
       // Explicitly set a different position to ensure non-zero distance
       // We'll use a simple pattern to place areas in a circle around the first area
@@ -212,4 +216,4 @@ Number of Areas: ${promptData.areaCount || 5}
 }
 
 // Import at the end to avoid circular dependency
-import { AreaGenerator } from "./area-generator";
+import { AreaMetadataGenerator } from "./area-metadata-generator";
