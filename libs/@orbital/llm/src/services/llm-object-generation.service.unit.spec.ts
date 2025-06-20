@@ -239,4 +239,66 @@ describe("LLMObjectGenerationService", () => {
     expect(actualContent).toContain('"expected":"number"');
     expect(actualContent).toContain('"received":"string"');
   });
+
+  it("should preserve assistant responses when preserveResponses option is true", async () => {
+    // Create valid responses for both calls
+    const firstResponse = JSON.stringify({
+      name: "Test User",
+      age: 30,
+      isActive: true,
+    });
+
+    const secondResponse = JSON.stringify({
+      name: "Test User 2",
+      age: 40,
+      isActive: false,
+    });
+
+    // No errors this time
+    const mockLLM = createMockLLM([firstResponse, secondResponse]);
+
+    const logger = createTestLogger("LLMObjectGeneration-Unit");
+    const service = new LLMObjectGenerationService(
+      mockLLM as unknown as BaseLanguageModel<any, any>,
+      { logErrors: false, logger }
+    );
+
+    // First generation with preserveResponses = true
+    await service.generateObject<TestObject>(
+      TestSchema,
+      buildMessages,
+      undefined,
+      0,
+      [],
+      { preserveResponses: true }
+    );
+
+    // Second generation should include the previous assistant response
+    const result = await service.generateObject<TestObject>(
+      TestSchema,
+      buildMessages,
+      undefined,
+      0,
+      [],
+      { preserveResponses: true }
+    );
+
+    // Verify the result is correct
+    expect(result.output).toEqual({
+      name: "Test User 2",
+      age: 40,
+      isActive: false,
+    });
+
+    // The second call to invoke should have more than 2 messages (system + human)
+    // if it's including previous assistant responses
+    const secondCallArgs = mockLLM.invoke.mock.calls[1][0];
+    expect(secondCallArgs.length).toBeGreaterThan(2);
+
+    // Verify that at least one of the messages is an AIMessage
+    const hasAIMessage = secondCallArgs.some(
+      (msg: any) => msg instanceof AIMessage
+    );
+    expect(hasAIMessage).toBe(true);
+  });
 });

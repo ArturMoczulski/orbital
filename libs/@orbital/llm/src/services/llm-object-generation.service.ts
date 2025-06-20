@@ -1,6 +1,10 @@
 import { BaseLanguageModel } from "@langchain/core/language_models/base";
 import { StructuredOutputParser } from "@langchain/core/output_parsers";
-import { HumanMessage, SystemMessage } from "@langchain/core/messages";
+import {
+  HumanMessage,
+  SystemMessage,
+  AIMessage,
+} from "@langchain/core/messages";
 import { ZodSchema, ZodError } from "zod";
 import { AbstractService, Logger, ConsoleLogger } from "@orbital/core";
 import { GenerationResult } from "../types";
@@ -15,6 +19,14 @@ export interface LLMObjectGenerationOptions {
   logErrors?: boolean;
   /** Logger to use for logging */
   logger?: Logger;
+}
+
+/**
+ * Options for a specific object generation request
+ */
+export interface GenerateObjectOptions {
+  /** Whether to preserve assistant responses in the conversation history */
+  preserveResponses?: boolean;
 }
 
 /**
@@ -35,6 +47,7 @@ export class LLMObjectGenerationService extends AbstractService {
   private logErrors: boolean;
   private model: BaseLanguageModel;
   private accumulatedIssues: Record<string, any>[] = [];
+  private assistantResponses: AIMessage[] = [];
 
   /**
    * Creates a new LLMObjectGenerationService
@@ -73,6 +86,7 @@ export class LLMObjectGenerationService extends AbstractService {
    * @param example Optional example object to include in the prompt
    * @param retryCount Current retry count (used internally)
    * @param previousIssues Previous validation issues (used internally)
+   * @param options Generation options for this specific request
    * @returns A Promise resolving to the generation result containing the generated object and prompt
    */
   async generateObject<T>(
@@ -80,11 +94,16 @@ export class LLMObjectGenerationService extends AbstractService {
     buildMessages: (retryCount: number) => LLMPromptMessages,
     example?: T,
     retryCount: number = 0,
-    previousIssues: Record<string, any>[] = []
+    previousIssues: Record<string, any>[] = [],
+    options: GenerateObjectOptions = {}
   ): Promise<GenerationResult<T>> {
     // Initialize accumulated issues with previous issues on first call
     if (retryCount === 0) {
       this.accumulatedIssues = [...previousIssues];
+      // Reset assistant responses when starting a new generation
+      if (!options.preserveResponses) {
+        this.assistantResponses = [];
+      }
     }
 
     // Create parser and get format instructions
@@ -97,7 +116,8 @@ export class LLMObjectGenerationService extends AbstractService {
         buildMessages,
         retryCount,
         formatInstructions,
-        example
+        example,
+        options
       );
 
     // Log the prompt
@@ -111,7 +131,9 @@ export class LLMObjectGenerationService extends AbstractService {
         formattedSystem,
         messageWithInstructions,
         parser,
-        retryCount
+        retryCount,
+        options,
+        buildMessages
       );
 
       // Return the parsed result and prompt
@@ -126,7 +148,8 @@ export class LLMObjectGenerationService extends AbstractService {
         schema,
         buildMessages,
         retryCount,
-        example
+        example,
+        options
       );
     }
   }
@@ -143,7 +166,8 @@ export class LLMObjectGenerationService extends AbstractService {
     buildMessages: (retryCount: number) => LLMPromptMessages,
     retryCount: number,
     formatInstructions: string,
-    example?: T
+    example?: T,
+    options: GenerateObjectOptions = {}
   ) {
     // Build the messages for this attempt
     const { system: baseSystem, human } = buildMessages(retryCount);
@@ -164,9 +188,41 @@ export class LLMObjectGenerationService extends AbstractService {
       retryCount === 0 ? new HumanMessage(enhancedContent) : human;
 
     // Construct the full prompt for logging and returning
-    const fullPrompt = `SYSTEM: ${formattedSystem.content}\n\nHUMAN: ${messageWithInstructions.content}`;
+    let fullPrompt = `SYSTEM: ${formattedSystem.content}\n\nHUMAN: ${messageWithInstructions.content}`;
 
     return { formattedSystem, messageWithInstructions, fullPrompt };
+  }
+
+  /**
+   * Builds the complete message array including system, human, and optionally assistant messages
+   * @param system System message
+   * @param human Human message
+   * @param options Generation options
+   * @returns Array of messages to send to the model, including previous assistant responses if preserveResponses is true
+   */
+  protected buildMessageArray(
+    system: SystemMessage,
+    human: HumanMessage,
+    options: GenerateObjectOptions = {}
+  ) {
+    const messages = [system];
+
+    // If preserveResponses is true and we have assistant responses,
+    // add them to the conversation
+    if (options.preserveResponses && this.assistantResponses.length > 0) {
+      // First add the human message
+      messages.push(human);
+
+      // Then add all assistant responses
+      for (const response of this.assistantResponses) {
+        messages.push(response);
+      }
+    } else {
+      // If not preserving responses, just add the human message
+      messages.push(human);
+    }
+
+    return messages;
   }
 
   /**
@@ -204,13 +260,30 @@ export class LLMObjectGenerationService extends AbstractService {
     formattedSystem: SystemMessage,
     messageWithInstructions: HumanMessage,
     parser: any,
-    retryCount: number
+    retryCount: number,
+    options: GenerateObjectOptions = {},
+    buildMessages?: (retryCount: number) => LLMPromptMessages
   ): Promise<unknown> {
     // Generate the object data using the LLM
-    const response = await this.model.invoke([
+    const messages = this.buildMessageArray(
       formattedSystem,
       messageWithInstructions,
-    ]);
+      options
+    );
+
+    const response = await this.model.invoke(messages);
+
+    // Store the assistant response if we're preserving responses
+    if (options.preserveResponses) {
+      if (response instanceof AIMessage) {
+        this.assistantResponses.push(response);
+      } else {
+        // If response is not an AIMessage, convert it to one
+        this.assistantResponses.push(
+          new AIMessage({ content: response.content })
+        );
+      }
+    }
 
     // Parse the response using the structured output parser
     const result = await parser.parse(response.content);
@@ -239,7 +312,8 @@ export class LLMObjectGenerationService extends AbstractService {
     schema: ZodSchema<T>,
     buildMessages: (retryCount: number) => LLMPromptMessages,
     retryCount: number,
-    example?: T
+    example?: T,
+    options: GenerateObjectOptions = {}
   ): Promise<GenerationResult<T>> {
     // Log the error if enabled
     if (this.logErrors) {
@@ -271,7 +345,8 @@ export class LLMObjectGenerationService extends AbstractService {
       buildMessagesWithFeedback,
       example,
       retryCount + 1,
-      this.accumulatedIssues
+      this.accumulatedIssues,
+      options
     );
   }
 
