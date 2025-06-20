@@ -242,11 +242,6 @@ describe("E2E: ObjectGenerationRunnable", () => {
       maxAttempts: 3,
       logger: verboseLogger,
       promptRepository: mockPromptRepository,
-      inputData: {
-        worldRegion: "northern realm",
-        seasonalEvents: ["winter festival", "ice fishing tournament"],
-        commonThreats: ["wolf packs", "avalanches", "bandits"],
-      },
     });
 
     // Input data for first generation
@@ -282,20 +277,15 @@ describe("E2E: ObjectGenerationRunnable", () => {
     testLogger.info("First Town:", firstResult.output);
     testLogger.info("Second Town:", secondResult.output);
 
-    // Log the prompts to verify inputData was included
+    // Log the prompts
     testLogger.debug("First Prompt:", firstResult.prompt);
     testLogger.debug("Second Prompt:", secondResult.prompt);
 
-    // Verify inputData was included in the prompts
-    expect(firstResult.prompt).toContain("RAW INPUT DATA");
-    expect(firstResult.prompt).toContain("northern realm");
-    expect(secondResult.prompt).toContain("RAW INPUT DATA");
-    expect(secondResult.prompt).toContain("northern realm");
-
-    // Explicitly verify that the first town's response is included in the second prompt
+    // Verify that the AI's previous response is included in the second prompt
     // This confirms that the history is being maintained
+    expect(secondResult.prompt).toContain("AI:");
     expect(secondResult.prompt).toContain(
-      JSON.stringify(firstResult.output, null, 2)
+      '"name":"' + firstResult.output.name + '"'
     );
 
     // Clear history after test

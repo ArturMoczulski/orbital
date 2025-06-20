@@ -12,6 +12,7 @@ import {
 import { BaseLanguageModel } from "@langchain/core/language_models/base";
 import { StructuredOutputParser } from "@langchain/core/output_parsers";
 import { OutputFixingParser } from "langchain/output_parsers";
+import { z } from "zod";
 import {
   InMemoryChatMessageHistory,
   BaseChatMessageHistory,
@@ -69,8 +70,6 @@ export interface ObjectGenerationRunnableOptions<In, Out> {
   messageHistoryStore?: (sessionId: string) => BaseChatMessageHistory;
   /** Optional logger */
   logger?: Logger;
-  /** Additional inputData embedded in prompt */
-  inputData?: In;
 }
 
 export class ObjectGenerationRunnable<In, Out> extends Runnable<
@@ -88,7 +87,6 @@ export class ObjectGenerationRunnable<In, Out> extends Runnable<
     InMemoryChatMessageHistory
   >();
   protected readonly logger?: Logger;
-  private readonly inputData?: In;
 
   private readonly parser: ReturnType<
     typeof StructuredOutputParser.fromZodSchema
@@ -157,7 +155,6 @@ export class ObjectGenerationRunnable<In, Out> extends Runnable<
     this.systemPrompt = sysPrompt;
     this.maxAttempts = opts.maxAttempts ?? 3;
     this.logger = opts.logger;
-    this.inputData = opts.inputData;
     this.messageHistoryStore = store;
 
     // Parsers
@@ -166,24 +163,41 @@ export class ObjectGenerationRunnable<In, Out> extends Runnable<
   }
 
   protected extractContent(response: BaseMessage): string {
+    let content = "";
+
+    // Extract the content from the response
     if (response instanceof AIMessage) {
-      return typeof response.content === "string"
-        ? response.content
-        : JSON.stringify(response.content);
+      content =
+        typeof response.content === "string"
+          ? response.content
+          : JSON.stringify(response.content);
     } else if (typeof response === "string") {
-      return response;
+      content = response;
     } else if (response && typeof (response as any).content === "string") {
-      return (response as any).content;
+      content = (response as any).content;
     } else if (response) {
       try {
         const str = JSON.stringify(response);
         const parsed = JSON.parse(str);
-        return parsed.invoke?.kwargs?.content ?? parsed.content ?? str;
+        content = parsed.invoke?.kwargs?.content ?? parsed.content ?? str;
       } catch {
-        return String(response);
+        content = String(response);
       }
     }
-    return "";
+
+    // Remove markdown code fences if present
+    if (content) {
+      // Remove ```json and ``` markers
+      content = content.replace(/```json\s*/g, "").replace(/```\s*$/g, "");
+
+      // If the content starts with a { and ends with a }, it's likely JSON
+      const jsonMatch = content.match(/^\s*(\{[\s\S]*\})\s*$/);
+      if (jsonMatch) {
+        return jsonMatch[1];
+      }
+    }
+
+    return content || "";
   }
 
   protected async parseContent(
@@ -225,19 +239,14 @@ export class ObjectGenerationRunnable<In, Out> extends Runnable<
       "INPUT:",
       JSON.stringify(validated, null, 2),
       "",
-      "IMPORTANT: Return **ONLY** raw JSON (no markdown).",
+      "IMPORTANT: Return **ONLY** raw JSON without any markdown formatting or code fences. Do NOT wrap your response in ```json ... ``` tags.",
     ];
-    if (this.inputData !== undefined) {
-      humanLines.push(
-        "",
-        "RAW INPUT DATA:",
-        JSON.stringify(this.inputData, null, 2)
-      );
-    }
 
     const messages: BaseMessage[] = [
       new SystemMessage(
-        `${this.systemPrompt}\n\n${this.parser.getFormatInstructions()}`
+        `${
+          this.systemPrompt
+        }\n\n${this.parser.getFormatInstructions()}\n\nIMPORTANT OVERRIDE: Return ONLY raw JSON without any markdown formatting or code fences. Do NOT wrap your response in \`\`\`json ... \`\`\` tags.`
       ),
       ...(useHistory
         ? await this.messageHistoryStore(sessionId).getMessages()
