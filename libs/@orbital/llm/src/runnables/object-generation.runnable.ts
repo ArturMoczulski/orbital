@@ -67,16 +67,26 @@ export const createRunnableRetry = <T, U>(
 /* Interfaces                                                   */
 /* ------------------------------------------------------------ */
 
+/**
+ * Options for ObjectGenerationRunnable
+ */
 export interface ObjectGenerationRunnableOptions<In, Out> {
-  schema: ZodSchema<Out>;
+  /** Schema for validating the input */
+  inputSchema: ZodSchema<In>;
+  /** Schema for validating the output */
+  outputSchema: ZodSchema<Out>;
+  /** Language model to use for generation */
   model: BaseLanguageModel;
+  /** System prompt to use for generation */
   systemPrompt: string;
+  /** Maximum number of retry attempts */
   maxAttempts?: number;
+  /** Function to get a message history store for a session */
   messageHistoryStore?: (sessionId: string) => BaseChatMessageHistory;
   /** Optional logger for verbose prompt and debug response logging */
   logger?: Logger;
   /** Optional input data to include in the prompt */
-  inputData?: In;
+  inputData?: In; // Keep inputData for now, might be removed later if inputSchema is sufficient
 }
 
 /* ------------------------------------------------------------ */
@@ -87,7 +97,8 @@ export class ObjectGenerationRunnable<In, Out> extends Runnable<
   In,
   GenerationResult<Out>
 > {
-  private readonly schema: ZodSchema<Out>;
+  private readonly inputSchema: ZodSchema<In>;
+  private readonly outputSchema: ZodSchema<Out>;
   private readonly model: BaseLanguageModel;
   private readonly systemPrompt: string;
   private readonly maxAttempts: number;
@@ -100,7 +111,7 @@ export class ObjectGenerationRunnable<In, Out> extends Runnable<
   // Components for generation
   private readonly parser: StructuredOutputParser<any>;
   private readonly fixingParser: any; // OutputFixingParser
-  private readonly logger?: Logger;
+  protected readonly logger?: Logger;
   private readonly inputData?: In; // Add inputData property
 
   lc_namespace = ["orbital", "object-generation"];
@@ -108,7 +119,8 @@ export class ObjectGenerationRunnable<In, Out> extends Runnable<
   constructor(opts: ObjectGenerationRunnableOptions<In, Out>) {
     super();
 
-    this.schema = opts.schema;
+    this.inputSchema = opts.inputSchema;
+    this.outputSchema = opts.outputSchema;
     this.model = opts.model;
     this.systemPrompt = opts.systemPrompt;
     this.maxAttempts = opts.maxAttempts ?? 3;
@@ -126,7 +138,7 @@ export class ObjectGenerationRunnable<In, Out> extends Runnable<
       });
 
     /* ---------- Parsers ---------- */
-    this.parser = StructuredOutputParser.fromZodSchema(this.schema);
+    this.parser = StructuredOutputParser.fromZodSchema(this.outputSchema);
     this.fixingParser = OutputFixingParser.fromLLM(this.model, this.parser);
   }
 
@@ -205,7 +217,7 @@ export class ObjectGenerationRunnable<In, Out> extends Runnable<
             parsedOutput = JSON.parse(extracted);
 
             // Validate against schema
-            const validation = this.schema.safeParse(parsedOutput);
+            const validation = this.outputSchema.safeParse(parsedOutput);
             if (!validation.success) {
               throw new Error("Extracted JSON doesn't match schema");
             }
@@ -372,6 +384,12 @@ export class ObjectGenerationRunnable<In, Out> extends Runnable<
       throw new Error("config.configurable.sessionId is required");
     }
 
+    // Validate input against the input schema
+    const validatedInput = this.inputSchema.parse(input);
+    if (this.logger) {
+      this.logger.debug("Input validated:", validatedInput);
+    }
+
     let capturedPrompt = "";
     const sessionId = config.configurable.sessionId as string;
     const useHistory = config.configurable.useHistory !== false;
@@ -379,7 +397,7 @@ export class ObjectGenerationRunnable<In, Out> extends Runnable<
     // Create a function to generate the messages
     const generateMessages = async () => {
       const result = await this.generatePromptMessages(
-        input,
+        validatedInput, // Use validated input
         sessionId,
         useHistory
       );

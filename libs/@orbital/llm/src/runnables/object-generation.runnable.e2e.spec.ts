@@ -51,7 +51,8 @@ describe("E2E: ObjectGenerationRunnable", () => {
   it("should generate a structured town object based on a schema", async () => {
     // Create the runnable
     const townGenerator = new ObjectGenerationRunnable<any, Town>({
-      schema: TownSchema,
+      inputSchema: z.any(), // Dummy input schema for E2E tests
+      outputSchema: TownSchema,
       model: model,
       systemPrompt: "You are a generator of realistic fantasy towns.",
       maxAttempts: 3,
@@ -145,7 +146,8 @@ describe("E2E: ObjectGenerationRunnable", () => {
     // Create the runnable
     const complexTownGenerator = new ObjectGenerationRunnable<any, ComplexTown>(
       {
-        schema: ComplexTownSchema,
+        inputSchema: z.any(), // Dummy input schema for E2E tests
+        outputSchema: ComplexTownSchema,
         model: model,
         systemPrompt:
           "You are a generator of detailed fantasy towns with rich histories and economies.",
@@ -208,7 +210,8 @@ describe("E2E: ObjectGenerationRunnable", () => {
   it("should maintain conversation history when useHistory is true", async () => {
     // Create the runnable with history and inputData
     const townGenerator = new ObjectGenerationRunnable<any, Town>({
-      schema: TownSchema,
+      inputSchema: z.any(), // Dummy input schema for E2E tests
+      outputSchema: TownSchema,
       model: model,
       systemPrompt: "You are a generator of realistic fantasy towns.",
       maxAttempts: 3,
@@ -313,7 +316,8 @@ describe("E2E: ObjectGenerationRunnable", () => {
       any,
       ConstrainedTown
     >({
-      schema: ConstrainedTownSchema,
+      inputSchema: z.any(), // Dummy input schema for E2E tests
+      outputSchema: ConstrainedTownSchema,
       model: model,
       systemPrompt:
         "You are a generator of medieval towns. Follow the constraints exactly.",

@@ -98,7 +98,8 @@ describe("ObjectGenerationRunnable", () => {
       TownInput,
       z.infer<typeof townSchema>
     >({
-      schema: townSchema,
+      inputSchema: z.any(), // Dummy input schema for base class tests
+      outputSchema: townSchema,
       model: mockLLM as unknown as BaseLanguageModel,
       systemPrompt: "You are a generator of realistic fantasy towns.",
       maxAttempts: 3,
@@ -142,7 +143,8 @@ describe("ObjectGenerationRunnable", () => {
       TownInput,
       z.infer<typeof townSchema>
     >({
-      schema: townSchema,
+      inputSchema: z.any(), // Dummy input schema for base class tests
+      outputSchema: townSchema,
       model: mockLLM as unknown as BaseLanguageModel,
       systemPrompt: "You are a generator of realistic fantasy towns.",
       maxAttempts: 3,
@@ -190,7 +192,8 @@ describe("ObjectGenerationRunnable", () => {
       TownInput,
       z.infer<typeof townSchema>
     >({
-      schema: townSchema,
+      inputSchema: z.any(), // Dummy input schema for base class tests
+      outputSchema: townSchema,
       model: mockLLM as unknown as BaseLanguageModel,
       systemPrompt: "You are a generator of realistic fantasy towns.",
       maxAttempts: 3,
@@ -242,7 +245,8 @@ describe("ObjectGenerationRunnable", () => {
       TownInput,
       z.infer<typeof townSchema>
     >({
-      schema: townSchema,
+      inputSchema: z.any(), // Dummy input schema for base class tests
+      outputSchema: townSchema,
       model: mockLLM as unknown as BaseLanguageModel,
       systemPrompt: "You are a generator of realistic fantasy towns.",
       maxAttempts: 3,

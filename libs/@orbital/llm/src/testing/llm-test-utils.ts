@@ -1,6 +1,5 @@
 import { ChatOllama } from "@langchain/community/chat_models/ollama";
 import { BaseLanguageModel } from "@langchain/core/language_models/base";
-import { LLMObjectGenerationService } from "../services/llm-object-generation.service";
 import { Logger } from "@orbital/core";
 
 /**
@@ -66,25 +65,6 @@ export function createOllamaModel(
 }
 
 /**
- * Creates an LLMObjectGenerationService instance for testing
- * @param model The language model to use
- * @param options Configuration options
- * @returns An LLMObjectGenerationService instance
- */
-export function createLLMObjectGenerationService(
-  model: BaseLanguageModel,
-  options: TestLLMOptions = {}
-): LLMObjectGenerationService {
-  const mergedOptions = { ...DEFAULT_TEST_LLM_OPTIONS, ...options };
-
-  return new LLMObjectGenerationService(model, {
-    maxRetries: mergedOptions.maxRetries,
-    logErrors: mergedOptions.logErrors,
-    logger: mergedOptions.logger,
-  });
-}
-
-/**
  * Sets up a test environment with Ollama and LLMObjectGenerationService
  * This function checks if Ollama is available, creates a model and service,
  * and returns them for use in tests.
@@ -119,17 +99,4 @@ export async function setupOllamaForTest(
     "setupOllamaForTest is deprecated. Use setupOllamaTest instead."
   );
   return await setupOllamaTest(options);
-}
-
-/**
- * @deprecated Use createLLMObjectGenerationService instead
- */
-export function createLLMServiceForTest(
-  model: BaseLanguageModel,
-  options: TestLLMOptions = {}
-): LLMObjectGenerationService {
-  console.warn(
-    "createLLMServiceForTest is deprecated. Use createLLMObjectGenerationService instead."
-  );
-  return createLLMObjectGenerationService(model, options);
 }
