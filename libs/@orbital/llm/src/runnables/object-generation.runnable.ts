@@ -17,7 +17,7 @@ import {
   InMemoryChatMessageHistory,
   BaseChatMessageHistory,
 } from "@langchain/core/chat_history";
-import { GenerationResult } from "../types";
+// Remove GenerationResult import as we'll use LangChain's built-in verbose mode
 import { IObjectGenerationPromptRepository } from "./object-generation-prompt-repository.interface";
 import {
   AIMessage,
@@ -72,10 +72,7 @@ export interface ObjectGenerationRunnableOptions<In, Out> {
   logger?: Logger;
 }
 
-export class ObjectGenerationRunnable<In, Out> extends Runnable<
-  In,
-  GenerationResult<Out>
-> {
+export class ObjectGenerationRunnable<In, Out> extends Runnable<In, Out> {
   private readonly inputSchema: ZodSchema<In>;
   private readonly outputSchema: ZodSchema<Out>;
   private readonly model: BaseLanguageModel;
@@ -203,7 +200,7 @@ export class ObjectGenerationRunnable<In, Out> extends Runnable<
   protected async parseContent(
     content: string,
     capturedPrompt: string
-  ): Promise<GenerationResult<Out>> {
+  ): Promise<Out> {
     let parsed: any;
     try {
       parsed = await this.parser.parse(content);
@@ -222,7 +219,8 @@ export class ObjectGenerationRunnable<In, Out> extends Runnable<
         }
       }
     }
-    return { output: parsed as Out, prompt: capturedPrompt };
+
+    return parsed as Out;
   }
 
   protected async generatePromptMessages(
@@ -285,11 +283,11 @@ export class ObjectGenerationRunnable<In, Out> extends Runnable<
     if (this.logger) {
       if (this.logger.getVerbosityLevel() === VerbosityLevel.VERBOSE) {
         this.logger.debug("LLM output with prompt:", {
-          output: result.output,
+          output: result,
           prompt: capturedPrompt,
         });
       } else {
-        this.logger.debug("LLM output:", result.output);
+        this.logger.debug("LLM output:", result);
       }
     }
     return result;
@@ -297,7 +295,7 @@ export class ObjectGenerationRunnable<In, Out> extends Runnable<
 
   protected createAndExecuteSequence(
     generate: () => Promise<BaseMessage[]>,
-    process: (r: BaseMessage) => Promise<GenerationResult<Out>>,
+    process: (r: BaseMessage) => Promise<Out>,
     config?: RunnableConfig
   ) {
     const seq = RunnableSequence.from([generate, this.model, process]);
@@ -310,10 +308,7 @@ export class ObjectGenerationRunnable<In, Out> extends Runnable<
     }).invoke(null, config);
   }
 
-  async invoke(
-    input: In,
-    config?: RunnableConfig
-  ): Promise<GenerationResult<Out>> {
+  async invoke(input: In, config?: RunnableConfig): Promise<Out> {
     if (!config?.configurable?.sessionId)
       throw new Error("configurable.sessionId is required");
     const sessionId = config.configurable.sessionId;
@@ -339,7 +334,7 @@ export class ObjectGenerationRunnable<In, Out> extends Runnable<
     const cfgs = Array.isArray(configs)
       ? configs
       : inputs.map(() => configs as RunnableConfig);
-    const out: GenerationResult<Out>[] = [];
+    const out: Out[] = [];
     for (let i = 0; i < inputs.length; i++) {
       out.push(await this.invoke(inputs[i], cfgs[i]));
     }

@@ -134,13 +134,12 @@ describe("ObjectGenerationRunnable", () => {
     });
 
     // Verify the result
-    expect(result.output).toEqual({
+    expect(result).toEqual({
       name: "Frostmere",
       population: 217,
       description: "A small, cold town with unfriendly inhabitants",
       pointsOfInterest: ["Frozen Lake", "Old Watchtower"],
     });
-    expect(result.prompt).toBeDefined();
   });
 
   it("should handle invalid JSON using the fixing parser", async () => {
@@ -183,7 +182,7 @@ describe("ObjectGenerationRunnable", () => {
     });
 
     // Verify the result
-    expect(result.output).toEqual({
+    expect(result).toEqual({
       name: "Frostmere",
       population: 217,
       description: "A small, cold town with unfriendly inhabitants",
@@ -236,7 +235,7 @@ describe("ObjectGenerationRunnable", () => {
     });
 
     // Verify the result
-    expect(result.output).toEqual({
+    expect(result).toEqual({
       name: "Frostmere",
       population: 217,
       description: "A small, cold town with unfriendly inhabitants",
@@ -290,7 +289,7 @@ describe("ObjectGenerationRunnable", () => {
     });
 
     // Verify the result
-    expect(result.output).toBeDefined();
+    expect(result).toBeDefined();
 
     // Verify the prompt repository was called with the correct key
     expect(keyPromptRepo.get).toHaveBeenCalledWith("fantasy_town");
@@ -342,7 +341,7 @@ describe("ObjectGenerationRunnable", () => {
     });
 
     // Verify the result
-    expect(result.output).toBeDefined();
+    expect(result).toBeDefined();
 
     // Verify the prompt repository was called with the inferred key
     expect(inferencePromptRepo.inferKey).toHaveBeenCalledWith("Town");
@@ -481,11 +480,10 @@ describe("ObjectGenerationRunnable", () => {
     });
 
     // Verify the result
-    expect(result.output).toBeDefined();
+    expect(result).toBeDefined();
 
     // Verify the direct prompt was used (repository should not be called)
     expect(priorityPromptRepo.get).not.toHaveBeenCalled();
-    expect(result.prompt).toContain(directPrompt);
   });
 
   it("should throw error when no system prompt is provided", async () => {
@@ -574,7 +572,7 @@ describe("ObjectGenerationRunnable", () => {
     });
 
     // Verify the result
-    expect(result.output).toBeDefined();
+    expect(result).toBeDefined();
 
     // Verify the custom registry was used
     expect(mockSchemaRegistry.get).toHaveBeenCalledWith(CustomTown);
