@@ -1,12 +1,12 @@
 /* libs/@orbital/llm/src/runnables/object-generation.runnable.ts */
 
-import { ZodSchema } from "zod";
-import { VerbosityLevel } from "@orbital/core";
+import type { ZodSchema } from "zod";
+import { VerbosityLevel, zodSchemaRegistry } from "@orbital/core";
 import type { Logger } from "@orbital/core";
+
 import {
   Runnable,
   RunnableConfig,
-  RunnableRetry,
   RunnableSequence,
 } from "@langchain/core/runnables";
 import { BaseLanguageModel } from "@langchain/core/language_models/base";
@@ -17,6 +17,7 @@ import {
   BaseChatMessageHistory,
 } from "@langchain/core/chat_history";
 import { GenerationResult } from "../types";
+import { IObjectGenerationPromptRepository } from "./object-generation-prompt-repository.interface";
 import {
   AIMessage,
   BaseMessage,
@@ -24,74 +25,53 @@ import {
   SystemMessage,
 } from "@langchain/core/messages";
 
-// Factory function for creating a RunnableRetry
-// This allows us to mock it in tests
+// Factory for retry logic (mockable in tests)
 export const createRunnableRetry = <T, U>(
   runnable: Runnable<T, U>,
   options: {
     stopAfterAttempt: number;
     onFailedAttempt?: (error: Error, attemptNumber: number) => void;
   }
-) => {
-  // In a real implementation, this would use withRetry
-  // But for simplicity and to avoid test issues, we'll implement a simple retry mechanism
-  return {
-    invoke: async (input: any, config?: RunnableConfig) => {
-      let lastError: Error | null = null;
-
-      for (let attempt = 1; attempt <= options.stopAfterAttempt; attempt++) {
-        try {
-          return await runnable.invoke(input, config);
-        } catch (error) {
-          lastError = error as Error;
-          if (options.onFailedAttempt) {
-            options.onFailedAttempt(lastError, attempt);
-          }
-        }
+) => ({
+  invoke: async (input: any, config?: RunnableConfig) => {
+    let lastError: Error | null = null;
+    for (let attempt = 1; attempt <= options.stopAfterAttempt; attempt++) {
+      try {
+        return await runnable.invoke(input, config);
+      } catch (err) {
+        lastError = err as Error;
+        options.onFailedAttempt?.(lastError, attempt);
       }
+    }
+    if (lastError) throw lastError;
+    throw new Error("Retry failed for unknown reason");
+  },
+});
 
-      // If we've exhausted all attempts, throw the last error
-      if (lastError) {
-        throw lastError;
-      }
-
-      // This should never happen, but TypeScript requires a return value
-      throw new Error("Retry failed for unknown reason");
-    },
-  };
-};
-
-/* ------------------------------------------------------------ */
-/* ------------------------------------------------------------ */
-
-/* Interfaces                                                   */
-/* ------------------------------------------------------------ */
-
-/**
- * Options for ObjectGenerationRunnable
- */
 export interface ObjectGenerationRunnableOptions<In, Out> {
-  /** Schema for validating the input */
-  inputSchema: ZodSchema<In>;
-  /** Schema for validating the output */
-  outputSchema: ZodSchema<Out>;
-  /** Language model to use for generation */
+  /** LLM model to use */
   model: BaseLanguageModel;
-  /** System prompt to use for generation */
-  systemPrompt: string;
-  /** Maximum number of retry attempts */
+  /** Override or infer input schema */
+  inputSchema?: ZodSchema<In>;
+  /** Override or infer output schema */
+  outputSchema?: ZodSchema<Out>;
+  /** Override the Zod registry */
+  schemaRegistry?: typeof zodSchemaRegistry;
+  /** Prompt repository (optional if systemPrompt is provided) */
+  promptRepository?: IObjectGenerationPromptRepository;
+  /** Literal system prompt */
+  systemPrompt?: string;
+  /** Key lookup for system prompt */
+  systemPromptKey?: string;
+  /** Retry attempts */
   maxAttempts?: number;
-  /** Function to get a message history store for a session */
+  /** Chat history store factory */
   messageHistoryStore?: (sessionId: string) => BaseChatMessageHistory;
-  /** Optional logger for verbose prompt and debug response logging */
+  /** Optional logger */
   logger?: Logger;
-  /** Optional input data to include in the prompt */
-  inputData?: In; // Keep inputData for now, might be removed later if inputSchema is sufficient
+  /** Additional inputData embedded in prompt */
+  inputData?: In;
 }
-
-/* ------------------------------------------------------------ */
-/* Runnable                                                     */
-/* ------------------------------------------------------------ */
 
 export class ObjectGenerationRunnable<In, Out> extends Runnable<
   In,
@@ -107,44 +87,84 @@ export class ObjectGenerationRunnable<In, Out> extends Runnable<
     string,
     InMemoryChatMessageHistory
   >();
-
-  // Components for generation
-  private readonly parser: StructuredOutputParser<any>;
-  private readonly fixingParser: any; // OutputFixingParser
   protected readonly logger?: Logger;
-  private readonly inputData?: In; // Add inputData property
+  private readonly inputData?: In;
+
+  private readonly parser: ReturnType<
+    typeof StructuredOutputParser.fromZodSchema
+  >;
+  private readonly fixingParser: ReturnType<typeof OutputFixingParser.fromLLM>;
 
   lc_namespace = ["orbital", "object-generation"];
 
-  constructor(opts: ObjectGenerationRunnableOptions<In, Out>) {
+  constructor(
+    /** Decorated type for inference */
+    private readonly type: new (...args: any[]) => any,
+    opts: ObjectGenerationRunnableOptions<In, Out>
+  ) {
     super();
+    // Registry & conventions
+    const registry = opts.schemaRegistry ?? zodSchemaRegistry;
+    const typeName = this.type.name ?? "";
 
-    this.inputSchema = opts.inputSchema;
-    this.outputSchema = opts.outputSchema;
-    this.model = opts.model;
-    this.systemPrompt = opts.systemPrompt;
-    this.maxAttempts = opts.maxAttempts ?? 3;
-    this.logger = opts.logger;
-    this.inputData = opts.inputData; // Store inputData
+    // Input schema
+    const inSch =
+      opts.inputSchema ??
+      registry.get((globalThis as any)[`${typeName}GenerationInputSchema`]);
 
-    /* ---------- History backend ---------- */
-    this.messageHistoryStore =
+    if (!inSch) {
+      throw new Error(`Input schema not found for type ${typeName}`);
+    }
+
+    // Output schema
+    const outSch = opts.outputSchema ?? registry.get(this.type as object);
+
+    if (!outSch) {
+      throw new Error(`Output schema not found for type ${typeName}`);
+    }
+
+    // Prompt
+    const promptRepo = opts.promptRepository;
+    let sysPrompt = opts.systemPrompt;
+
+    // If no direct system prompt, try to get it from the repository
+    if (!sysPrompt && promptRepo) {
+      if (opts.systemPromptKey) {
+        sysPrompt = promptRepo.get(opts.systemPromptKey);
+      } else if (typeName) {
+        sysPrompt = promptRepo.get(promptRepo.inferKey(typeName));
+      }
+    }
+
+    if (!sysPrompt) {
+      throw new Error(`System prompt not provided`);
+    }
+
+    // History store
+    const store =
       opts.messageHistoryStore ??
-      ((sid) => {
+      ((sid: string) => {
         if (!this.inMemoryHistories.has(sid)) {
           this.inMemoryHistories.set(sid, new InMemoryChatMessageHistory());
         }
         return this.inMemoryHistories.get(sid)!;
       });
 
-    /* ---------- Parsers ---------- */
+    // Assign
+    this.inputSchema = inSch as ZodSchema<In>;
+    this.outputSchema = outSch as ZodSchema<Out>;
+    this.model = opts.model;
+    this.systemPrompt = sysPrompt;
+    this.maxAttempts = opts.maxAttempts ?? 3;
+    this.logger = opts.logger;
+    this.inputData = opts.inputData;
+    this.messageHistoryStore = store;
+
+    // Parsers
     this.parser = StructuredOutputParser.fromZodSchema(this.outputSchema);
     this.fixingParser = OutputFixingParser.fromLLM(this.model, this.parser);
   }
 
-  /**
-   * Extract the raw message content from various response types
-   */
   protected extractContent(response: BaseMessage): string {
     if (response instanceof AIMessage) {
       return typeof response.content === "string"
@@ -152,25 +172,13 @@ export class ObjectGenerationRunnable<In, Out> extends Runnable<
         : JSON.stringify(response.content);
     } else if (typeof response === "string") {
       return response;
-    } else if (response && typeof response.content === "string") {
-      return response.content;
+    } else if (response && typeof (response as any).content === "string") {
+      return (response as any).content;
     } else if (response) {
       try {
-        const stringified = JSON.stringify(response);
-        const parsed = JSON.parse(stringified);
-        // Serialized AIMessage
-        if (
-          parsed.invoke &&
-          parsed.invoke.kwargs &&
-          typeof parsed.invoke.kwargs.content === "string"
-        ) {
-          return parsed.invoke.kwargs.content;
-        }
-        // Direct content
-        if (parsed.content && typeof parsed.content === "string") {
-          return parsed.content;
-        }
-        return stringified;
+        const str = JSON.stringify(response);
+        const parsed = JSON.parse(str);
+        return parsed.invoke?.kwargs?.content ?? parsed.content ?? str;
       } catch {
         return String(response);
       }
@@ -178,98 +186,49 @@ export class ObjectGenerationRunnable<In, Out> extends Runnable<
     return "";
   }
 
-  /**
-   * Parse the content string into the expected output type
-   * Handles parsing errors with fallbacks and test-specific behavior
-   */
   protected async parseContent(
     content: string,
     capturedPrompt: string
   ): Promise<GenerationResult<Out>> {
-    // Parse the response
-    let parsedOutput: any;
+    let parsed: any;
     try {
-      // First try direct parsing
-      parsedOutput = await this.parser.parse(content);
-    } catch (parseError: unknown) {
-      console.warn(
-        "Direct parsing failed:",
-        parseError instanceof Error ? parseError.message : String(parseError)
-      );
-
+      parsed = await this.parser.parse(content);
+    } catch {
       try {
-        // If direct parsing fails, use the fixing parser
-        parsedOutput = await this.fixingParser.parse(content);
-      } catch (fixingError: unknown) {
-        console.warn(
-          "Fixing parser failed:",
-          fixingError instanceof Error
-            ? fixingError.message
-            : String(fixingError)
-        );
-
-        // Last resort - try to extract JSON from the content
-        try {
-          // Try to find any JSON-like structure in the content
-          const jsonMatch = content.match(/\{.*\}/);
-          if (jsonMatch) {
-            const extracted = jsonMatch[0];
-            parsedOutput = JSON.parse(extracted);
-
-            // Validate against schema
-            const validation = this.outputSchema.safeParse(parsedOutput);
-            if (!validation.success) {
-              throw new Error("Extracted JSON doesn't match schema");
-            }
-          } else {
-            throw new Error("No JSON found in content");
-          }
-        } catch (e) {
-          // If all parsing attempts fail, re-throw the original error
-          throw fixingError;
+        parsed = await this.fixingParser.parse(content);
+      } catch {
+        const match = content.match(/\{.*\}/);
+        if (match) {
+          const json = JSON.parse(match[0]);
+          const val = this.outputSchema.safeParse(json);
+          if (!val.success) throw new Error("Schema validation failed");
+          parsed = json;
+        } else {
+          throw new Error("Unable to parse response");
         }
       }
     }
-
-    // Return the result
-    return {
-      output: parsedOutput as Out,
-      prompt: capturedPrompt,
-    };
+    return { output: parsed as Out, prompt: capturedPrompt };
   }
 
-  /**
-   * Generate prompt messages for the LLM
-   * Builds system, history, and human messages and captures the prompt for logging
-   */
   protected async generatePromptMessages(
     input: In,
     sessionId: string,
     useHistory: boolean
-  ): Promise<{ messages: BaseMessage[]; capturedPrompt: string }> {
-    // Format the input
-    const formattedInput = JSON.stringify(input, null, 2);
-    const formatInstructions = this.parser.getFormatInstructions();
+  ) {
+    const validated = this.inputSchema.parse(input);
+    this.logger?.debug("Input validated:", validated);
 
-    // Get history if enabled
-    const historyMessages =
-      sessionId && useHistory
-        ? await this.messageHistoryStore(sessionId).getMessages()
-        : [];
-
-    // Build messages array
-    const humanMessageContent = [
+    const humanLines = [
       "Given the following input, generate an object that **strictly** matches the schema above.",
       "",
       "INPUT:",
-      formattedInput,
+      JSON.stringify(validated, null, 2),
       "",
       "IMPORTANT: Return **ONLY** raw JSON (no markdown).",
     ];
-
-    // Add inputData if provided
     if (this.inputData !== undefined) {
-      humanMessageContent.push(
+      humanLines.push(
         "",
         "RAW INPUT DATA:",
         JSON.stringify(this.inputData, null, 2)
@@ -277,159 +236,100 @@ export class ObjectGenerationRunnable<In, Out> extends Runnable<
     }
 
     const messages: BaseMessage[] = [
-      new SystemMessage(`${this.systemPrompt}\n\n${formatInstructions}`),
-      ...historyMessages,
-      new HumanMessage(humanMessageContent.join("\n")),
+      new SystemMessage(
+        `${this.systemPrompt}\n\n${this.parser.getFormatInstructions()}`
+      ),
+      ...(useHistory
+        ? await this.messageHistoryStore(sessionId).getMessages()
+        : []),
+      new HumanMessage(humanLines.join("\n")),
     ];
 
-    // Capture the prompt for debugging/testing
-    const capturedPrompt = messages
-      .map((m) => {
-        if (m instanceof SystemMessage) return `SYSTEM: ${m.content}`;
-        if (m instanceof HumanMessage) return `HUMAN: ${m.content}`;
-        if (m instanceof AIMessage) return `AI: ${m.content}`;
-        return `MESSAGE: ${m.content}`;
-      })
+    const captured = messages
+      .map((m) =>
+        m instanceof SystemMessage
+          ? `SYSTEM: ${m.content}`
+          : m instanceof HumanMessage
+          ? `HUMAN: ${m.content}`
+          : m instanceof AIMessage
+          ? `AI: ${m.content}`
+          : `MSG: ${(m as any).content}`
+      )
       .join("\n\n");
 
-    if (this.logger) {
-      this.logger.verbose(capturedPrompt);
-    }
-
-    return { messages, capturedPrompt };
+    this.logger?.verbose(captured);
+    return { messages, capturedPrompt: captured };
   }
 
-  /**
-   * Process the LLM response
-   * Handles logging, history storage, content extraction, and parsing
-   */
   protected async processModelResponse(
     response: BaseMessage,
     sessionId: string,
     useHistory: boolean,
     capturedPrompt: string
-  ): Promise<GenerationResult<Out>> {
-    // Store in history if enabled
-    if (sessionId && useHistory && response instanceof AIMessage) {
-      this.messageHistoryStore(sessionId).addMessage(response);
+  ) {
+    if (useHistory && response instanceof AIMessage) {
+      await this.messageHistoryStore(sessionId).addMessage(response);
     }
-
-    // Extract content from the response
     const content = this.extractContent(response);
+    const result = await this.parseContent(content, capturedPrompt);
 
-    const parsed = await this.parseContent(content, capturedPrompt);
-
-    // Log the parsed output at debug level
-    // If verbosity level is VERBOSE, also include the prompt
     if (this.logger) {
-      const isVerbose =
-        this.logger.getVerbosityLevel() === VerbosityLevel.VERBOSE;
-
-      if (isVerbose) {
-        // Include both the output and prompt in verbose mode
-        this.logger.debug(`LLM output with prompt:`, {
-          output: parsed.output,
+      if (this.logger.getVerbosityLevel() === VerbosityLevel.VERBOSE) {
+        this.logger.debug("LLM output with prompt:", {
+          output: result.output,
           prompt: capturedPrompt,
         });
       } else {
-        // Just log the output in debug mode
-        this.logger.debug(`LLM output:`, parsed.output);
+        this.logger.debug("LLM output:", result.output);
       }
     }
-
-    return parsed;
+    return result;
   }
 
-  /**
-   * Create and execute a runnable sequence with retry logic
-   */
   protected createAndExecuteSequence(
-    generateMessages: () => Promise<BaseMessage[]>,
-    processResponse: (response: BaseMessage) => Promise<GenerationResult<Out>>,
+    generate: () => Promise<BaseMessage[]>,
+    process: (r: BaseMessage) => Promise<GenerationResult<Out>>,
     config?: RunnableConfig
-  ): Promise<GenerationResult<Out>> {
-    // Create a runnable sequence that:
-    // 1. Generates messages
-    // 2. Invokes the model
-    // 3. Processes the response
-    const generateSequence = RunnableSequence.from([
-      generateMessages,
-      this.model,
-      processResponse,
-    ]);
-
-    // Wrap the sequence with retry logic using the factory function
-    const retrySequence = createRunnableRetry(generateSequence, {
+  ) {
+    const seq = RunnableSequence.from([generate, this.model, process]);
+    const logger = this.logger;
+    return createRunnableRetry(seq, {
       stopAfterAttempt: this.maxAttempts,
-      onFailedAttempt: (error: Error, attemptNumber: number) => {
-        console.warn(
-          `Attempt ${attemptNumber}/${this.maxAttempts} failed:`,
-          error instanceof Error ? error.message : error
-        );
-      },
-    });
-
-    // Execute the retry sequence
-    return retrySequence.invoke(null, config);
+      onFailedAttempt: (err, att) =>
+        logger &&
+        logger.warn(`Attempt ${att}/${this.maxAttempts} failed:`, err.message),
+    }).invoke(null, config);
   }
 
-  /* -------------------------------------------------------- */
-  /* Public methods                                           */
-  /* -------------------------------------------------------- */
   async invoke(
     input: In,
     config?: RunnableConfig
   ): Promise<GenerationResult<Out>> {
-    if (!config?.configurable?.sessionId) {
-      throw new Error("config.configurable.sessionId is required");
-    }
-
-    // Validate input against the input schema
-    const validatedInput = this.inputSchema.parse(input);
-    if (this.logger) {
-      this.logger.debug("Input validated:", validatedInput);
-    }
-
-    let capturedPrompt = "";
-    const sessionId = config.configurable.sessionId as string;
+    if (!config?.configurable?.sessionId)
+      throw new Error("configurable.sessionId is required");
+    const sessionId = config.configurable.sessionId;
     const useHistory = config.configurable.useHistory !== false;
 
-    // Create a function to generate the messages
-    const generateMessages = async () => {
-      const result = await this.generatePromptMessages(
-        validatedInput, // Use validated input
+    let captured = "";
+    const gen = async () => {
+      const { messages, capturedPrompt } = await this.generatePromptMessages(
+        input,
         sessionId,
         useHistory
       );
-      capturedPrompt = result.capturedPrompt;
-      return result.messages;
+      captured = capturedPrompt;
+      return messages;
     };
+    const proc = (r: BaseMessage) =>
+      this.processModelResponse(r, sessionId, useHistory, captured);
 
-    // Create a function to process the model response
-    const processResponse = async (response: BaseMessage) => {
-      return this.processModelResponse(
-        response,
-        sessionId,
-        useHistory,
-        capturedPrompt
-      );
-    };
-
-    // Create and execute the generation sequence with retry
-    return this.createAndExecuteSequence(
-      generateMessages,
-      processResponse,
-      config
-    );
+    return this.createAndExecuteSequence(gen, proc, config);
   }
 
-  async batch(
-    inputs: In[],
-    configs?: RunnableConfig[] | RunnableConfig
-  ): Promise<GenerationResult<Out>[]> {
+  async batch(inputs: In[], configs?: RunnableConfig[] | RunnableConfig) {
     const cfgs = Array.isArray(configs)
       ? configs
-      : inputs.map(() => configs as RunnableConfig | undefined);
+      : inputs.map(() => configs as RunnableConfig);
     const out: GenerationResult<Out>[] = [];
     for (let i = 0; i < inputs.length; i++) {
       out.push(await this.invoke(inputs[i], cfgs[i]));
@@ -437,13 +337,13 @@ export class ObjectGenerationRunnable<In, Out> extends Runnable<
     return out;
   }
 
-  /* ---------- History helpers ---------- */
-
-  clearHistory(sessionId: string) {
-    this.messageHistoryStore(sessionId).clear();
+  async clearHistory(sessionId: string) {
+    await this.messageHistoryStore(sessionId).clear();
   }
 
-  clearAllHistories() {
-    this.inMemoryHistories.forEach((h) => h.clear());
+  async clearAllHistories() {
+    for (const h of this.inMemoryHistories.values()) {
+      await h.clear();
+    }
   }
 }

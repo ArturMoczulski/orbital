@@ -4,6 +4,7 @@ import { ConsoleLogger, VerbosityLevel } from "@orbital/core";
 import { HumanMessage, SystemMessage } from "@langchain/core/messages";
 import { BaseLanguageModel } from "@langchain/core/language_models/base";
 import { ObjectGenerationRunnable } from "./object-generation.runnable";
+import { IObjectGenerationPromptRepository } from "./object-generation-prompt-repository.interface";
 import { setupOllamaTest } from "../testing/llm-test-utils";
 
 /**
@@ -34,6 +35,21 @@ describe("E2E: ObjectGenerationRunnable", () => {
     "ObjectGenerationRunnable"
   );
 
+  // Create a mock prompt repository for testing
+  const mockPromptRepository: IObjectGenerationPromptRepository = {
+    inferKey: (typeName: string) => typeName.toLowerCase(),
+    get: (key: string) => {
+      if (key === "town") {
+        return "You are a generator of realistic fantasy towns.";
+      } else if (key === "complextown") {
+        return "You are a generator of detailed fantasy towns with rich histories and economies.";
+      } else if (key === "constrainedtown") {
+        return "You are a generator of medieval towns. Follow the constraints exactly.";
+      }
+      return "You are a creative generator.";
+    },
+  };
+
   // Define a simple test schema
   const TownSchema = z
     .object({
@@ -50,13 +66,16 @@ describe("E2E: ObjectGenerationRunnable", () => {
 
   it("should generate a structured town object based on a schema", async () => {
     // Create the runnable
-    const townGenerator = new ObjectGenerationRunnable<any, Town>({
+    class TownType {}
+
+    const townGenerator = new ObjectGenerationRunnable<any, Town>(TownType, {
       inputSchema: z.any(), // Dummy input schema for E2E tests
       outputSchema: TownSchema,
       model: model,
       systemPrompt: "You are a generator of realistic fantasy towns.",
       maxAttempts: 3,
       logger: verboseLogger,
+      promptRepository: mockPromptRepository,
     });
 
     // Input data
@@ -144,7 +163,10 @@ describe("E2E: ObjectGenerationRunnable", () => {
     type ComplexTown = z.infer<typeof ComplexTownSchema>;
 
     // Create the runnable
+    class ComplexTownType {}
+
     const complexTownGenerator = new ObjectGenerationRunnable<any, ComplexTown>(
+      ComplexTownType,
       {
         inputSchema: z.any(), // Dummy input schema for E2E tests
         outputSchema: ComplexTownSchema,
@@ -153,6 +175,7 @@ describe("E2E: ObjectGenerationRunnable", () => {
           "You are a generator of detailed fantasy towns with rich histories and economies.",
         maxAttempts: 3,
         logger: verboseLogger,
+        promptRepository: mockPromptRepository,
       }
     );
 
@@ -209,13 +232,16 @@ describe("E2E: ObjectGenerationRunnable", () => {
 
   it("should maintain conversation history when useHistory is true", async () => {
     // Create the runnable with history and inputData
-    const townGenerator = new ObjectGenerationRunnable<any, Town>({
+    class TownType {}
+
+    const townGenerator = new ObjectGenerationRunnable<any, Town>(TownType, {
       inputSchema: z.any(), // Dummy input schema for E2E tests
       outputSchema: TownSchema,
       model: model,
       systemPrompt: "You are a generator of realistic fantasy towns.",
       maxAttempts: 3,
       logger: verboseLogger,
+      promptRepository: mockPromptRepository,
       inputData: {
         worldRegion: "northern realm",
         seasonalEvents: ["winter festival", "ice fishing tournament"],
@@ -252,13 +278,6 @@ describe("E2E: ObjectGenerationRunnable", () => {
     expect(secondResult).toBeDefined();
     expect(secondResult.output).toBeDefined();
 
-    // The second town should have some reference to the first town
-    // This is a bit of a fuzzy test, but we're looking for the model to have
-    // maintained some context from the first generation
-    const combinedText = (
-      secondResult.output.name + secondResult.output.description
-    ).toLowerCase();
-
     // Log the results
     testLogger.info("First Town:", firstResult.output);
     testLogger.info("Second Town:", secondResult.output);
@@ -272,6 +291,12 @@ describe("E2E: ObjectGenerationRunnable", () => {
     expect(firstResult.prompt).toContain("northern realm");
     expect(secondResult.prompt).toContain("RAW INPUT DATA");
     expect(secondResult.prompt).toContain("northern realm");
+
+    // Explicitly verify that the first town's response is included in the second prompt
+    // This confirms that the history is being maintained
+    expect(secondResult.prompt).toContain(
+      JSON.stringify(firstResult.output, null, 2)
+    );
 
     // Clear history after test
     townGenerator.clearHistory("e2e-history-session");
@@ -312,10 +337,12 @@ describe("E2E: ObjectGenerationRunnable", () => {
     type ConstrainedTown = z.infer<typeof ConstrainedTownSchema>;
 
     // Create the runnable with a low max attempts to speed up the test
+    class ConstrainedTownType {}
+
     const constrainedTownGenerator = new ObjectGenerationRunnable<
       any,
       ConstrainedTown
-    >({
+    >(ConstrainedTownType, {
       inputSchema: z.any(), // Dummy input schema for E2E tests
       outputSchema: ConstrainedTownSchema,
       model: model,
@@ -323,6 +350,7 @@ describe("E2E: ObjectGenerationRunnable", () => {
         "You are a generator of medieval towns. Follow the constraints exactly.",
       maxAttempts: 3,
       logger: verboseLogger,
+      promptRepository: mockPromptRepository,
     });
 
     // Input data designed to potentially cause validation issues
