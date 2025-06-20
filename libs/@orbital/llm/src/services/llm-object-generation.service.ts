@@ -1,7 +1,7 @@
 import { BaseLanguageModel } from "@langchain/core/language_models/base";
 import { StructuredOutputParser } from "@langchain/core/output_parsers";
 import { HumanMessage, SystemMessage } from "@langchain/core/messages";
-import { ZodSchema } from "zod";
+import { ZodSchema, ZodError } from "zod";
 import { AbstractService, Logger, ConsoleLogger } from "@orbital/core";
 import { GenerationResult } from "../types";
 
@@ -34,6 +34,7 @@ export class LLMObjectGenerationService extends AbstractService {
   private maxRetries: number;
   private logErrors: boolean;
   private model: BaseLanguageModel;
+  private accumulatedIssues: Record<string, any>[] = [];
 
   /**
    * Creates a new LLMObjectGenerationService
@@ -69,8 +70,13 @@ export class LLMObjectGenerationService extends AbstractService {
     schema: ZodSchema<T>,
     buildMessages: (retryCount: number) => LLMPromptMessages,
     example?: T,
-    retryCount: number = 0
+    retryCount: number = 0,
+    previousIssues: Record<string, any>[] = []
   ): Promise<GenerationResult<T>> {
+    // Initialize accumulated issues with previous issues on first call
+    if (retryCount === 0) {
+      this.accumulatedIssues = [...previousIssues];
+    }
     // Create a structured output parser with the schema
     const parser = StructuredOutputParser.fromZodSchema(schema);
 
@@ -78,36 +84,34 @@ export class LLMObjectGenerationService extends AbstractService {
     const formatInstructions = parser.getFormatInstructions();
 
     // Build the messages for this attempt
-    const { system: origSystem, human } = buildMessages(retryCount);
-    // On retry, enhance system instructions globally
-    const system =
-      retryCount > 0
-        ? new SystemMessage(
-            origSystem.content +
-              " Your previous response did not match the required schema. Please retry and ensure your response follows the format instructions exactly."
-          )
-        : origSystem;
+    // Build messages for this attempt
+    const { system: baseSystem, human } = buildMessages(retryCount);
+    // Append format instructions to system message
+    const formattedSystem = new SystemMessage(
+      `${baseSystem.content}\n\n${formatInstructions}`
+    );
 
     // Start with the human content
     let enhancedContent = human.content as string;
+    if (retryCount === 0) {
+      // Add example if provided
+      if (example) {
+        const exampleJson = JSON.stringify(example, null, 2);
+        enhancedContent += `\n\nHere is an example of a valid response:\n\n${exampleJson}`;
+      }
 
-    // Add example if provided
-    if (example) {
-      const exampleJson = JSON.stringify(example, null, 2);
-      enhancedContent += `\n\nHere is an example of a valid response:\n\n${exampleJson}`;
+      // Add only the raw JSON reminder at the end
+      enhancedContent +=
+        "\n\nIMPORTANT: Your response must be a valid JSON object WITHOUT any markdown formatting. " +
+        "Do not use ```json code blocks or any other markdown. Return ONLY the raw JSON object.";
     }
 
-    // Add format instructions and raw JSON reminder
-    enhancedContent +=
-      `\n\n${formatInstructions}\n\n` +
-      "IMPORTANT: Your response must be a valid JSON object WITHOUT any markdown formatting. " +
-      "Do not use ```json code blocks or any other markdown. Return ONLY the raw JSON object.";
-
-    // Create the enhanced message
-    const messageWithInstructions = new HumanMessage(enhancedContent);
+    // Create the message to send
+    const messageWithInstructions =
+      retryCount === 0 ? new HumanMessage(enhancedContent) : human;
 
     // Construct the full prompt for logging and returning
-    const fullPrompt = `SYSTEM: ${system.content}\n\nHUMAN: ${messageWithInstructions.content}`;
+    const fullPrompt = `SYSTEM: ${formattedSystem.content}\n\nHUMAN: ${messageWithInstructions.content}`;
 
     // Log the prompt
     this.logger.verbose(
@@ -117,7 +121,7 @@ export class LLMObjectGenerationService extends AbstractService {
     try {
       // Generate the object data using the LLM
       const response = await this.model.invoke([
-        system,
+        formattedSystem,
         messageWithInstructions,
       ]);
 
@@ -154,12 +158,62 @@ export class LLMObjectGenerationService extends AbstractService {
         );
       }
 
-      // Retry with an incremented retry count
+      // Retry with schema-validation feedback in the next attempt
+      const buildMessagesWithFeedback = (nextRetryCount: number) => {
+        const { system: prevSystem, human: prevHuman } =
+          buildMessages(nextRetryCount);
+
+        // Format validation errors for feedback
+        let newIssues: Record<string, any>[] = [];
+
+        if (error instanceof ZodError && error.issues.length > 0) {
+          // Process all validation issues
+          newIssues = error.issues.map((issue) => {
+            // Create a simplified object with only the essential properties
+            const simplifiedIssue: Record<string, any> = {
+              code: issue.code,
+              path: issue.path,
+              message: issue.message,
+            };
+
+            // Add type-specific properties that might exist on this specific issue type
+            if ("expected" in issue) {
+              simplifiedIssue.expected = (issue as any).expected;
+            }
+            if ("received" in issue) {
+              simplifiedIssue.received = (issue as any).received;
+            }
+
+            return simplifiedIssue;
+          });
+
+          // Add new issues to accumulated issues
+          this.accumulatedIssues = [...this.accumulatedIssues, ...newIssues];
+        }
+
+        // Use all accumulated issues for feedback
+        const feedback =
+          error instanceof ZodError
+            ? JSON.stringify(this.accumulatedIssues)
+            : (error as Error).message;
+
+        // Get the original human message content without any previous error feedback
+        const originalContent = buildMessages(0).human.content as string;
+
+        // Create a new human message with the original content plus accumulated feedback
+        const enhancedContent = `${originalContent}\nYour previous response had errors:\n${feedback}`;
+
+        return {
+          system: prevSystem,
+          human: new HumanMessage(enhancedContent),
+        };
+      };
       return this.generateObject(
         schema,
-        buildMessages,
+        buildMessagesWithFeedback,
         example,
-        retryCount + 1
+        retryCount + 1,
+        this.accumulatedIssues
       );
     }
   }
