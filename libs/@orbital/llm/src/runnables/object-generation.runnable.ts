@@ -63,10 +63,6 @@ export const createRunnableRetry = <T, U>(
 /* ------------------------------------------------------------ */
 /* ------------------------------------------------------------ */
 
-/**
- * Logger for request/response debugging.
- */
-
 /* Interfaces                                                   */
 /* ------------------------------------------------------------ */
 
@@ -129,181 +125,192 @@ export class ObjectGenerationRunnable<In, Out> extends Runnable<
     this.fixingParser = OutputFixingParser.fromLLM(this.model, this.parser);
   }
 
-  /* -------------------------------------------------------- */
-  /* Public methods                                           */
-  /* -------------------------------------------------------- */
-
-  async invoke(
-    input: In,
-    config?: RunnableConfig
-  ): Promise<GenerationResult<Out>> {
-    if (!config?.configurable?.sessionId) {
-      throw new Error("config.configurable.sessionId is required");
-    }
-
-    let capturedPrompt = "";
-    const sessionId = config.configurable.sessionId as string;
-    const useHistory = config.configurable.useHistory !== false;
-
-    // Create a function to generate the messages
-    const generateMessages = async () => {
-      // Format the input
-      const formattedInput = JSON.stringify(input, null, 2);
-      const formatInstructions = this.parser.getFormatInstructions();
-
-      // Get history if enabled
-      const historyMessages =
-        sessionId && useHistory
-          ? await this.messageHistoryStore(sessionId).getMessages()
-          : [];
-
-      // Build messages array
-      const messages: BaseMessage[] = [
-        new SystemMessage(`${this.systemPrompt}\n\n${formatInstructions}`),
-        ...historyMessages,
-        new HumanMessage(
-          [
-            "Given the following input, generate an object that **strictly** matches the schema above.",
-            "",
-            "INPUT:",
-            formattedInput,
-            "",
-            "IMPORTANT: Return **ONLY** raw JSON (no markdown).",
-          ].join("\n")
-        ),
-      ];
-
-      // Capture the prompt for debugging/testing
-      capturedPrompt = messages
-        .map((m) => {
-          if (m instanceof SystemMessage) return `SYSTEM: ${m.content}`;
-          if (m instanceof HumanMessage) return `HUMAN: ${m.content}`;
-          if (m instanceof AIMessage) return `AI: ${m.content}`;
-          return `MESSAGE: ${m.content}`;
-        })
-        .join("\n\n");
-
-      if (this.logger) {
-        this.logger.verbose(capturedPrompt);
-      }
-      return messages;
-    };
-
-    // Create a function to process the model response
-    const processResponse = async (response: BaseMessage) => {
-      if (this.logger) {
-        this.logger.debug(`LLM raw response: ${JSON.stringify(response)}`);
-      }
-      // Store in history if enabled
-      if (sessionId && useHistory && response instanceof AIMessage) {
-        this.messageHistoryStore(sessionId).addMessage(response);
-      }
-
-      // Extract content from the response
-      let content: string = "";
-
-      // Handle different response types
-      if (response instanceof AIMessage) {
-        content =
-          typeof response.content === "string"
-            ? response.content
-            : JSON.stringify(response.content);
-      } else if (typeof response === "string") {
-        content = response;
-      } else if (response && typeof response.content === "string") {
-        content = response.content;
-      } else if (response) {
-        // Try to handle the case where we get a serialized object
-        try {
-          // First try to stringify and then parse to extract any nested content
-          const stringified = JSON.stringify(response);
-          const parsed = JSON.parse(stringified);
-
-          // Check for common patterns in the response structure
-          if (
-            parsed.invoke &&
-            parsed.invoke.kwargs &&
-            typeof parsed.invoke.kwargs.content === "string"
-          ) {
-            // Handle the case where we get a serialized AIMessage object
-            content = parsed.invoke.kwargs.content;
-          } else if (parsed.content && typeof parsed.content === "string") {
-            // Direct content property
-            content = parsed.content;
-          } else {
-            // Just use the stringified version
-            content = stringified;
-          }
-        } catch (e) {
-          // If JSON operations fail, use string conversion as last resort
-          content = String(response);
-        }
-      }
-
-      // Parse the response
-      let parsedOutput: any;
+  /**
+   * Extract the raw message content from various response types
+   */
+  protected extractContent(response: BaseMessage): string {
+    if (response instanceof AIMessage) {
+      return typeof response.content === "string"
+        ? response.content
+        : JSON.stringify(response.content);
+    } else if (typeof response === "string") {
+      return response;
+    } else if (response && typeof response.content === "string") {
+      return response.content;
+    } else if (response) {
       try {
-        // First try direct parsing
-        parsedOutput = await this.parser.parse(content);
-      } catch (parseError: unknown) {
+        const stringified = JSON.stringify(response);
+        const parsed = JSON.parse(stringified);
+        // Serialized AIMessage
+        if (
+          parsed.invoke &&
+          parsed.invoke.kwargs &&
+          typeof parsed.invoke.kwargs.content === "string"
+        ) {
+          return parsed.invoke.kwargs.content;
+        }
+        // Direct content
+        if (parsed.content && typeof parsed.content === "string") {
+          return parsed.content;
+        }
+        return stringified;
+      } catch {
+        return String(response);
+      }
+    }
+    return "";
+  }
+
+  /**
+   * Parse the content string into the expected output type
+   * Handles parsing errors with fallbacks and test-specific behavior
+   */
+  protected async parseContent(
+    content: string,
+    capturedPrompt: string
+  ): Promise<GenerationResult<Out>> {
+    // Parse the response
+    let parsedOutput: any;
+    try {
+      // First try direct parsing
+      parsedOutput = await this.parser.parse(content);
+    } catch (parseError: unknown) {
+      console.warn(
+        "Direct parsing failed:",
+        parseError instanceof Error ? parseError.message : String(parseError)
+      );
+
+      try {
+        // If direct parsing fails, use the fixing parser
+        parsedOutput = await this.fixingParser.parse(content);
+      } catch (fixingError: unknown) {
         console.warn(
-          "Direct parsing failed:",
-          parseError instanceof Error ? parseError.message : String(parseError)
+          "Fixing parser failed:",
+          fixingError instanceof Error
+            ? fixingError.message
+            : String(fixingError)
         );
 
+        // Last resort - try to extract JSON from the content
         try {
-          // If direct parsing fails, use the fixing parser
-          parsedOutput = await this.fixingParser.parse(content);
-        } catch (fixingError: unknown) {
-          console.warn(
-            "Fixing parser failed:",
-            fixingError instanceof Error
-              ? fixingError.message
-              : String(fixingError)
-          );
+          // Try to find any JSON-like structure in the content
+          const jsonMatch = content.match(/\{.*\}/);
+          if (jsonMatch) {
+            const extracted = jsonMatch[0];
+            parsedOutput = JSON.parse(extracted);
 
-          // Last resort - try to extract JSON from the content
-          try {
-            // Try to find any JSON-like structure in the content
-            const jsonMatch = content.match(/\{.*\}/);
-            if (jsonMatch) {
-              const extracted = jsonMatch[0];
-              parsedOutput = JSON.parse(extracted);
-
-              // Validate against schema
-              const validation = this.schema.safeParse(parsedOutput);
-              if (!validation.success) {
-                throw new Error("Extracted JSON doesn't match schema");
-              }
-            } else {
-              throw new Error("No JSON found in content");
+            // Validate against schema
+            const validation = this.schema.safeParse(parsedOutput);
+            if (!validation.success) {
+              throw new Error("Extracted JSON doesn't match schema");
             }
-          } catch (e) {
-            // If all parsing attempts fail, create a basic object that matches the schema
-            // This is a last resort to avoid test failures
-            if (process.env.NODE_ENV === "test") {
-              // In test environment, return a hardcoded object that matches the expected test output
-              // This is a last resort to make tests pass
-              parsedOutput = {
-                name: "Frostmere",
-                population: 217,
-                description: "A small, cold town with unfriendly inhabitants",
-                pointsOfInterest: ["Frozen Lake", "Old Watchtower"],
-              };
-            } else {
-              throw fixingError; // Re-throw the original error in non-test environments
-            }
+          } else {
+            throw new Error("No JSON found in content");
           }
+        } catch (e) {
+          // If all parsing attempts fail, re-throw the original error
+          throw fixingError;
         }
       }
+    }
 
-      // Return the result
-      return {
-        output: parsedOutput as Out,
-        prompt: capturedPrompt,
-      };
+    // Return the result
+    return {
+      output: parsedOutput as Out,
+      prompt: capturedPrompt,
     };
+  }
 
+  /**
+   * Generate prompt messages for the LLM
+   * Builds system, history, and human messages and captures the prompt for logging
+   */
+  protected async generatePromptMessages(
+    input: In,
+    sessionId: string,
+    useHistory: boolean
+  ): Promise<{ messages: BaseMessage[]; capturedPrompt: string }> {
+    // Format the input
+    const formattedInput = JSON.stringify(input, null, 2);
+    const formatInstructions = this.parser.getFormatInstructions();
+
+    // Get history if enabled
+    const historyMessages =
+      sessionId && useHistory
+        ? await this.messageHistoryStore(sessionId).getMessages()
+        : [];
+
+    // Build messages array
+    const messages: BaseMessage[] = [
+      new SystemMessage(`${this.systemPrompt}\n\n${formatInstructions}`),
+      ...historyMessages,
+      new HumanMessage(
+        [
+          "Given the following input, generate an object that **strictly** matches the schema above.",
+          "",
+          "INPUT:",
+          formattedInput,
+          "",
+          "IMPORTANT: Return **ONLY** raw JSON (no markdown).",
+        ].join("\n")
+      ),
+    ];
+
+    // Capture the prompt for debugging/testing
+    const capturedPrompt = messages
+      .map((m) => {
+        if (m instanceof SystemMessage) return `SYSTEM: ${m.content}`;
+        if (m instanceof HumanMessage) return `HUMAN: ${m.content}`;
+        if (m instanceof AIMessage) return `AI: ${m.content}`;
+        return `MESSAGE: ${m.content}`;
+      })
+      .join("\n\n");
+
+    if (this.logger) {
+      this.logger.verbose(capturedPrompt);
+    }
+
+    return { messages, capturedPrompt };
+  }
+
+  /**
+   * Process the LLM response
+   * Handles logging, history storage, content extraction, and parsing
+   */
+  protected async processModelResponse(
+    response: BaseMessage,
+    sessionId: string,
+    useHistory: boolean,
+    capturedPrompt: string
+  ): Promise<GenerationResult<Out>> {
+    if (this.logger) {
+      this.logger.debug(`LLM raw response: ${JSON.stringify(response)}`);
+    }
+
+    // Store in history if enabled
+    if (sessionId && useHistory && response instanceof AIMessage) {
+      this.messageHistoryStore(sessionId).addMessage(response);
+    }
+
+    // Extract content from the response
+    const content = this.extractContent(response);
+
+    // Log the extracted message content
+    if (this.logger) {
+      this.logger.debug(`LLM message content: ${content}`);
+    }
+
+    return this.parseContent(content, capturedPrompt);
+  }
+
+  /**
+   * Create and execute a runnable sequence with retry logic
+   */
+  protected createAndExecuteSequence(
+    generateMessages: () => Promise<BaseMessage[]>,
+    processResponse: (response: BaseMessage) => Promise<GenerationResult<Out>>,
+    config?: RunnableConfig
+  ): Promise<GenerationResult<Out>> {
     // Create a runnable sequence that:
     // 1. Generates messages
     // 2. Invokes the model
@@ -327,6 +334,50 @@ export class ObjectGenerationRunnable<In, Out> extends Runnable<
 
     // Execute the retry sequence
     return retrySequence.invoke(null, config);
+  }
+
+  /* -------------------------------------------------------- */
+  /* Public methods                                           */
+  /* -------------------------------------------------------- */
+  async invoke(
+    input: In,
+    config?: RunnableConfig
+  ): Promise<GenerationResult<Out>> {
+    if (!config?.configurable?.sessionId) {
+      throw new Error("config.configurable.sessionId is required");
+    }
+
+    let capturedPrompt = "";
+    const sessionId = config.configurable.sessionId as string;
+    const useHistory = config.configurable.useHistory !== false;
+
+    // Create a function to generate the messages
+    const generateMessages = async () => {
+      const result = await this.generatePromptMessages(
+        input,
+        sessionId,
+        useHistory
+      );
+      capturedPrompt = result.capturedPrompt;
+      return result.messages;
+    };
+
+    // Create a function to process the model response
+    const processResponse = async (response: BaseMessage) => {
+      return this.processModelResponse(
+        response,
+        sessionId,
+        useHistory,
+        capturedPrompt
+      );
+    };
+
+    // Create and execute the generation sequence with retry
+    return this.createAndExecuteSequence(
+      generateMessages,
+      processResponse,
+      config
+    );
   }
 
   async batch(
