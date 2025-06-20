@@ -1,6 +1,7 @@
 /* libs/@orbital/llm/src/runnables/object-generation.runnable.ts */
 
 import { ZodSchema } from "zod";
+import { VerbosityLevel } from "@orbital/core";
 import type { Logger } from "@orbital/core";
 import {
   Runnable,
@@ -66,7 +67,7 @@ export const createRunnableRetry = <T, U>(
 /* Interfaces                                                   */
 /* ------------------------------------------------------------ */
 
-export interface ObjectGenerationRunnableOptions<Out> {
+export interface ObjectGenerationRunnableOptions<In, Out> {
   schema: ZodSchema<Out>;
   model: BaseLanguageModel;
   systemPrompt: string;
@@ -74,6 +75,8 @@ export interface ObjectGenerationRunnableOptions<Out> {
   messageHistoryStore?: (sessionId: string) => BaseChatMessageHistory;
   /** Optional logger for verbose prompt and debug response logging */
   logger?: Logger;
+  /** Optional input data to include in the prompt */
+  inputData?: In;
 }
 
 /* ------------------------------------------------------------ */
@@ -98,10 +101,11 @@ export class ObjectGenerationRunnable<In, Out> extends Runnable<
   private readonly parser: StructuredOutputParser<any>;
   private readonly fixingParser: any; // OutputFixingParser
   private readonly logger?: Logger;
+  private readonly inputData?: In; // Add inputData property
 
   lc_namespace = ["orbital", "object-generation"];
 
-  constructor(opts: ObjectGenerationRunnableOptions<Out>) {
+  constructor(opts: ObjectGenerationRunnableOptions<In, Out>) {
     super();
 
     this.schema = opts.schema;
@@ -109,6 +113,7 @@ export class ObjectGenerationRunnable<In, Out> extends Runnable<
     this.systemPrompt = opts.systemPrompt;
     this.maxAttempts = opts.maxAttempts ?? 3;
     this.logger = opts.logger;
+    this.inputData = opts.inputData; // Store inputData
 
     /* ---------- History backend ---------- */
     this.messageHistoryStore =
@@ -241,19 +246,28 @@ export class ObjectGenerationRunnable<In, Out> extends Runnable<
         : [];
 
     // Build messages array
+    const humanMessageContent = [
+      "Given the following input, generate an object that **strictly** matches the schema above.",
+      "",
+      "INPUT:",
+      formattedInput,
+      "",
+      "IMPORTANT: Return **ONLY** raw JSON (no markdown).",
+    ];
+
+    // Add inputData if provided
+    if (this.inputData !== undefined) {
+      humanMessageContent.push(
+        "",
+        "RAW INPUT DATA:",
+        JSON.stringify(this.inputData, null, 2)
+      );
+    }
+
     const messages: BaseMessage[] = [
       new SystemMessage(`${this.systemPrompt}\n\n${formatInstructions}`),
       ...historyMessages,
-      new HumanMessage(
-        [
-          "Given the following input, generate an object that **strictly** matches the schema above.",
-          "",
-          "INPUT:",
-          formattedInput,
-          "",
-          "IMPORTANT: Return **ONLY** raw JSON (no markdown).",
-        ].join("\n")
-      ),
+      new HumanMessage(humanMessageContent.join("\n")),
     ];
 
     // Capture the prompt for debugging/testing
@@ -293,9 +307,22 @@ export class ObjectGenerationRunnable<In, Out> extends Runnable<
 
     const parsed = await this.parseContent(content, capturedPrompt);
 
-    // Log the extracted message content
+    // Log the parsed output at debug level
+    // If verbosity level is VERBOSE, also include the prompt
     if (this.logger) {
-      this.logger.debug(`LLM response:`, parsed);
+      const isVerbose =
+        this.logger.getVerbosityLevel() === VerbosityLevel.VERBOSE;
+
+      if (isVerbose) {
+        // Include both the output and prompt in verbose mode
+        this.logger.debug(`LLM output with prompt:`, {
+          output: parsed.output,
+          prompt: capturedPrompt,
+        });
+      } else {
+        // Just log the output in debug mode
+        this.logger.debug(`LLM output:`, parsed.output);
+      }
     }
 
     return parsed;

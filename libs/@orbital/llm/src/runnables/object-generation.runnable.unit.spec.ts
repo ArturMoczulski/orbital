@@ -217,4 +217,63 @@ describe("ObjectGenerationRunnable", () => {
       pointsOfInterest: ["Frozen Lake", "Old Watchtower"],
     });
   });
+
+  it("should include inputData in the prompt when provided", async () => {
+    // Create the mock LLM with a spy on invoke
+    const mockLLM = createMockLLM();
+    const invokeSpy = jest.spyOn(mockLLM, "invoke");
+
+    // Input data
+    const input: TownInput = {
+      climate: "snowy",
+      temperature: -10,
+      friendliness: "low",
+    };
+
+    // Static input data to be included in the constructor (must match TownInput type)
+    const staticInputData: TownInput = {
+      climate: "alpine",
+      temperature: -15,
+      friendliness: "low",
+    };
+
+    // Create the runnable with inputData
+    const townGenerator = new ObjectGenerationRunnable<
+      TownInput,
+      z.infer<typeof townSchema>
+    >({
+      schema: townSchema,
+      model: mockLLM as unknown as BaseLanguageModel,
+      systemPrompt: "You are a generator of realistic fantasy towns.",
+      maxAttempts: 3,
+      logger: verboseLogger,
+      inputData: staticInputData,
+    });
+
+    // Generate the town
+    const result = await townGenerator.invoke(input, {
+      configurable: { sessionId: "test-input-data-session" },
+    });
+
+    // Verify the result
+    expect(result.output).toEqual({
+      name: "Frostmere",
+      population: 217,
+      description: "A small, cold town with unfriendly inhabitants",
+      pointsOfInterest: ["Frozen Lake", "Old Watchtower"],
+    });
+
+    // Check that the LLM was called with messages containing the inputData
+    expect(invokeSpy).toHaveBeenCalled();
+    const messages = invokeSpy.mock.calls[0][0];
+
+    // Convert messages to string to check content
+    const messagesStr = JSON.stringify(messages);
+
+    // Verify inputData is included in the prompt
+    expect(messagesStr).toContain("RAW INPUT DATA");
+    expect(messagesStr).toContain("alpine");
+    expect(messagesStr).toContain("temperature");
+    expect(messagesStr).toContain("friendliness");
+  });
 });

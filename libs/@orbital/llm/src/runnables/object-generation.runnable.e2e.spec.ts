@@ -87,7 +87,6 @@ describe("E2E: ObjectGenerationRunnable", () => {
 
     // Log the result using the test logger
     testLogger.info("Generated Town:", result.output);
-    testLogger.debug("Prompt used:", result.prompt);
   });
 
   it("should handle complex nested schemas", async () => {
@@ -204,17 +203,21 @@ describe("E2E: ObjectGenerationRunnable", () => {
       "Generated Complex Town:",
       JSON.stringify(result.output, null, 2)
     );
-    testLogger.debug("Prompt used:", result.prompt);
   });
 
   it("should maintain conversation history when useHistory is true", async () => {
-    // Create the runnable with history
+    // Create the runnable with history and inputData
     const townGenerator = new ObjectGenerationRunnable<any, Town>({
       schema: TownSchema,
       model: model,
       systemPrompt: "You are a generator of realistic fantasy towns.",
       maxAttempts: 3,
       logger: verboseLogger,
+      inputData: {
+        worldRegion: "northern realm",
+        seasonalEvents: ["winter festival", "ice fishing tournament"],
+        commonThreats: ["wolf packs", "avalanches", "bandits"],
+      },
     });
 
     // Input data for first generation
@@ -256,6 +259,16 @@ describe("E2E: ObjectGenerationRunnable", () => {
     // Log the results
     testLogger.info("First Town:", firstResult.output);
     testLogger.info("Second Town:", secondResult.output);
+
+    // Log the prompts to verify inputData was included
+    testLogger.debug("First Prompt:", firstResult.prompt);
+    testLogger.debug("Second Prompt:", secondResult.prompt);
+
+    // Verify inputData was included in the prompts
+    expect(firstResult.prompt).toContain("RAW INPUT DATA");
+    expect(firstResult.prompt).toContain("northern realm");
+    expect(secondResult.prompt).toContain("RAW INPUT DATA");
+    expect(secondResult.prompt).toContain("northern realm");
 
     // Clear history after test
     townGenerator.clearHistory("e2e-history-session");
