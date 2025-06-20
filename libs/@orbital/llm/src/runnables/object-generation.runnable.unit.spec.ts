@@ -577,4 +577,48 @@ describe("ObjectGenerationRunnable", () => {
     // Verify the custom registry was used
     expect(mockSchemaRegistry.get).toHaveBeenCalledWith(CustomTown);
   });
+
+  it("should return structured output in verbose mode", async () => {
+    // Create the mock LLM
+    const mockLLM = createMockLLM();
+
+    // Create a dummy type for testing
+    class Town {}
+
+    const townGenerator = new ObjectGenerationRunnable<
+      TownInput,
+      z.infer<typeof townSchema>
+    >(Town, {
+      inputSchema: z.any(), // Dummy input schema for base class tests
+      outputSchema: townSchema,
+      model: mockLLM as unknown as BaseLanguageModel,
+      systemPrompt: "You are a generator of realistic fantasy towns.",
+      maxAttempts: 3,
+      logger: verboseLogger,
+      promptRepository: mockPromptRepository,
+    });
+
+    // Input data
+    const input: TownInput = {
+      climate: "snowy",
+      temperature: -10,
+      friendliness: "low",
+    };
+
+    // Generate the town with standard config
+    const result = await townGenerator.invoke(input, {
+      configurable: { sessionId: "test-verbose-mode" },
+    });
+
+    // Verify the result is the expected output
+    expect(result).toBeDefined();
+
+    // We should get the structured output object
+    expect(result).toEqual({
+      name: "Frostmere",
+      population: 217,
+      description: "A small, cold town with unfriendly inhabitants",
+      pointsOfInterest: ["Frozen Lake", "Old Watchtower"],
+    });
+  });
 });

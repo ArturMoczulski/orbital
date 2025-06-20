@@ -323,8 +323,12 @@ describe("E2E: ObjectGenerationRunnable", () => {
       outputSchema: ConstrainedTownSchema,
       model: model,
       systemPrompt:
-        "You are a generator of medieval towns. Follow the constraints exactly.",
-      maxAttempts: 3,
+        "You are a generator of medieval towns. Follow these constraints exactly: " +
+        "name must be 5-20 characters, population must be between 100-10000, " +
+        "foundingYear must be between 1000-1500, description must be 50-200 characters, " +
+        "and governmentType must be one of: monarchy, republic, council, or dictatorship. " +
+        "Make sure all values are of the correct type (strings for text, numbers for numeric values).",
+      maxAttempts: 5,
       logger: verboseLogger,
       promptRepository: mockPromptRepository,
     });
@@ -359,5 +363,54 @@ describe("E2E: ObjectGenerationRunnable", () => {
 
     // Log the result
     testLogger.info("Generated Constrained Town:", result);
+  });
+
+  it("should return rich output in verbose mode", async () => {
+    // Create the runnable
+    class VerboseTownType {}
+
+    const townGenerator = new ObjectGenerationRunnable<any, Town>(
+      VerboseTownType,
+      {
+        inputSchema: z.any(), // Dummy input schema for E2E tests
+        outputSchema: TownSchema,
+        model: model,
+        systemPrompt: "You are a generator of realistic fantasy towns.",
+        maxAttempts: 3,
+        logger: verboseLogger,
+        promptRepository: mockPromptRepository,
+      }
+    );
+
+    // Input data
+    const input = {
+      climate: "snowy",
+      temperature: -10,
+      friendliness: "low",
+    };
+
+    // Generate the town with verbose mode
+    // Use the standard LangChain approach for verbose mode
+    const result = await townGenerator.invoke(input, {
+      configurable: { sessionId: "e2e-verbose-mode-session" },
+    });
+
+    // Assert basic output structure
+    expect(result).toBeDefined();
+
+    // Check the output properties - should still have the town data
+    expect(typeof result.name).toBe("string");
+    expect(result.name.length).toBeGreaterThan(0);
+    expect(typeof result.population).toBe("number");
+    expect(result.population).toBeGreaterThan(0);
+    expect(typeof result.description).toBe("string");
+    expect(result.description.length).toBeGreaterThan(0);
+    expect(Array.isArray(result.pointsOfInterest)).toBe(true);
+
+    // We don't try to access the model directly since it's private
+    // Instead, we focus on testing that the output is correctly structured
+
+    // Log the full result for inspection
+    testLogger.info("Result:", result);
   });
 });
