@@ -283,10 +283,6 @@ export class ObjectGenerationRunnable<In, Out> extends Runnable<
     useHistory: boolean,
     capturedPrompt: string
   ): Promise<GenerationResult<Out>> {
-    if (this.logger) {
-      this.logger.debug(`LLM raw response: ${JSON.stringify(response)}`);
-    }
-
     // Store in history if enabled
     if (sessionId && useHistory && response instanceof AIMessage) {
       this.messageHistoryStore(sessionId).addMessage(response);
@@ -295,12 +291,14 @@ export class ObjectGenerationRunnable<In, Out> extends Runnable<
     // Extract content from the response
     const content = this.extractContent(response);
 
+    const parsed = await this.parseContent(content, capturedPrompt);
+
     // Log the extracted message content
     if (this.logger) {
-      this.logger.debug(`LLM message content: ${content}`);
+      this.logger.debug(`LLM response:`, parsed);
     }
 
-    return this.parseContent(content, capturedPrompt);
+    return parsed;
   }
 
   /**
