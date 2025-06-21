@@ -1,17 +1,17 @@
-/** @type {import('next').NextConfig} */
 const path = require("path");
 
+/** @type {import('next').NextConfig} */
 module.exports = {
   reactStrictMode: true,
-  // Transpile shared Phaser UI TS source
-  transpilePackages: ["@kiloaxe/phaser-ui"],
+  transpilePackages: ["@orbital/phaser-ui"],
   webpack(config, { dev }) {
-    // Alias Phaser UI to source in development, dist in production
     config.resolve.alias = {
       ...(config.resolve.alias || {}),
-      "@kiloaxe/phaser-ui": path.resolve(
+      "@orbital/phaser-ui": path.resolve(
         __dirname,
-        dev ? "../shared/phaser-ui/src" : "../shared/phaser-ui/dist"
+        dev
+          ? "../../../libs/@orbital/phaser-ui/src"
+          : "../../../libs/@orbital/phaser-ui/dist"
       ),
     };
     return config;

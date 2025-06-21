@@ -4,7 +4,7 @@ module.exports = {
   testEnvironment: "jest-environment-jsdom",
   clearMocks: true,
   resetMocks: true,
-  roots: ["<rootDir>", "<rootDir>/../shared/phaser-ui/src"],
+  roots: ["<rootDir>", "<rootDir>/../../libs/@orbital/phaser-ui/src"],
   testMatch: ["**/*.spec.ts"],
   transform: {
     "^.+\\.(ts|tsx|js)$": "ts-jest",
@@ -13,9 +13,12 @@ module.exports = {
   setupFiles: ["jest-canvas-mock", "<rootDir>/jest.setup.js"],
   setupFilesAfterEnv: [],
   resetModules: true,
-  transformIgnorePatterns: ["node_modules/(?!(\\@kiloaxe\\/phaser-ui)/)"],
+  transformIgnorePatterns: ["node_modules/(?!(\\@orbital\\/phaser-ui)/)"],
   moduleFileExtensions: ["ts", "tsx", "js", "jsx", "json", "node"],
-  moduleDirectories: ["node_modules", "<rootDir>/../shared/phaser-ui/src"],
+  moduleDirectories: [
+    "node_modules",
+    "<rootDir>/../../libs/@orbital/phaser-ui/src",
+  ],
   moduleNameMapper: {
     // Mock styles and asset imports
     "\\.(css|less|sass|scss)$": "<rootDir>/test/mocks/styleMock.js",
@@ -31,8 +34,8 @@ module.exports = {
       "<rootDir>/test/mocks/pluginMock.js",
     "^phaser3-rex-plugins/templates/ui/ui-plugin\\.js$":
       "<rootDir>/test/mocks/pluginMock.js",
-    "^@kiloaxe/phaser-ui$": "<rootDir>/test/mocks/phaserUiMock.js",
-    "^@kiloaxe/phaser-ui/(.*)$": "<rootDir>/test/mocks/phaserUiMock.js",
+    "^@orbital/phaser-ui$": "<rootDir>/test/mocks/phaserUiMock.js",
+    "^@orbital/phaser-ui/(.*)$": "<rootDir>/test/mocks/phaserUiMock.js",
     // Mock GameSettingsPopup to avoid dependency issues
     "^game/ui/organisms/GameSettingsPopup$":
       "<rootDir>/test/mocks/gameSettingsPopupMock.js",
