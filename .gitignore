@@ -15,3 +15,4 @@
 # VSCode settings
 .DS_Store
 node_modules
+**/dist/
