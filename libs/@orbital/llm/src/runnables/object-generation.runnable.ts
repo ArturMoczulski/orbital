@@ -122,7 +122,10 @@ export class ObjectGenerationRunnable<In, Out> extends Runnable<In, Out> {
   constructor(
     /** Decorated type for inference */
     private readonly type: new (...args: any[]) => any,
-    opts: ObjectGenerationRunnableOptions<In, Out>
+    opts: ObjectGenerationRunnableOptions<
+      In,
+      Out
+    > = {} as ObjectGenerationRunnableOptions<In, Out>
   ) {
     super();
     const registry = opts.schemaRegistry ?? zodSchemaRegistry;

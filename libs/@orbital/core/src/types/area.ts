@@ -6,6 +6,7 @@ import {
   IdentifiableObjectProps,
 } from "./identifiable-object";
 import { Position, PositionSchema } from "./position";
+import { AreaMap, AreaMapSchema } from "./area-map";
 import { ZodSchema } from "../decorators/zod-schema.decorator";
 
 /**
@@ -25,6 +26,9 @@ export const AreaSchema = z
     position: PositionSchema.describe(
       "Central position of the area in 3D space"
     ),
+    areaMap: AreaMapSchema.optional().describe(
+      "Map representation of this area"
+    ),
   })
   .describe("A named area in the game world with a specific position");
 
@@ -39,6 +43,8 @@ export class Area
   parentId?: string;
   name: string = "";
   position: Position = new Position();
+  /** Map representation of this area */
+  areaMap?: AreaMap;
   /** Detailed description of the area */
   description: string = "";
   /** Notable landmarks or features in this area */
@@ -52,6 +58,8 @@ export class Area
       parentId: faker.string.uuid(),
       name: faker.lorem.word(),
       position: Position.mock(),
+      areaMap:
+        overrides.areaMap || (Math.random() > 0.5 ? AreaMap.mock() : undefined),
     };
     return new Area({ ...base, ...overrides });
   }
@@ -75,6 +83,14 @@ export class Area
         ? positionData
         : new Position(positionData);
 
+    // Handle areaMap if provided
+    let areaMap: AreaMap | undefined = undefined;
+    if ((validated as any).areaMap) {
+      const areaMapData = (validated as any).areaMap;
+      areaMap =
+        areaMapData instanceof AreaMap ? areaMapData : new AreaMap(areaMapData);
+    }
+
     // Assign properties directly
     this.name = validated.name;
     this.parentId = validated.parentId;
@@ -83,5 +99,6 @@ export class Area
     this.landmarks = (validated as any).landmarks ?? [];
     this.connections = (validated as any).connections ?? [];
     this.position = position;
+    this.areaMap = areaMap;
   }
 }

@@ -14,7 +14,10 @@ import { set, merge, upperFirst, cloneDeep, get, isEmpty, pick } from "lodash";
 export class CompositeObjectGenerationRunnable<T extends object> {
   constructor(
     private readonly type: new (...args: any[]) => T,
-    private readonly options: ObjectGenerationRunnableOptions<any, any>
+    private readonly options: ObjectGenerationRunnableOptions<
+      any,
+      any
+    > = {} as ObjectGenerationRunnableOptions<any, any>
   ) {}
 
   /**
@@ -114,17 +117,6 @@ export class CompositeObjectGenerationRunnable<T extends object> {
 
     // Create options with fallbacks
     const rootOptions: any = { ...this.options };
-
-    // Add explicit type instructions to system prompt
-    if (rootOptions.systemPrompt) {
-      const typeInstructions = `IMPORTANT: Ensure all properties match their expected types:
-- String properties must be strings
-- Number properties must be numbers (not strings containing numbers)
-- Boolean properties must be true or false
-- Array properties must be arrays`;
-
-      rootOptions.systemPrompt = `${rootOptions.systemPrompt}\n\n${typeInstructions}`;
-    }
     if (!inSchemaExists) {
       rootOptions.inputSchema = require("zod").z.any();
     }

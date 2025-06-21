@@ -10,7 +10,9 @@
     "test:unit": "jest --config jest.unit.config.js",
     "test:integration": "jest --config jest.integration.config.js",
     "test:e2e": "jest --config jest.e2e.config.js",
-    "test": "jest --coverage"
+    "test": "jest --coverage",
+    "prerepl": "tsc -b",
+    "repl": "NODE_OPTIONS=--experimental-specifier-resolution=node node repl.mjs"
   },
   "dependencies": {
     "@langchain/community": "0.3.47",
@@ -37,6 +39,7 @@
     "jest-util": "^29.0.0",
     "rimraf": "^6.0.0",
     "ts-jest": "^29.0.0",
+    "ts-node": "^10.9.1",
     "typescript": "^5.0.0"
   }
 }
