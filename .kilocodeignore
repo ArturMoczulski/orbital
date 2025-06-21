@@ -1,6 +1,3 @@
-# Node modules
-node_modules/
-
 # Build artifacts/backups
 dist.bak/
 
@@ -29,14 +26,7 @@ tmp/
 *.js.map
 *.d.ts.map
 
-services/*/node_modules/
-
-services/*/dist/
-
-services/*/.turbo/
-
-services/*/.cache/
-
-services/*/tmp/
-
-services/*/temp/
+**/*/.turbo/
+**/*/.cache/
+**/*/tmp/
+**/*/temp/
