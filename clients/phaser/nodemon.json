@@ -1,0 +1,9 @@
+{
+  "watch": [
+    "./",
+    "../shared/phaser-ui/src"
+  ],
+  "ext": "ts,tsx,js,jsx,json,css",
+  "exec": "NEXT_TELEMETRY_DISABLED=1 npm exec next dev -- -p $PORT",
+  "legacyWatch": true
+}

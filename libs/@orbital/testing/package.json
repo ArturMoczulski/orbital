@@ -12,6 +12,7 @@
     "test": "jest --coverage"
   },
   "dependencies": {
+    "@orbital/core": "workspace:*",
     "dotenv": "^16.3.1"
   },
   "devDependencies": {

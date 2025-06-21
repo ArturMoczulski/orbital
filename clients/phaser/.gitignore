@@ -1,0 +1,12 @@
+# Yarn PnP and cache artifacts
+.pnp.cjs
+.yarn/install-state.gz
+.yarn/unplugged/
+
+# Turborepo artifacts
+.turbo/
+
+# VSCode settings
+.DS_Store
+node_modules
+.next
