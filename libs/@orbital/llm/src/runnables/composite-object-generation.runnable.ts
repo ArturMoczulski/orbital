@@ -6,22 +6,7 @@ import {
   ObjectGenerationRunnable,
   ObjectGenerationRunnableOptions,
 } from "./object-generation.runnable";
-
-/**
- * Utility to set a nested value at the given path on an object.
- */
-function setAtPath(obj: any, path: string, value: any): void {
-  const parts = path.split(".");
-  let current = obj;
-  for (let i = 0; i < parts.length - 1; i++) {
-    const key = parts[i];
-    if (!(key in current) || typeof current[key] !== "object") {
-      current[key] = {};
-    }
-    current = current[key];
-  }
-  current[parts[parts.length - 1]] = value;
-}
+import { set, merge, upperFirst, cloneDeep, get, isEmpty, pick } from "lodash";
 
 /**
  * Composite runnable that generates an object and its nested parts.
@@ -40,13 +25,15 @@ export class CompositeObjectGenerationRunnable<T extends object> {
   /**
    * Invoke generation for the root object and any nested inputs.
    * @param rootInput Input for the top-level object.
-   * @param nestedInputs Map of nested input data keyed by JSON path.
+   * @param nestedInputs Map of nested inputs keyed by JSON path. Each value can be either:
+   *                     - An input object for a new ObjectGenerationRunnable
+   *                     - An ObjectGenerationRunnable instance to use directly
    * @param config Optional configuration including verbose mode.
    * @returns The generated object, with verbose data if requested.
    */
   async invoke(
     rootInput: any,
-    nestedInputs: Record<string, any> = {},
+    nestedInputs: Record<string, any | ObjectGenerationRunnable<any, any>> = {},
     config?: RunnableConfig & { verbose?: boolean }
   ): Promise<T & { _verbose?: Record<string, any> }> {
     const sessionId = `composite-${Date.now()}`;
@@ -54,16 +41,56 @@ export class CompositeObjectGenerationRunnable<T extends object> {
     const isVerbose = Boolean(config?.verbose);
     const verboseData: Record<string, any> = {};
 
-    // Construct root options with schema fallbacks
+    // Step 1: Generate the root object
+    const { root, rootVerboseData } = await this.generateRootObject(
+      rootInput,
+      nestedPaths,
+      sessionId,
+      config,
+      isVerbose
+    );
+
+    // Store verbose data for root if available
+    if (isVerbose && rootVerboseData) {
+      verboseData.root = rootVerboseData;
+    }
+
+    // Step 2: Generate all nested objects
+    await this.generateNestedObjects(
+      root,
+      nestedInputs,
+      nestedPaths,
+      sessionId,
+      config,
+      isVerbose,
+      verboseData
+    );
+
+    // Step 3: Add verbose data to result if needed
+    if (isVerbose && !isEmpty(verboseData)) {
+      (root as any)._verbose = verboseData;
+    }
+
+    return root;
+  }
+
+  /**
+   * Creates a root runnable with appropriate schema fallbacks.
+   */
+  protected createRootRunnable(): ObjectGenerationRunnable<any, any> {
     const typeName = this.type.name;
     const registry = this.options.schemaRegistry ?? zodSchemaRegistry;
+
+    // Check if schemas exist using lodash.get for safer property access
+    const inputSchemaKey = `${typeName}GenerationInputSchema`;
     const inSchemaExists = Boolean(
-      this.options.inputSchema ||
-        registry.get((globalThis as any)[`${typeName}GenerationInputSchema`])
+      this.options.inputSchema || registry.get(get(globalThis, inputSchemaKey))
     );
     const outSchemaExists = Boolean(
       this.options.outputSchema || registry.get(this.type as object)
     );
+
+    // Create options with fallbacks
     const rootOptions: any = { ...this.options };
     if (!inSchemaExists) {
       rootOptions.inputSchema = require("zod").z.any();
@@ -71,133 +98,224 @@ export class CompositeObjectGenerationRunnable<T extends object> {
     if (!outSchemaExists) {
       rootOptions.outputSchema = require("zod").z.any();
     }
-    // Generate the root object, excluding any nested fields
-    const rootRunnable = new ObjectGenerationRunnable(this.type, rootOptions);
 
-    // Prepare config for root invocation
-    const rootConfig: RunnableConfig & { exclude?: string[] } = {
-      ...(config || {}),
+    return new ObjectGenerationRunnable(this.type, rootOptions);
+  }
+
+  /**
+   * Prepares a config for a runnable invocation, including verbose callbacks.
+   */
+  protected prepareRunnableConfig(
+    baseConfig: RunnableConfig | undefined,
+    sessionId: string,
+    isVerbose: boolean,
+    options: {
+      exclude?: string[];
+      pathSuffix?: string;
+    } = {}
+  ): { config: RunnableConfig; verboseDataCapture: { data: any } } {
+    // Create config with session ID using lodash.merge
+    const config: RunnableConfig = merge({}, baseConfig || {}, {
       configurable: {
-        ...(config?.configurable || {}),
-        sessionId,
+        sessionId: options.pathSuffix
+          ? `${sessionId}-${options.pathSuffix}`
+          : sessionId,
       },
-      exclude: nestedPaths,
-    };
+    });
 
-    // Add callbacks for verbose mode if enabled
-    let rootVerboseData: any = null;
+    // Add exclude if provided using lodash.merge
+    if (options.exclude) {
+      merge(config, { exclude: options.exclude });
+    }
+
+    // Add callbacks for verbose mode
+    const verboseDataCapture = { data: null };
     if (isVerbose) {
-      rootConfig.callbacks = [
+      config.callbacks = [
         {
           handleLLMEnd: (output: any) => {
-            rootVerboseData = output;
+            verboseDataCapture.data = output;
           },
         },
       ];
     }
+
+    return { config, verboseDataCapture };
+  }
+
+  /**
+   * Generates the root object using the root runnable.
+   */
+  protected async generateRootObject(
+    rootInput: any,
+    nestedPaths: string[],
+    sessionId: string,
+    baseConfig?: RunnableConfig & { verbose?: boolean },
+    isVerbose = false
+  ): Promise<{ root: any; rootVerboseData: any }> {
+    // Create root runnable
+    const rootRunnable = this.createRootRunnable();
+
+    // Prepare config for root invocation
+    const { config, verboseDataCapture } = this.prepareRunnableConfig(
+      baseConfig,
+      sessionId,
+      isVerbose,
+      { exclude: nestedPaths }
+    );
 
     // Invoke root runnable
-    const rootResult = await rootRunnable.invoke(rootInput, rootConfig);
-    const root: any = rootResult;
+    const root = await rootRunnable.invoke(rootInput, config);
 
-    // Store verbose data for root if available
-    if (isVerbose && rootVerboseData) {
-      verboseData.root = rootVerboseData;
+    return { root, rootVerboseData: verboseDataCapture.data };
+  }
+
+  /**
+   * Creates a parent context prompt to pass to nested generations.
+   */
+  protected createParentContextPrompt(root: any): string {
+    return (
+      `The object you will generate is part of a larger ${this.type.name} object:\n` +
+      JSON.stringify(root, null, 2)
+    );
+  }
+
+  /**
+   * Creates a nested runnable based on a path.
+   */
+  protected createNestedRunnable(
+    path: string,
+    root: any
+  ): ObjectGenerationRunnable<any, any> | null {
+    // Extract and capitalize type name from path using lodash.upperFirst
+    const segments = path.split(".");
+    const rawTypeName = segments[segments.length - 1];
+    const typeName = upperFirst(rawTypeName);
+
+    // Look up the schema class and actual Zod schema using lodash.get
+    const schemaKey = `${typeName}GenerationInputSchema`;
+    const schemaClass = get(globalThis, schemaKey);
+    const inputSchema = zodSchemaRegistry.get(schemaClass);
+    if (!inputSchema) {
+      return null;
     }
 
-    // For each nested path, only generate if an input schema is registered
+    // Look up the nested type constructor using lodash.get
+    const TypeConstructor = get(globalThis, typeName);
+    if (!TypeConstructor) {
+      return null;
+    }
+
+    // Create options for the nested runnable
+    const nestedOptions = { ...this.options };
+
+    // Add parent context to system prompt
+    const nestedSystemPrompt = this.createParentContextPrompt(root);
+    if (this.options.systemPrompt) {
+      nestedOptions.systemPrompt = `${this.options.systemPrompt}\n\n${nestedSystemPrompt}`;
+    } else {
+      nestedOptions.systemPrompt = nestedSystemPrompt;
+    }
+
+    // Set schemas
+    nestedOptions.inputSchema = inputSchema;
+    if (
+      !zodSchemaRegistry.get(TypeConstructor) &&
+      !nestedOptions.outputSchema
+    ) {
+      nestedOptions.outputSchema = require("zod").z.any();
+    }
+
+    return new ObjectGenerationRunnable(TypeConstructor, nestedOptions);
+  }
+
+  /**
+   * Processes a single nested input (either a runnable or static data).
+   */
+  protected async processNestedInput(
+    path: string,
+    nestedValue: any | ObjectGenerationRunnable<any, any>,
+    root: any,
+    sessionId: string,
+    baseConfig?: RunnableConfig,
+    isVerbose = false
+  ): Promise<{ result: any; verboseData: any } | null> {
+    // Prepare config for nested invocation
+    const { config, verboseDataCapture } = this.prepareRunnableConfig(
+      cloneDeep(baseConfig), // Use cloneDeep to avoid modifying the original config
+      sessionId,
+      isVerbose,
+      { pathSuffix: path }
+    );
+
+    let nestedResult: any;
+
+    // Check if the nested value is a runnable
+    if (nestedValue instanceof ObjectGenerationRunnable) {
+      // If a runnable is provided, use it directly
+      const runnable = nestedValue as ObjectGenerationRunnable<any, any>;
+
+      // Add parent context to the runnable's system prompt
+      const parentContextPrompt = this.createParentContextPrompt(root);
+      runnable.updateSystemPrompt(parentContextPrompt);
+
+      // Invoke the provided runnable with empty input
+      nestedResult = await runnable.invoke({}, config);
+    } else {
+      // Otherwise, create a new runnable based on the path
+      const nestedRunnable = this.createNestedRunnable(path, root);
+      if (!nestedRunnable) {
+        return null;
+      }
+
+      // Invoke the nested runnable with the provided input
+      nestedResult = await nestedRunnable.invoke(nestedValue, config);
+    }
+
+    return {
+      result: nestedResult,
+      verboseData: verboseDataCapture.data,
+    };
+  }
+
+  /**
+   * Generates all nested objects and merges them into the root.
+   */
+  protected async generateNestedObjects(
+    root: any,
+    nestedInputs: Record<string, any | ObjectGenerationRunnable<any, any>>,
+    nestedPaths: string[],
+    sessionId: string,
+    baseConfig?: RunnableConfig,
+    isVerbose = false,
+    verboseData: Record<string, any> = {}
+  ): Promise<void> {
+    // Process each nested path
     for (const path of nestedPaths) {
-      const segments = path.split(".");
-      // Capitalize the type name to match PascalCase convention
-      const rawTypeName = segments[segments.length - 1];
-      const typeName =
-        rawTypeName.charAt(0).toUpperCase() + rawTypeName.slice(1);
+      const nestedValue = nestedInputs[path];
 
-      // Look up the schema class and actual Zod schema
-      const schemaClass = (globalThis as any)[
-        `${typeName}GenerationInputSchema`
-      ];
-      const inputSchema = zodSchemaRegistry.get(schemaClass);
-      if (!inputSchema) {
+      // Process the nested input
+      const result = await this.processNestedInput(
+        path,
+        nestedValue,
+        root,
+        sessionId,
+        baseConfig,
+        isVerbose
+      );
+
+      // Skip if processing failed
+      if (!result) {
         continue;
       }
 
-      // Look up the nested type constructor
-      const TypeConstructor = (globalThis as any)[typeName];
-      if (!TypeConstructor) {
-        continue;
+      // Store verbose data if available
+      if (isVerbose && result.verboseData) {
+        verboseData[path] = result.verboseData;
       }
 
-      // Instantiate and run nested generation with parent context prompt
-      const nestedOptions = { ...this.options };
-      // Ensure we have a system prompt for the nested runnable
-      const nestedSystemPrompt =
-        `The object you will generate is part of a larger ${this.type.name} object:\n` +
-        JSON.stringify(root, null, 2);
-
-      // If the original options had a system prompt, append to it
-      if (this.options.systemPrompt) {
-        nestedOptions.systemPrompt = `${this.options.systemPrompt}\n\n${nestedSystemPrompt}`;
-      } else {
-        nestedOptions.systemPrompt = nestedSystemPrompt;
-      }
-
-      // Explicitly set input schema
-      nestedOptions.inputSchema = inputSchema;
-
-      // Set output schema fallback if needed
-      if (
-        !zodSchemaRegistry.get(TypeConstructor) &&
-        !nestedOptions.outputSchema
-      ) {
-        nestedOptions.outputSchema = require("zod").z.any();
-      }
-
-      const nestedRunnable = new ObjectGenerationRunnable(
-        TypeConstructor,
-        nestedOptions
-      );
-      // Prepare config for nested invocation
-      const nestedConfig: RunnableConfig = {
-        ...(config || {}),
-        configurable: {
-          ...(config?.configurable || {}),
-          sessionId: `${sessionId}-${path}`,
-        },
-      };
-
-      // Add callbacks for verbose mode if enabled
-      let nestedVerboseData: any = null;
-      if (isVerbose) {
-        nestedConfig.callbacks = [
-          {
-            handleLLMEnd: (output: any) => {
-              nestedVerboseData = output;
-            },
-          },
-        ];
-      }
-
-      // Invoke the nested runnable
-      const nestedResult = await nestedRunnable.invoke(
-        nestedInputs[path],
-        nestedConfig
-      );
-
-      // Store verbose data for this nested path if available
-      if (isVerbose && nestedVerboseData) {
-        verboseData[path] = nestedVerboseData;
-      }
-
-      // Merge nested result into the root object
-      setAtPath(root, path, nestedResult);
+      // Merge nested result into the root object using lodash.set
+      set(root, path, result.result);
     }
-
-    // If verbose mode is enabled, attach the verbose data to the result
-    if (isVerbose && Object.keys(verboseData).length > 0) {
-      (root as any)._verbose = verboseData;
-    }
-
-    return root;
   }
 }

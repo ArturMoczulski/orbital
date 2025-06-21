@@ -283,4 +283,78 @@ ${JSON.stringify({ ...rootInput, generated: true }, null, 2)}`,
     expect(verboseData.root).toEqual(mockRootVerboseData);
     expect(verboseData.child).toEqual(mockNestedVerboseData);
   });
+
+  it("accepts ObjectGenerationRunnable instances directly in nestedInputs", async () => {
+    const composite = new CompositeObjectGenerationRunnable(RootType, {
+      model: {} as any,
+      systemPrompt: "Test system prompt for root type",
+    });
+    const rootInput = { hello: "world" };
+
+    // Create a custom nested runnable to pass directly
+    const customNestedRunnable = new ObjectGenerationRunnable(ChildType, {
+      model: {} as any,
+      systemPrompt: "Custom system prompt for child type",
+      inputSchema: ChildGenerationInputSchema,
+      outputSchema: z.object({ id: z.number(), custom: z.boolean() }),
+    });
+
+    // Spy on the updateSystemPrompt method
+    const updateSystemPromptSpy = jest.spyOn(
+      customNestedRunnable,
+      "updateSystemPrompt"
+    );
+
+    // Register schema class and constructor on globalThis
+    (globalThis as any).ChildGenerationInputSchema = ChildGenerationInputSchema;
+    (globalThis as any).Child = ChildType;
+
+    // Stub zodSchemaRegistry to return schemas for both root and child
+    (zodSchemaRegistry.get as jest.Mock).mockImplementation((key) => {
+      // For the root type
+      if (key === RootType) {
+        return z.object({});
+      }
+      // For the child input schema
+      if (key === (globalThis as any).ChildGenerationInputSchema) {
+        return ChildGenerationInputSchema;
+      }
+      // For the child output schema
+      if (key === ChildType) {
+        return z.object({ id: z.number(), custom: z.boolean() });
+      }
+      return undefined;
+    });
+
+    // Mock the invoke method for both root and custom nested runnable
+    invokeSpy.mockImplementation(async (input: any, config: any) => {
+      // For root invocation (has exclude property)
+      if (config && config.exclude && config.exclude.includes("child")) {
+        return { ...rootInput, generated: true };
+      }
+
+      // For nested invocation, return a custom result
+      return { id: 5, custom: true };
+    });
+
+    // Pass the custom runnable directly in nestedInputs
+    const nestedInputs = { child: customNestedRunnable };
+    const result = await composite.invoke(rootInput, nestedInputs);
+
+    // Verify the invoke was called twice (root and nested)
+    expect(invokeSpy).toHaveBeenCalledTimes(2);
+
+    // Verify updateSystemPrompt was called to add parent context
+    expect(updateSystemPromptSpy).toHaveBeenCalledTimes(1);
+    expect(updateSystemPromptSpy).toHaveBeenCalledWith(
+      expect.stringContaining("part of a larger RootType object")
+    );
+
+    // Verify the nested result was merged correctly
+    expect(result).toEqual({
+      hello: "world",
+      generated: true,
+      child: { id: 5, custom: true },
+    });
+  });
 });

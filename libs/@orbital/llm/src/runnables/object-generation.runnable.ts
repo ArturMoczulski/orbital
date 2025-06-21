@@ -108,7 +108,7 @@ export class ObjectGenerationRunnable<In, Out> extends Runnable<In, Out> {
   private readonly inputSchema: ZodSchema<In>;
   private readonly outputSchema: ZodSchema<Out>;
   private readonly model: BaseLanguageModel;
-  private readonly systemPrompt: string;
+  private systemPrompt: string; // Changed from readonly to allow updates
   private readonly maxAttempts: number;
   private readonly messageHistoryStore: (id: string) => BaseChatMessageHistory;
   private readonly inMemoryHistories = new Map<
@@ -169,6 +169,14 @@ export class ObjectGenerationRunnable<In, Out> extends Runnable<In, Out> {
     this.maxAttempts = opts.maxAttempts ?? 3;
     this.logger = opts.logger;
     this.messageHistoryStore = store;
+  }
+
+  /**
+   * Updates the system prompt, appending the provided text.
+   * @param additionalPrompt Text to append to the existing system prompt
+   */
+  updateSystemPrompt(additionalPrompt: string): void {
+    this.systemPrompt = `${this.systemPrompt}\n\n${additionalPrompt}`;
   }
 
   protected extractContent(response: BaseMessage): string {
