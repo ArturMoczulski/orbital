@@ -1,7 +1,11 @@
 // Inject a verbose logger for testing
 import { ConsoleLogger, VerbosityLevel } from "@orbital/core";
 import { z } from "zod";
-import { AIMessage, BaseMessage } from "@langchain/core/messages";
+import {
+  AIMessage,
+  BaseMessage,
+  SystemMessage,
+} from "@langchain/core/messages";
 import { BaseLanguageModel } from "@langchain/core/language_models/base";
 import { ObjectGenerationRunnable } from "./object-generation.runnable";
 import { IObjectGenerationPromptRepository } from "./object-generation-prompt-repository.interface";
@@ -60,6 +64,44 @@ jest.mock("langchain/output_parsers", () => {
       }),
     },
   };
+});
+
+import { deepOmitShape, pruneSchema } from "./object-generation.runnable";
+
+describe("Schema pruning utilities", () => {
+  const shape = {
+    a: z.string(),
+    b: z.number(),
+    c: z.object({ d: z.string(), e: z.number() }),
+  } as const;
+
+  it("deepOmitShape removes top-level keys", () => {
+    const pruned = deepOmitShape(shape, ["b"]);
+    expect(pruned).toHaveProperty("a");
+    expect(pruned).toHaveProperty("c");
+    expect(pruned).not.toHaveProperty("b");
+  });
+
+  it("deepOmitShape removes nested keys", () => {
+    const pruned = deepOmitShape(shape, ["c.d"]);
+    // nested c shape should only contain e
+    const nestedShape = (pruned.c as any)._def.shape();
+    expect(nestedShape).toHaveProperty("e");
+    expect(nestedShape).not.toHaveProperty("d");
+  });
+
+  it("pruneSchema returns a ZodObject without excluded keys", () => {
+    const schema = z.object(shape);
+    const prunedSchema = pruneSchema(schema, ["b", "c.d"]);
+    const prunedShape = (prunedSchema as any)._def.shape();
+    expect(prunedShape).toHaveProperty("a");
+    expect(prunedShape).toHaveProperty("c");
+    expect(prunedShape).not.toHaveProperty("b");
+    // nested
+    const nested = (prunedShape.c as any)._def.shape();
+    expect(nested).toHaveProperty("e");
+    expect(nested).not.toHaveProperty("d");
+  });
 });
 
 describe("ObjectGenerationRunnable", () => {
@@ -620,5 +662,95 @@ describe("ObjectGenerationRunnable", () => {
       description: "A small, cold town with unfriendly inhabitants",
       pointsOfInterest: ["Frozen Lake", "Old Watchtower"],
     });
+  });
+  it("omits specified fields from schema when exclude option is used", async () => {
+    const {
+      StructuredOutputParser,
+    } = require("@langchain/core/output_parsers");
+    const parserMock = {
+      getFormatInstructions: jest.fn().mockReturnValue("format-instructions"),
+      parse: jest.fn().mockResolvedValue({
+        name: "PrunedTown",
+        population: 123,
+        pointsOfInterest: [],
+      }),
+    };
+    jest
+      .spyOn(StructuredOutputParser, "fromZodSchema")
+      .mockReturnValue(parserMock);
+    const mockLLM = createMockLLM();
+    class Town {}
+    const townGenerator = new ObjectGenerationRunnable<
+      TownInput,
+      z.infer<typeof townSchema>
+    >(Town, {
+      inputSchema: z.any(),
+      outputSchema: townSchema,
+      model: mockLLM as unknown as BaseLanguageModel,
+      systemPrompt: "You are a generator of realistic fantasy towns.",
+      maxAttempts: 3,
+      logger: verboseLogger,
+      promptRepository: mockPromptRepository,
+    });
+    const input: TownInput = {
+      climate: "snowy",
+      temperature: -5,
+      friendliness: "medium",
+    };
+    const excludeFields = ["description", "pointsOfInterest"];
+    await townGenerator.invoke(input, {
+      configurable: { sessionId: "test-exclude-session" },
+      exclude: excludeFields,
+    });
+    const calls = (StructuredOutputParser.fromZodSchema as jest.Mock).mock
+      .calls;
+    const calledSchema = calls[calls.length - 1][0] as any;
+    const prunedSchema = pruneSchema(townSchema, excludeFields) as any;
+    expect(calledSchema._def.shape()).toEqual(prunedSchema._def.shape());
+  });
+
+  it("omits nested fields from schema when exclude includes nested paths", async () => {
+    const {
+      StructuredOutputParser,
+    } = require("@langchain/core/output_parsers");
+    const parserMock = {
+      getFormatInstructions: jest.fn().mockReturnValue("format-instructions"),
+      parse: jest.fn().mockResolvedValue({}),
+    };
+    jest
+      .spyOn(StructuredOutputParser, "fromZodSchema")
+      .mockReturnValue(parserMock);
+    const mockLLM = createMockLLM();
+    class NestedType {}
+    const nestedSchema = z.object({
+      owner: z.object({ name: z.string(), address: z.string() }),
+      population: z.number(),
+    });
+    const nestedGenerator = new ObjectGenerationRunnable<
+      NestedType,
+      z.infer<typeof nestedSchema>
+    >(NestedType, {
+      inputSchema: z.any(),
+      outputSchema: nestedSchema,
+      model: mockLLM as unknown as BaseLanguageModel,
+      systemPrompt: "You are a generator of nested objects.",
+      maxAttempts: 1,
+      logger: verboseLogger,
+      promptRepository: mockPromptRepository,
+    });
+    await nestedGenerator.invoke(
+      {},
+      {
+        configurable: { sessionId: "nested-exclude-session" },
+        exclude: ["owner.address"],
+      }
+    );
+    const calls = (StructuredOutputParser.fromZodSchema as jest.Mock).mock
+      .calls;
+    const calledSchema = calls[calls.length - 1][0] as any;
+    const pruned = pruneSchema(nestedSchema, ["owner.address"]) as any;
+    const ownerShape = (calledSchema._def.shape().owner as any)._def.shape();
+    const expectedOwnerShape = (pruned._def.shape().owner as any)._def.shape();
+    expect(ownerShape).toEqual(expectedOwnerShape);
   });
 });

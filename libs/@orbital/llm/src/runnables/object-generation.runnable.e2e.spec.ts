@@ -413,4 +413,33 @@ describe("E2E: ObjectGenerationRunnable", () => {
     // Log the full result for inspection
     testLogger.info("Result:", result);
   });
+  it("should support exclude option in E2E", async () => {
+    // Test that exclude removes specified fields from the schema in a real LLM scenario
+    class TownType {}
+    const townGenerator = new ObjectGenerationRunnable<any, Town>(TownType, {
+      inputSchema: z.any(),
+      outputSchema: TownSchema,
+      model: model,
+      systemPrompt: "You are a generator of realistic fantasy towns.",
+      maxAttempts: 3,
+      logger: verboseLogger,
+      promptRepository: mockPromptRepository,
+    });
+    const input = {
+      climate: "snowy",
+      temperature: -10,
+      friendliness: "low",
+    };
+    const result = await townGenerator.invoke(input, {
+      configurable: { sessionId: "e2e-exclude-session" },
+      exclude: ["description"],
+    });
+    expect(result).toBeDefined();
+    // description should be omitted per exclude
+    expect((result as any).description).toBeUndefined();
+    // other fields still present
+    expect(typeof result.name).toBe("string");
+    expect(typeof result.population).toBe("number");
+    expect(Array.isArray(result.pointsOfInterest)).toBe(true);
+  });
 });
