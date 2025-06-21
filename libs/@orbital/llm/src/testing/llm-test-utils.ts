@@ -25,9 +25,9 @@ export interface TestLLMOptions {
  */
 export const DEFAULT_TEST_LLM_OPTIONS: TestLLMOptions = {
   baseUrl: "http://localhost:11434",
-  model: "llama3.1:latest",
-  temperature: 0.7,
-  maxRetries: 3,
+  model: "gemma3:latest",
+  temperature: 0.2, // Lower temperature for more predictable outputs
+  maxRetries: 5, // Increase max retries
   logErrors: true,
 };
 

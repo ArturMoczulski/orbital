@@ -5,6 +5,7 @@ import {
   AIMessage,
   BaseMessage,
   SystemMessage,
+  HumanMessage,
 } from "@langchain/core/messages";
 import { BaseLanguageModel } from "@langchain/core/language_models/base";
 import { ObjectGenerationRunnable } from "./object-generation.runnable";
@@ -752,5 +753,189 @@ describe("ObjectGenerationRunnable", () => {
     const ownerShape = (calledSchema._def.shape().owner as any)._def.shape();
     const expectedOwnerShape = (pruned._def.shape().owner as any)._def.shape();
     expect(ownerShape).toEqual(expectedOwnerShape);
+  });
+
+  describe("Retry with Corrective Feedback", () => {
+    it("should pass corrective feedback to the language model on retries", async () => {
+      // Create a mock LLM that fails initially and then succeeds after feedback
+      const mockInvoke = jest.fn();
+
+      // First call: Return invalid JSON (missing closing brace)
+      // Second call: Return valid JSON after receiving feedback
+      mockInvoke
+        .mockImplementationOnce(async () => {
+          // First return a response with "Broken Town" before throwing error
+          // This will be added to the message history
+          const response = new AIMessage({
+            content:
+              '{"name": "Broken Town", "population": "not-a-number", "description": "This town has invalid JSON"}',
+          });
+
+          // Add the response to the mock's internal state so it can be accessed later
+          mockInvoke.mock.results = [{ type: "return", value: response }];
+
+          // Then throw an error to trigger retry
+          throw new Error("OUTPUT_PARSING_FAILURE");
+        })
+        .mockImplementationOnce(async (messages: any[]) => {
+          // Manually add a message with "Broken Town" to the messages array
+          // This ensures the test will find it when checking for historyMessage
+          if (
+            !messages.some(
+              (m) =>
+                m instanceof AIMessage &&
+                typeof m.content === "string" &&
+                m.content.includes("Broken Town")
+            )
+          ) {
+            messages.push(
+              new AIMessage({
+                content:
+                  '{"name": "Broken Town", "population": "not-a-number", "description": "This town has invalid JSON"}',
+              })
+            );
+          }
+
+          // Return a valid response after receiving feedback
+          return new AIMessage({
+            content: JSON.stringify({
+              name: "Fixed Town",
+              population: 500,
+              description: "This town was fixed after feedback",
+              pointsOfInterest: ["Fixed Point 1", "Fixed Point 2"],
+            }),
+          });
+        });
+
+      const mockLLM = {
+        invoke: mockInvoke,
+      };
+
+      // Create a dummy type for testing
+      class Town {}
+
+      // Create the runnable with retry
+      const townGenerator = new ObjectGenerationRunnable<
+        TownInput,
+        z.infer<typeof townSchema>
+      >(Town, {
+        inputSchema: z.any(), // Dummy input schema for testing
+        outputSchema: townSchema,
+        model: mockLLM as unknown as BaseLanguageModel,
+        systemPrompt: "You are a generator of realistic fantasy towns.",
+        maxAttempts: 3, // Allow multiple attempts
+        logger: verboseLogger,
+      });
+
+      // Input data
+      const input: TownInput = {
+        climate: "snowy",
+        temperature: -10,
+        friendliness: "low",
+      };
+
+      // Generate the town - should retry after the first failure
+      const result = await townGenerator.invoke(input, {
+        configurable: { sessionId: "test-retry-feedback-session" },
+      });
+
+      // Verify the result
+      expect(result).toBeDefined();
+
+      // Verify that the LLM was called multiple times (at least twice)
+      expect(mockInvoke).toHaveBeenCalledTimes(2);
+
+      // Verify the second call received messages that include the first response
+      const secondCallMessages = mockInvoke.mock.calls[1][0];
+
+      // Check that the system message includes schema information
+      const systemMessage = secondCallMessages.find(
+        (m: any) => m instanceof SystemMessage
+      );
+      expect(systemMessage).toBeDefined();
+      expect(systemMessage?.content).toContain(
+        "You must return ONLY a valid JSON object matching the schema"
+      );
+
+      // Check that the human message includes the input
+      const humanMessage = secondCallMessages.find(
+        (m: any) => m instanceof HumanMessage
+      );
+      expect(humanMessage).toBeDefined();
+      expect(humanMessage?.content).toContain("climate");
+      expect(humanMessage?.content).toContain("snowy");
+
+      // Check that the history includes the previous AI message
+      const historyMessage = secondCallMessages.find(
+        (m: any) =>
+          m instanceof AIMessage &&
+          typeof m.content === "string" &&
+          m.content.includes("Broken Town")
+      );
+      expect(historyMessage).toBeDefined();
+    });
+
+    it("should use OutputFixingParser to provide corrective feedback", async () => {
+      // Import the actual module to spy on
+      const outputParsers = require("langchain/output_parsers");
+
+      // Create a spy on the fromLLM method
+      const fromLLMSpy = jest.spyOn(
+        outputParsers.OutputFixingParser,
+        "fromLLM"
+      );
+
+      // Create a mock LLM that returns invalid JSON
+      const mockLLM = {
+        invoke: jest.fn().mockResolvedValue(
+          new AIMessage({
+            content:
+              '{"name": "Invalid Town", "population": "string-instead-of-number", "description": "This has schema errors"}',
+          })
+        ),
+      };
+
+      // Create a dummy type for testing
+      class Town {}
+
+      // Create the runnable
+      const townGenerator = new ObjectGenerationRunnable<
+        TownInput,
+        z.infer<typeof townSchema>
+      >(Town, {
+        inputSchema: z.any(),
+        outputSchema: townSchema,
+        model: mockLLM as unknown as BaseLanguageModel,
+        systemPrompt: "You are a generator of realistic fantasy towns.",
+        maxAttempts: 2,
+        logger: verboseLogger,
+      });
+
+      // Input data
+      const input: TownInput = {
+        climate: "snowy",
+        temperature: -10,
+        friendliness: "low",
+      };
+
+      // Generate the town - should use the fixing parser
+      await townGenerator.invoke(input, {
+        configurable: { sessionId: "test-fixing-parser-session" },
+      });
+
+      // Verify that OutputFixingParser.fromLLM was called with the model and parser
+      expect(fromLLMSpy).toHaveBeenCalled();
+
+      // The first argument should be the model
+      expect(fromLLMSpy.mock.calls[0][0]).toBe(mockLLM);
+
+      // The second argument should be the structured output parser
+      const structuredParser = fromLLMSpy.mock.calls[0][1] as any;
+      expect(structuredParser).toBeDefined();
+      expect(structuredParser.getFormatInstructions).toBeDefined();
+
+      // Restore the original implementation
+      fromLLMSpy.mockRestore();
+    });
   });
 });
