@@ -79,6 +79,10 @@ export const AreaMapGenerationInputSchema = z
       .describe("Size of the map (e.g., 'small', 'medium', 'large')"),
     /** Description of the map */
     description: z.string().describe("Detailed description of the map"),
+    /** Mapping of tile type names to numeric values */
+    tiles: z
+      .record(z.string(), z.number())
+      .describe("Mapping of tile type names to numeric values"),
   })
   .describe("Input schema for area map generation");
 
@@ -96,12 +100,15 @@ export class AreaMapGenerationInput implements AreaMapGenerationInputProps {
   size: string = "";
   /** Description of the map */
   description: string = "";
+  /** Mapping of tile type names to numeric values */
+  tiles: Record<string, number> = {};
 
   constructor(data?: Partial<AreaMapGenerationInputProps>) {
     if (data) {
       const validated = AreaMapGenerationInputSchema.parse(data);
       this.size = validated.size;
       this.description = validated.description;
+      this.tiles = validated.tiles;
     }
   }
 
