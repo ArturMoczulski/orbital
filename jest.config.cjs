@@ -61,7 +61,6 @@ function getProjects() {
 module.exports = {
   ...commonConfig,
   // CJS-specific overrides
-  preset: "ts-jest",
   moduleFileExtensions: ["ts", "tsx", "js", "json", "node"],
   displayName: "default",
   testMatch: ["**/?(*.)+(spec|test).ts?(x)"],
@@ -69,7 +68,14 @@ module.exports = {
   projects:
     process.env.JEST_DISABLE_PROJECTS === "true" ? undefined : getProjects(),
   transform: {
-    "^.+\\.(ts|tsx)$": "ts-jest",
+    "^.+\\.(ts|tsx)$": [
+      path.resolve(__dirname, "node_modules/ts-jest"),
+      {
+        tsconfig: {
+          esModuleInterop: true,
+        },
+      },
+    ],
   },
   globals: {
     "ts-jest": {
