@@ -1,12 +1,22 @@
 /** @type {import('ts-jest').JestConfigWithTsJest} */
+const path = require("path");
+
 module.exports = {
   // Mock HTMLCanvasElement for Phaser using jest-canvas-mock
-  setupFiles: ["jest-canvas-mock"],
+  setupFiles: [
+    path.resolve(__dirname, "../../../node_modules/jest-canvas-mock"),
+  ],
   testEnvironment: "jest-environment-jsdom",
   roots: ["<rootDir>/src"],
   testMatch: ["**/*.spec.ts"],
   transform: {
-    "^.+\\.(ts|tsx|js|cjs)$": ["ts-jest", { useESM: true }],
+    "^.+\\.(ts|tsx|js|cjs)$": [
+      path.resolve(__dirname, "../../../node_modules/ts-jest"),
+      {
+        useESM: true,
+        tsconfig: path.join(__dirname, "tsconfig.json"),
+      },
+    ],
   },
   transformIgnorePatterns: ["node_modules/"],
   extensionsToTreatAsEsm: [".ts"],

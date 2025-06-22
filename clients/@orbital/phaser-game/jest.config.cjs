@@ -1,23 +1,35 @@
 /** @type {import('ts-jest').JestConfigWithTsJest} */
+const path = require("path");
+
 module.exports = {
-  preset: "ts-jest",
   testEnvironment: "jest-environment-jsdom",
   clearMocks: true,
   resetMocks: true,
-  roots: ["<rootDir>", "<rootDir>/../../libs/@orbital/phaser-ui/src"],
+  roots: [
+    "<rootDir>",
+    path.resolve(__dirname, "../../../libs/@orbital/phaser-ui/src"),
+  ],
   testMatch: ["**/*.spec.ts"],
   transform: {
-    "^.+\\.(ts|tsx|js)$": "ts-jest",
+    "^.+\\.(ts|tsx|js)$": [
+      path.resolve(__dirname, "../../../node_modules/ts-jest"),
+      {
+        tsconfig: path.join(__dirname, "tsconfig.json"),
+      },
+    ],
   },
   // Mock HTMLCanvasElement for Phaser using jest-canvas-mock
-  setupFiles: ["jest-canvas-mock", "<rootDir>/jest.setup.js"],
+  setupFiles: [
+    path.resolve(__dirname, "../../../node_modules/jest-canvas-mock"),
+    "<rootDir>/jest.setup.js",
+  ],
   setupFilesAfterEnv: [],
   resetModules: true,
   transformIgnorePatterns: ["node_modules/(?!(\\@orbital\\/phaser-ui)/)"],
   moduleFileExtensions: ["ts", "tsx", "js", "jsx", "json", "node"],
   moduleDirectories: [
     "node_modules",
-    "<rootDir>/../../libs/@orbital/phaser-ui/src",
+    path.resolve(__dirname, "../../../libs/@orbital/phaser-ui/src"),
   ],
   moduleNameMapper: {
     // Mock styles and asset imports
