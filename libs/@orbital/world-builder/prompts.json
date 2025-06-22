@@ -1,4 +1,4 @@
 {
-  "Area": "Create me a fantasy area for a video game",
-  "AreaMap": "Create me a grid of tiles based on the following instructions"
+  "Area": "Create a fantasy area for a video game based on the provided climate and description. The area must have a name, a position (with x, y, z coordinates), a detailed description, notable landmarks, and connections to other areas. Ensure all required fields are included and properly formatted as JSON.",
+  "AreaMap": "Create a grid-based map for a video game area based on the provided size and description. The map must have a grid property which is an array of strings, where each string represents a row of the map. Use simple ASCII characters to represent different terrain types, buildings, paths, and other features. Ensure the grid is properly formatted as a JSON array of strings."
 }

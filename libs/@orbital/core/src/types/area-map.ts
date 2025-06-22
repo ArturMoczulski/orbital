@@ -57,33 +57,9 @@ export const AreaMapSchema = z
       .string()
       .optional()
       .describe("Unique identifier for the map instance"),
-    version: z.number().int().describe("Version of the IR format"),
-    cellSize: z.number().describe("Size of each cell in map units"),
-    legend: z
-      .record(
-        z.object({
-          terrain: z.string().describe("Terrain type"),
-          walkable: z
-            .boolean()
-            .describe("Whether this terrain type is walkable"),
-          elevation: z
-            .number()
-            .optional()
-            .describe("Elevation of this terrain type"),
-        })
-      )
-      .describe("Legend mapping symbols to tile properties"),
     grid: z
       .array(z.string())
       .describe("Array of strings, each representing a row of the map grid"),
-    metadata: z
-      .object({
-        biome: z.string().optional().describe("Biome type of the map"),
-        seed: z.number().optional().describe("Random seed used for generation"),
-        description: z.string().optional().describe("Additional description"),
-      })
-      .optional()
-      .describe("Additional metadata for the map"),
   })
   .describe("Complete IR data for a game area map");
 
@@ -110,14 +86,7 @@ export class AreaMap
   /** Create a mock AreaMap instance */
   static mock(overrides: Partial<AreaMapProps> = {}): AreaMap {
     const base: Partial<AreaMapProps> = {
-      version: 1,
-      cellSize: 1.0,
-      legend: {
-        ".": { terrain: "dirt", walkable: true },
-        "~": { terrain: "water", walkable: false, elevation: -1 },
-      },
       grid: ["...", "...", "..."],
-      metadata: { biome: "default", seed: 0, description: "Mock map" },
     };
     return new AreaMap({ ...base, ...overrides });
   }
@@ -129,10 +98,6 @@ export class AreaMap
     super({ id });
 
     // Assign validated properties
-    this.version = validated.version;
-    this.cellSize = validated.cellSize;
-    this.legend = validated.legend;
     this.grid = validated.grid;
-    this.metadata = validated.metadata;
   }
 }

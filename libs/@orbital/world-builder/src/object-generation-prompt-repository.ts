@@ -3,7 +3,7 @@ import * as fs from "fs";
 import * as path from "path";
 
 // Load prompts from prompts.json at package root
-const promptsPath = path.resolve(__dirname, "../../prompts.json");
+const promptsPath = path.resolve(__dirname, "../prompts.json");
 const raw = fs.readFileSync(promptsPath, "utf-8");
 const prompts: Record<string, string> = JSON.parse(raw);
 
@@ -26,3 +26,4 @@ export class ObjectGenerationPromptRepository
     return prompt;
   }
 }
+export const promptRepository = new ObjectGenerationPromptRepository();
