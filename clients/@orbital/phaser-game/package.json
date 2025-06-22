@@ -1,5 +1,5 @@
 {
-  "name": "@orbital/phaser",
+  "name": "@orbital/phaser-game",
   "version": "1.0.0",
   "private": true,
   "packageManager": "yarn@4.9.2",

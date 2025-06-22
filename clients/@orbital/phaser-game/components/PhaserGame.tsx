@@ -1,6 +1,6 @@
 import { useRef, useEffect } from "react";
 import Phaser from "phaser";
-import CharacterSelectScene from "./../game/ui/scenes/CharacterSelectScene";
+import CharacterSelectScene from "../game/ui/scenes/CharacterSelectScene";
 import { container, TYPES } from "../di";
 
 export default function PhaserGame() {

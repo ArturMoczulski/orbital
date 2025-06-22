@@ -1,0 +1,40 @@
+{
+  "name": "@orbital/phaser-maps",
+  "version": "1.0.0",
+  "private": true,
+  "packageManager": "yarn@4.9.2",
+  "scripts": {
+    "dev": "yarn run dotenv -e .env.local next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "test": "npx jest --config jest.config.cjs"
+  },
+  "dependencies": {
+    "@orbital/phaser-ui": "workspace:*",
+    "inversify": "6.0.1",
+    "next": "^14.0.0",
+    "next-transpile-modules": "^10.0.1",
+    "phaser": "^3.70.0",
+    "phaser3-rex-plugins": "^1.80.16",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "reflect-metadata": "^0.2.2"
+  },
+  "devDependencies": {
+    "@types/jest": "^29.5.14",
+    "@types/node": "22.15.30",
+    "@types/react": "19.1.6",
+    "@types/react-dom": "^18.2.18",
+    "dotenv-cli": "^4.0.0",
+    "eslint": "^8.56.0",
+    "eslint-config-next": "^14.0.0",
+    "jest": "^29.7.0",
+    "nodemon": "^3.0.2",
+    "ts-jest": "^29.3.4",
+    "typescript": "5.8.3"
+  },
+  "optionalDependencies": {
+    "@orbital/phaser-extended-mocks": "workspace:*"
+  }
+}
