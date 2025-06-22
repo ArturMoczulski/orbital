@@ -35,7 +35,7 @@ export default function AuthUI({ baseUrl, onSuccess }: AuthUIProps) {
         onSuccess();
       } else {
         // After successful signup, automatically log in the user
-        const loginRes = await fetch(`${baseUrl}/login`, {
+        const loginRes = await fetch(`/api/auth/login`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ username, password }),

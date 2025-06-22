@@ -1,8 +1,8 @@
 /// <reference types="jest" />
-// Mock Phaser UI Button to simplify UI logic in tests
-jest.mock("@orbital/phaser-ui", () => {
+// Mock the base Button to simplify UI logic in tests
+jest.mock("../atoms/Button", () => {
   return {
-    Button: class {
+    default: class {
       scene: any;
       container: any;
       constructor(config: any) {
@@ -29,7 +29,7 @@ jest.mock("@orbital/phaser-ui", () => {
 });
 
 import { describe, expect, it, beforeEach, jest } from "@jest/globals";
-import { ClientEvent } from "../../events";
+import { ClientEvent } from "../events";
 const PhaserMock: any = require("phaser");
 import LogoutButton, { LogoutButtonConfig } from "./LogoutButton";
 

@@ -10,7 +10,7 @@ export default function PhaserGame() {
     if (!gameRef.current) return;
 
     // Get the Phaser.Game instance directly from the container
-    const game = container.get<Phaser.Game>(TYPES.PhaserGame);
+    const game = container.get<Phaser.Game>(TYPES.PhaserClient);
 
     // Set the parent element for the game
     game.canvas.parentNode?.removeChild(game.canvas);
@@ -18,8 +18,6 @@ export default function PhaserGame() {
 
     // Start the CharacterSelectScene
     game.scene.start("CharacterSelectScene");
-    // Ensure AuthService is instantiated so it subscribes to logout events
-    container.get(TYPES.AuthService);
 
     // Handle window resize
     const resize = () => {

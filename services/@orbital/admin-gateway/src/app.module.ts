@@ -1,21 +1,26 @@
 import { Module } from "@nestjs/common";
-import { PingController } from "./ping/ping.controller";
-import { ClientsModule, Transport } from "@nestjs/microservices";
+import { ConfigModule, ConfigService } from "@nestjs/config";
 import { MongooseModule } from "@nestjs/mongoose";
+import { PingController } from "./ping/ping.controller";
 import { AuthModule } from "./auth/auth.module";
 import { UsersModule } from "./users/users.module";
+
 @Module({
   imports: [
-    MongooseModule.forRoot(process.env.KILOAXE_SERVICES_GATEWAY_MONGO_URI!),
+    ConfigModule.forRoot({
+      isGlobal: true,
+      envFilePath: ".env.local",
+      expandVariables: true,
+    }),
+    MongooseModule.forRootAsync({
+      imports: [ConfigModule],
+      useFactory: (configService: ConfigService) => ({
+        uri: configService.get<string>("ADMIN_DB_URI"),
+      }),
+      inject: [ConfigService],
+    }),
     AuthModule,
     UsersModule,
-    ClientsModule.register([
-      {
-        name: "WORLD_SERVICE",
-        transport: Transport.NATS,
-        options: { servers: [process.env.NATS_URL || "nats://nats:4222"] },
-      },
-    ]),
   ],
   controllers: [PingController],
   providers: [],

@@ -36,8 +36,8 @@ module.exports = {
       "<rootDir>/test/mocks/pluginMock.js",
     "^@orbital/phaser-ui$": "<rootDir>/test/mocks/phaserUiMock.js",
     "^@orbital/phaser-ui/(.*)$": "<rootDir>/test/mocks/phaserUiMock.js",
-    // Mock GameSettingsPopup to avoid dependency issues
-    "^game/ui/organisms/GameSettingsPopup$":
-      "<rootDir>/test/mocks/gameSettingsPopupMock.js",
+    // Mock ClientSettingsPopup to avoid dependency issues
+    "^game/ui/organisms/ClientSettingsPopup$":
+      "<rootDir>/test/mocks/clientSettingsPopupMock.js",
   },
 };

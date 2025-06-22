@@ -3,7 +3,7 @@ import { AppModule } from "./app.module";
 import * as dotenv from "dotenv";
 
 async function bootstrap() {
-  dotenv.config({ path: "../.env" });
+  dotenv.config({ path: "../.env.local" });
   const app = await NestFactory.create(AppModule, {
     cors: {
       origin: "*", // Allow all origins for development

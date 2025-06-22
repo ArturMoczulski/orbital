@@ -1,8 +1,7 @@
 import Phaser from "phaser";
 // @ts-ignore: no declaration file for rexui plugin
 import UIPlugin from "phaser3-rex-plugins/dist/rexuiplugin.js";
-import GameSettingsPopup from "../organisms/GameSettingsPopup";
-import { container, TYPES, Theme } from "../../../di";
+import { ClientSettingsPopup, Theme } from "@orbital/phaser-ui";
 
 export default class CharacterSelectScene extends Phaser.Scene {
   private theme: Theme;
@@ -22,8 +21,8 @@ export default class CharacterSelectScene extends Phaser.Scene {
       },
     });
 
-    // Get theme from the container
-    this.theme = container.get<Theme>(TYPES.Theme);
+    // Use the active theme directly
+    this.theme = Theme.active;
   }
 
   preload() {
@@ -38,7 +37,7 @@ export default class CharacterSelectScene extends Phaser.Scene {
     this.add.image(400, 300, "logo");
 
     // Create and display Game Settings Popup with theme from DI container
-    const settingsPopup = new GameSettingsPopup({
+    const settingsPopup = new ClientSettingsPopup({
       scene: this,
       theme: this.theme,
     });

@@ -78,7 +78,7 @@ describe("Popup", () => {
 
     it("should use default theme if none provided", () => {
       const configWithoutTheme = { ...mockConfig };
-      delete configWithoutTheme.theme;
+      delete (configWithoutTheme as any).theme;
       const popup = new TestPopup(configWithoutTheme);
       expect(popup).toBeDefined();
     });
@@ -116,15 +116,6 @@ describe("Popup", () => {
 
       // Create the popup to ensure no errors
       popup.create();
-    });
-
-    it("should create panel with correct properties", () => {
-      const popup = new TestPopup(mockConfig);
-      const theme = mockConfig.theme as Theme;
-
-      // Skip this test as we can't easily mock the Panel constructor
-      // The functionality is already tested in Panel.spec.ts
-      expect(true).toBe(true);
     });
 
     it("should show the panel", () => {

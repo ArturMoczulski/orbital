@@ -10,7 +10,13 @@ export type { ButtonConfig } from "./atoms/Button";
 
 export { default as Panel } from "./atoms/Panel";
 export type { PanelConfig } from "./atoms/Panel";
-export { default as Popup } from "./organisms/Popup";
-export type { PopupConfig } from "./organisms/Popup";
+export { default as Popup } from "./molecules/Popup";
+export type { PopupConfig } from "./molecules/Popup";
+export { default as ClientSettingsPopup } from "./organisms/ClientSettingsPopup";
+export type { ClientSettingsPopupConfig } from "./organisms/ClientSettingsPopup";
+
+export { default as LogoutButton } from "./molecules/LogoutButton";
+export type { LogoutButtonConfig } from "./molecules/LogoutButton";
+export { ClientEvent } from "./events";
 
 export { default as Theme } from "./theme/Theme";
