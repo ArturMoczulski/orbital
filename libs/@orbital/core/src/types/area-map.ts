@@ -5,51 +5,10 @@ import {
   IdentifiableObjectProps,
 } from "./identifiable-object";
 import { ZodSchema } from "../decorators/zod-schema.decorator";
+import { AreaMapTiles } from "./area-map-tiles";
 
 /**
- * Zod schema for map generation input
- */
-export const MapGenerationInputSchema = z
-  .object({
-    /** Width of the map in cells */
-    width: z.number().int().min(1).describe("Width of the map in cells"),
-    /** Height of the map in cells */
-    height: z.number().int().min(1).describe("Height of the map in cells"),
-    /** Legend mapping symbols to tile properties */
-    legend: z
-      .record(
-        z.object({
-          terrain: z.string().describe("Terrain type"),
-          walkable: z
-            .boolean()
-            .describe("Whether this terrain type is walkable"),
-          elevation: z
-            .number()
-            .optional()
-            .describe("Elevation of this terrain type"),
-        })
-      )
-      .describe("Legend mapping symbols to tile properties"),
-    /** Theme of the map */
-    theme: z.string().default("fantasy").describe("Theme of the map"),
-    /** Biome type of the map */
-    biome: z.string().optional().describe("Biome type of the map"),
-    /** Random seed for generation */
-    seed: z.number().optional().describe("Random seed for generation"),
-    /** Any additional details or constraints */
-    additionalDetails: z
-      .string()
-      .optional()
-      .default("")
-      .describe("Additional details or constraints"),
-  })
-  .describe("Input schema for map generation");
-
-/** Type for map generation prompt */
-export type MapGenerationPrompt = z.infer<typeof MapGenerationInputSchema>;
-
-/**
- * Intermediate Representation (IR) for a game area map.
+ * Zod schema for AreaMapGrid
  */
 export const AreaMapSchema = z
   .object({
@@ -57,36 +16,41 @@ export const AreaMapSchema = z
       .string()
       .optional()
       .describe("Unique identifier for the map instance"),
+    width: z.number().int().min(1).describe("Width of the map in cells"),
+    height: z.number().int().min(1).describe("Height of the map in cells"),
     grid: z
-      .array(z.string())
-      .describe("Array of strings, each representing a row of the map grid"),
+      .array(z.array(z.nativeEnum(AreaMapTiles)))
+      .describe("2D grid of map tiles"),
   })
-  .describe("Complete IR data for a game area map");
+  .describe("A map of an area with a grid of tiles");
 
-/** Type for map IR properties */
+/** Type for AreaMapGrid properties */
 export type AreaMapProps = z.infer<typeof AreaMapSchema>;
 
 /**
- * Domain class for AreaMap with auto-assignment and validation.
+ * Domain class for AreaMapGrid with auto-assignment and validation.
  */
 @ZodSchema(AreaMapSchema)
 export class AreaMap
   extends IdentifiableObject
   implements AreaMapProps, IdentifiableObjectProps
 {
-  version: number = 1;
-  cellSize: number = 1.0;
-  legend: Record<
-    string,
-    { terrain: string; walkable: boolean; elevation?: number }
-  > = {};
-  grid: string[] = [];
-  metadata?: { biome?: string; seed?: number; description?: string };
+  width: number = 0;
+  height: number = 0;
+  grid: AreaMapTiles[][] = [];
 
-  /** Create a mock AreaMap instance */
+  /** Create a mock AreaMapGrid instance */
   static mock(overrides: Partial<AreaMapProps> = {}): AreaMap {
+    const width = overrides.width || 3;
+    const height = overrides.height || 3;
+    const grid =
+      overrides.grid ||
+      Array(height).fill(Array(width).fill(AreaMapTiles.GrassGround));
+
     const base: Partial<AreaMapProps> = {
-      grid: ["...", "...", "..."],
+      width,
+      height,
+      grid,
     };
     return new AreaMap({ ...base, ...overrides });
   }
@@ -98,6 +62,82 @@ export class AreaMap
     super({ id });
 
     // Assign validated properties
+    this.width = validated.width;
+    this.height = validated.height;
     this.grid = validated.grid;
+  }
+}
+
+/**
+ * Zod schema for area map generation input
+ */
+export const AreaMapGenerationInputSchema = z
+  .object({
+    /** Size of the map */
+    size: z
+      .string()
+      .describe("Size of the map (e.g., 'small', 'medium', 'large')"),
+    /** Description of the map */
+    description: z.string().describe("Detailed description of the map"),
+  })
+  .describe("Input schema for area map generation");
+
+/** Type for area map generation input */
+export type AreaMapGenerationInputProps = z.infer<
+  typeof AreaMapGenerationInputSchema
+>;
+
+/**
+ * Input class for area map generation
+ */
+@ZodSchema(AreaMapGenerationInputSchema)
+export class AreaMapGenerationInput implements AreaMapGenerationInputProps {
+  /** Size of the map */
+  size: string = "";
+  /** Description of the map */
+  description: string = "";
+
+  constructor(data?: Partial<AreaMapGenerationInputProps>) {
+    if (data) {
+      const validated = AreaMapGenerationInputSchema.parse(data);
+      this.size = validated.size;
+      this.description = validated.description;
+    }
+  }
+
+  /**
+   * Parse the size string into width and height values
+   * @returns An object with width and height properties
+   */
+  parseSize(): { width: number; height: number } {
+    // Default size if parsing fails
+    const defaultSize = { width: 32, height: 32 };
+
+    if (!this.size) return defaultSize;
+
+    // Try to parse formats like "32x32", "32X32", "32,32", "32 32"
+    const match = this.size.match(/(\d+)\s*[xX,\s]\s*(\d+)/);
+    if (match) {
+      const width = parseInt(match[1], 10);
+      const height = parseInt(match[2], 10);
+      return { width, height };
+    }
+
+    // Try to parse single number formats like "32" (square map)
+    const singleNumber = parseInt(this.size, 10);
+    if (!isNaN(singleNumber)) {
+      return { width: singleNumber, height: singleNumber };
+    }
+
+    // Handle text sizes
+    const sizeMap: Record<string, { width: number; height: number }> = {
+      small: { width: 16, height: 16 },
+      medium: { width: 32, height: 32 },
+      large: { width: 64, height: 64 },
+      huge: { width: 128, height: 128 },
+    };
+
+    const normalizedSize = this.size.toLowerCase().trim();
+    return sizeMap[normalizedSize] || defaultSize;
   }
 }

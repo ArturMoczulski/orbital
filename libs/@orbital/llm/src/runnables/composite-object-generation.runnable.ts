@@ -231,15 +231,21 @@ export class CompositeObjectGenerationRunnable<T extends object> {
     const segments = path.split(".");
     let rawTypeName = segments[segments.length - 1];
 
+    console.log(
+      `Creating nested runnable for path: ${path}, raw type name: ${rawTypeName}`
+    );
+
     // Handle special path names that don't match their type names
     const pathToTypeMapping: Record<string, string> = {
       capital: "City",
+      areaMap: "AreaMap", // Add mapping for areaMap
       // Add more mappings as needed
     };
 
     // Check if we have a special mapping for this path
     if (pathToTypeMapping[rawTypeName]) {
       rawTypeName = pathToTypeMapping[rawTypeName];
+      console.log(`Using mapped type name: ${rawTypeName}`);
     } else if (rawTypeName.includes("[")) {
       // Handle array paths like "cities[0]" by extracting the base name
       rawTypeName = rawTypeName.split("[")[0];
@@ -247,21 +253,33 @@ export class CompositeObjectGenerationRunnable<T extends object> {
       if (rawTypeName.endsWith("s")) {
         rawTypeName = rawTypeName.slice(0, -1);
       }
+      console.log(`Processed array path to type name: ${rawTypeName}`);
     }
 
     const typeName = upperFirst(rawTypeName);
+    console.log(`Final type name: ${typeName}`);
 
     // Look up the schema class and actual Zod schema using lodash.get
     const schemaKey = `${typeName}GenerationInputSchema`;
+    console.log(`Looking for schema class with key: ${schemaKey}`);
     const schemaClass = get(globalThis, schemaKey);
+    console.log(`Found schema class: ${schemaClass ? "yes" : "no"}`);
+
     const inputSchema = zodSchemaRegistry.get(schemaClass);
+    console.log(`Found input schema: ${inputSchema ? "yes" : "no"}`);
+
     if (!inputSchema) {
+      console.log(`Failed to find input schema for ${typeName}`);
       return null;
     }
 
     // Look up the nested type constructor using lodash.get
+    console.log(`Looking for type constructor: ${typeName}`);
     const TypeConstructor = get(globalThis, typeName);
+    console.log(`Found type constructor: ${TypeConstructor ? "yes" : "no"}`);
+
     if (!TypeConstructor) {
+      console.log(`Failed to find type constructor for ${typeName}`);
       return null;
     }
 

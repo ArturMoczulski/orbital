@@ -4,7 +4,6 @@ export * from "./types/position";
 export * from "./types/area";
 export * from "./types/area-map";
 export * from "./types/area-map-tiles";
-export * from "./types/area-map-grid";
 export * from "./types/base-object";
 export * from "./types/identifiable-object";
 export * from "./world-history";

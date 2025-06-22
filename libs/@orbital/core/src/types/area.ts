@@ -6,8 +6,8 @@ import {
   IdentifiableObjectProps,
 } from "./identifiable-object";
 import { Position, PositionSchema } from "./position";
-import { AreaMap, AreaMapSchema } from "./area-map";
 import { ZodSchema } from "../decorators/zod-schema.decorator";
+import { AreaMap, AreaMapSchema } from "./area-map";
 
 /**
  * Represents a named area with a position.
@@ -20,6 +20,7 @@ export const AreaSchema = z
     id: z.string().optional().describe("Unique identifier for the area"),
     parentId: z
       .string()
+      .nullable()
       .optional()
       .describe("Identifier of the parent area, if any"),
     name: z.string().describe("Descriptive name of the area"),
@@ -40,7 +41,7 @@ export class Area
   extends IdentifiableObject
   implements AreaProps, IdentifiableObjectProps
 {
-  parentId?: string;
+  parentId?: string | null;
   name: string = "";
   position: Position = new Position();
   /** Map representation of this area */
