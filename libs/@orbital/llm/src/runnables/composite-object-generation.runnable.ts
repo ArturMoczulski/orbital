@@ -1,7 +1,7 @@
 /* libs/@orbital/llm/src/runnables/composite-object-generation.runnable.ts */
 
 import { zodSchemaRegistry } from "@orbital/core";
-import { schemaRegistry } from "@orbital/core/src/registry";
+import { schemaRegistry } from "@orbital/core";
 import { RunnableConfig } from "@langchain/core/runnables";
 import {
   ObjectGenerationRunnable,

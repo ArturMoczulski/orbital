@@ -1,5 +1,4 @@
 #!/usr/bin/env node
-import "ts-node/esm";
 import { fileURLToPath } from "url";
 import { createRequire } from "module";
 const require = createRequire(import.meta.url);
