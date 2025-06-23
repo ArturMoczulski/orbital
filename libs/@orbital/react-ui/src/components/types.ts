@@ -32,10 +32,15 @@ export interface ObjectExplorerProps<T extends ExplorerObject> {
   onSelect: (objectId: string) => void;
 
   /**
-   * Type name for the objects being displayed (e.g., "Areas", "Items", etc.)
-   * Used in the header display
+   * Constructor for type inference, used to derive display name from class name.
    */
-  objectTypeName: string;
+  type: { name: string };
+
+  /**
+   * Type name for the objects being displayed (e.g., "Areas", "Items", etc.)
+   * Used in the header display. If omitted, `type.name + "s"` is used.
+   */
+  objectTypeName?: string;
 
   /**
    * Optional custom render function for tree nodes

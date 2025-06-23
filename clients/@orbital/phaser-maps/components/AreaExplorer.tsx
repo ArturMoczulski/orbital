@@ -15,9 +15,9 @@ export default function AreaExplorer({ onSelect }: AreaExplorerProps) {
 
   return (
     <ObjectExplorer<Area>
+      type={Area}
       queryResult={areasQuery}
       onSelect={onSelect}
-      objectTypeName="Areas"
     />
   );
 }

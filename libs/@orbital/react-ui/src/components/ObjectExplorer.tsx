@@ -15,9 +15,13 @@ import { useOrbitalTheme } from "../theme/ThemeContext";
 export function ObjectExplorer<T extends ExplorerObject>({
   queryResult,
   onSelect,
+  type,
   objectTypeName,
   renderNode,
 }: ObjectExplorerProps<T>) {
+  // Determine display type name: use provided or default from constructor
+  const typeName = objectTypeName ?? `${type.name}s`;
+
   // Use the orbital theme if available, otherwise fall back to the default MUI theme
   const orbitalTheme = useOrbitalTheme();
   const defaultTheme = useTheme();
@@ -28,7 +32,6 @@ export function ObjectExplorer<T extends ExplorerObject>({
     {}
   );
 
-  // Handle expanding/collapsing nodes
   const toggleNode = (id: string) => {
     setExpandedNodes((prev) => ({
       ...prev,
@@ -36,16 +39,14 @@ export function ObjectExplorer<T extends ExplorerObject>({
     }));
   };
 
-  // Handle clicking the select button
   const handleSelectClick = (id: string, event: React.MouseEvent) => {
-    event.stopPropagation(); // Prevent triggering the tree node toggle
+    event.stopPropagation();
     const selectedObject = objects?.find((obj) => obj.id === id);
     if (selectedObject) {
       onSelect(selectedObject.id);
     }
   };
 
-  // Default tree node component
   const DefaultTreeNode = ({
     object,
     level = 0,
@@ -80,26 +81,25 @@ export function ObjectExplorer<T extends ExplorerObject>({
               <ChevronRightIcon fontSize="small" color="inherit" />
             )
           ) : (
-            <Box sx={{ width: 24 }} /> // Spacer
+            <Box sx={{ width: 24 }} />
           )}
           <Typography sx={{ flexGrow: 1, ml: 1 }}>{object.name}</Typography>
           <IconButton
             size="small"
             color="inherit"
             onClick={(e) => handleSelectClick(object.id, e)}
-            title={`Select ${objectTypeName.slice(0, -1)}`}
+            title={`Select ${type.name}`}
             data-testid={`select-button-${object.id}`}
           >
             <MapIcon fontSize="small" color="inherit" />
           </IconButton>
         </Box>
-
         {isExpanded && hasChildren && (
           <Box>
-            {childObjects.map((childObject) => (
+            {childObjects.map((child) => (
               <DefaultTreeNode
-                key={childObject.id}
-                object={childObject}
+                key={child.id}
+                object={child}
                 level={level + 1}
               />
             ))}
@@ -109,28 +109,29 @@ export function ObjectExplorer<T extends ExplorerObject>({
     );
   };
 
-  // Handle loading states
-  if (isLoading)
+  if (isLoading) {
     return (
       <Box sx={{ color: "text.primary" }} data-testid="loading-state">
-        Loading {objectTypeName.toLowerCase()}...
+        Loading {typeName.toLowerCase()}...
       </Box>
     );
-  if (error || !objects)
+  }
+  if (error || !objects) {
     return (
       <Box sx={{ color: "error.main" }} data-testid="error-state">
-        Error loading {objectTypeName.toLowerCase()}
+        Error loading {typeName.toLowerCase()}
       </Box>
     );
-  if (objects.length === 0)
+  }
+  if (objects.length === 0) {
     return (
       <Box sx={{ color: "text.primary" }} data-testid="empty-state">
-        No {objectTypeName.toLowerCase()} available
+        No {typeName.toLowerCase()} available
       </Box>
     );
+  }
 
-  // Get root level objects (those without a parentId)
-  const rootObjects = objects.filter((object) => !object.parentId);
+  const rootObjects = objects.filter((obj) => !obj.parentId);
 
   return (
     <Box
@@ -148,29 +149,25 @@ export function ObjectExplorer<T extends ExplorerObject>({
           color="text.secondary"
           data-testid="objects-count"
         >
-          {objectTypeName} loaded: {objects.length}
+          {typeName} loaded: {objects.length}
         </Typography>
       </Box>
-
       <Box sx={{ mt: 1 }}>
-        {rootObjects.map((object) => {
-          // Use default tree node if no custom renderer
-          if (!renderNode) {
-            return <DefaultTreeNode key={object.id} object={object} />;
-          }
-
-          // For custom rendering, create a simple wrapper
-          const renderedContent = renderNode(
-            object,
-            () => toggleNode(object.id),
-            (e) => handleSelectClick(object.id, e)
-          );
-
-          // Return the rendered content in a Box
-          return (
-            <Box key={object.id}>{renderedContent as React.ReactElement}</Box>
-          );
-        })}
+        {rootObjects.map((obj) =>
+          !renderNode ? (
+            <DefaultTreeNode key={obj.id} object={obj} />
+          ) : (
+            <Box key={obj.id}>
+              {
+                renderNode(
+                  obj,
+                  () => toggleNode(obj.id),
+                  (e) => handleSelectClick(obj.id, e)
+                ) as React.ReactElement
+              }
+            </Box>
+          )
+        )}
       </Box>
     </Box>
   );
