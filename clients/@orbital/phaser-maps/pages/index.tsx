@@ -2,7 +2,7 @@
 import React, { useState } from "react";
 import dynamic from "next/dynamic";
 import Box from "@mui/material/Box";
-import ObjectExplorer from "../components/ObjectExplorer";
+import AreaExplorer from "../components/AreaExplorer";
 import { useGetAreaQuery } from "../services/areaApi";
 import { skipToken } from "@reduxjs/toolkit/query/react";
 
@@ -35,7 +35,7 @@ export default function ExplorerPage() {
           overflow: "auto",
         }}
       >
-        <ObjectExplorer onSelect={handleSelectArea} />
+        <AreaExplorer onSelect={handleSelectArea} />
       </Box>
       <Box sx={{ flexGrow: 1, display: "flex", flexDirection: "column" }}>
         {/* Map Viewer */}

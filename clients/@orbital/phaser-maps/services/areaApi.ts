@@ -1,12 +1,5 @@
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
-import type { AreaMapProps } from "@orbital/core/src/types/area-map";
-
-export interface Area {
-  id: string;
-  parentId?: string;
-  name: string;
-  areaMap?: AreaMapProps;
-}
+import type { Area } from "@orbital/core/src/types/area";
 
 export const areaApi = createApi({
   reducerPath: "areaApi",

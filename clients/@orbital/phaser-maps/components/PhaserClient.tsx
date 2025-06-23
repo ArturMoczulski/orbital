@@ -100,6 +100,7 @@ export default function PhaserClient({
     >
       {isCurrentlyLoading && (
         <div
+          data-testid="loading-overlay"
           style={{
             position: "absolute",
             top: 0,
@@ -124,6 +125,7 @@ export default function PhaserClient({
       )}
       {!areaMap && (
         <div
+          data-testid="no-area-message"
           style={{
             position: "absolute",
             top: "50%",
