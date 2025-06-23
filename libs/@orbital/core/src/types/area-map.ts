@@ -22,6 +22,27 @@ export const AreaMapSchema = z
       .array(z.array(z.nativeEnum(AreaMapTiles)))
       .describe("2D grid of map tiles"),
   })
+  .superRefine((data, ctx) => {
+    // Validate that the grid has the correct number of rows (height)
+    if (data.grid.length !== data.height) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["grid"],
+        message: `Grid has ${data.grid.length} rows, but height is ${data.height}`,
+      });
+    }
+
+    // Validate that each row has the correct number of columns (width)
+    data.grid.forEach((row, rowIndex) => {
+      if (row.length !== data.width) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ["grid", rowIndex],
+          message: `Row ${rowIndex} has ${row.length} columns, but width is ${data.width}`,
+        });
+      }
+    });
+  })
   .describe("A map of an area with a grid of tiles");
 
 /** Type for AreaMapGrid properties */
@@ -43,9 +64,13 @@ export class AreaMap
   static mock(overrides: Partial<AreaMapProps> = {}): AreaMap {
     const width = overrides.width || 3;
     const height = overrides.height || 3;
+
+    // Create a grid with independent arrays for each row to avoid reference issues
     const grid =
       overrides.grid ||
-      Array(height).fill(Array(width).fill(AreaMapTiles.GrassGround));
+      Array.from({ length: height }, () =>
+        Array.from({ length: width }, () => AreaMapTiles.GrassGround)
+      );
 
     const base: Partial<AreaMapProps> = {
       width,

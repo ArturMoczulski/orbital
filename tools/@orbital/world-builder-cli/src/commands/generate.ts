@@ -41,9 +41,14 @@ const chalk = require("chalk");
 // Load environment variables from world-builder .env
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+const envPath = path.resolve(__dirname, "../../.env.local");
+console.log(`Loading environment variables from: ${envPath}`);
 dotenv.config({
-  path: path.resolve(__dirname, "../../.env.local"),
+  path: envPath,
 });
+console.log(
+  `Environment variables loaded. OPENAI_MODEL_NAME=${process.env.OPENAI_MODEL_NAME}`
+);
 
 const generate = new Command("generate")
   .description("Generate a new Area object from a combined JSON input")
@@ -53,8 +58,12 @@ const generate = new Command("generate")
   )
   .option("-o, --output <file>", "Output file path (defaults to stdout)")
   .option("-v, --verbose", "Enable verbose output", false)
+  .option("-m, --model <name>", "Override the model name from .env.local")
   .action(
-    async (input: string, options: { output?: string; verbose: boolean }) => {
+    async (
+      input: string,
+      options: { output?: string; verbose: boolean; model?: string }
+    ) => {
       try {
         console.log(chalk.blue("🌍 Generating area..."));
 
@@ -96,8 +105,10 @@ const generate = new Command("generate")
         }
 
         // Create OpenAI model
+        const modelName =
+          options.model || process.env.OPENAI_MODEL_NAME || "gpt-4o";
         const model = new OpenAI({
-          modelName: process.env.OPENAI_MODEL || "gpt-4",
+          modelName,
           temperature: 0.7,
           openAIApiKey: process.env.OPENAI_API_KEY,
         });
@@ -107,10 +118,7 @@ const generate = new Command("generate")
           ? new ConsoleLogger(VerbosityLevel.DEBUG, "AreaGenerator")
           : undefined;
 
-        console.log(
-          chalk.blue("🧠 Using model:"),
-          process.env.OPENAI_MODEL || "gpt-4"
-        );
+        console.log(chalk.blue("🧠 Using model:"), modelName);
 
         // Generate area
         const area = await generateArea(

@@ -42,6 +42,7 @@ Options:
 
 - `-o, --output <file>`: Save the generated area to a file instead of stdout
 - `-v, --verbose`: Enable verbose output for debugging
+- `-m, --model <name>`: Override the model name from .env.local
 
 ### Input Format
 
@@ -77,6 +78,12 @@ Generate an area using a JSON file and save the output:
 world-builder-cli generate examples/area-input.json --output generated-area.json --verbose
 ```
 
+Generate an area using a specific model:
+
+```bash
+world-builder-cli generate examples/area-input.json --model gpt-4
+```
+
 Generate an area using a JSON string:
 
 ```bash
@@ -91,8 +98,14 @@ You can also use the provided npm/yarn scripts:
 # Using yarn
 yarn generate '{"climate":"tropical","description":"A lush jungle","areaMap":{"size":"medium"}}' -o area.json
 
+# Using yarn with a specific model
+yarn generate '{"climate":"tropical","description":"A lush jungle","areaMap":{"size":"medium"}}' -o area.json -m gpt-4
+
 # Using npm
 npm run generate -- '{"climate":"tropical","description":"A lush jungle","areaMap":{"size":"medium"}}' -o area.json
+
+# Using npm with a specific model
+npm run generate -- '{"climate":"tropical","description":"A lush jungle","areaMap":{"size":"medium"}}' -o area.json -m gpt-4
 ```
 
 Outputs a generated `Area` object as JSON.
