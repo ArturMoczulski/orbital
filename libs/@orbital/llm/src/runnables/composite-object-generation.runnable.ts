@@ -60,6 +60,14 @@ export class CompositeObjectGenerationRunnable<T extends object> {
 
     // Process each property in the input
     for (const [key, value] of Object.entries(input)) {
+      // Skip the 'verbose' key as it's a config flag, not a nested object
+      if (key === "verbose") {
+        this.options.logger?.debug(
+          `Skipping 'verbose' key in input as it's a config flag`
+        );
+        continue;
+      }
+
       // If the value is an object or an ObjectGenerationRunnable, treat it as a nested input
       if (
         value instanceof ObjectGenerationRunnable ||

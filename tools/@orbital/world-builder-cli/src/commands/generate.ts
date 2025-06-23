@@ -84,6 +84,17 @@ const generate = new Command("generate")
           }
         }
 
+        // Make sure we don't have a 'verbose' property in the input data
+        // as it would be treated as a nested object path
+        if (inputData.verbose !== undefined) {
+          console.warn(
+            chalk.yellow(
+              "Warning: Removing 'verbose' property from input data as it conflicts with the --verbose flag"
+            )
+          );
+          delete inputData.verbose;
+        }
+
         // Create OpenAI model
         const model = new OpenAI({
           modelName: process.env.OPENAI_MODEL || "gpt-4",
