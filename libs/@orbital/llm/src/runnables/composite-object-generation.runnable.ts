@@ -23,23 +23,65 @@ export class CompositeObjectGenerationRunnable<T extends object> {
 
   /**
    * Invoke generation for the root object and any nested inputs.
-   * @param rootInput Input for the top-level object.
-   * @param nestedInputs Map of nested input data keyed by JSON path.
-   */
-  /**
-   * Invoke generation for the root object and any nested inputs.
-   * @param rootInput Input for the top-level object.
-   * @param nestedInputs Map of nested inputs keyed by JSON path. Each value can be either:
-   *                     - An input object for a new ObjectGenerationRunnable
-   *                     - An ObjectGenerationRunnable instance to use directly
+   *
+   * @param input A single object containing both root properties and nested objects.
+   *              Any property that is an object or ObjectGenerationRunnable will be treated as a nested input.
    * @param config Optional configuration including verbose mode.
    * @returns The generated object, with verbose data if requested.
+   *
+   * @example
+   * ```typescript
+   * // Simple usage with just root properties
+   * const result = await runnable.invoke({ climate: "winter" });
+   *
+   * // With nested objects
+   * const result = await runnable.invoke({
+   *   climate: "winter",
+   *   areaMap: { size: 'small' }
+   * });
+   *
+   * // With a mix of properties and ObjectGenerationRunnable instances
+   * const result = await runnable.invoke({
+   *   climate: "winter",
+   *   areaMap: new ObjectGenerationRunnable(AreaMap, options)
+   * });
+   * ```
    */
   async invoke(
-    rootInput: any,
-    nestedInputs: Record<string, any | ObjectGenerationRunnable<any, any>> = {},
+    input: any,
     config?: RunnableConfig & { verbose?: boolean }
   ): Promise<T & { _verbose?: Record<string, any> }> {
+    // Separate root properties from nested objects
+    const nestedInputs: Record<
+      string,
+      any | ObjectGenerationRunnable<any, any>
+    > = {};
+    const rootInput: Record<string, any> = {};
+
+    // Process each property in the input
+    for (const [key, value] of Object.entries(input)) {
+      // If the value is an object or an ObjectGenerationRunnable, treat it as a nested input
+      if (
+        value instanceof ObjectGenerationRunnable ||
+        (typeof value === "object" && value !== null && !Array.isArray(value))
+      ) {
+        nestedInputs[key] = value;
+      } else {
+        // Otherwise, it's a root property
+        rootInput[key] = value;
+      }
+    }
+
+    this.options.logger?.debug(
+      `Separated input into root and nested properties`
+    );
+    this.options.logger?.debug(
+      `Root properties: ${Object.keys(rootInput).join(", ")}`
+    );
+    this.options.logger?.debug(
+      `Nested properties: ${Object.keys(nestedInputs).join(", ")}`
+    );
+
     this.options.logger?.info("Starting composite object generation...");
     const startTime = Date.now();
 
@@ -84,7 +126,7 @@ export class CompositeObjectGenerationRunnable<T extends object> {
 
     // Log the final composite object with all nested objects
     if (this.options.logger) {
-      this.options.logger.info(
+      this.options.logger?.info(
         "Generated composite object:",
         JSON.stringify(root, null, 2)
       );

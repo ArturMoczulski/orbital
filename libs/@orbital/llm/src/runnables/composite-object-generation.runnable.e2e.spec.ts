@@ -93,17 +93,20 @@ describe("E2E: CompositeObjectGenerationRunnable", () => {
       }
     );
 
-    const input = {
+    const result = await generator.invoke({
+      // Root properties
       climate: "temperate",
       terrain: "plains",
       culture: "medieval",
       age: "new",
-    };
-    const nested = {
-      capital: { size: "medium", importance: "high", specialization: "trade" },
-    };
+      // Nested object
+      capital: {
+        size: "medium",
+        importance: "high",
+        specialization: "trade",
+      },
+    });
 
-    const result = await generator.invoke(input, nested);
     expect(typeof result.name).toBe("string");
     expect(result.capital).toBeDefined();
     expect(typeof result.capital.name).toBe("string");
@@ -121,13 +124,13 @@ describe("E2E: CompositeObjectGenerationRunnable", () => {
       }
     );
 
-    const input = {
+    const result = await generator.invoke({
+      // Root properties
       climate: "tropical",
       terrain: "coastal",
       culture: "ancient",
       age: "old",
-    };
-    const nested = {
+      // Nested objects
       capital: {
         size: "large",
         importance: "very high",
@@ -143,9 +146,8 @@ describe("E2E: CompositeObjectGenerationRunnable", () => {
         importance: "low",
         specialization: "farming",
       },
-    };
+    });
 
-    const result = await generator.invoke(input, nested);
     expect(typeof result.name).toBe("string");
     expect(Array.isArray(result.cities)).toBe(true);
     expect(result.cities.length).toBeGreaterThanOrEqual(1);

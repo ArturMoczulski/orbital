@@ -24,7 +24,17 @@ describe("CompositeObjectGenerationRunnable", () => {
     // Spy on the core runnable invoke method
     invokeSpy = jest
       .spyOn(ObjectGenerationRunnable.prototype, "invoke")
-      .mockImplementation(async (input: any) => input);
+      .mockImplementation(async (input: any, config?: any) => {
+        // For the root object generation, filter out any properties that are in the exclude list
+        if (config?.exclude) {
+          const filteredInput = { ...input };
+          for (const key of config.exclude) {
+            delete filteredInput[key];
+          }
+          return filteredInput;
+        }
+        return input;
+      });
   });
 
   afterEach(() => {
@@ -36,10 +46,10 @@ describe("CompositeObjectGenerationRunnable", () => {
       model: {} as any,
       systemPrompt: "root only",
     });
-    const rootInput = { x: 1, y: 2 };
-    const result = await composite.invoke(rootInput, {});
+    const input = { x: 1, y: 2 };
+    const result = await composite.invoke(input);
     expect(invokeSpy).toHaveBeenCalledTimes(1);
-    expect(result).toEqual(rootInput);
+    expect(result).toEqual(input);
   });
 
   it("skips nested generation when child type is not registered", async () => {
@@ -49,11 +59,14 @@ describe("CompositeObjectGenerationRunnable", () => {
       model: {} as any,
       systemPrompt: "no child",
     });
-    const rootInput = { a: 1 };
-    const nestedInputs = { child: { id: 5 } };
-    const result = await composite.invoke(rootInput, nestedInputs);
+    const input = {
+      a: 1,
+      child: { id: 5 },
+    };
+    const result = await composite.invoke(input);
     expect(invokeSpy).toHaveBeenCalledTimes(1);
-    expect(result).toEqual(rootInput);
+    // Only the root properties should be in the result since child type is not registered
+    expect(result).toEqual({ a: 1 });
   });
 
   it("generates and merges nested object when child type is registered", async () => {
@@ -62,22 +75,20 @@ describe("CompositeObjectGenerationRunnable", () => {
       model: {} as any,
       systemPrompt: "with child",
     });
-    const rootInput = { hello: "world" };
-    const nestedInputs = { child: { id: 5 } };
-    const result = await composite.invoke(rootInput, nestedInputs);
+    const input = {
+      hello: "world",
+      child: { id: 5 },
+    };
+    const result = await composite.invoke(input);
     expect(invokeSpy).toHaveBeenCalledTimes(2);
     // Root invocation should exclude the nested path
-    expect(invokeSpy).toHaveBeenNthCalledWith(
-      1,
-      rootInput,
+    // The first call should be with just the root properties
+    expect(invokeSpy.mock.calls[0][0]).toEqual({ hello: "world" });
+    expect(invokeSpy.mock.calls[0][1]).toEqual(
       expect.objectContaining({ exclude: ["child"] })
     );
     // Nested invocation uses the provided nested input
-    expect(invokeSpy).toHaveBeenNthCalledWith(
-      2,
-      nestedInputs.child,
-      expect.any(Object)
-    );
+    expect(invokeSpy).toHaveBeenNthCalledWith(2, { id: 5 }, expect.any(Object));
     expect(result).toEqual({
       hello: "world",
       child: { id: 5 },
