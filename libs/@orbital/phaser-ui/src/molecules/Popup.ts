@@ -64,4 +64,21 @@ export default abstract class Popup {
       this.panel.getElement().destroy();
     }
   }
+
+  /** Toggle popup via CSS-like display on its root Atom */
+  public toggle(): this {
+    if (!this.panel) return this;
+    const styles = this.panel.style();
+    const curr = styles[AtomState.Normal].display || "block";
+    const next = curr === "none" ? "block" : "none";
+    // Apply to panel Atom
+    this.panel.style({ display: next });
+    // Also toggle display on child Atoms to ensure content hides
+    (this.panel as any).children.forEach((child: any) => {
+      if (child instanceof Atom) {
+        child.style({ display: next });
+      }
+    });
+    return this;
+  }
 }

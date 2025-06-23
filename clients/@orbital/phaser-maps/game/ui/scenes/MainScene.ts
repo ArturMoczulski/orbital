@@ -1,7 +1,7 @@
 import Phaser from "phaser";
 // @ts-ignore: no declaration file for rexui plugin
 import UIPlugin from "phaser3-rex-plugins/dist/rexuiplugin.js";
-import { ClientSettingsPopup, Theme } from "@orbital/phaser-ui";
+import { ClientSettingsPopup, Theme, Button } from "@orbital/phaser-ui";
 
 export default class MainScene extends Phaser.Scene {
   private theme: Theme;
@@ -42,6 +42,17 @@ export default class MainScene extends Phaser.Scene {
       theme: this.theme,
     });
     settingsPopup.create();
+    // hide initially
+    settingsPopup.toggle();
+    // add a Settings button at top-right that toggles popup
+    new Button({
+      scene: this,
+      theme: this.theme,
+      text: "Settings",
+      x: this.scale.width - 100,
+      y: 20,
+      onClick: () => settingsPopup.toggle(),
+    });
   }
 
   update() {

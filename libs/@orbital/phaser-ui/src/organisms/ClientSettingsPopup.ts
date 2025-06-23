@@ -12,6 +12,11 @@ export default class ClientSettingsPopup extends Popup {
     super(config);
   }
 
+  /** Toggle visibility of this popup via CSS-like display */
+  public toggle(): this {
+    return super.toggle();
+  }
+
   protected content(): AGO[] {
     return [
       new LogoutButton({

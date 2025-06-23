@@ -1,4 +1,4 @@
-export { default as Atom } from "./atoms/Atom";
+export { default as Atom, AtomState } from "./atoms/Atom";
 export type {
   AtomConfig,
   AtomStateStyleProperties as AtomStyleProperties,
@@ -18,5 +18,8 @@ export type { ClientSettingsPopupConfig } from "./organisms/ClientSettingsPopup"
 export { default as LogoutButton } from "./molecules/LogoutButton";
 export type { LogoutButtonConfig } from "./molecules/LogoutButton";
 export { ClientEvent } from "./events";
+
+// Export state management
+export { UIStore, UIBinding, BindingConfig } from "./state";
 
 export { default as Theme } from "./theme/Theme";

@@ -1,4 +1,3 @@
-import { interfaces } from "inversify";
 import Phaser from "phaser";
 // @ts-ignore: no declaration file for rexui plugin
 import UIPlugin from "phaser3-rex-plugins/dist/rexuiplugin.js";

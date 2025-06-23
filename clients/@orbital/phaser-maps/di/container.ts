@@ -8,11 +8,11 @@ const container = new Container();
 // Bind Phaser.Game directly using factory
 container
   .bind<Phaser.Game>(TYPES.PhaserClient)
-  .toDynamicValue((context) => {
+  .toDynamicValue(() => {
     const {
       phaserClientFactory,
     } = require("./factories/phaser-client.factory");
-    return phaserClientFactory(context);
+    return phaserClientFactory();
   })
   .inSingletonScope();
 

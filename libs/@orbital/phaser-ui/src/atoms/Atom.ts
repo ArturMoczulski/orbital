@@ -23,6 +23,8 @@ export interface AtomStyleProperties {
   color?: string | number;
   fontSize?: string | number;
   letterSpacing?: number;
+  /** Show/hide element and its subtree */
+  display?: "block" | "none";
 }
 
 export enum AtomState {
@@ -487,7 +489,78 @@ export default class Atom extends Phaser.GameObjects.GameObject {
    * Render updates each frame.
    */
   protected updateRender(): void {
+    // Hide/show based on display style
+    if (this.calculatedProperties.display === "none") {
+      // hide background rectangle
+      if (
+        this.backgroundRect &&
+        typeof (this.backgroundRect as any).setVisible === "function"
+      ) {
+        (this.backgroundRect as any).setVisible(false);
+      }
+      // hide sizer container
+      if (this.sizer && typeof (this.sizer as any).setVisible === "function") {
+        (this.sizer as any).setVisible(false);
+      }
+      // hide main element
+      if (
+        this.element &&
+        typeof (this.element as any).setVisible === "function"
+      ) {
+        (this.element as any).setVisible(false);
+      }
+      // hide all children content
+      this.children.forEach((child) => {
+        let el: any;
+        if (child instanceof Atom) {
+          el = child.getElement();
+        } else if (child && typeof (child as any).getElement === "function") {
+          el = (child as any).getElement();
+        } else {
+          el = child;
+        }
+        if (el && typeof el.setVisible === "function") {
+          el.setVisible(false);
+        }
+      });
+      return;
+    }
+    if (
+      this.element &&
+      typeof (this.element as any).setVisible === "function"
+    ) {
+      (this.element as any).setVisible(true);
+    }
     // Use the cached properties directly
+    // Show all parts when display != 'none'
+    if (
+      this.backgroundRect &&
+      typeof (this.backgroundRect as any).setVisible === "function"
+    ) {
+      (this.backgroundRect as any).setVisible(true);
+    }
+    if (this.sizer && typeof (this.sizer as any).setVisible === "function") {
+      (this.sizer as any).setVisible(true);
+    }
+    if (
+      this.element &&
+      typeof (this.element as any).setVisible === "function"
+    ) {
+      (this.element as any).setVisible(true);
+    }
+    this.children.forEach((child) => {
+      let el: any;
+      if (child instanceof Atom) {
+        el = child.getElement();
+      } else if (child && typeof (child as any).getElement === "function") {
+        el = (child as any).getElement();
+      } else {
+        el = child;
+      }
+      if (el && typeof el.setVisible === "function") {
+        el.setVisible(true);
+      }
+    });
     const props = this.calculatedProperties;
     const bg: any = this.backgroundRect;
 
@@ -631,6 +704,7 @@ export default class Atom extends Phaser.GameObjects.GameObject {
         // Don't force another layout as it might be causing issues
       }
     }
+    this.children.push(ago);
     return this;
   }
 }
