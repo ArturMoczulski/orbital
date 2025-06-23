@@ -8,13 +8,19 @@ import { AreaMapTiles } from "@orbital/core/src/types/area-map-tiles";
 
 interface PhaserClientProps {
   areaMap?: AreaMapProps;
+  isLoading?: boolean;
 }
 
-export default function PhaserClient({ areaMap }: PhaserClientProps) {
-  // Create a completely new approach that doesn't rely on dependency injection
+export default function PhaserClient({
+  areaMap,
+  isLoading = false,
+}: PhaserClientProps) {
   const gameRef = useRef<HTMLDivElement>(null);
   const gameInstanceRef = useRef<Phaser.Game | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [internalLoading, setInternalLoading] = useState(true);
+
+  // Combined loading state (either parent is loading or internal is loading)
+  const isCurrentlyLoading = isLoading || internalLoading;
 
   // Create a new game instance when the component mounts
   useEffect(() => {
@@ -22,12 +28,9 @@ export default function PhaserClient({ areaMap }: PhaserClientProps) {
 
     // Clean up any existing game instance
     if (gameInstanceRef.current) {
-      console.log("PhaserClient: Cleaning up existing game instance");
       gameInstanceRef.current.destroy(true);
       gameInstanceRef.current = null;
     }
-
-    console.log("PhaserClient: Setting up new game instance");
 
     // Create a simple scene class directly in this component
     class DirectMapScene extends Phaser.Scene {
@@ -40,13 +43,10 @@ export default function PhaserClient({ areaMap }: PhaserClientProps) {
       }
 
       init(data: AreaMapProps | undefined) {
-        console.log("DirectMapScene.init: Received data:", data);
         this.mapData = data;
       }
 
       create() {
-        console.log("DirectMapScene.create: Creating scene");
-
         // Clear any existing content
         this.children.removeAll();
 
@@ -58,26 +58,6 @@ export default function PhaserClient({ areaMap }: PhaserClientProps) {
           this.scale.height,
           0x333333
         );
-
-        // Add a border
-        const graphics = this.add.graphics();
-        graphics.lineStyle(4, 0xffffff, 1);
-        graphics.strokeRect(
-          10,
-          10,
-          this.scale.width - 20,
-          this.scale.height - 20
-        );
-
-        // Add a title
-        this.add
-          .text(this.scale.width / 2, 30, "PHASER MAP VIEWER", {
-            fontSize: "18px",
-            color: "#ffffff",
-            backgroundColor: "#ff0000",
-            padding: { x: 10, y: 5 },
-          })
-          .setOrigin(0.5, 0);
 
         // Add loading text
         this.loadingText = this.add
@@ -104,7 +84,6 @@ export default function PhaserClient({ areaMap }: PhaserClientProps) {
             this.loadingText.setVisible(false);
           }
         } catch (error) {
-          console.error("Error drawing map:", error);
           if (this.loadingText) {
             this.loadingText.setText(
               `Error drawing map: ${
@@ -117,7 +96,6 @@ export default function PhaserClient({ areaMap }: PhaserClientProps) {
 
       // Method to update the map data without recreating the scene
       updateMap(newMapData: AreaMapProps) {
-        console.log("DirectMapScene.updateMap: Updating map with new data");
         this.mapData = newMapData;
 
         // Show loading text during update
@@ -141,7 +119,6 @@ export default function PhaserClient({ areaMap }: PhaserClientProps) {
             this.loadingText.setVisible(false);
           }
         } catch (error) {
-          console.error("Error updating map:", error);
           if (this.loadingText) {
             this.loadingText.setText(
               `Error updating map: ${
@@ -159,9 +136,9 @@ export default function PhaserClient({ areaMap }: PhaserClientProps) {
           this.scale.height / 2
         );
 
-        // Calculate tile size
-        const maxWidth = this.scale.width * 0.8;
-        const maxHeight = this.scale.height * 0.6;
+        // Calculate tile size to fill the entire canvas
+        const maxWidth = this.scale.width;
+        const maxHeight = this.scale.height;
         const tileSize = Math.min(
           maxWidth / mapData.width,
           maxHeight / mapData.height
@@ -170,17 +147,6 @@ export default function PhaserClient({ areaMap }: PhaserClientProps) {
         // Calculate offsets to center the map
         const offsetX = -(mapData.width * tileSize) / 2;
         const offsetY = -(mapData.height * tileSize) / 2;
-
-        // Add a background for the map area
-        const mapBg = this.add.rectangle(
-          0,
-          0,
-          mapData.width * tileSize + 20,
-          mapData.height * tileSize + 20,
-          0x000000,
-          0.2
-        );
-        this.mapContainer.add(mapBg);
 
         // Define tile colors
         const tileColors: Record<number, number> = {
@@ -195,7 +161,6 @@ export default function PhaserClient({ areaMap }: PhaserClientProps) {
         };
 
         // Draw each tile
-        let tileCount = 0;
         for (let row = 0; row < mapData.height; row++) {
           if (!mapData.grid[row]) continue;
 
@@ -211,36 +176,8 @@ export default function PhaserClient({ areaMap }: PhaserClientProps) {
             const rect = this.add.rectangle(x, y, tileSize, tileSize, color);
             rect.setStrokeStyle(1, 0x000000);
             this.mapContainer.add(rect);
-            tileCount++;
           }
         }
-
-        // Add a border around the map
-        const mapBorder = this.add.rectangle(
-          0,
-          0,
-          mapData.width * tileSize + 10,
-          mapData.height * tileSize + 10,
-          0x000000,
-          0
-        );
-        mapBorder.setStrokeStyle(4, 0xff0000);
-        this.mapContainer.add(mapBorder);
-
-        // Add text to show tile count
-        const countText = this.add.text(
-          0,
-          offsetY + mapData.height * tileSize + 30,
-          `Map has ${tileCount} tiles (${mapData.width}x${mapData.height})`,
-          {
-            fontSize: "14px",
-            color: "#ffffff",
-            backgroundColor: "#000000",
-            padding: { x: 10, y: 5 },
-          }
-        );
-        countText.setOrigin(0.5, 0);
-        this.mapContainer.add(countText);
       }
     }
 
@@ -260,14 +197,11 @@ export default function PhaserClient({ areaMap }: PhaserClientProps) {
       // Don't set parent here - we'll manually attach the canvas
     };
 
-    console.log("PhaserClient: Creating new Phaser game with config:", config);
     const game = new Phaser.Game(config);
     gameInstanceRef.current = game;
 
     // Wait for the game to be ready before attaching the canvas
     game.events.once("ready", () => {
-      console.log("PhaserClient: Game ready event fired");
-
       // Force the canvas to be visible with explicit styles
       game.canvas.style.display = "block";
       game.canvas.style.width = "100%";
@@ -277,7 +211,6 @@ export default function PhaserClient({ areaMap }: PhaserClientProps) {
       game.canvas.style.left = "0";
       game.canvas.style.zIndex = "5";
       game.canvas.style.backgroundColor = "#333333";
-      game.canvas.style.border = "2px dashed red";
 
       // Attach the canvas to our container
       if (gameRef.current) {
@@ -288,11 +221,10 @@ export default function PhaserClient({ areaMap }: PhaserClientProps) {
       game.scene.start("DirectMapScene", areaMap);
 
       // Set loading to false
-      setIsLoading(false);
+      setInternalLoading(false);
     });
 
     return () => {
-      console.log("PhaserClient: Cleaning up");
       if (gameInstanceRef.current) {
         gameInstanceRef.current.destroy(true);
         gameInstanceRef.current = null;
@@ -304,8 +236,7 @@ export default function PhaserClient({ areaMap }: PhaserClientProps) {
   useEffect(() => {
     if (!gameInstanceRef.current || !areaMap) return;
 
-    console.log("PhaserClient: areaMap changed, updating scene");
-    setIsLoading(true);
+    setInternalLoading(true);
 
     // Get the scene and update it
     const scene = gameInstanceRef.current.scene.getScene(
@@ -315,62 +246,28 @@ export default function PhaserClient({ areaMap }: PhaserClientProps) {
       // Use a small timeout to allow the loading state to be rendered
       setTimeout(() => {
         scene.updateMap(areaMap);
-        setIsLoading(false);
+        // Wait a bit before hiding the loading indicator to ensure the map is fully rendered
+        setTimeout(() => {
+          setInternalLoading(false);
+        }, 200);
       }, 50);
     } else {
-      console.error(
-        "PhaserClient: Could not get scene or scene doesn't have updateMap method"
-      );
-      setIsLoading(false);
+      setInternalLoading(false);
     }
   }, [areaMap]);
 
-  // Add a visible border to the container to help with debugging
   return (
     <div
       ref={gameRef}
       style={{
         width: "100%",
         height: "100%",
-        border: "3px solid blue",
         position: "relative",
-        overflow: "hidden", // Ensure content doesn't overflow
+        overflow: "hidden",
       }}
     >
-      {/* Add a debug overlay */}
-      <div
-        style={{
-          position: "absolute",
-          top: 10,
-          left: 10,
-          background: "rgba(0,0,0,0.7)",
-          color: "white",
-          padding: "5px",
-          zIndex: 10, // Higher than canvas but not too high
-          pointerEvents: "none",
-        }}
-      >
-        Map should be visible here (Canvas has red dashed border)
-      </div>
-
-      {/* Add a background grid to help visualize the container */}
-      <div
-        style={{
-          position: "absolute",
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          backgroundImage:
-            "linear-gradient(45deg, #f0f0f0 25%, transparent 25%), linear-gradient(-45deg, #f0f0f0 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #f0f0f0 75%), linear-gradient(-45deg, transparent 75%, #f0f0f0 75%)",
-          backgroundSize: "20px 20px",
-          backgroundPosition: "0 0, 0 10px, 10px -10px, -10px 0px",
-          zIndex: 1,
-        }}
-      />
-
       {/* Loading overlay */}
-      {isLoading && (
+      {isCurrentlyLoading && (
         <div
           style={{
             position: "absolute",
@@ -396,21 +293,23 @@ export default function PhaserClient({ areaMap }: PhaserClientProps) {
       )}
 
       {/* Fallback content in case Phaser fails to render */}
-      <div
-        style={{
-          position: "absolute",
-          top: "50%",
-          left: "50%",
-          transform: "translate(-50%, -50%)",
-          textAlign: "center",
-          zIndex: 2,
-          pointerEvents: "none",
-        }}
-      >
-        <Typography variant="body1" sx={{ color: "text.secondary" }}>
-          {areaMap ? "Loading map..." : "No area loaded"}
-        </Typography>
-      </div>
+      {!areaMap && (
+        <div
+          style={{
+            position: "absolute",
+            top: "50%",
+            left: "50%",
+            transform: "translate(-50%, -50%)",
+            textAlign: "center",
+            zIndex: 2,
+            pointerEvents: "none",
+          }}
+        >
+          <Typography variant="body1" sx={{ color: "text.secondary" }}>
+            No area loaded
+          </Typography>
+        </div>
+      )}
     </div>
   );
 }
