@@ -7,7 +7,11 @@ import { WorldsModule } from "./worlds/worlds.module";
 
 @Module({
   imports: [
-    ConfigModule.forRoot(),
+    ConfigModule.forRoot({
+      isGlobal: true,
+      envFilePath: ".env.local",
+      expandVariables: true,
+    }),
     DatabaseModule,
     CharactersModule,
     LocationsModule,
