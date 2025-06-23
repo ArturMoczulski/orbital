@@ -5,7 +5,9 @@ import MapIcon from "@mui/icons-material/Map";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 import Typography from "@mui/material/Typography";
+import { useTheme } from "@mui/material/styles";
 import { ExplorerObject, ObjectExplorerProps } from "./types";
+import { useOrbitalTheme } from "../theme/ThemeContext";
 
 /**
  * A generic tree-view component for displaying hierarchical objects
@@ -16,6 +18,11 @@ export function ObjectExplorer<T extends ExplorerObject>({
   objectTypeName,
   renderNode,
 }: ObjectExplorerProps<T>) {
+  // Use the orbital theme if available, otherwise fall back to the default MUI theme
+  const orbitalTheme = useOrbitalTheme();
+  const defaultTheme = useTheme();
+  const theme = orbitalTheme || defaultTheme;
+
   const { data: objects, isLoading, error } = queryResult;
   const [expandedNodes, setExpandedNodes] = useState<Record<string, boolean>>(
     {}
@@ -105,21 +112,21 @@ export function ObjectExplorer<T extends ExplorerObject>({
   // Handle loading states
   if (isLoading)
     return (
-      <div data-testid="loading-state">
+      <Box sx={{ color: "text.primary" }} data-testid="loading-state">
         Loading {objectTypeName.toLowerCase()}...
-      </div>
+      </Box>
     );
   if (error || !objects)
     return (
-      <div data-testid="error-state">
+      <Box sx={{ color: "error.main" }} data-testid="error-state">
         Error loading {objectTypeName.toLowerCase()}
-      </div>
+      </Box>
     );
   if (objects.length === 0)
     return (
-      <div data-testid="empty-state">
+      <Box sx={{ color: "text.primary" }} data-testid="empty-state">
         No {objectTypeName.toLowerCase()} available
-      </div>
+      </Box>
     );
 
   // Get root level objects (those without a parentId)
@@ -127,7 +134,12 @@ export function ObjectExplorer<T extends ExplorerObject>({
 
   return (
     <Box
-      sx={{ height: "100%", bgcolor: "background.default", overflow: "auto" }}
+      sx={{
+        height: "100%",
+        bgcolor: "background.default",
+        color: "text.primary",
+        overflow: "auto",
+      }}
       data-testid="object-explorer"
     >
       <Box sx={{ p: 1 }}>

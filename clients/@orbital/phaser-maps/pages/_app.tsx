@@ -2,9 +2,16 @@ import "reflect-metadata";
 import type { AppProps } from "next/app";
 import { Provider } from "react-redux";
 import { store } from "../store";
-import { ThemeProvider, createTheme, CssBaseline } from "@mui/material";
+import {
+  ThemeProvider,
+  createTheme,
+  CssBaseline,
+  StyledEngineProvider,
+} from "@mui/material";
+import { OrbitalThemeProvider } from "@orbital/react-ui";
 import "../styles/global.css";
 
+// Create the theme
 const artilioTheme = createTheme({
   palette: {
     primary: { main: "#afa888" },
@@ -15,16 +22,31 @@ const artilioTheme = createTheme({
   typography: {
     fontFamily: "'MedievalSharp', cursive",
   },
+  components: {
+    MuiCssBaseline: {
+      styleOverrides: {
+        body: {
+          backgroundColor: "#191d45",
+          color: "#e7cfa0",
+        },
+      },
+    },
+  },
 });
 
 function MyApp({ Component, pageProps }: AppProps) {
   return (
-    <ThemeProvider theme={artilioTheme}>
-      <CssBaseline />
-      <Provider store={store}>
-        <Component {...pageProps} />
-      </Provider>
-    </ThemeProvider>
+    <StyledEngineProvider injectFirst>
+      <ThemeProvider theme={artilioTheme}>
+        <CssBaseline />
+        <Provider store={store}>
+          {/* @ts-expect-error Theme type incompatibility between packages */}
+          <OrbitalThemeProvider theme={artilioTheme}>
+            <Component {...pageProps} />
+          </OrbitalThemeProvider>
+        </Provider>
+      </ThemeProvider>
+    </StyledEngineProvider>
   );
 }
 

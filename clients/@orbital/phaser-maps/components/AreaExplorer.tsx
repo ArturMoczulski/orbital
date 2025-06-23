@@ -13,8 +13,6 @@ interface AreaExplorerProps {
 export default function AreaExplorer({ onSelect }: AreaExplorerProps) {
   const areasQuery = useGetAreasQuery();
 
-  // No need for a handler function anymore since ObjectExplorer now passes the ID directly
-
   return (
     <ObjectExplorer<Area>
       queryResult={areasQuery}
