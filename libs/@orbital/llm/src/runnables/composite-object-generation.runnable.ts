@@ -1,6 +1,7 @@
 /* libs/@orbital/llm/src/runnables/composite-object-generation.runnable.ts */
 
 import { zodSchemaRegistry } from "@orbital/core";
+import { schemaRegistry } from "@orbital/core/src/registry";
 import { RunnableConfig } from "@langchain/core/runnables";
 import {
   ObjectGenerationRunnable,
@@ -108,6 +109,15 @@ export class CompositeObjectGenerationRunnable<T extends object> {
 
     // Check if schemas exist using lodash.get for safer property access
     const inputSchemaKey = `${typeName}GenerationInputSchema`;
+
+    // DEPRECATED: Using globalThis lookup
+    if (!this.options.inputSchema && !registry.get(this.type as object)) {
+      this.options.logger?.debug(
+        `WARNING: Using deprecated globalThis lookup for schema ${inputSchemaKey}. ` +
+          `Use @ZodSchema decorator to register your types in the schemaRegistry.`
+      );
+    }
+
     const inSchemaExists = Boolean(
       this.options.inputSchema || registry.get(get(globalThis, inputSchemaKey))
     );
@@ -227,17 +237,41 @@ export class CompositeObjectGenerationRunnable<T extends object> {
     path: string,
     root: any
   ): ObjectGenerationRunnable<any, any> | null {
-    // Extract and capitalize type name from path using lodash.upperFirst
+    // Attempt to find nested schema & ctor in central registry first
     const segments = path.split(".");
     let rawTypeName = segments[segments.length - 1];
+    // derive a name for central-registry lookup
+    const registryTypeName = upperFirst(
+      rawTypeName.replace(/\[.*?\]/, "").replace(/s$/, "")
+    );
+    const registryEntry = schemaRegistry.get(registryTypeName);
+    if (registryEntry) {
+      const { ctor: TypeConstructor, schema: inputSchema } = registryEntry;
+      const nestedOptions = { ...this.options, inputSchema };
+      // apply parent context and return
+      const nestedSystemPrompt = this.createParentContextPrompt(root);
+      const typeInstructions = `IMPORTANT: Ensure all properties match their expected types:
+- String properties must be strings
+- Number properties must be numbers (not strings containing numbers)
+- Boolean properties must be true or false
+- Array properties must be arrays`;
+      nestedOptions.systemPrompt = this.options.systemPrompt
+        ? `${this.options.systemPrompt}\n\n${typeInstructions}\n\n${nestedSystemPrompt}`
+        : `${typeInstructions}\n\n${nestedSystemPrompt}`;
+      return new ObjectGenerationRunnable(TypeConstructor, nestedOptions);
+    }
 
-    console.log(
+    // Fallback: Extract and capitalize type name from path using lodash.upperFirst
+    // Handle arrays and plurals below
+    rawTypeName = segments[segments.length - 1];
+
+    this.options.logger?.debug(
       `Creating nested runnable for path: ${path}, raw type name: ${rawTypeName}`
     );
 
     // Handle special path names that don't match their type names
     const pathToTypeMapping: Record<string, string> = {
-      capital: "City",
+      capital: "CityGenerator",
       areaMap: "AreaMap", // Add mapping for areaMap
       // Add more mappings as needed
     };
@@ -245,7 +279,30 @@ export class CompositeObjectGenerationRunnable<T extends object> {
     // Check if we have a special mapping for this path
     if (pathToTypeMapping[rawTypeName]) {
       rawTypeName = pathToTypeMapping[rawTypeName];
-      console.log(`Using mapped type name: ${rawTypeName}`);
+      this.options.logger?.debug(`Using mapped type name: ${rawTypeName}`);
+
+      // Check schemaRegistry again with the mapped type name
+      const mappedTypeName = rawTypeName;
+      const mappedRegistryEntry = schemaRegistry.get(mappedTypeName);
+      if (mappedRegistryEntry) {
+        this.options.logger?.debug(
+          `Found mapped type ${mappedTypeName} in schemaRegistry`
+        );
+        const { ctor: TypeConstructor, schema: inputSchema } =
+          mappedRegistryEntry;
+        const nestedOptions = { ...this.options, inputSchema };
+        // apply parent context and return
+        const nestedSystemPrompt = this.createParentContextPrompt(root);
+        const typeInstructions = `IMPORTANT: Ensure all properties match their expected types:
+- String properties must be strings
+- Number properties must be numbers (not strings containing numbers)
+- Boolean properties must be true or false
+- Array properties must be arrays`;
+        nestedOptions.systemPrompt = this.options.systemPrompt
+          ? `${this.options.systemPrompt}\n\n${typeInstructions}\n\n${nestedSystemPrompt}`
+          : `${typeInstructions}\n\n${nestedSystemPrompt}`;
+        return new ObjectGenerationRunnable(TypeConstructor, nestedOptions);
+      }
     } else if (rawTypeName.includes("[")) {
       // Handle array paths like "cities[0]" by extracting the base name
       rawTypeName = rawTypeName.split("[")[0];
@@ -253,33 +310,108 @@ export class CompositeObjectGenerationRunnable<T extends object> {
       if (rawTypeName.endsWith("s")) {
         rawTypeName = rawTypeName.slice(0, -1);
       }
-      console.log(`Processed array path to type name: ${rawTypeName}`);
+      this.options.logger?.debug(
+        `Processed array path to type name: ${rawTypeName}`
+      );
+
+      // For array items, check if we can find the singular form in the registry
+      const singularTypeName = upperFirst(rawTypeName);
+      this.options.logger?.debug(
+        `Checking registry for singular type: ${singularTypeName}`
+      );
+
+      // Try both with and without Generator suffix
+      const singularRegistryEntry =
+        schemaRegistry.get(singularTypeName) ||
+        schemaRegistry.get(`${singularTypeName}Generator`);
+
+      if (singularRegistryEntry) {
+        this.options.logger?.debug(`Found singular type in schemaRegistry`);
+        const { ctor: TypeConstructor, schema: inputSchema } =
+          singularRegistryEntry;
+        const nestedOptions = { ...this.options, inputSchema };
+        // apply parent context and return
+        const nestedSystemPrompt = this.createParentContextPrompt(root);
+        const typeInstructions = `IMPORTANT: Ensure all properties match their expected types:
+- String properties must be strings
+- Number properties must be numbers (not strings containing numbers)
+- Boolean properties must be true or false
+- Array properties must be arrays`;
+        nestedOptions.systemPrompt = this.options.systemPrompt
+          ? `${this.options.systemPrompt}\n\n${typeInstructions}\n\n${nestedSystemPrompt}`
+          : `${typeInstructions}\n\n${nestedSystemPrompt}`;
+        return new ObjectGenerationRunnable(TypeConstructor, nestedOptions);
+      }
     }
 
     const typeName = upperFirst(rawTypeName);
-    console.log(`Final type name: ${typeName}`);
+    this.options.logger?.debug(`Final type name: ${typeName}`);
 
     // Look up the schema class and actual Zod schema using lodash.get
-    const schemaKey = `${typeName}GenerationInputSchema`;
-    console.log(`Looking for schema class with key: ${schemaKey}`);
-    const schemaClass = get(globalThis, schemaKey);
-    console.log(`Found schema class: ${schemaClass ? "yes" : "no"}`);
+    // Try different schema key patterns
+    let schemaClass;
+    let inputSchema;
 
-    const inputSchema = zodSchemaRegistry.get(schemaClass);
-    console.log(`Found input schema: ${inputSchema ? "yes" : "no"}`);
+    // DEPRECATED: Fallback to globalThis lookup
+    // This fallback will be removed in a future version
+    // Please use @ZodSchema decorator to register your types in the schemaRegistry
+    this.options.logger?.debug(
+      `WARNING: Falling back to deprecated globalThis lookup for ${typeName}. ` +
+        `Use @ZodSchema decorator to register your types in the schemaRegistry.`
+    );
+
+    // First try the standard pattern: TypeNameGenerationInputSchema
+    const schemaKey1 = `${typeName}GenerationInputSchema`;
+    this.options.logger?.debug(
+      `Looking for schema class with key: ${schemaKey1}`
+    );
+    schemaClass = get(globalThis, schemaKey1);
+
+    if (schemaClass) {
+      this.options.logger?.debug(`Found schema class: yes`);
+      inputSchema = zodSchemaRegistry.get(schemaClass);
+    } else {
+      this.options.logger?.debug(`Found schema class: no`);
+
+      // Try alternative pattern: TypeInputSchema (used in E2E tests)
+      const schemaKey2 = `${typeName.replace("Generator", "")}InputSchema`;
+      this.options.logger?.debug(
+        `Looking for alternative schema key: ${schemaKey2}`
+      );
+      schemaClass = get(globalThis, schemaKey2);
+
+      if (schemaClass) {
+        this.options.logger?.debug(`Found alternative schema class: yes`);
+        inputSchema = zodSchemaRegistry.get(schemaClass);
+      } else {
+        this.options.logger?.debug(`Found alternative schema class: no`);
+      }
+    }
+
+    this.options.logger?.debug(
+      `Found input schema: ${inputSchema ? "yes" : "no"}`
+    );
 
     if (!inputSchema) {
-      console.log(`Failed to find input schema for ${typeName}`);
+      this.options.logger?.debug(`Failed to find input schema for ${typeName}`);
       return null;
     }
 
     // Look up the nested type constructor using lodash.get
-    console.log(`Looking for type constructor: ${typeName}`);
+    this.options.logger?.debug(`Looking for type constructor: ${typeName}`);
+    this.options.logger?.debug(
+      `WARNING: Using deprecated globalThis lookup for constructor ${typeName}. ` +
+        `Use @ZodSchema decorator to register your types in the schemaRegistry.`
+    );
     const TypeConstructor = get(globalThis, typeName);
-    console.log(`Found type constructor: ${TypeConstructor ? "yes" : "no"}`);
+    this.options.logger?.debug(
+      `Found type constructor: ${TypeConstructor ? "yes" : "no"}`
+    );
 
     if (!TypeConstructor) {
-      console.log(`Failed to find type constructor for ${typeName}`);
+      this.options.logger?.debug(
+        `Failed to find type constructor for ${typeName}`
+      );
       return null;
     }
 
@@ -388,13 +520,13 @@ export class CompositeObjectGenerationRunnable<T extends object> {
     );
 
     // Special handling for certain paths
-    if (path === "capital" && nestedResult && nestedResult.capital) {
-      // If the result has a 'capital' property, use that instead of the whole object
+    if (path === "capital") {
+      // For capital path, the nestedResult is the capital object itself
       this.options.logger?.debug(
-        `Extracting capital property from result for path: ${path}`
+        `Using direct result for capital path: ${path}`
       );
       return {
-        result: nestedResult.capital,
+        result: nestedResult,
         verboseData: verboseDataCapture.data,
       };
     }
@@ -457,6 +589,10 @@ export class CompositeObjectGenerationRunnable<T extends object> {
       }
 
       // Merge nested result into the root object using lodash.set
+      this.options.logger?.debug(
+        `Before merge, root object has ${Object.keys(root).length} properties`
+      );
+      this.options.logger?.debug(`Merging result for path: ${path}`);
       set(root, path, result.result);
       this.options.logger?.debug(`Merged result for path: ${path}`);
 

@@ -1,0 +1,28 @@
+{
+  "name": "@orbital/world-builder-cli",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "build": "tsc",
+    "prepare": "npm run build",
+    "start": "node dist/index.js",
+    "test": "echo \"No tests configured\""
+  },
+  "files": [
+    "dist"
+  ],
+  "bin": "dist/index.js",
+  "dependencies": {
+    "@langchain/core": "0.3.47",
+    "@langchain/openai": "0.1.0",
+    "@orbital/world-builder": "1.0.0",
+    "commander": "^14.0.0",
+    "dotenv": "^16.3.1",
+    "figlet": "^1.6.0",
+    "reflect-metadata": "^0.2.1"
+  },
+  "devDependencies": {
+    "ts-node": "^10.9.1",
+    "typescript": "^5.0.0"
+  }
+}
