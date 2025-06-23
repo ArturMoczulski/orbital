@@ -98,10 +98,6 @@ export default function ObjectExplorer({ onSelect }: ObjectExplorerProps) {
     <Box
       sx={{ height: "100%", bgcolor: "background.default", overflow: "auto" }}
     >
-      <Typography variant="h6" sx={{ p: 1, borderBottom: "1px solid #ccc" }}>
-        Object Explorer (Custom Tree)
-      </Typography>
-
       <Box sx={{ p: 1 }}>
         <Typography variant="body2" color="text.secondary">
           Areas loaded: {areas.length}
