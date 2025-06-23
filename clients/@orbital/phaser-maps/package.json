@@ -11,7 +11,16 @@
     "test": "npx jest --config jest.config.cjs"
   },
   "dependencies": {
+    "@emotion/react": "^11.14.0",
+    "@emotion/styled": "^11.14.0",
+    "@mui/icons-material": "^7.1.2",
+    "@mui/lab": "^7.0.0-beta.14",
+    "@mui/material": "^7.1.2",
+    "@mui/system": "^7.1.1",
+    "@mui/utils": "^7.1.1",
+    "@mui/x-tree-view": "^8.5.3",
     "@orbital/phaser-ui": "workspace:*",
+    "@reduxjs/toolkit": "^2.8.2",
     "inversify": "6.0.1",
     "next": "^14.0.0",
     "next-transpile-modules": "^10.0.1",
@@ -19,6 +28,7 @@
     "phaser3-rex-plugins": "^1.80.16",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
+    "react-redux": "^9.2.0",
     "reflect-metadata": "^0.2.2"
   },
   "devDependencies": {
