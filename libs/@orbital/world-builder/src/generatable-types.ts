@@ -14,10 +14,6 @@ export function getGeneratableTypes(): string[] {
       availableTypes.push(typeName);
       continue;
     }
-    // Special case for Area which uses AreaGenerationInput
-    if (typeName === "Area" && schemaRegistry.has("AreaGenerationInput")) {
-      availableTypes.push(typeName);
-    }
   }
 
   return availableTypes;
