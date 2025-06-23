@@ -1,0 +1,15 @@
+export enum SkillCategory {
+  AESTHETICS_PERFORMANCE = "Aesthetics & Performance",
+  BODY_CONTROL = "Body-Control",
+  COMBAT_WEAPON = "Combat & Weapon",
+  COMMUNICATION = "Communication",
+  OBSERVATION = "Observation",
+  TRADECRAFT = "Tradecraft",
+  CRAFTING = "Crafting",
+  ACADEMIC_KNOWLEDGE = "Academic & Knowledge",
+  MILITARY = "Military",
+  OUTDOORSMAN = "Outdoorsman",
+  TECHNICAL = "Technical",
+  THIEF = "Thief",
+  REACTION = "Reaction",
+}

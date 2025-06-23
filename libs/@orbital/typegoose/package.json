@@ -1,0 +1,24 @@
+{
+  "name": "@orbital/typegoose",
+  "version": "0.1.0",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc -b",
+    "clean": "rimraf dist",
+    "prepare": "npm run build"
+  },
+  "dependencies": {
+    "@orbital/characters": "workspace:*",
+    "@orbital/core": "workspace:*",
+    "@typegoose/typegoose": "^7.6.3",
+    "mongoose": "5.10.18",
+    "nestjs-typegoose": "^7.1.38"
+  },
+  "peerDependencies": {
+    "@nestjs/common": "*"
+  },
+  "devDependencies": {
+    "@types/mongoose": "^5.11.97"
+  }
+}
