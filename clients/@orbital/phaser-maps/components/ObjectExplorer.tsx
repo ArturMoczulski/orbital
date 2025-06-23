@@ -52,15 +52,17 @@ export default function ObjectExplorer({ onSelect }: ObjectExplorerProps) {
             py: 1,
             px: 1,
             cursor: "pointer",
-            "&:hover": { bgcolor: "rgba(0, 0, 0, 0.04)" },
+            borderRadius: "4px",
+            color: "text.primary",
+            "&:hover": { bgcolor: "secondary.main", color: "text.primary" },
           }}
           onClick={() => toggleNode(area.id)}
         >
           {hasChildren ? (
             isExpanded ? (
-              <ExpandMoreIcon fontSize="small" />
+              <ExpandMoreIcon fontSize="small" color="inherit" />
             ) : (
-              <ChevronRightIcon fontSize="small" />
+              <ChevronRightIcon fontSize="small" color="inherit" />
             )
           ) : (
             <Box sx={{ width: 24 }} /> // Spacer
@@ -68,10 +70,11 @@ export default function ObjectExplorer({ onSelect }: ObjectExplorerProps) {
           <Typography sx={{ flexGrow: 1, ml: 1 }}>{area.name}</Typography>
           <IconButton
             size="small"
+            color="inherit"
             onClick={(e) => handleLoadClick(area.id, e)}
             title="Load area map"
           >
-            <MapIcon fontSize="small" />
+            <MapIcon fontSize="small" color="inherit" />
           </IconButton>
         </Box>
 

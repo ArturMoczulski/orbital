@@ -6,4 +6,6 @@ html {
   margin: 0;
   padding: 0;
   overflow: hidden; /* Prevent scrollbars due to animation */
+  background-color: #191d45;
+  color: #e7cfa0;
 }

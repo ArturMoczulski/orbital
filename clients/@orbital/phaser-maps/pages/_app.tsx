@@ -7,23 +7,13 @@ import "../styles/global.css";
 
 const artilioTheme = createTheme({
   palette: {
-    primary: {
-      main: "#3366cc",
-    },
-    secondary: {
-      main: "#4caf50",
-    },
-    background: {
-      default: "#f4f4f4",
-      paper: "#ffffff",
-    },
-    text: {
-      primary: "#333333",
-      secondary: "#757575",
-    },
+    primary: { main: "#afa888" },
+    secondary: { main: "#c57659" },
+    background: { default: "#191d45", paper: "rgba(0, 0, 0, 0.85)" },
+    text: { primary: "#e7cfa0", secondary: "#c57659" },
   },
   typography: {
-    fontFamily: "'MedievalSharp', sans-serif",
+    fontFamily: "'MedievalSharp', cursive",
   },
 });
 
