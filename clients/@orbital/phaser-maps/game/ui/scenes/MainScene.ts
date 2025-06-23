@@ -43,7 +43,11 @@ export default class MainScene extends Phaser.Scene {
       this.mapData = {
         width: 5,
         height: 5,
-        grid: Array(5).fill(Array(5).fill(3)), // Fill with grass tiles
+        // Create a grid with independent arrays for each row to avoid reference issues
+        grid: Array.from(
+          { length: 5 },
+          () => Array.from({ length: 5 }, () => 3) // Fill with grass tiles
+        ),
       };
     } else {
       // Use the provided map data
