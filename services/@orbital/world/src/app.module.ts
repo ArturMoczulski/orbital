@@ -2,8 +2,8 @@ import { Module } from "@nestjs/common";
 import { ConfigModule } from "@nestjs/config";
 import { DatabaseModule } from "./database.module";
 import { CharactersModule } from "./characters/characters.module";
-import { LocationsModule } from "./locations/locations.module";
 import { WorldsModule } from "./worlds/worlds.module";
+import { AreasModule } from "./areas/areas.module";
 
 @Module({
   imports: [
@@ -14,8 +14,8 @@ import { WorldsModule } from "./worlds/worlds.module";
     }),
     DatabaseModule,
     CharactersModule,
-    LocationsModule,
     WorldsModule,
+    AreasModule,
   ],
 })
 export class AppModule {}

@@ -14,3 +14,6 @@ export * from "./models/location.model";
 
 // World model
 export * from "./models/world.model";
+
+// Area model
+export * from "./models/area.model";
