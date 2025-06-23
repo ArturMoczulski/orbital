@@ -9,7 +9,8 @@ import * as fs from "fs";
 import dotenv from "dotenv";
 
 import { OpenAI } from "@langchain/openai";
-import { generateArea, getGeneratableTypes } from "@orbital/world-builder";
+import { generateArea } from "@orbital/world-builder";
+import { getGeneratableTypes } from "@orbital/llm";
 import {
   ObjectGenerationRunnable,
   CompositeObjectGenerationRunnable,
@@ -83,7 +84,7 @@ const listTypes = new Command("list-types")
     if (types.length === 0) {
       console.log(chalk.yellow("  No types found."));
     } else {
-      types.forEach((t) => console.log(chalk.green(`  - ${t}`)));
+      types.forEach((t: string) => console.log(chalk.green(`  - ${t}`)));
     }
   });
 
