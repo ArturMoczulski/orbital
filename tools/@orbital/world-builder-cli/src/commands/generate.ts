@@ -5,6 +5,7 @@ import { Command } from "commander";
 import { fileURLToPath } from "url";
 import { createRequire } from "module";
 import * as path from "path";
+import * as fs from "fs";
 import dotenv from "dotenv";
 import { OpenAI } from "@langchain/openai";
 import {
@@ -53,7 +54,79 @@ const generate = new Command("generate")
   .option("-o, --output <file>", "Output file path (defaults to stdout)")
   .option("-v, --verbose", "Enable verbose output", false)
   .action(
-    async (input: string, options: { output?: string; verbose: boolean }) => {}
+    async (input: string, options: { output?: string; verbose: boolean }) => {
+      try {
+        console.log(chalk.blue("🌍 Generating area..."));
+
+        // Parse input (either JSON string or file path)
+        let inputData: any;
+
+        if (input.startsWith("{") || input.startsWith("[")) {
+          // Input is a JSON string
+          try {
+            inputData = JSON.parse(input);
+          } catch (error) {
+            console.error(chalk.red("Error parsing JSON input:"), error);
+            process.exit(1);
+          }
+        } else {
+          // Input is a file path
+          try {
+            const filePath = path.resolve(process.cwd(), input);
+            const fileContent = fs.readFileSync(filePath, "utf-8");
+            inputData = JSON.parse(fileContent);
+          } catch (error) {
+            console.error(
+              chalk.red(`Error reading or parsing file ${input}:`),
+              error
+            );
+            process.exit(1);
+          }
+        }
+
+        // Create OpenAI model
+        const model = new OpenAI({
+          modelName: process.env.OPENAI_MODEL || "gpt-4",
+          temperature: 0.7,
+          openAIApiKey: process.env.OPENAI_API_KEY,
+        });
+
+        // Set up logger for verbose output
+        const logger = options.verbose
+          ? new ConsoleLogger(VerbosityLevel.DEBUG, "AreaGenerator")
+          : undefined;
+
+        console.log(
+          chalk.blue("🧠 Using model:"),
+          process.env.OPENAI_MODEL || "gpt-4"
+        );
+
+        // Generate area
+        const area = await generateArea(
+          model as unknown as BaseLanguageModel,
+          inputData,
+          { verbose: options.verbose }
+        );
+
+        // Format the result
+        const result = JSON.stringify(area, null, 2);
+
+        // Output the result
+        if (options.output) {
+          const outputPath = path.resolve(process.cwd(), options.output);
+          fs.writeFileSync(outputPath, result);
+          console.log(
+            chalk.green(`✅ Area generated and saved to ${outputPath}`)
+          );
+        } else {
+          console.log(chalk.green("✅ Generated Area:"));
+          console.log(result);
+        }
+      } catch (error) {
+        console.error(chalk.red("Error generating area:"), error);
+        process.exit(1);
+      }
+    }
   );
 
 export default generate;

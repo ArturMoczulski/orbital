@@ -5,7 +5,7 @@ import {
   AreaGenerationInputProps,
 } from "./area-generation-input";
 import { promptRepository } from "../object-generation-prompt-repository";
-import { Area } from "@orbital/core";
+import { Area, ConsoleLogger, VerbosityLevel } from "@orbital/core";
 
 /**
  * Helper to generate an Area object and its nested parts.
@@ -18,17 +18,23 @@ import { Area } from "@orbital/core";
  */
 export async function generateArea(
   model: BaseLanguageModel,
-  rootInput: Partial<AreaGenerationInputProps>,
-  nestedInputs: Record<string, any> = {},
-  verbose = false
+  input: Partial<AreaGenerationInputProps> & Record<string, any>,
+  config?: { verbose?: boolean }
 ): Promise<Area> {
-  const validatedRootInput = AreaGenerationInputSchema.parse(rootInput);
+  // Validate the root input properties
+  const validatedRootInput = AreaGenerationInputSchema.parse(input);
+  // Create a logger if verbose mode is enabled
+  const logger = config?.verbose
+    ? new ConsoleLogger(VerbosityLevel.DEBUG, "AreaGenerator")
+    : undefined;
   const runnable = new CompositeObjectGenerationRunnable(Area, {
     // @ts-ignore: allow BaseLanguageModel without private internals
     model,
     promptRepository,
     inputSchema: AreaGenerationInputSchema,
+    logger,
   });
 
-  return runnable.invoke(validatedRootInput, nestedInputs, { verbose });
+  // Use the new single-input API
+  return runnable.invoke(input, config);
 }
