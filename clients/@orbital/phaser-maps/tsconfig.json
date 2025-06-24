@@ -37,7 +37,8 @@
     "**/*.d.ts",
     ".next/types/**/*.ts",
     "../../../libs/@orbital/phaser-ui/src/organisms/GameSettingsPopup.ts",
-    "../../libs/@orbital/phaser/src/**/*"
+    "../../libs/@orbital/phaser/src/**/*",
+    "../../libs/@orbital/react-ui/src/**/*"
   ],
   "exclude": ["node_modules"]
 }

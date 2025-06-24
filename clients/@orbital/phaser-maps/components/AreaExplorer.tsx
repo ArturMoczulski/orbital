@@ -1,7 +1,7 @@
 import React from "react";
-import { useGetAreasQuery } from "../services/areaApi";
+import { useGetAreasQuery } from "../services/worldApi.generated";
 import { Area } from "@orbital/core/src/types/area";
-import { ObjectExplorer } from "@orbital/react-ui";
+import { ObjectExplorer, type QueryResult } from "@orbital/react-ui";
 
 interface AreaExplorerProps {
   onSelect: (areaId: string) => void;
@@ -11,7 +11,7 @@ interface AreaExplorerProps {
  * Area-specific implementation of ObjectExplorer
  */
 export default function AreaExplorer({ onSelect }: AreaExplorerProps) {
-  const areasQuery = useGetAreasQuery();
+  const areasQuery = useGetAreasQuery(undefined);
 
   return (
     <ObjectExplorer<Area>

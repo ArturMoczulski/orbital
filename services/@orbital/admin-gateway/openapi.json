@@ -1,0 +1,100 @@
+{
+  "openapi": "3.0.0",
+  "paths": {
+    "/api/ping": {
+      "get": {
+        "operationId": "PingController_ping",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Ping"
+        ]
+      }
+    },
+    "/api/auth/signup": {
+      "post": {
+        "operationId": "AuthController_signup",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/api/auth/login": {
+      "post": {
+        "operationId": "AuthController_login",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/users": {
+      "post": {
+        "operationId": "UsersController_create",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Users"
+        ]
+      }
+    },
+    "/users/{username}": {
+      "get": {
+        "operationId": "UsersController_findByUsername",
+        "parameters": [
+          {
+            "name": "username",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Users"
+        ]
+      }
+    }
+  },
+  "info": {
+    "title": "Admin Gateway API",
+    "description": "The Admin Gateway API provides access to administrative functions",
+    "version": "1.0",
+    "contact": {}
+  },
+  "tags": [
+    {
+      "name": "admin",
+      "description": ""
+    }
+  ],
+  "servers": [],
+  "components": {
+    "schemas": {}
+  }
+}

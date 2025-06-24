@@ -1,6 +1,8 @@
 import { NestFactory } from "@nestjs/core";
 import { AppModule } from "./app.module";
 import * as dotenv from "dotenv";
+import * as fs from "fs";
+import { SwaggerModule, DocumentBuilder } from "@nestjs/swagger";
 
 async function bootstrap() {
   dotenv.config({ path: "../.env.local" });
@@ -13,8 +15,30 @@ async function bootstrap() {
       optionsSuccessStatus: 204,
     },
   });
+
+  // Setup Swagger
+  const config = new DocumentBuilder()
+    .setTitle("Admin Gateway API")
+    .setDescription(
+      "The Admin Gateway API provides access to administrative functions"
+    )
+    .setVersion("1.0")
+    .addTag("admin")
+    .build();
+
+  const document = SwaggerModule.createDocument(app, config);
+
+  // Save the OpenAPI spec to a file for codegen
+  fs.writeFileSync("openapi.json", JSON.stringify(document, null, 2));
+
+  // Setup Swagger UI
+  SwaggerModule.setup("api-docs", app, document);
+
   await app.listen(parseInt(process.env.PORT || "5001", 10));
   console.log(`Application is running on: ${await app.getUrl()}`);
+  console.log(
+    `Swagger documentation available at: ${await app.getUrl()}/api-docs`
+  );
 }
 
 bootstrap();

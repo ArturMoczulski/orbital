@@ -1,0 +1,719 @@
+{
+  "openapi": "3.0.0",
+  "paths": {
+    "/areas": {
+      "post": {
+        "operationId": "AreasController_createArea",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateAreaDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "The area has been successfully created.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AreaDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Create a new area",
+        "tags": [
+          "areas"
+        ]
+      },
+      "get": {
+        "operationId": "AreasController_getAllAreas",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Return all areas",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/AreaDto"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "summary": "Get all areas",
+        "tags": [
+          "areas"
+        ]
+      }
+    },
+    "/areas/{id}": {
+      "get": {
+        "operationId": "AreasController_getArea",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "Area ID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Return the area with the specified ID",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AreaDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Area not found"
+          }
+        },
+        "summary": "Get an area by ID",
+        "tags": [
+          "areas"
+        ]
+      },
+      "put": {
+        "operationId": "AreasController_updateArea",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "Area ID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateAreaDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The area has been successfully updated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AreaDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Area not found"
+          }
+        },
+        "summary": "Update an area",
+        "tags": [
+          "areas"
+        ]
+      },
+      "delete": {
+        "operationId": "AreasController_deleteArea",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "Area ID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The area has been successfully deleted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AreaDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Area not found"
+          }
+        },
+        "summary": "Delete an area",
+        "tags": [
+          "areas"
+        ]
+      }
+    },
+    "/areas/world/{worldId}": {
+      "get": {
+        "operationId": "AreasController_getAreasByWorldId",
+        "parameters": [
+          {
+            "name": "worldId",
+            "required": true,
+            "in": "path",
+            "description": "World ID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Return areas belonging to the specified world",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/AreaDto"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "summary": "Get areas by world ID",
+        "tags": [
+          "areas"
+        ]
+      }
+    },
+    "/areas/parent/{parentId}": {
+      "get": {
+        "operationId": "AreasController_getAreasByParentId",
+        "parameters": [
+          {
+            "name": "parentId",
+            "required": true,
+            "in": "path",
+            "description": "Parent area ID or \"null\" for root areas",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Return areas with the specified parent",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/AreaDto"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "summary": "Get areas by parent ID",
+        "tags": [
+          "areas"
+        ]
+      }
+    },
+    "/areas/tags": {
+      "get": {
+        "operationId": "AreasController_getAreasByTags",
+        "parameters": [
+          {
+            "name": "tags",
+            "required": true,
+            "in": "query",
+            "description": "Comma-separated list of tags",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Return areas with the specified tags",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/AreaDto"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "summary": "Get areas by tags",
+        "tags": [
+          "areas"
+        ]
+      }
+    }
+  },
+  "info": {
+    "title": "World API",
+    "description": "The World API provides access to areas, maps, and other world-related resources",
+    "version": "1.0",
+    "contact": {}
+  },
+  "tags": [
+    {
+      "name": "areas",
+      "description": ""
+    }
+  ],
+  "servers": [],
+  "components": {
+    "schemas": {
+      "CreateAreaDto": {
+        "description": "A named area in the game world with a specific position",
+        "type": "object",
+        "properties": {
+          "parentId": {
+            "description": "Identifier of the parent area, if any",
+            "type": "string",
+            "nullable": true
+          },
+          "name": {
+            "description": "Name of the area",
+            "type": "string",
+            "minLength": 1
+          },
+          "position": {
+            "description": "Central position of the area in 3D space",
+            "type": "object",
+            "properties": {
+              "x": {
+                "description": "X coordinate of the position, in meters from origin",
+                "type": "number"
+              },
+              "y": {
+                "description": "Y coordinate of the position, in meters from origin",
+                "type": "number"
+              },
+              "z": {
+                "description": "Z coordinate (height), in meters above ground",
+                "type": "number"
+              }
+            },
+            "required": [
+              "x",
+              "y",
+              "z"
+            ]
+          },
+          "areaMap": {
+            "description": "A map of an area with a grid of tiles",
+            "type": "object",
+            "properties": {
+              "id": {
+                "description": "Unique identifier for the map instance",
+                "type": "string"
+              },
+              "width": {
+                "description": "Width of the map in cells",
+                "type": "integer",
+                "minimum": 1,
+                "exclusiveMinimum": false
+              },
+              "height": {
+                "description": "Height of the map in cells",
+                "type": "integer",
+                "minimum": 1,
+                "exclusiveMinimum": false
+              },
+              "grid": {
+                "description": "2D grid of map tiles",
+                "type": "array",
+                "items": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "enum": [
+                      "Water",
+                      "BeachSand",
+                      "DirtGround",
+                      "GrassGround",
+                      "Rocks",
+                      "DirtPath",
+                      "CobblePath",
+                      "Snow",
+                      0,
+                      1,
+                      2,
+                      3,
+                      4,
+                      5,
+                      6,
+                      7
+                    ],
+                    "x-enumNames": [
+                      "0",
+                      "1",
+                      "2",
+                      "3",
+                      "4",
+                      "5",
+                      "6",
+                      "7",
+                      "Water",
+                      "BeachSand",
+                      "DirtGround",
+                      "GrassGround",
+                      "Rocks",
+                      "DirtPath",
+                      "CobblePath",
+                      "Snow"
+                    ]
+                  }
+                }
+              }
+            },
+            "required": [
+              "width",
+              "height",
+              "grid"
+            ]
+          },
+          "worldId": {
+            "description": "Identifier of the world this area belongs to",
+            "type": "string",
+            "minLength": 1
+          },
+          "tags": {
+            "description": "Tags for categorizing the area",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "description": {
+            "description": "Detailed description of the area",
+            "type": "string",
+            "minLength": 1
+          },
+          "landmarks": {
+            "description": "Notable landmarks or features in this area",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "connections": {
+            "description": "Names of other areas this area connects to",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "name",
+          "position",
+          "worldId",
+          "description"
+        ]
+      },
+      "AreaDto": {
+        "description": "A named area in the game world with a specific position",
+        "type": "object",
+        "properties": {
+          "id": {
+            "description": "Unique identifier for the area",
+            "type": "string"
+          },
+          "parentId": {
+            "description": "Identifier of the parent area, if any",
+            "type": "string",
+            "nullable": true
+          },
+          "name": {
+            "description": "Descriptive name of the area",
+            "type": "string"
+          },
+          "position": {
+            "description": "Central position of the area in 3D space",
+            "type": "object",
+            "properties": {
+              "x": {
+                "description": "X coordinate of the position, in meters from origin",
+                "type": "number"
+              },
+              "y": {
+                "description": "Y coordinate of the position, in meters from origin",
+                "type": "number"
+              },
+              "z": {
+                "description": "Z coordinate (height), in meters above ground",
+                "type": "number"
+              }
+            },
+            "required": [
+              "x",
+              "y",
+              "z"
+            ]
+          },
+          "areaMap": {
+            "description": "A map of an area with a grid of tiles",
+            "type": "object",
+            "properties": {
+              "id": {
+                "description": "Unique identifier for the map instance",
+                "type": "string"
+              },
+              "width": {
+                "description": "Width of the map in cells",
+                "type": "integer",
+                "minimum": 1,
+                "exclusiveMinimum": false
+              },
+              "height": {
+                "description": "Height of the map in cells",
+                "type": "integer",
+                "minimum": 1,
+                "exclusiveMinimum": false
+              },
+              "grid": {
+                "description": "2D grid of map tiles",
+                "type": "array",
+                "items": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "enum": [
+                      "Water",
+                      "BeachSand",
+                      "DirtGround",
+                      "GrassGround",
+                      "Rocks",
+                      "DirtPath",
+                      "CobblePath",
+                      "Snow",
+                      0,
+                      1,
+                      2,
+                      3,
+                      4,
+                      5,
+                      6,
+                      7
+                    ],
+                    "x-enumNames": [
+                      "0",
+                      "1",
+                      "2",
+                      "3",
+                      "4",
+                      "5",
+                      "6",
+                      "7",
+                      "Water",
+                      "BeachSand",
+                      "DirtGround",
+                      "GrassGround",
+                      "Rocks",
+                      "DirtPath",
+                      "CobblePath",
+                      "Snow"
+                    ]
+                  }
+                }
+              }
+            },
+            "required": [
+              "width",
+              "height",
+              "grid"
+            ]
+          },
+          "worldId": {
+            "description": "Identifier of the world this area belongs to",
+            "type": "string"
+          },
+          "tags": {
+            "description": "Tags for categorizing the area",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "name",
+          "position"
+        ]
+      },
+      "UpdateAreaDto": {
+        "description": "A named area in the game world with a specific position",
+        "type": "object",
+        "properties": {
+          "id": {
+            "description": "Unique identifier for the area",
+            "type": "string"
+          },
+          "parentId": {
+            "description": "Identifier of the parent area, if any",
+            "type": "string",
+            "nullable": true
+          },
+          "name": {
+            "description": "Name of the area",
+            "type": "string",
+            "minLength": 1
+          },
+          "position": {
+            "description": "3D position in cartesian space",
+            "type": "object",
+            "properties": {
+              "x": {
+                "description": "X coordinate of the position, in meters from origin",
+                "type": "number"
+              },
+              "y": {
+                "description": "Y coordinate of the position, in meters from origin",
+                "type": "number"
+              },
+              "z": {
+                "description": "Z coordinate (height), in meters above ground",
+                "type": "number"
+              }
+            },
+            "required": [
+              "x",
+              "y",
+              "z"
+            ]
+          },
+          "areaMap": {
+            "description": "A map of an area with a grid of tiles",
+            "type": "object",
+            "properties": {
+              "id": {
+                "description": "Unique identifier for the map instance",
+                "type": "string"
+              },
+              "width": {
+                "description": "Width of the map in cells",
+                "type": "integer",
+                "minimum": 1,
+                "exclusiveMinimum": false
+              },
+              "height": {
+                "description": "Height of the map in cells",
+                "type": "integer",
+                "minimum": 1,
+                "exclusiveMinimum": false
+              },
+              "grid": {
+                "description": "2D grid of map tiles",
+                "type": "array",
+                "items": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "enum": [
+                      "Water",
+                      "BeachSand",
+                      "DirtGround",
+                      "GrassGround",
+                      "Rocks",
+                      "DirtPath",
+                      "CobblePath",
+                      "Snow",
+                      0,
+                      1,
+                      2,
+                      3,
+                      4,
+                      5,
+                      6,
+                      7
+                    ],
+                    "x-enumNames": [
+                      "0",
+                      "1",
+                      "2",
+                      "3",
+                      "4",
+                      "5",
+                      "6",
+                      "7",
+                      "Water",
+                      "BeachSand",
+                      "DirtGround",
+                      "GrassGround",
+                      "Rocks",
+                      "DirtPath",
+                      "CobblePath",
+                      "Snow"
+                    ]
+                  }
+                }
+              }
+            },
+            "required": [
+              "width",
+              "height",
+              "grid"
+            ]
+          },
+          "worldId": {
+            "description": "Identifier of the world this area belongs to",
+            "type": "string",
+            "minLength": 1
+          },
+          "tags": {
+            "description": "Tags for categorizing the area",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "description": {
+            "description": "Detailed description of the area",
+            "type": "string",
+            "minLength": 1
+          },
+          "landmarks": {
+            "description": "Notable landmarks or features in this area",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "connections": {
+            "description": "Names of other areas this area connects to",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    }
+  }
+}

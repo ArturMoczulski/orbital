@@ -17,6 +17,7 @@
     "@nestjs/core": "^10.0.0",
     "@nestjs/mongoose": "^10.0.0",
     "@nestjs/platform-express": "^10.0.0",
+    "@nestjs/swagger": "^11.2.0",
     "@orbital/core": "workspaces:*",
     "@orbital/typegoose": "workspaces:*",
     "@typegoose/typegoose": "^7.6.3",
@@ -24,8 +25,12 @@
     "dotenv": "^16.5.0",
     "mongoose": "5.10.18",
     "nestjs-typegoose": "^7.1.38",
+    "nestjs-zod": "^4.3.1",
+    "openapi3-ts": "^4.4.0",
     "reflect-metadata": "^0.1.13",
-    "rxjs": "^7.8.0"
+    "rxjs": "^7.8.0",
+    "swagger-ui-express": "^5.0.1",
+    "zod": "^3.25.67"
   },
   "devDependencies": {
     "@nestjs/cli": "^10.0.0",
