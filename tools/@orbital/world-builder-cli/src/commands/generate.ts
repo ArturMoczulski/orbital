@@ -1,4 +1,7 @@
 // Import reflect-metadata for decorator support
+import "@orbital/world-builder";
+import { z } from "zod";
+import { schemaRegistry, zodSchemaRegistry } from "@orbital/core";
 import "reflect-metadata";
 
 import { Command } from "commander";
@@ -9,8 +12,8 @@ import * as fs from "fs";
 import dotenv from "dotenv";
 
 import { OpenAI } from "@langchain/openai";
-import { generateArea } from "@orbital/world-builder";
 import { getGeneratableTypes } from "@orbital/llm";
+import { promptRepository } from "@orbital/world-builder";
 import {
   ObjectGenerationRunnable,
   CompositeObjectGenerationRunnable,
@@ -27,11 +30,6 @@ const chalk = require("chalk");
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const envPath = path.resolve(__dirname, "../../.env.local");
-console.log(`Loading environment variables from: ${envPath}`);
-dotenv.config({ path: envPath });
-console.log(
-  `Environment variables loaded. OPENAI_MODEL_NAME=${process.env.OPENAI_MODEL_NAME}`
-);
 
 /**
  * Generic function to generate any type of object using CompositeObjectGenerationRunnable
@@ -47,11 +45,6 @@ async function generateObject(
     ? new ConsoleLogger(VerbosityLevel.DEBUG, `${typeName}Generator`)
     : undefined;
 
-  // For Area type, use the specialized generateArea function
-  if (typeName === "Area") {
-    return generateArea(model, inputData, config);
-  }
-
   // Look for the type in the generatable types list
   const availableTypes = getGeneratableTypes();
   if (!availableTypes.includes(typeName)) {
@@ -62,13 +55,27 @@ async function generateObject(
     );
   }
 
-  // Obtain constructor from schemaRegistry via llm's CompositeObjectGenerationRunnable
-  // The runnable will lookup schema internally
-  const runnable = new CompositeObjectGenerationRunnable(
-    // @ts-ignore
-    (globalThis as any)[typeName],
-    { model, logger }
-  );
+  // Resolve constructor via registry
+  const entry = schemaRegistry.get(typeName);
+  if (!entry) {
+    throw new Error(`Type "${typeName}" not found in registry.`);
+  }
+  const ctor = entry.ctor;
+  const inputKey = `${typeName}GenerationInput`;
+  const inputEntry = schemaRegistry.get(inputKey);
+  // Use partial input schema to allow missing optional fields
+  const rawInputSchema = inputEntry?.schema;
+  const inputSchema =
+    rawInputSchema instanceof z.ZodObject
+      ? rawInputSchema.partial()
+      : rawInputSchema;
+  const runnable = new CompositeObjectGenerationRunnable(ctor, {
+    model,
+    logger,
+    inputSchema,
+    schemaRegistry: zodSchemaRegistry,
+    systemPrompt: promptRepository.get(typeName),
+  });
 
   return runnable.invoke(inputData, config);
 }
