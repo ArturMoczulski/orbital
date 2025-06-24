@@ -1,5 +1,5 @@
 import React from "react";
-import { useGetAreasQuery } from "../services/worldApi.generated";
+import { useGetAreasQuery } from "../services/adminApi.generated";
 import { Area } from "@orbital/core/src/types/area";
 import { ObjectExplorer, type QueryResult } from "@orbital/react-ui";
 

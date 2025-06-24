@@ -3,7 +3,7 @@ import React, { useState } from "react";
 import dynamic from "next/dynamic";
 import Box from "@mui/material/Box";
 import AreaExplorer from "../components/AreaExplorer";
-import { useGetAreaQuery } from "../services/worldApi.generated";
+import { useGetAreaQuery } from "../services/adminApi.generated";
 import { skipToken } from "@reduxjs/toolkit/query/react";
 
 // Dynamically load PhaserClient without SSR

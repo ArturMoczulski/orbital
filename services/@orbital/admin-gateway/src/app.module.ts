@@ -4,6 +4,7 @@ import { MongooseModule } from "@nestjs/mongoose";
 import { PingController } from "./ping/ping.controller";
 import { AuthModule } from "./auth/auth.module";
 import { UsersModule } from "./users/users.module";
+import { AreasModule } from "./areas/areas.module";
 
 @Module({
   imports: [
@@ -21,6 +22,7 @@ import { UsersModule } from "./users/users.module";
     }),
     AuthModule,
     UsersModule,
+    AreasModule,
   ],
   controllers: [PingController],
   providers: [],

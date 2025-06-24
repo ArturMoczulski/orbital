@@ -8,12 +8,6 @@ let adminApi: any = {
   middleware: () => {},
 };
 
-let worldApi: any = {
-  reducerPath: "worldApi",
-  reducer: {},
-  middleware: () => {},
-};
-
 // Try to import the generated Admin API if it exists
 try {
   const generatedAdminApi = require("./services/adminApi.generated");
@@ -24,20 +18,9 @@ try {
   );
 }
 
-// Try to import the generated World API if it exists
-try {
-  const generatedWorldApi = require("./services/worldApi.generated");
-  worldApi = generatedWorldApi.worldApi;
-} catch (error) {
-  console.warn(
-    "World API not generated yet. Run 'yarn generate:world-api' to create it."
-  );
-}
-
 export const store = configureStore({
   reducer: {
     [adminApi.reducerPath]: adminApi.reducer,
-    [worldApi.reducerPath]: worldApi.reducer,
   },
   middleware: (getDefaultMiddleware) => {
     const defaultMiddleware = getDefaultMiddleware();
@@ -46,10 +29,6 @@ export const store = configureStore({
     // Add API middleware if they exist
     if (adminApi.middleware) {
       middlewareArray.push(adminApi.middleware);
-    }
-
-    if (worldApi.middleware) {
-      middlewareArray.push(worldApi.middleware);
     }
 
     return defaultMiddleware.concat(...middlewareArray);

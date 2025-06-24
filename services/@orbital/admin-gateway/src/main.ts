@@ -2,6 +2,7 @@ import { NestFactory } from "@nestjs/core";
 import { AppModule } from "./app.module";
 import * as dotenv from "dotenv";
 import * as fs from "fs";
+import * as path from "path";
 import { SwaggerModule, DocumentBuilder } from "@nestjs/swagger";
 
 async function bootstrap() {
@@ -27,6 +28,11 @@ async function bootstrap() {
     .build();
 
   const document = SwaggerModule.createDocument(app, config);
+  // Export OpenAPI spec to file for RTK Query codegen
+  fs.writeFileSync(
+    path.resolve(__dirname, "..", "openapi.json"),
+    JSON.stringify(document, null, 2)
+  );
 
   // Save the OpenAPI spec to a file for codegen
   fs.writeFileSync("openapi.json", JSON.stringify(document, null, 2));
