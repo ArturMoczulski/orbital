@@ -4,6 +4,7 @@ import * as dotenv from "dotenv";
 import * as fs from "fs";
 import * as path from "path";
 import { SwaggerModule, DocumentBuilder } from "@nestjs/swagger";
+import { MicroserviceExceptionFilter } from "@orbital/microservices";
 
 async function bootstrap() {
   dotenv.config({ path: "../.env.local" });
@@ -16,6 +17,9 @@ async function bootstrap() {
       optionsSuccessStatus: 204,
     },
   });
+
+  // Apply global exception filter for RPC exceptions
+  app.useGlobalFilters(new MicroserviceExceptionFilter());
 
   // Setup Swagger
   const config = new DocumentBuilder()
@@ -45,6 +49,7 @@ async function bootstrap() {
   console.log(
     `Swagger documentation available at: ${await app.getUrl()}/api-docs`
   );
+  console.log(`Connected to NATS for microservice communication`);
 }
 
 bootstrap();

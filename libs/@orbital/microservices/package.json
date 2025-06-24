@@ -1,0 +1,35 @@
+{
+  "name": "@orbital/microservices",
+  "version": "1.0.0",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc -p tsconfig.json"
+  },
+  "peerDependencies": {
+    "@nestjs/common": "^10.0.0",
+    "@nestjs/event-emitter": "^2.0.0",
+    "@nestjs/microservices": "^10.0.0",
+    "nats": "^2.19.0",
+    "reflect-metadata": "^0.1.13",
+    "rxjs": "^7.8.0"
+  },
+  "devDependencies": {
+    "@asyncapi/generator": "^1.9.13",
+    "@asyncapi/typescript-node-template": "^0.12.0",
+    "@nestjs/common": "^10.0.0",
+    "@nestjs/core": "^10.0.0",
+    "@nestjs/event-emitter": "^2.0.4",
+    "@nestjs/microservices": "^10.0.0",
+    "@types/node": "^24.0.3",
+    "commander": "^11.1.0",
+    "nats": "^2.19.0",
+    "reflect-metadata": "^0.1.13",
+    "rxjs": "^7.8.0",
+    "typescript": "^5.8.3",
+    "zod": "^3.22.4"
+  },
+  "bin": {
+    "generate-asyncapi": "./dist/asyncapi/cli/generate-asyncapi.js"
+  }
+}

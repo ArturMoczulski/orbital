@@ -1,29 +1,27 @@
 import { Injectable } from "@nestjs/common";
+import { WorldMicroservice } from "../world/world.microservice";
 
 @Injectable()
 export class AreasService {
-  getAll(): any[] {
-    // TODO: Proxy to Area microservice
-    return [];
+  constructor(private readonly worldService: WorldMicroservice) {}
+
+  async getAll() {
+    return this.worldService.getAllAreas();
   }
 
-  getById(id: string): any {
-    // TODO: Proxy to Area microservice
-    return { id };
+  async getById(id: string) {
+    return this.worldService.getArea(id);
   }
 
-  create(body: any): any {
-    // TODO: Proxy to Area microservice
-    return body;
+  async create(body: any) {
+    return this.worldService.createArea(body);
   }
 
-  update(id: string, body: any): any {
-    // TODO: Proxy to Area microservice
-    return { id, ...body };
+  async update(id: string, body: any) {
+    return this.worldService.updateArea(id, body);
   }
 
-  delete(id: string): any {
-    // TODO: Proxy to Area microservice
-    return { deletedId: id };
+  async delete(id: string) {
+    return this.worldService.deleteArea(id);
   }
 }
