@@ -7,6 +7,10 @@ const handler: NextApiHandler = async (req, res) => {
   const targetUrl = `${
     process.env.NEXT_PUBLIC_ADMIN_GATEWAY_URL
   }/${segments.join("/")}`;
+  +(
+    // Debug logging for proxy requests
+    (+console.log(`[admin-proxy] ${req.method} -> ${targetUrl}`))
+  );
 
   // Proxy the incoming request to the Admin Gateway
   // Build and sanitize headers

@@ -62,14 +62,20 @@ export class AreaMap
 
   /** Create a mock AreaMapGrid instance */
   static mock(overrides: Partial<AreaMapProps> = {}): AreaMap {
-    const width = overrides.width || 3;
-    const height = overrides.height || 3;
+    const width = overrides.width || 64;
+    const height = overrides.height || 64;
 
-    // Create a grid with independent arrays for each row to avoid reference issues
+    // Create a grid with randomized tiles, independent arrays per row
     const grid =
       overrides.grid ||
       Array.from({ length: height }, () =>
-        Array.from({ length: width }, () => AreaMapTiles.GrassGround)
+        Array.from({ length: width }, () => {
+          // Only use numeric enum values for random tile selection
+          const tileValues = Object.values(AreaMapTiles).filter(
+            (v): v is AreaMapTiles => typeof v === "number"
+          );
+          return tileValues[Math.floor(Math.random() * tileValues.length)];
+        })
       );
 
     const base: Partial<AreaMapProps> = {

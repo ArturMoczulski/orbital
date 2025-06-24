@@ -24,28 +24,35 @@ export class MicroserviceManagerService implements OnModuleInit {
 
   async onModuleInit() {
     try {
-      // Get a service watcher for all services (*)
-      // Access the services API directly through the connection
+      // Check if NATS services API is available
       // @ts-ignore - Ignore TypeScript error for NATS services API
-      const iter = this.nc.services.watch("*");
+      if (this.nc.services && typeof this.nc.services.watch === "function") {
+        // Get a service watcher for all services (*)
+        // @ts-ignore - Ignore TypeScript error for NATS services API
+        const iter = this.nc.services.watch("*");
 
-      // Start async processing of service events
-      (async () => {
-        for await (const ev of iter) {
-          // Check if service is up based on status
-          const up = ev.status === "OK";
+        // Start async processing of service events
+        (async () => {
+          for await (const ev of iter) {
+            // Check if service is up based on status
+            const up = ev.status === "OK";
 
-          // Emit the appropriate event with service info
-          this.eventEmitter.emit(
-            up
-              ? MicroserviceManagerEvents.Available
-              : MicroserviceManagerEvents.Unavailable,
-            { microservice: ev.name }
-          );
-        }
-      })().catch((err) => {
-        console.error("Error in microservice watcher:", err);
-      });
+            // Emit the appropriate event with service info
+            this.eventEmitter.emit(
+              up
+                ? MicroserviceManagerEvents.Available
+                : MicroserviceManagerEvents.Unavailable,
+              { microservice: ev.name }
+            );
+          }
+        })().catch((err) => {
+          console.error("Error in microservice watcher:", err);
+        });
+      } else {
+        console.log(
+          "NATS services API not available, microservice watcher disabled"
+        );
+      }
     } catch (err) {
       console.error("Failed to initialize microservice watcher:", err);
     }

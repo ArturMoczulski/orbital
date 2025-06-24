@@ -9,7 +9,10 @@
     "dev": "nest start --watch",
     "test": "NODE_NO_WARNINGS=1 jest --passWithNoTests",
     "test:watch": "jest --watch",
-    "test:cov": "jest --coverage"
+    "test:cov": "jest --coverage",
+    "generate:asyncapi-document": "ts-node src/generate-asyncapi-document.ts",
+    "generate:asyncapi-client": "generate-asyncapi generate -i ./asyncapi/asyncapi.json -o ./asyncapi/client",
+    "generate:asyncapi": "yarn generate:asyncapi-document && yarn generate:asyncapi-client"
   },
   "dependencies": {
     "@nestjs/common": "^10.0.0",

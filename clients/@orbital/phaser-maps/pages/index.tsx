@@ -3,8 +3,8 @@ import React, { useState } from "react";
 import dynamic from "next/dynamic";
 import Box from "@mui/material/Box";
 import AreaExplorer from "../components/AreaExplorer";
-import { useGetAreaQuery } from "../services/adminApi.generated";
-import { skipToken } from "@reduxjs/toolkit/query/react";
+import { useAreasControllerGetByIdQuery } from "../services/adminApi.generated";
+import type { AreaMap } from "@orbital/core/src/types/area-map";
 
 // Dynamically load PhaserClient without SSR
 const PhaserClient = dynamic(() => import("../components/PhaserClient"), {
@@ -13,17 +13,22 @@ const PhaserClient = dynamic(() => import("../components/PhaserClient"), {
 
 export default function ExplorerPage() {
   const [selectedAreaId, setSelectedAreaId] = useState<string | null>(null);
+  const [selectedAreaMap, setSelectedAreaMap] = useState<AreaMap | null>(null);
 
-  // Handle area selection
-  const handleSelectArea = (id: string) => {
+  // Handle area selection with map
+  const handleSelectArea = (id: string, areaMap: AreaMap) => {
     setSelectedAreaId(id);
+    setSelectedAreaMap(areaMap);
   };
 
   const {
     data: area,
     isLoading,
     error,
-  } = useGetAreaQuery(selectedAreaId ?? skipToken);
+  } = useAreasControllerGetByIdQuery(
+    { id: selectedAreaId! },
+    { skip: !selectedAreaId }
+  );
 
   return (
     <Box display="flex" sx={{ height: "100vh" }}>
@@ -85,7 +90,13 @@ export default function ExplorerPage() {
               position: "relative",
             }}
           >
-            <PhaserClient areaMap={area?.areaMap} isLoading={isLoading} />
+            <PhaserClient
+              areaMap={selectedAreaMap ?? undefined}
+              isLoading={
+                isLoading ||
+                (selectedAreaId !== null && selectedAreaMap === null)
+              }
+            />
           </Box>
         </Box>
       </Box>

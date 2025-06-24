@@ -29,9 +29,10 @@ async function bootstrap() {
     )
     .setVersion("1.0")
     .addTag("admin")
+    .addTag("areas")
     .build();
 
-  const document = SwaggerModule.createDocument(app, config);
+  const document = SwaggerModule.createDocument(app, config as any);
   // Export OpenAPI spec to file for RTK Query codegen
   fs.writeFileSync(
     path.resolve(__dirname, "..", "openapi.json"),

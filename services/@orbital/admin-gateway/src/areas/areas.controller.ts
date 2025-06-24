@@ -24,6 +24,10 @@ export class AreasController {
   getById(@Param("id") id: string) {
     return this.areasService.getById(id);
   }
+  @Get(":id/map")
+  getMap(@Param("id") id: string) {
+    return this.areasService.getMap(id);
+  }
 
   @Post()
   create(@Body() body: any) {

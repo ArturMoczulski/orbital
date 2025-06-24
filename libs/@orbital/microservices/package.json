@@ -16,7 +16,6 @@
   },
   "devDependencies": {
     "@asyncapi/generator": "^1.9.13",
-    "@asyncapi/typescript-node-template": "^0.12.0",
     "@nestjs/common": "^10.0.0",
     "@nestjs/core": "^10.0.0",
     "@nestjs/event-emitter": "^2.0.4",
@@ -31,5 +30,8 @@
   },
   "bin": {
     "generate-asyncapi": "./dist/asyncapi/cli/generate-asyncapi.js"
+  },
+  "dependencies": {
+    "@asyncapi/html-template": "^3.3.0"
   }
 }

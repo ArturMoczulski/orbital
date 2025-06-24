@@ -79,6 +79,120 @@
           "Users"
         ]
       }
+    },
+    "/areas": {
+      "get": {
+        "operationId": "AreasController_getAll",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "areas"
+        ]
+      },
+      "post": {
+        "operationId": "AreasController_create",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "areas"
+        ]
+      }
+    },
+    "/areas/{id}": {
+      "get": {
+        "operationId": "AreasController_getById",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "areas"
+        ]
+      },
+      "put": {
+        "operationId": "AreasController_update",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "areas"
+        ]
+      },
+      "delete": {
+        "operationId": "AreasController_delete",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "areas"
+        ]
+      }
+    },
+    "/areas/{id}/map": {
+      "get": {
+        "operationId": "AreasController_getMap",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "areas"
+        ]
+      }
     }
   },
   "info": {
@@ -90,6 +204,10 @@
   "tags": [
     {
       "name": "admin",
+      "description": ""
+    },
+    {
+      "name": "areas",
       "description": ""
     }
   ],

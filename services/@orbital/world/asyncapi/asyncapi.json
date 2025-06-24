@@ -1,0 +1,519 @@
+{
+  "asyncapi": "2.6.0",
+  "info": {
+    "title": "World Service - Areas API",
+    "version": "1.0.0",
+    "description": "API for managing areas in the world service"
+  },
+  "channels": {
+    "world.AreasMicroserviceController.createArea": {
+      "description": "Creates a new area with the provided data",
+      "publish": {
+        "summary": "Create a new area",
+        "message": {
+          "$ref": "#/components/messages/world.AreasMicroserviceController.createAreaMessage"
+        }
+      },
+      "subscribe": {
+        "summary": "Reply for Create a new area",
+        "message": {
+          "$ref": "#/components/messages/world.AreasMicroserviceController.createAreaReply"
+        }
+      }
+    },
+    "world.AreasMicroserviceController.getAllAreas": {
+      "description": "Retrieves all areas",
+      "subscribe": {
+        "summary": "Reply for Get all areas",
+        "message": {
+          "$ref": "#/components/messages/world.AreasMicroserviceController.getAllAreasReply"
+        }
+      }
+    },
+    "world.AreasMicroserviceController.getArea": {
+      "description": "Retrieves an area by its ID",
+      "publish": {
+        "summary": "Get area by ID",
+        "message": {
+          "$ref": "#/components/messages/world.AreasMicroserviceController.getAreaMessage"
+        }
+      },
+      "subscribe": {
+        "summary": "Reply for Get area by ID",
+        "message": {
+          "$ref": "#/components/messages/world.AreasMicroserviceController.getAreaReply"
+        }
+      }
+    },
+    "world.AreasMicroserviceController.updateArea": {
+      "description": "Updates an area with the provided data",
+      "publish": {
+        "summary": "Update area",
+        "message": {
+          "$ref": "#/components/messages/world.AreasMicroserviceController.updateAreaMessage"
+        }
+      },
+      "subscribe": {
+        "summary": "Reply for Update area",
+        "message": {
+          "$ref": "#/components/messages/world.AreasMicroserviceController.updateAreaReply"
+        }
+      }
+    },
+    "world.AreasMicroserviceController.deleteArea": {
+      "description": "Deletes an area by its ID",
+      "publish": {
+        "summary": "Delete area",
+        "message": {
+          "$ref": "#/components/messages/world.AreasMicroserviceController.deleteAreaMessage"
+        }
+      },
+      "subscribe": {
+        "summary": "Reply for Delete area",
+        "message": {
+          "$ref": "#/components/messages/world.AreasMicroserviceController.deleteAreaReply"
+        }
+      }
+    },
+    "world.AreasMicroserviceController.getAreasByWorldId": {
+      "description": "Retrieves all areas belonging to a specific world",
+      "publish": {
+        "summary": "Get areas by world ID",
+        "message": {
+          "$ref": "#/components/messages/world.AreasMicroserviceController.getAreasByWorldIdMessage"
+        }
+      },
+      "subscribe": {
+        "summary": "Reply for Get areas by world ID",
+        "message": {
+          "$ref": "#/components/messages/world.AreasMicroserviceController.getAreasByWorldIdReply"
+        }
+      }
+    },
+    "world.AreasMicroserviceController.getAreasByParentId": {
+      "description": "Retrieves all areas with a specific parent ID",
+      "publish": {
+        "summary": "Get areas by parent ID",
+        "message": {
+          "$ref": "#/components/messages/world.AreasMicroserviceController.getAreasByParentIdMessage"
+        }
+      },
+      "subscribe": {
+        "summary": "Reply for Get areas by parent ID",
+        "message": {
+          "$ref": "#/components/messages/world.AreasMicroserviceController.getAreasByParentIdReply"
+        }
+      }
+    },
+    "world.AreasMicroserviceController.getAreasByTags": {
+      "description": "Retrieves all areas that have all the specified tags",
+      "publish": {
+        "summary": "Get areas by tags",
+        "message": {
+          "$ref": "#/components/messages/world.AreasMicroserviceController.getAreasByTagsMessage"
+        }
+      },
+      "subscribe": {
+        "summary": "Reply for Get areas by tags",
+        "message": {
+          "$ref": "#/components/messages/world.AreasMicroserviceController.getAreasByTagsReply"
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {},
+    "messages": {
+      "world.AreasMicroserviceController.createAreaMessage": {
+        "name": "world.AreasMicroserviceController.createAreaMessage",
+        "description": "Area creation request",
+        "payload": {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string"
+            },
+            "description": {
+              "type": "string"
+            },
+            "worldId": {
+              "type": "string"
+            },
+            "parentId": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "tags": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          "required": [
+            "name",
+            "worldId"
+          ]
+        }
+      },
+      "world.AreasMicroserviceController.createAreaReply": {
+        "name": "world.AreasMicroserviceController.createAreaReply",
+        "description": "Created area",
+        "payload": {
+          "type": "object",
+          "properties": {
+            "_id": {
+              "type": "string"
+            },
+            "name": {
+              "type": "string"
+            },
+            "description": {
+              "type": "string"
+            },
+            "worldId": {
+              "type": "string"
+            },
+            "parentId": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "tags": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      },
+      "world.AreasMicroserviceController.getAllAreasReply": {
+        "name": "world.AreasMicroserviceController.getAllAreasReply",
+        "description": "List of all areas",
+        "payload": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "_id": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "description": {
+                "type": "string"
+              },
+              "worldId": {
+                "type": "string"
+              },
+              "parentId": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "tags": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      },
+      "world.AreasMicroserviceController.getAreaMessage": {
+        "name": "world.AreasMicroserviceController.getAreaMessage",
+        "description": "Area ID",
+        "payload": {
+          "type": "string"
+        }
+      },
+      "world.AreasMicroserviceController.getAreaReply": {
+        "name": "world.AreasMicroserviceController.getAreaReply",
+        "description": "Area details",
+        "payload": {
+          "type": "object",
+          "properties": {
+            "_id": {
+              "type": "string"
+            },
+            "name": {
+              "type": "string"
+            },
+            "description": {
+              "type": "string"
+            },
+            "worldId": {
+              "type": "string"
+            },
+            "parentId": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "tags": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      },
+      "world.AreasMicroserviceController.updateAreaMessage": {
+        "name": "world.AreasMicroserviceController.updateAreaMessage",
+        "description": "Area update request",
+        "payload": {
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "string"
+            },
+            "updateAreaDto": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string"
+                },
+                "description": {
+                  "type": "string"
+                },
+                "parentId": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "tags": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          },
+          "required": [
+            "id",
+            "updateAreaDto"
+          ]
+        }
+      },
+      "world.AreasMicroserviceController.updateAreaReply": {
+        "name": "world.AreasMicroserviceController.updateAreaReply",
+        "description": "Updated area",
+        "payload": {
+          "type": "object",
+          "properties": {
+            "_id": {
+              "type": "string"
+            },
+            "name": {
+              "type": "string"
+            },
+            "description": {
+              "type": "string"
+            },
+            "worldId": {
+              "type": "string"
+            },
+            "parentId": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "tags": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      },
+      "world.AreasMicroserviceController.deleteAreaMessage": {
+        "name": "world.AreasMicroserviceController.deleteAreaMessage",
+        "description": "Area ID",
+        "payload": {
+          "type": "string"
+        }
+      },
+      "world.AreasMicroserviceController.deleteAreaReply": {
+        "name": "world.AreasMicroserviceController.deleteAreaReply",
+        "description": "Deleted area",
+        "payload": {
+          "type": "object",
+          "properties": {
+            "_id": {
+              "type": "string"
+            },
+            "name": {
+              "type": "string"
+            },
+            "description": {
+              "type": "string"
+            },
+            "worldId": {
+              "type": "string"
+            },
+            "parentId": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "tags": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      },
+      "world.AreasMicroserviceController.getAreasByWorldIdMessage": {
+        "name": "world.AreasMicroserviceController.getAreasByWorldIdMessage",
+        "description": "World ID",
+        "payload": {
+          "type": "string"
+        }
+      },
+      "world.AreasMicroserviceController.getAreasByWorldIdReply": {
+        "name": "world.AreasMicroserviceController.getAreasByWorldIdReply",
+        "description": "List of areas in the world",
+        "payload": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "_id": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "description": {
+                "type": "string"
+              },
+              "worldId": {
+                "type": "string"
+              },
+              "parentId": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "tags": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      },
+      "world.AreasMicroserviceController.getAreasByParentIdMessage": {
+        "name": "world.AreasMicroserviceController.getAreasByParentIdMessage",
+        "description": "Parent ID (or null for top-level areas)",
+        "payload": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "world.AreasMicroserviceController.getAreasByParentIdReply": {
+        "name": "world.AreasMicroserviceController.getAreasByParentIdReply",
+        "description": "List of child areas",
+        "payload": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "_id": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "description": {
+                "type": "string"
+              },
+              "worldId": {
+                "type": "string"
+              },
+              "parentId": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "tags": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      },
+      "world.AreasMicroserviceController.getAreasByTagsMessage": {
+        "name": "world.AreasMicroserviceController.getAreasByTagsMessage",
+        "description": "List of tags",
+        "payload": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "world.AreasMicroserviceController.getAreasByTagsReply": {
+        "name": "world.AreasMicroserviceController.getAreasByTagsReply",
+        "description": "List of areas with matching tags",
+        "payload": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "_id": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "description": {
+                "type": "string"
+              },
+              "worldId": {
+                "type": "string"
+              },
+              "parentId": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "tags": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

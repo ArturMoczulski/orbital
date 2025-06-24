@@ -15,10 +15,10 @@ const defaultTileColors: Record<AreaMapTiles, number> = {
 
 export class MapViewer extends Phaser.GameObjects.Container {
   private tileSize: number;
-  private tileRects: Phaser.GameObjects.Rectangle[][] = [];
   private mapWidth: number;
   private mapHeight: number;
   private labelText: Phaser.GameObjects.Text;
+  private graphics: Phaser.GameObjects.Graphics;
 
   constructor(
     scene: Phaser.Scene,
@@ -34,6 +34,10 @@ export class MapViewer extends Phaser.GameObjects.Container {
     this.mapHeight = mapData.height;
     this.tileSize = Math.min(width / this.mapWidth, height / this.mapHeight);
 
+    // Create a single graphics object for all tiles
+    this.graphics = scene.add.graphics({ x: 0, y: 0 });
+    this.add(this.graphics);
+
     // create loading/update/no-data label
     this.labelText = scene.add
       .text(0, 0, "", {
@@ -44,6 +48,7 @@ export class MapViewer extends Phaser.GameObjects.Container {
       })
       .setOrigin(0.5);
     this.labelText.setPosition(width / 2, height / 2);
+    this.add(this.labelText);
 
     scene.add.existing(this);
     this.drawMap(mapData, tileColors);
@@ -56,9 +61,8 @@ export class MapViewer extends Phaser.GameObjects.Container {
     // show loading
     this.labelText.setVisible(true).setText("Loading map...");
 
-    // destroy previous tile rectangles
-    this.tileRects.forEach((row) => row.forEach((rect) => rect.destroy()));
-    this.tileRects = [];
+    // Clear the graphics object
+    this.graphics.clear();
 
     // no-data case
     if (!mapData.grid || mapData.width === 0 || mapData.height === 0) {
@@ -66,24 +70,38 @@ export class MapViewer extends Phaser.GameObjects.Container {
       return;
     }
 
-    // draw grid of rectangles
+    // Draw all tiles in a single graphics object
+    const size = this.tileSize;
+    const strokeWidth = Math.max(1, Math.min(2, size / 16)); // Adaptive stroke width
+
+    // First pass: fill all tiles
     for (let row = 0; row < mapData.height; row++) {
-      this.tileRects[row] = [];
       for (let col = 0; col < mapData.width; col++) {
         const code = mapData.grid[row][col] as AreaMapTiles;
         const color = tileColors[code] ?? 0x000000;
-        const rect = this.scene.add
-          .rectangle(
-            col * this.tileSize,
-            row * this.tileSize,
-            this.tileSize,
-            this.tileSize,
-            color
-          )
-          .setOrigin(0, 0);
-        rect.setStrokeStyle(1, 0x000000);
-        this.add(rect);
-        this.tileRects[row][col] = rect;
+
+        this.graphics.fillStyle(color, 1);
+        this.graphics.fillRect(col * size, row * size, size, size);
+      }
+    }
+
+    // Second pass: draw grid lines (optional, can be removed for better performance)
+    if (size > 4) {
+      // Only draw grid lines if tiles are big enough
+      this.graphics.lineStyle(strokeWidth, 0x000000, 0.3);
+      for (let row = 0; row <= mapData.height; row++) {
+        this.graphics.beginPath();
+        this.graphics.moveTo(0, row * size);
+        this.graphics.lineTo(mapData.width * size, row * size);
+        this.graphics.closePath();
+        this.graphics.strokePath();
+      }
+      for (let col = 0; col <= mapData.width; col++) {
+        this.graphics.beginPath();
+        this.graphics.moveTo(col * size, 0);
+        this.graphics.lineTo(col * size, mapData.height * size);
+        this.graphics.closePath();
+        this.graphics.strokePath();
       }
     }
 
@@ -119,14 +137,16 @@ export class MapViewer extends Phaser.GameObjects.Container {
     this.tileSize = Math.min(width / this.mapWidth, height / this.mapHeight);
     this.labelText.setPosition(width / 2, height / 2);
 
-    // reposition and resize each tile
-    this.tileRects.forEach((row, r) =>
-      row.forEach((rect, c) => {
-        rect
-          .setPosition(c * this.tileSize, r * this.tileSize)
-          .setSize(this.tileSize, this.tileSize);
-      })
+    // Redraw the entire map with the new tile size
+    this.drawMap(
+      {
+        width: this.mapWidth,
+        height: this.mapHeight,
+        grid: this.scene.data.get("currentMapGrid") || [],
+      },
+      defaultTileColors
     );
+
     return this;
   }
 
@@ -181,6 +201,8 @@ export class MapViewerScene extends Phaser.Scene {
 
   public updateMap(newData: AreaMapProps) {
     if (!this.mapViewer) return;
+    // Store the current grid data for resize operations
+    this.data.set("currentMapGrid", newData.grid);
     this.mapViewer.updateMap(newData);
     this.reposition(newData);
   }

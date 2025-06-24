@@ -1,12 +1,15 @@
 import { Module } from "@nestjs/common";
 import { ConfigModule, ConfigService } from "@nestjs/config";
-import { EventEmitterModule } from "@nestjs/event-emitter";
 import { MongooseModule } from "@nestjs/mongoose";
-import { MicroserviceManagerService } from "@orbital/microservices";
+import { EventEmitterModule } from "@nestjs/event-emitter";
+import { EventEmitter2 } from "@nestjs/event-emitter";
 import { PingController } from "./ping/ping.controller";
 import { AuthModule } from "./auth/auth.module";
 import { UsersModule } from "./users/users.module";
 import { AreasModule } from "./areas/areas.module";
+import { APP_INTERCEPTOR } from "@nestjs/core";
+import { LoggingInterceptor } from "./common/logging.interceptor";
+import { MicroserviceManagerService } from "@orbital/microservices";
 
 @Module({
   imports: [
@@ -38,7 +41,18 @@ import { AreasModule } from "./areas/areas.module";
         });
       },
     },
-    MicroserviceManagerService,
+    EventEmitter2,
+    {
+      provide: MicroserviceManagerService,
+      useFactory: (natsConnection, eventEmitter) => {
+        return new MicroserviceManagerService(natsConnection, eventEmitter);
+      },
+      inject: ["NatsConnection", EventEmitter2],
+    },
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: LoggingInterceptor,
+    },
   ],
 })
 export class AppModule {}

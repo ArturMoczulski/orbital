@@ -2,6 +2,7 @@
 import * as fs from "fs";
 import * as path from "path";
 import { Command } from "commander";
+// @ts-ignore
 import { AsyncAPIGenerator } from "@asyncapi/generator";
 
 interface GenerateOptions {
@@ -31,7 +32,7 @@ async function generateClients(options: GenerateOptions): Promise<void> {
     const document = JSON.parse(fs.readFileSync(options.input, "utf8"));
 
     // Use default template if not specified
-    const template = options.template || "@asyncapi/typescript-node-template";
+    const template = options.template || "@asyncapi/html-template";
 
     // Generate client code
     const generator = new AsyncAPIGenerator(template, options.output, {
