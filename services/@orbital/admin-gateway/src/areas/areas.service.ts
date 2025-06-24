@@ -1,83 +1,61 @@
 import { Injectable, Logger } from "@nestjs/common";
 import { AreaMap } from "@orbital/core/src/types/area-map";
+import { WorldMicroservice } from "@orbital/world-rpc";
 
 @Injectable()
 export class AreasService {
   private readonly logger = new Logger(AreasService.name);
+
+  constructor(private readonly worldMicroservice: WorldMicroservice) {}
+
   /**
-   * Get all areas (mock data)
+   * Get all areas from the world microservice
    */
-  getAll(): any[] {
-    return [
-      {
-        id: "1",
-        name: "Mock Area 1",
-        position: { x: 0, y: 0, z: 0 },
-        parentId: null,
-        worldId: "world1",
-        tags: [],
-        description: "",
-        landmarks: [],
-        connections: [],
-      },
-      {
-        id: "2",
-        name: "Mock Area 2",
-        position: { x: 10, y: 10, z: 0 },
-        parentId: null,
-        worldId: "world1",
-        tags: ["forest"],
-        description: "",
-        landmarks: [],
-        connections: [],
-      },
-    ];
+  async getAll(): Promise<any[]> {
+    const areas = await this.worldMicroservice.areas.getAllAreas();
+    return Array.isArray(areas) ? areas : [];
   }
 
   /**
-   * Get a single area by ID (mock data)
+   * Get a single area by ID from the world microservice
    */
-  getById(id: string): any {
-    // Return basic area data without map
-    return {
+  async getById(id: string): Promise<any> {
+    return this.worldMicroservice.areas.getArea(id);
+  }
+
+  /**
+   * Create a new area using the world microservice
+   */
+  async create(body: any): Promise<any> {
+    return this.worldMicroservice.areas.createArea(body);
+  }
+
+  /**
+   * Update an area using the world microservice
+   */
+  async update(id: string, body: any): Promise<any> {
+    return this.worldMicroservice.areas.updateArea({
       id,
-      name: `Mock Area ${id}`,
-      position: { x: 0, y: 0, z: 0 },
-      parentId: null,
-      worldId: "world1",
-      tags: [],
-      description: "",
-      landmarks: [],
-      connections: [],
-    };
+      updateDto: body,
+    });
   }
 
   /**
-   * Create a new area (mock)
+   * Delete an area using the world microservice
    */
-  create(body: any): any {
-    return body;
+  async delete(id: string): Promise<any> {
+    return this.worldMicroservice.areas.deleteArea(id);
   }
 
   /**
-   * Update an area (mock)
+   * Get map data for a specific area
+   * Currently returns a mock map since the microservice doesn't have this method yet
    */
-  update(id: string, body: any): any {
-    return { id, ...body };
-  }
+  async getMap(id: string): Promise<any> {
+    // TODO: When the world microservice adds a getMap method, use it here:
+    // return await this.worldMicroservice.areas.getMap(id);
 
-  /**
-   * Delete an area (mock)
-   */
-  delete(id: string): any {
-    return { deletedId: id };
-  }
-
-  /**
-   * Get map data for a specific area (mock)
-   * Generates a 64x64 randomized map and logs details
-   */
-  getMap(id: string): any {
+    // For now, generate a mock map
     const width = 64;
     const height = 64;
 

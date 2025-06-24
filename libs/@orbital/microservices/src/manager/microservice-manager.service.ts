@@ -1,6 +1,15 @@
-import { Global, Injectable, OnModuleInit } from "@nestjs/common";
+import {
+  Global,
+  Inject,
+  Injectable,
+  Logger,
+  OnModuleInit,
+  OnModuleDestroy,
+} from "@nestjs/common";
+import { ClientProxy } from "@nestjs/microservices";
 import { EventEmitter2 } from "@nestjs/event-emitter";
 import { NatsConnection } from "nats";
+import { Microservice } from "../microservice";
 
 /**
  * Events emitted when microservices go up or down.
@@ -14,13 +23,60 @@ export enum MicroserviceManagerEvents {
  * Watches the NATS Service Framework for service-heartbeats
  * and emits Nest events when service status changes.
  */
+/**
+ * Registry of known microservices for health monitoring.
+ */
+export class MicroserviceRegistry {
+  private static instance: MicroserviceRegistry;
+  private services: Set<string> = new Set();
+
+  private constructor() {}
+
+  static getInstance(): MicroserviceRegistry {
+    if (!MicroserviceRegistry.instance) {
+      MicroserviceRegistry.instance = new MicroserviceRegistry();
+    }
+    return MicroserviceRegistry.instance;
+  }
+
+  register(serviceName: string): void {
+    this.services.add(serviceName);
+  }
+
+  getAll(): string[] {
+    return Array.from(this.services);
+  }
+}
+
+/**
+ * Watches the NATS Service Framework for service-heartbeats
+ * and emits Nest events when service status changes.
+ */
 @Global()
 @Injectable()
-export class MicroserviceManagerService implements OnModuleInit {
+export class MicroserviceManagerService
+  extends Microservice
+  implements OnModuleInit, OnModuleDestroy
+{
+  private readonly logger = new Logger(MicroserviceManagerService.name);
+  private readonly registry = MicroserviceRegistry.getInstance();
+  private readonly statusMap: Record<string, boolean> = {};
+
   constructor(
-    private readonly nc: NatsConnection,
+    @Inject("NATS_CLIENT") clientProxy: ClientProxy,
+    @Inject("NatsConnection") private readonly nc: NatsConnection,
     private readonly eventEmitter: EventEmitter2
-  ) {}
+  ) {
+    super(clientProxy, "microservice-manager");
+  }
+
+  /**
+   * Register a microservice for health monitoring
+   */
+  registerService(serviceName: string): void {
+    this.registry.register(serviceName);
+    this.logger.log(`Registered service for monitoring: ${serviceName}`);
+  }
 
   async onModuleInit() {
     try {
@@ -56,5 +112,13 @@ export class MicroserviceManagerService implements OnModuleInit {
     } catch (err) {
       console.error("Failed to initialize microservice watcher:", err);
     }
+  }
+
+  /**
+   * Clean up resources on module destroy
+   */
+  onModuleDestroy() {
+    // Close any resources if needed
+    this.logger.log("Cleaning up microservice manager resources");
   }
 }

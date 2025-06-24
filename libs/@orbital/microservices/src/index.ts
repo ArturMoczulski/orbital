@@ -25,7 +25,12 @@ export { MicroserviceExceptionFilter } from "./filters/microservice-exception.fi
 export {
   MicroserviceManagerService,
   MicroserviceManagerEvents,
+  MicroserviceRegistry,
 } from "./manager/microservice-manager.service";
+export {
+  MicroserviceManagerModule,
+  MicroserviceManagerModuleOptions,
+} from "./manager/microservice-manager.module";
 
 // Bulk operations
 export * from "./bulk";

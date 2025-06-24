@@ -2,14 +2,14 @@ import { Module } from "@nestjs/common";
 import { ConfigModule, ConfigService } from "@nestjs/config";
 import { MongooseModule } from "@nestjs/mongoose";
 import { EventEmitterModule } from "@nestjs/event-emitter";
-import { EventEmitter2 } from "@nestjs/event-emitter";
+import { ClientsModule, Transport } from "@nestjs/microservices";
 import { PingController } from "./ping/ping.controller";
 import { AuthModule } from "./auth/auth.module";
 import { UsersModule } from "./users/users.module";
 import { AreasModule } from "./areas/areas.module";
 import { APP_INTERCEPTOR } from "@nestjs/core";
 import { LoggingInterceptor } from "./common/logging.interceptor";
-import { MicroserviceManagerService } from "@orbital/microservices";
+import { MicroserviceManagerModule } from "@orbital/microservices";
 
 @Module({
   imports: [
@@ -26,29 +26,29 @@ import { MicroserviceManagerService } from "@orbital/microservices";
       }),
       inject: [ConfigService],
     }),
+    // Register NATS client globally for microservice communication
+    ClientsModule.registerAsync([
+      {
+        name: "NATS_CLIENT",
+        imports: [ConfigModule],
+        useFactory: (configService: ConfigService) => ({
+          transport: Transport.NATS,
+          options: {
+            servers: [
+              configService.get<string>("NATS_URL", "nats://localhost:4222"),
+            ],
+          },
+        }),
+        inject: [ConfigService],
+      },
+    ]),
     AuthModule,
     UsersModule,
     AreasModule,
   ],
   controllers: [PingController],
   providers: [
-    {
-      provide: "NatsConnection",
-      useFactory: async () => {
-        const { connect } = await import("nats");
-        return connect({
-          servers: process.env.NATS_URL || "nats://localhost:4222",
-        });
-      },
-    },
-    EventEmitter2,
-    {
-      provide: MicroserviceManagerService,
-      useFactory: (natsConnection, eventEmitter) => {
-        return new MicroserviceManagerService(natsConnection, eventEmitter);
-      },
-      inject: ["NatsConnection", EventEmitter2],
-    },
+    // Global logging interceptor
     {
       provide: APP_INTERCEPTOR,
       useClass: LoggingInterceptor,

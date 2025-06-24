@@ -1,12 +1,15 @@
 import { Module } from "@nestjs/common";
-import { ConfigModule } from "@nestjs/config";
+import { ConfigModule, ConfigService } from "@nestjs/config";
 import { EventEmitterModule } from "@nestjs/event-emitter";
 import { EventEmitter2 } from "@nestjs/event-emitter";
 import { ClientsModule, Transport } from "@nestjs/microservices";
 import { DiscoveryModule, DiscoveryService } from "@nestjs/core";
 import { MetadataScanner } from "@nestjs/core";
 import { Reflector } from "@nestjs/core";
-import { MicroserviceManagerService } from "@orbital/microservices";
+import {
+  MicroserviceManagerModule,
+  MicroserviceManagerService,
+} from "@orbital/microservices";
 import { DatabaseModule } from "./database.module";
 import { CharactersModule } from "./characters/characters.module";
 import { WorldsModule } from "./worlds/worlds.module";
@@ -21,13 +24,19 @@ import { AreasModule } from "./areas/areas.module";
     }),
     EventEmitterModule.forRoot(),
     DiscoveryModule,
-    ClientsModule.register([
+    ClientsModule.registerAsync([
       {
         name: "NATS_CLIENT",
-        transport: Transport.NATS,
-        options: {
-          servers: [process.env.NATS_URL || "nats://localhost:4222"],
-        },
+        imports: [ConfigModule],
+        useFactory: (configService: ConfigService) => ({
+          transport: Transport.NATS,
+          options: {
+            servers: [
+              configService.get<string>("NATS_URL", "nats://localhost:4222"),
+            ],
+          },
+        }),
+        inject: [ConfigService],
       },
     ]),
     DatabaseModule,
@@ -35,27 +44,6 @@ import { AreasModule } from "./areas/areas.module";
     WorldsModule,
     AreasModule,
   ],
-  providers: [
-    {
-      provide: "NatsConnection",
-      useFactory: async () => {
-        const { connect } = await import("nats");
-        return connect({
-          servers: process.env.NATS_URL || "nats://localhost:4222",
-        });
-      },
-    },
-    EventEmitter2,
-    MetadataScanner,
-    Reflector,
-    DiscoveryService,
-    {
-      provide: MicroserviceManagerService,
-      useFactory: (natsConnection, eventEmitter) => {
-        return new MicroserviceManagerService(natsConnection, eventEmitter);
-      },
-      inject: ["NatsConnection", EventEmitter2],
-    },
-  ],
+  providers: [EventEmitter2, MetadataScanner, Reflector, DiscoveryService],
 })
 export class AppModule {}
