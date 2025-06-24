@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Inject } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
 import { Microservice } from '@orbital/microservices';
 import { AreaModel } from '@orbital/typegoose';
@@ -60,7 +60,7 @@ export class WorldMicroservice extends Microservice {
    */
   public readonly areas: AreasController;
 
-  constructor(client: ClientProxy) {
+  constructor(@Inject('NATS_CLIENT') client: ClientProxy) {
     super(client, 'world');
 
     // Initialize areas controller

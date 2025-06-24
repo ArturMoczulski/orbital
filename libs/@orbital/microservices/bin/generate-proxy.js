@@ -9,6 +9,11 @@ program
   .requiredOption("-i, --input <file>", "AsyncAPI spec file")
   .requiredOption("-o, --output <dir>", "Output directory")
   .option("-s, --service <name>", "Service name", "world")
+  .option(
+    "--nats-client-token <token>",
+    "NATS client injection token",
+    "NATS_CLIENT"
+  )
   .parse(process.argv);
 
 const options = program.opts();
@@ -83,7 +88,7 @@ Object.keys(serviceControllers).forEach((serviceName) => {
 
   // Collect imports needed
   const imports = new Set([
-    `import { Injectable } from '@nestjs/common';`,
+    `import { Injectable, Inject } from '@nestjs/common';`,
     `import { ClientProxy } from '@nestjs/microservices';`,
     `import { Microservice } from '@orbital/microservices';`,
   ]);
@@ -235,7 +240,9 @@ export interface ${dtoType} {
       entityName.charAt(0).toUpperCase() + entityName.slice(1);
 
     microserviceContent += `
-interface ${controllerBaseName}Controller {`;
+interface ${
+      controllerBaseName.charAt(0).toUpperCase() + controllerBaseName.slice(1)
+    }Controller {`;
 
     controller.methods.forEach((method) => {
       // Determine parameter and return types based on AsyncAPI spec
@@ -393,7 +400,7 @@ export class ${capitalizedServiceName}Microservice extends Microservice {`;
   // Add constructor
   microserviceContent += `
 
-  constructor(client: ClientProxy) {
+  constructor(@Inject('${options.natsClientToken}') client: ClientProxy) {
     super(client, '${serviceName}');
 `;
 

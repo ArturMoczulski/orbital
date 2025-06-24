@@ -10,7 +10,8 @@
  *     [--proxy-out path/to/output/dir] \
  *     [--title "Service Name"] \
  *     [--version "1.0.0"] \
- *     [--service "serviceName"]
+ *     [--service "serviceName"] \
+ *     [--nats-client-token "NATS_CLIENT"]
  *
  * All parameters have sensible defaults based on the current package:
  * - entry: dist/app.module.js
@@ -18,6 +19,7 @@
  * - proxy-out: ../../../libs/{package-name}-rpc/src
  * - title: {Package Name}
  * - service: {package name without owner}
+ * - nats-client-token: "NATS_CLIENT"
  */
 const { program } = require("commander");
 const path = require("path");
@@ -95,6 +97,11 @@ program
     "Service name for proxy generation",
     defaultService
   )
+  .option(
+    "--nats-client-token <token>",
+    "NATS client injection token",
+    "NATS_CLIENT"
+  )
   .parse(process.argv);
 
 const opts = program.opts();
@@ -106,6 +113,7 @@ console.log(`- Proxy Output: ${opts.proxyOut}`);
 console.log(`- Title: ${opts.title}`);
 console.log(`- Version: ${opts.version}`);
 console.log(`- Service: ${opts.service}`);
+console.log(`- NATS Client Token: ${opts.natsClientToken}`);
 
 // Resolve paths to the generate-spec.js and generate-proxy.js scripts
 const generateSpecPath = path.resolve(__dirname, "generate-spec.js");
@@ -163,6 +171,8 @@ const proxyResult = spawnSync(
     opts.proxyOut,
     "--service",
     opts.service,
+    "--nats-client-token",
+    opts.natsClientToken,
   ],
   { stdio: "inherit" }
 );

@@ -41,7 +41,7 @@ export function ObjectExplorer<T extends ExplorerObject>({
 
   const handleSelectClick = (id: string, event: React.MouseEvent) => {
     event.stopPropagation();
-    const selectedObject = objects?.find((obj) => obj.id === id);
+    const selectedObject = objects?.find((obj: T) => obj.id === id);
     if (selectedObject) {
       onSelect(selectedObject.id);
     }
@@ -54,9 +54,10 @@ export function ObjectExplorer<T extends ExplorerObject>({
     object: T;
     level?: number;
   }) => {
-    const hasChildren = objects?.some((o) => o.parentId === object.id);
+    const hasChildren = objects?.some((o: T) => o.parentId === object.id);
     const isExpanded = expandedNodes[object.id] || false;
-    const childObjects = objects?.filter((o) => o.parentId === object.id) || [];
+    const childObjects =
+      objects?.filter((o: T) => o.parentId === object.id) || [];
 
     return (
       <Box key={object.id} sx={{ ml: level * 2 }}>
@@ -96,7 +97,7 @@ export function ObjectExplorer<T extends ExplorerObject>({
         </Box>
         {isExpanded && hasChildren && (
           <Box>
-            {childObjects.map((child) => (
+            {childObjects.map((child: T) => (
               <DefaultTreeNode
                 key={child.id}
                 object={child}
@@ -131,7 +132,7 @@ export function ObjectExplorer<T extends ExplorerObject>({
     );
   }
 
-  const rootObjects = objects.filter((obj) => !obj.parentId);
+  const rootObjects = objects.filter((obj: T) => !obj.parentId);
 
   return (
     <Box
@@ -153,7 +154,7 @@ export function ObjectExplorer<T extends ExplorerObject>({
         </Typography>
       </Box>
       <Box sx={{ mt: 1 }}>
-        {rootObjects.map((obj) =>
+        {rootObjects.map((obj: T) =>
           !renderNode ? (
             <DefaultTreeNode key={obj.id} object={obj} />
           ) : (

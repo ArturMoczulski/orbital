@@ -8,18 +8,15 @@ export interface ExplorerObject {
   [key: string]: any; // Allow for additional properties
 }
 
-import type { TypedUseQueryHookResult } from "@reduxjs/toolkit/query/react";
-import type { BaseQueryFn } from "@reduxjs/toolkit/query";
-
 /**
- * Query result type alias matching RTK Query hook return.
- * This allows passing RTK Query hook results directly to components.
+ * Query result type alias for data fetching hooks.
+ * This allows passing query hook results directly to components.
  */
-export type QueryResult<T extends ExplorerObject> = TypedUseQueryHookResult<
-  T[],
-  any,
-  any
->;
+export interface QueryResult<T extends ExplorerObject> {
+  data?: T[];
+  isLoading: boolean;
+  error?: any;
+}
 
 /**
  * Props for the ObjectExplorer component
