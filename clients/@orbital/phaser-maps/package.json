@@ -4,14 +4,15 @@
   "private": true,
   "packageManager": "yarn@4.9.2",
   "scripts": {
+    "predev": "yarn generate:api",
     "dev": "yarn run dotenv -e .env.local next dev",
+    "prebuild": "yarn generate:api",
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
     "test": "npx jest --config jest.config.cjs",
     "e2e": "cypress run --headed",
-    "generate:admin-api": "rtk-query-codegen-openapi openapi-config.cjs",
-    "generate:api": "yarn generate:admin-api"
+    "generate:api": "rtk-query-codegen-openapi openapi-config.cjs"
   },
   "dependencies": {
     "@emotion/react": "^11.14.0",

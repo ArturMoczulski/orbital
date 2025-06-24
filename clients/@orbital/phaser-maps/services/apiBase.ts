@@ -1,6 +1,6 @@
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 
-export const emptySplitApi = createApi({
+export const baseSplitApi = createApi({
   reducerPath: "adminApi",
   // Wrap baseQuery to add request/response logging
   baseQuery: async (args, api, extraOptions) => {
