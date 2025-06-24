@@ -19,6 +19,8 @@
     "@nestjs/common": "*"
   },
   "devDependencies": {
-    "@types/mongoose": "^5.11.97"
+    "@types/mongoose": "^5.11.97",
+    "ts-jest": "^29.0.0",
+    "typescript": "^5.0.0"
   }
 }

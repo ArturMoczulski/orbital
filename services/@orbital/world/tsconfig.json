@@ -1,5 +1,4 @@
 {
-  "extends": "../../../tsconfig.json",
   "references": [
     { "path": "../../../libs/@orbital/characters" },
     { "path": "../../../libs/@orbital/core" },

@@ -39,7 +39,7 @@ export abstract class Microservice {
    * @param opts Optional overrides for timeout or skipTimeout
    * @returns The deserialized response, or null if no payload
    */
-  protected async request<Res = unknown>(
+  public async request<Res = unknown>(
     pattern: string,
     payload?: unknown,
     opts?: { timeout?: number; skipTimeout?: boolean }
@@ -80,23 +80,17 @@ export abstract class Microservice {
   }
 
   /** Bulk-status RPC helper */
-  protected statusBulkRequest<T = unknown>(pattern: string, payload?: unknown) {
+  public statusBulkRequest<T = unknown>(pattern: string, payload?: unknown) {
     return this.request<T>(pattern, payload);
   }
 
   /** Bulk-counted RPC helper */
-  protected countedBulkRequest<T = unknown>(
-    pattern: string,
-    payload?: unknown
-  ) {
+  public countedBulkRequest<T = unknown>(pattern: string, payload?: unknown) {
     return this.request<T>(pattern, payload);
   }
 
   /** Bulk-itemized RPC helper */
-  protected itemizedBulkRequest<T = unknown>(
-    pattern: string,
-    payload?: unknown
-  ) {
+  public itemizedBulkRequest<T = unknown>(pattern: string, payload?: unknown) {
     return this.request<T>(pattern, payload);
   }
 }

@@ -6,10 +6,7 @@ import { ClientsModule, Transport } from "@nestjs/microservices";
 import { DiscoveryModule, DiscoveryService } from "@nestjs/core";
 import { MetadataScanner } from "@nestjs/core";
 import { Reflector } from "@nestjs/core";
-import {
-  MicroserviceManagerService,
-  AsyncAPIDocumentGenerator,
-} from "@orbital/microservices";
+import { MicroserviceManagerService } from "@orbital/microservices";
 import { DatabaseModule } from "./database.module";
 import { CharactersModule } from "./characters/characters.module";
 import { WorldsModule } from "./worlds/worlds.module";
@@ -52,7 +49,6 @@ import { AreasModule } from "./areas/areas.module";
     MetadataScanner,
     Reflector,
     DiscoveryService,
-    AsyncAPIDocumentGenerator,
     {
       provide: MicroserviceManagerService,
       useFactory: (natsConnection, eventEmitter) => {

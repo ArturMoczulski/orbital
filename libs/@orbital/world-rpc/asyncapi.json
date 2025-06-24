@@ -1,0 +1,320 @@
+{
+  "asyncapi": "2.6.0",
+  "info": {
+    "title": "@orbital/world",
+    "description": "@orbital/world API Documentation",
+    "version": "1.0.0",
+    "contact": {
+      "name": "Orbital Team",
+      "url": "https://example.com",
+      "email": "info@example.com"
+    },
+    "license": {
+      "name": "MIT",
+      "url": "https://opensource.org/licenses/MIT"
+    }
+  },
+  "tags": [],
+  "servers": {
+    "nats": {
+      "url": "nats://localhost:4222",
+      "protocol": "nats"
+    }
+  },
+  "components": {
+    "schemas": {}
+  },
+  "defaultContentType": "application/json",
+  "channels": {
+    "world.AreasMicroserviceController.createArea": {
+      "subscribe": {
+        "summary": "createArea operation",
+        "operationId": "createArea",
+        "message": {
+          "name": "createArea",
+          "title": "createArea message",
+          "contentType": "application/json",
+          "payload": {
+            "type": "object",
+            "properties": {
+              "createAreaDto": {
+                "type": "object",
+                "description": "Create DTO for createArea"
+              }
+            }
+          }
+        }
+      },
+      "publish": {
+        "summary": "createArea response",
+        "operationId": "createAreaResponse",
+        "message": {
+          "name": "createAreaResponse",
+          "title": "createArea response message",
+          "contentType": "application/json",
+          "payload": {
+            "type": "object",
+            "properties": {},
+            "description": "Created resource from createArea"
+          }
+        }
+      }
+    },
+    "world.AreasMicroserviceController.getAllAreas": {
+      "subscribe": {
+        "summary": "getAllAreas operation",
+        "operationId": "getAllAreas",
+        "message": {
+          "name": "getAllAreas",
+          "title": "getAllAreas message",
+          "contentType": "application/json",
+          "payload": {
+            "type": "object",
+            "properties": {}
+          }
+        }
+      },
+      "publish": {
+        "summary": "getAllAreas response",
+        "operationId": "getAllAreasResponse",
+        "message": {
+          "name": "getAllAreasResponse",
+          "title": "getAllAreas response message",
+          "contentType": "application/json",
+          "payload": {
+            "type": "array",
+            "properties": {},
+            "items": {
+              "type": "object",
+              "description": "Item in the getAllAreas response collection"
+            }
+          }
+        }
+      }
+    },
+    "world.AreasMicroserviceController.getArea": {
+      "subscribe": {
+        "summary": "getArea operation",
+        "operationId": "getArea",
+        "message": {
+          "name": "getArea",
+          "title": "getArea message",
+          "contentType": "application/json",
+          "payload": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "description": "Parameter id for getArea"
+              }
+            }
+          }
+        }
+      },
+      "publish": {
+        "summary": "getArea response",
+        "operationId": "getAreaResponse",
+        "message": {
+          "name": "getAreaResponse",
+          "title": "getArea response message",
+          "contentType": "application/json",
+          "payload": {
+            "type": "object",
+            "properties": {},
+            "nullable": true,
+            "description": "Resource from getArea, may be null if not found"
+          }
+        }
+      }
+    },
+    "world.AreasMicroserviceController.updateArea": {
+      "subscribe": {
+        "summary": "updateArea operation",
+        "operationId": "updateArea",
+        "message": {
+          "name": "updateArea",
+          "title": "updateArea message",
+          "contentType": "application/json",
+          "payload": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "description": "Resource identifier"
+              },
+              "updateDto": {
+                "type": "object",
+                "description": "Update DTO for updateArea"
+              }
+            }
+          }
+        }
+      },
+      "publish": {
+        "summary": "updateArea response",
+        "operationId": "updateAreaResponse",
+        "message": {
+          "name": "updateAreaResponse",
+          "title": "updateArea response message",
+          "contentType": "application/json",
+          "payload": {
+            "type": "object",
+            "properties": {},
+            "nullable": true,
+            "description": "Resource from updateArea, may be null if not found"
+          }
+        }
+      }
+    },
+    "world.AreasMicroserviceController.deleteArea": {
+      "subscribe": {
+        "summary": "deleteArea operation",
+        "operationId": "deleteArea",
+        "message": {
+          "name": "deleteArea",
+          "title": "deleteArea message",
+          "contentType": "application/json",
+          "payload": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "description": "Filter parameter for deleteArea"
+              }
+            }
+          }
+        }
+      },
+      "publish": {
+        "summary": "deleteArea response",
+        "operationId": "deleteAreaResponse",
+        "message": {
+          "name": "deleteAreaResponse",
+          "title": "deleteArea response message",
+          "contentType": "application/json",
+          "payload": {
+            "type": "object",
+            "properties": {},
+            "nullable": true,
+            "description": "Resource from deleteArea, may be null if not found"
+          }
+        }
+      }
+    },
+    "world.AreasMicroserviceController.getAreasByWorldId": {
+      "subscribe": {
+        "summary": "getAreasByWorldId operation",
+        "operationId": "getAreasByWorldId",
+        "message": {
+          "name": "getAreasByWorldId",
+          "title": "getAreasByWorldId message",
+          "contentType": "application/json",
+          "payload": {
+            "type": "object",
+            "properties": {
+              "worldId": {
+                "type": "string",
+                "description": "Filter parameter for getAreasByWorldId"
+              }
+            }
+          }
+        }
+      },
+      "publish": {
+        "summary": "getAreasByWorldId response",
+        "operationId": "getAreasByWorldIdResponse",
+        "message": {
+          "name": "getAreasByWorldIdResponse",
+          "title": "getAreasByWorldId response message",
+          "contentType": "application/json",
+          "payload": {
+            "type": "array",
+            "properties": {},
+            "items": {
+              "type": "object",
+              "description": "Item in the getAreasByWorldId response collection"
+            }
+          }
+        }
+      }
+    },
+    "world.AreasMicroserviceController.getAreasByParentId": {
+      "subscribe": {
+        "summary": "getAreasByParentId operation",
+        "operationId": "getAreasByParentId",
+        "message": {
+          "name": "getAreasByParentId",
+          "title": "getAreasByParentId message",
+          "contentType": "application/json",
+          "payload": {
+            "type": "object",
+            "properties": {
+              "parentId": {
+                "type": "string",
+                "description": "Filter parameter for getAreasByParentId"
+              }
+            }
+          }
+        }
+      },
+      "publish": {
+        "summary": "getAreasByParentId response",
+        "operationId": "getAreasByParentIdResponse",
+        "message": {
+          "name": "getAreasByParentIdResponse",
+          "title": "getAreasByParentId response message",
+          "contentType": "application/json",
+          "payload": {
+            "type": "array",
+            "properties": {},
+            "items": {
+              "type": "object",
+              "description": "Item in the getAreasByParentId response collection"
+            }
+          }
+        }
+      }
+    },
+    "world.AreasMicroserviceController.getAreasByTags": {
+      "subscribe": {
+        "summary": "getAreasByTags operation",
+        "operationId": "getAreasByTags",
+        "message": {
+          "name": "getAreasByTags",
+          "title": "getAreasByTags message",
+          "contentType": "application/json",
+          "payload": {
+            "type": "object",
+            "properties": {
+              "tags": {
+                "type": "array",
+                "description": "Filter parameter for getAreasByTags",
+                "items": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      },
+      "publish": {
+        "summary": "getAreasByTags response",
+        "operationId": "getAreasByTagsResponse",
+        "message": {
+          "name": "getAreasByTagsResponse",
+          "title": "getAreasByTags response message",
+          "contentType": "application/json",
+          "payload": {
+            "type": "array",
+            "properties": {},
+            "items": {
+              "type": "object",
+              "description": "Item in the getAreasByTags response collection"
+            }
+          }
+        }
+      }
+    }
+  },
+  "id": "https://example.com/apis/@orbital/world"
+}

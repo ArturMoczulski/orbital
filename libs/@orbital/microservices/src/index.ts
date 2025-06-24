@@ -11,6 +11,12 @@ export {
 // Decorators
 export { MicroserviceController } from "./decorators/controller.decorator";
 export { MessagePattern } from "./decorators/message-pattern.decorator";
+export {
+  MicroserviceRequest,
+  MicroserviceStatusBulkRequest,
+  MicroserviceCountedBulkRequest,
+  MicroserviceItemizedBulkRequest,
+} from "./decorators/request.decorators";
 
 // Filters
 export { MicroserviceExceptionFilter } from "./filters/microservice-exception.filter";
@@ -23,6 +29,3 @@ export {
 
 // Bulk operations
 export * from "./bulk";
-
-// AsyncAPI
-export * from "./asyncapi";

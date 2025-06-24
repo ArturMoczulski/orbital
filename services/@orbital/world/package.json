@@ -10,9 +10,9 @@
     "test": "NODE_NO_WARNINGS=1 jest --passWithNoTests",
     "test:watch": "jest --watch",
     "test:cov": "jest --coverage",
-    "generate:asyncapi-document": "ts-node src/generate-asyncapi-document.ts",
-    "generate:asyncapi-client": "generate-asyncapi generate -i ./asyncapi/asyncapi.json -o ./asyncapi/client",
-    "generate:asyncapi": "yarn generate:asyncapi-document && yarn generate:asyncapi-client"
+    "generate:asyncApiSpec": "orbital-ms-spec --entry dist/app.module.js --out ../../../libs/@orbital/world-rpc/asyncapi.json --title \"World Service\"",
+    "generate:rpcClient": "orbital-ms-proxy --input ../../../libs/@orbital/world-rpc/asyncapi.json --output ../../../libs/@orbital/world-rpc/src --service world",
+    "generate:client": "orbital-ms-client"
   },
   "dependencies": {
     "@nestjs/common": "^10.0.0",
@@ -50,7 +50,7 @@
     "jest": "^29.5.0",
     "supertest": "^6.3.3",
     "ts-jest": "^29.1.0",
-    "ts-node": "^10.0.0",
+    "ts-node": "^10.9.1",
     "typescript": "^5.1.3"
   }
 }
