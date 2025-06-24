@@ -5,6 +5,9 @@ import MapIcon from "@mui/icons-material/Map";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 import Typography from "@mui/material/Typography";
+import Dialog from "@mui/material/Dialog";
+import DialogTitle from "@mui/material/DialogTitle";
+import AddIcon from "@mui/icons-material/Add";
 import { useTheme } from "@mui/material/styles";
 import { ExplorerObject, ObjectExplorerProps } from "./types";
 import { useOrbitalTheme } from "../theme/ThemeContext";
@@ -19,32 +22,28 @@ export function ObjectExplorer<T extends ExplorerObject>({
   objectTypeName,
   renderNode,
 }: ObjectExplorerProps<T>) {
-  // Determine display type name: use provided or default from constructor
   const typeName = objectTypeName ?? `${type.name}s`;
+  const theme = useOrbitalTheme() || useTheme();
 
-  // Use the orbital theme if available, otherwise fall back to the default MUI theme
-  const orbitalTheme = useOrbitalTheme();
-  const defaultTheme = useTheme();
-  const theme = orbitalTheme || defaultTheme;
+  const { data, isLoading, error } = queryResult;
+  const objects: T[] = data ?? [];
 
-  const { data: objects, isLoading, error } = queryResult;
   const [expandedNodes, setExpandedNodes] = useState<Record<string, boolean>>(
     {}
   );
+  const [showAddModal, setShowAddModal] = useState(false);
+
+  const openAddModal = () => setShowAddModal(true);
+  const closeAddModal = () => setShowAddModal(false);
 
   const toggleNode = (id: string) => {
-    setExpandedNodes((prev) => ({
-      ...prev,
-      [id]: !prev[id],
-    }));
+    setExpandedNodes((prev) => ({ ...prev, [id]: !prev[id] }));
   };
 
   const handleSelectClick = (id: string, event: React.MouseEvent) => {
     event.stopPropagation();
-    const selectedObject = objects?.find((obj: T) => obj.id === id);
-    if (selectedObject) {
-      onSelect(selectedObject.id);
-    }
+    const selected = objects.find((o) => o.id === id);
+    if (selected) onSelect(selected.id);
   };
 
   const DefaultTreeNode = ({
@@ -54,10 +53,8 @@ export function ObjectExplorer<T extends ExplorerObject>({
     object: T;
     level?: number;
   }) => {
-    const hasChildren = objects?.some((o: T) => o.parentId === object.id);
-    const isExpanded = expandedNodes[object.id] || false;
-    const childObjects =
-      objects?.filter((o: T) => o.parentId === object.id) || [];
+    const children = objects.filter((o) => o.parentId === object.id);
+    const isExpanded = !!expandedNodes[object.id];
 
     return (
       <Box key={object.id} sx={{ ml: level * 2 }}>
@@ -68,18 +65,17 @@ export function ObjectExplorer<T extends ExplorerObject>({
             py: 1,
             px: 1,
             cursor: "pointer",
-            borderRadius: "4px",
-            color: "text.primary",
-            "&:hover": { bgcolor: "secondary.main", color: "text.primary" },
+            borderRadius: 1,
+            "&:hover": { bgcolor: "secondary.main" },
           }}
           onClick={() => toggleNode(object.id)}
           data-testid={`tree-node-${object.id}`}
         >
-          {hasChildren ? (
+          {children.length > 0 ? (
             isExpanded ? (
-              <ExpandMoreIcon fontSize="small" color="inherit" />
+              <ExpandMoreIcon fontSize="small" />
             ) : (
-              <ChevronRightIcon fontSize="small" color="inherit" />
+              <ChevronRightIcon fontSize="small" />
             )
           ) : (
             <Box sx={{ width: 24 }} />
@@ -87,17 +83,16 @@ export function ObjectExplorer<T extends ExplorerObject>({
           <Typography sx={{ flexGrow: 1, ml: 1 }}>{object.name}</Typography>
           <IconButton
             size="small"
-            color="inherit"
             onClick={(e) => handleSelectClick(object.id, e)}
             title={`Select ${type.name}`}
             data-testid={`select-button-${object.id}`}
           >
-            <MapIcon fontSize="small" color="inherit" />
+            <MapIcon fontSize="small" />
           </IconButton>
         </Box>
-        {isExpanded && hasChildren && (
+        {isExpanded && children.length > 0 && (
           <Box>
-            {childObjects.map((child: T) => (
+            {children.map((child) => (
               <DefaultTreeNode
                 key={child.id}
                 object={child}
@@ -112,64 +107,130 @@ export function ObjectExplorer<T extends ExplorerObject>({
 
   if (isLoading) {
     return (
-      <Box sx={{ color: "text.primary" }} data-testid="loading-state">
+      <Box sx={{ p: 2, color: "text.primary" }} data-testid="loading-state">
         Loading {typeName.toLowerCase()}...
       </Box>
     );
   }
-  if (error || !objects) {
+
+  if (error) {
     return (
-      <Box sx={{ color: "error.main" }} data-testid="error-state">
+      <Box sx={{ p: 2, color: "error.main" }} data-testid="error-state">
         Error loading {typeName.toLowerCase()}
       </Box>
     );
   }
-  if (objects.length === 0) {
-    return (
-      <Box sx={{ color: "text.primary" }} data-testid="empty-state">
-        No {typeName.toLowerCase()} available
-      </Box>
-    );
-  }
 
-  const rootObjects = objects.filter((obj: T) => !obj.parentId);
+  const rootObjects = objects.filter((o) => !o.parentId);
 
   return (
-    <Box
-      sx={{
-        height: "100%",
-        bgcolor: "background.default",
-        color: "text.primary",
-        overflow: "auto",
-      }}
-      data-testid="object-explorer"
-    >
-      <Box sx={{ p: 1 }}>
-        <Typography
-          variant="body2"
-          color="text.secondary"
-          data-testid="objects-count"
+    <>
+      <Box
+        sx={{
+          height: "100%",
+          bgcolor: "background.default",
+          color: "text.primary",
+          display: "flex",
+          flexDirection: "column",
+        }}
+        data-testid="object-explorer"
+      >
+        {/* Header */}
+        <Box
+          sx={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            p: 1,
+            borderBottom: 1,
+            borderColor: "divider",
+          }}
         >
-          {typeName} loaded: {objects.length}
-        </Typography>
-      </Box>
-      <Box sx={{ mt: 1 }}>
-        {rootObjects.map((obj: T) =>
-          !renderNode ? (
-            <DefaultTreeNode key={obj.id} object={obj} />
-          ) : (
-            <Box key={obj.id}>
-              {
-                renderNode(
-                  obj,
-                  () => toggleNode(obj.id),
-                  (e) => handleSelectClick(obj.id, e)
-                ) as React.ReactElement
-              }
+          <Typography variant="body2" color="text.secondary">
+            {typeName} loaded: {objects.length}
+          </Typography>
+          <IconButton
+            size="small"
+            onClick={openAddModal}
+            title="Add object"
+            data-testid="add-object-button"
+            sx={{
+              bgcolor: "primary.main",
+              color: "primary.contrastText",
+              "&:hover": { bgcolor: "primary.dark" },
+            }}
+          >
+            <AddIcon />
+          </IconButton>
+        </Box>
+
+        {/* Body or Empty State */}
+        <Box sx={{ flexGrow: 1, overflow: "auto", p: 1 }}>
+          {rootObjects.length === 0 ? (
+            <Box
+              sx={{
+                display: "flex",
+                flexDirection: "column",
+                justifyContent: "center",
+                alignItems: "center",
+                height: "100%",
+              }}
+              data-testid="empty-state"
+            >
+              <Typography color="text.secondary" sx={{ mb: 1 }}>
+                No {typeName.toLowerCase()} available
+              </Typography>
+              <IconButton
+                size="large"
+                onClick={openAddModal}
+                title="Add object"
+                data-testid="add-object-button-empty"
+                sx={{
+                  bgcolor: "primary.main",
+                  color: "primary.contrastText",
+                  "&:hover": { bgcolor: "primary.dark" },
+                }}
+              >
+                <AddIcon fontSize="large" />
+              </IconButton>
             </Box>
-          )
-        )}
+          ) : (
+            rootObjects.map((obj) =>
+              !renderNode ? (
+                <DefaultTreeNode key={obj.id} object={obj} />
+              ) : (
+                <Box key={obj.id}>
+                  {
+                    renderNode(
+                      obj,
+                      () => toggleNode(obj.id),
+                      (e) => handleSelectClick(obj.id, e)
+                    ) as React.ReactElement
+                  }
+                </Box>
+              )
+            )
+          )}
+        </Box>
       </Box>
-    </Box>
+
+      {/* Add Object Modal */}
+      <Dialog
+        open={showAddModal}
+        onClose={closeAddModal}
+        fullWidth
+        maxWidth="md"
+        PaperProps={{
+          sx: {
+            width: "80%",
+            height: "80%",
+            border: "2px solid",
+            borderColor: "primary.main",
+          },
+        }}
+      >
+        <DialogTitle>Add Object</DialogTitle>
+      </Dialog>
+    </>
   );
 }

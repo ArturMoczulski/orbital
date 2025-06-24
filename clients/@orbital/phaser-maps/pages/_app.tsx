@@ -14,10 +14,16 @@ import "../styles/global.css";
 // Create the theme
 const artilioTheme = createTheme({
   palette: {
-    primary: { main: "#afa888" },
-    secondary: { main: "#c57659" },
-    background: { default: "#191d45", paper: "rgba(0, 0, 0, 0.85)" },
-    text: { primary: "#e7cfa0", secondary: "#c57659" },
+    primary: { main: "rgba(175,168,136,1)" }, // #afa888
+    secondary: { main: "rgba(197,118,89,1)" }, // #c57659
+    background: {
+      default: "rgba(25,29,69,1)", // #191d45
+      paper: "rgba(0,0,0,0.85)",
+    },
+    text: {
+      primary: "rgba(231,207,160,1)", // #e7cfa0
+      secondary: "rgba(197,118,89,1)", // #c57659
+    },
   },
   typography: {
     fontFamily: "'MedievalSharp', cursive",
@@ -26,8 +32,16 @@ const artilioTheme = createTheme({
     MuiCssBaseline: {
       styleOverrides: {
         body: {
-          backgroundColor: "#191d45",
-          color: "#e7cfa0",
+          backgroundColor: "rgba(25,29,69,1)", // #191d45
+          color: "rgba(231,207,160,1)", // #e7cfa0
+        },
+      },
+    },
+    MuiDialog: {
+      styleOverrides: {
+        paper: {
+          border: "2px solid",
+          borderColor: "primary.main",
         },
       },
     },
