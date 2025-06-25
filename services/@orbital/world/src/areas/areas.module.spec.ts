@@ -1,6 +1,6 @@
 import { Test } from "@nestjs/testing";
 import { AreasModule } from "./areas.module";
-import { AreasController } from "./areas.controller";
+import { AreasMicroserviceController } from "./areas.microservice.controller";
 import { AreasService } from "./areas.service";
 import { AreasRepository } from "./areas.repository";
 import { getModelToken } from "nestjs-typegoose";
@@ -15,7 +15,9 @@ describe("AreasModule", () => {
       .compile();
 
     expect(module).toBeDefined();
-    expect(module.get(AreasController)).toBeInstanceOf(AreasController);
+    expect(module.get(AreasMicroserviceController)).toBeInstanceOf(
+      AreasMicroserviceController
+    );
     expect(module.get(AreasService)).toBeInstanceOf(AreasService);
     expect(module.get(AreasRepository)).toBeInstanceOf(AreasRepository);
   });

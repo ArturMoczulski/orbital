@@ -33,8 +33,8 @@ export class AreasService {
     return this.areasRepository.create(modelData);
   }
 
-  async getArea(id: string): Promise<AreaModel | null> {
-    return this.areasRepository.findById(id);
+  async getArea(_id: string): Promise<AreaModel | null> {
+    return this.areasRepository.findById(_id);
   }
 
   async getAllAreas(
@@ -45,15 +45,15 @@ export class AreasService {
   }
 
   async updateArea(
-    id: string,
+    _id: string,
     updateDto: UpdateAreaDto
   ): Promise<AreaModel | null> {
     const modelData = this.dtoToModel(updateDto);
-    return this.areasRepository.update(id, modelData);
+    return this.areasRepository.update(_id, modelData);
   }
 
-  async deleteArea(id: string): Promise<AreaModel | null> {
-    return this.areasRepository.delete(id);
+  async deleteArea(_id: string): Promise<AreaModel | null> {
+    return this.areasRepository.delete(_id);
   }
 
   async getAreasByWorldId(worldId: string): Promise<AreaModel[]> {

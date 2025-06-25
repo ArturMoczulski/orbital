@@ -12,7 +12,7 @@ import { AreaMapTiles } from "./area-map-tiles";
  */
 export const AreaMapSchema = z
   .object({
-    id: z
+    _id: z
       .string()
       .optional()
       .describe("Unique identifier for the map instance"),
@@ -61,7 +61,9 @@ export class AreaMap
   grid: AreaMapTiles[][] = [];
 
   /** Create a mock AreaMapGrid instance */
-  static mock(overrides: Partial<AreaMapProps> = {}): AreaMap {
+  static mock(
+    overrides: Partial<AreaMapProps & { _id?: string }> = {}
+  ): AreaMap {
     const width = overrides.width || 64;
     const height = overrides.height || 64;
 
@@ -89,8 +91,8 @@ export class AreaMap
   constructor(data: unknown) {
     // Validate input against schema
     const validated = AreaMapSchema.parse(data);
-    const id = (validated as any).id || randomUUID();
-    super({ id });
+    const _id = (validated as any)._id || randomUUID();
+    super({ _id });
 
     // Assign validated properties
     this.width = validated.width;

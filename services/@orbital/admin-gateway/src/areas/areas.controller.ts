@@ -6,6 +6,7 @@ import {
   Delete,
   Param,
   Body,
+  NotFoundException,
 } from "@nestjs/common";
 import { ApiTags } from "@nestjs/swagger";
 import { AreasService } from "./areas.service";
@@ -20,13 +21,17 @@ export class AreasController {
     return this.areasService.getAll();
   }
 
-  @Get(":id")
-  getById(@Param("id") id: string) {
-    return this.areasService.getById(id);
+  @Get("/:_id")
+  async getById(@Param("_id") _id: string) {
+    try {
+      return await this.areasService.getById(_id);
+    } catch (error) {
+      throw new NotFoundException(`Area with id ${_id} not found`);
+    }
   }
-  @Get(":id/map")
-  getMap(@Param("id") id: string) {
-    return this.areasService.getMap(id);
+  @Get("/:_id/map")
+  getMap(@Param("_id") _id: string) {
+    return this.areasService.getMap(_id);
   }
 
   @Post()
@@ -34,13 +39,13 @@ export class AreasController {
     return this.areasService.create(body);
   }
 
-  @Put(":id")
-  update(@Param("id") id: string, @Body() body: any) {
-    return this.areasService.update(id, body);
+  @Put("/:_id")
+  update(@Param("_id") _id: string, @Body() body: any) {
+    return this.areasService.update(_id, body);
   }
 
-  @Delete(":id")
-  delete(@Param("id") id: string) {
-    return this.areasService.delete(id);
+  @Delete("/:_id")
+  delete(@Param("_id") _id: string) {
+    return this.areasService.delete(_id);
   }
 }

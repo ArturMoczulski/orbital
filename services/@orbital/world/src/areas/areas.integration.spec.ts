@@ -1,5 +1,5 @@
 import { Test, TestingModule } from "@nestjs/testing";
-import { AreasController } from "./areas.controller";
+import { AreasMicroserviceController } from "./areas.microservice.controller";
 import { AreasService } from "./areas.service";
 import { AreasRepository } from "./areas.repository";
 import { AreasModule } from "./areas.module";
@@ -22,7 +22,7 @@ const mockAreaModel = {
 };
 
 describe("Areas Integration", () => {
-  let controller: AreasController;
+  let controller: AreasMicroserviceController;
   let service: AreasService;
   let repository: AreasRepository;
   let module: TestingModule;
@@ -35,7 +35,7 @@ describe("Areas Integration", () => {
           envFilePath: [".env.test", ".env.local"],
         }),
       ],
-      controllers: [AreasController],
+      controllers: [AreasMicroserviceController],
       providers: [
         AreasService,
         AreasRepository,
@@ -46,7 +46,9 @@ describe("Areas Integration", () => {
       ],
     }).compile();
 
-    controller = module.get<AreasController>(AreasController);
+    controller = module.get<AreasMicroserviceController>(
+      AreasMicroserviceController
+    );
     service = module.get<AreasService>(AreasService);
     repository = module.get<AreasRepository>(AreasRepository);
   });
@@ -67,6 +69,7 @@ describe("Areas Integration", () => {
       const mockArea = Area.mock({
         name: "Test Area",
       });
+      // description is now optional
       mockArea.description = "Test Description";
 
       const createAreaDto: CreateAreaDto = {
@@ -186,7 +189,10 @@ describe("Areas Integration", () => {
         .mockResolvedValue(updatedAreaModel as AreaModel);
 
       // Act
-      const result = await controller.updateArea(areaId, updateAreaDto);
+      const result = await controller.updateArea({
+        _id: areaId,
+        updateDto: updateAreaDto,
+      });
 
       // Assert
       expect(repository.update).toHaveBeenCalledWith(areaId, updateAreaDto);

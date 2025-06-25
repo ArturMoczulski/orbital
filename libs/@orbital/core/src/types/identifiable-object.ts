@@ -12,7 +12,7 @@ export type IdentifiableObjectProps = z.infer<typeof IdentifiableObjectSchema>;
 /** Zod schema for IdentifiableObject */
 export const IdentifiableObjectSchema = z
   .object({
-    id: z.string().describe("Unique identifier for the object"),
+    _id: z.string().describe("Unique identifier for the object"),
   })
   .describe("An object with a unique identifier");
 
@@ -25,12 +25,12 @@ export class IdentifiableObject
   implements IdentifiableObjectProps
 {
   /** Unique identifier, defaults to a random UUID */
-  public id!: string;
+  public _id!: string;
 
   constructor(data?: IdentifiableObjectProps) {
-    const id = data?.id ?? randomUUID();
-    super({ ...data, id });
-    this.id = id;
+    const _id = data?._id ?? randomUUID();
+    super({ ...data, _id });
+    this._id = _id;
   }
 
   /** Create a mock IdentifiableObject with a random UUID */
@@ -38,7 +38,7 @@ export class IdentifiableObject
     overrides: Partial<IdentifiableObjectProps> = {}
   ): IdentifiableObject {
     return new IdentifiableObject({
-      id: overrides.id ?? faker.string.uuid(),
+      _id: overrides._id ?? faker.string.uuid(),
       ...overrides,
     });
   }

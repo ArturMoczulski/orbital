@@ -13,8 +13,12 @@ export class AreasService {
     return Array.isArray(areas) ? areas : [];
   }
 
-  async getById(id: string): Promise<any> {
-    return this.worldMicroservice.areas.getArea(id);
+  async getById(_id: string): Promise<any> {
+    const area = await this.worldMicroservice.areas.getArea(_id);
+    if (!area) {
+      throw new Error("Area not found");
+    }
+    return area;
   }
 
   async create(body: any): Promise<any> {
@@ -23,31 +27,35 @@ export class AreasService {
       ...body,
       // Ensure position is present
       position: body.position || { x: 0, y: 0, z: 0 },
-      // Ensure description is present (required by database model)
+      // Ensure description is present (optional in database model now)
       description: body.description || "",
-      // Ensure worldId is present if not provided
+      // Ensure worldId is present if not provided (optional in database model now)
       worldId: body.worldId || "default",
-      // Ensure _id is present if not provided
-      _id: body.id || body._id,
       // Ensure name is present (required by database model)
       name: body.name || "New Area",
     };
+
+    // Note: _id is now optional with a default value in the model
+    // We don't need to explicitly set it here anymore
 
     this.logger.log(`Creating area: ${JSON.stringify(areaData)}`);
     return this.worldMicroservice.areas.createArea(areaData);
   }
 
-  async update(id: string, body: any): Promise<any> {
-    return this.worldMicroservice.areas.updateArea({ id, updateDto: body });
+  async update(_id: string, body: any): Promise<any> {
+    return this.worldMicroservice.areas.updateArea({
+      _id,
+      updateDto: body,
+    });
   }
 
-  async delete(id: string): Promise<any> {
-    return this.worldMicroservice.areas.deleteArea(id);
+  async delete(_id: string): Promise<any> {
+    return this.worldMicroservice.areas.deleteArea(_id);
   }
 
-  async getMap(id: string): Promise<any> {
+  async getMap(_id: string): Promise<any> {
     // TODO: When the world microservice adds a getMap method, use it here:
-    // return await this.worldMicroservice.areas.getMap(id);
+    // return await this.worldMicroservice.areas.getMap(_id);
 
     // For now, generate a mock map
     const width = 64;
@@ -56,7 +64,7 @@ export class AreasService {
       Array.from({ length: width }, () => Math.floor(Math.random() * 8))
     );
 
-    this.logger.log(`getMap id=${id} width=${width} height=${height}`);
-    return { id, width, height, grid };
+    this.logger.log(`getMap _id=${_id} width=${width} height=${height}`);
+    return { _id, width, height, grid };
   }
 }

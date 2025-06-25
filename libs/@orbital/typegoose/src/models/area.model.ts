@@ -1,18 +1,19 @@
 import { prop, modelOptions } from "@typegoose/typegoose";
 import { AreaMap, Position } from "@orbital/core";
+import { randomUUID } from "crypto";
 
 @modelOptions({
   schemaOptions: { collection: "areas", timestamps: true },
 })
 export class AreaModel {
-  @prop({ required: true, auto: true })
+  @prop({ required: false, auto: true, default: () => randomUUID() })
   _id!: string;
 
   @prop({ required: true })
   name!: string;
 
-  @prop({ required: true })
-  description!: string;
+  @prop({ required: false, default: "" })
+  description?: string;
 
   @prop({ type: () => Object, required: true })
   position!: Position;

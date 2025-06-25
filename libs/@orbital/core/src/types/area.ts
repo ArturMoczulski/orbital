@@ -17,7 +17,7 @@ export type AreaProps = z.infer<typeof AreaSchema>;
 /** Zod schema for Area */
 export const AreaSchema = z
   .object({
-    id: z.string().optional().describe("Unique identifier for the area"),
+    _id: z.string().optional().describe("Unique identifier for the area"),
     parentId: z
       .string()
       .nullable()
@@ -32,7 +32,6 @@ export const AreaSchema = z
     ),
     worldId: z
       .string()
-      .optional()
       .describe("Identifier of the world this area belongs to"),
     tags: z
       .array(z.string())
@@ -61,7 +60,7 @@ export class Area
   /** Names of other areas this area connects to */
   connections: string[] = [];
   /** Identifier of the world this area belongs to */
-  worldId?: string;
+  worldId!: string;
   /** Tags for categorizing the area */
   tags: string[] = [];
 
@@ -89,7 +88,7 @@ export class Area
 
     // Create a clean object with properly instantiated properties
     const cleanData = {
-      id: (validated as any).id || randomUUID(),
+      _id: (validated as any)._id || randomUUID(),
     };
 
     // Pass the clean data to the parent constructor

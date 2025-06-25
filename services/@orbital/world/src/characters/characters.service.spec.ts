@@ -8,10 +8,10 @@ describe("CharactersService", () => {
 
   beforeEach(() => {
     repositoryMock = {
-      create: jest.fn().mockResolvedValue({ id: "1", name: "Hero", level: 5 }),
+      create: jest.fn().mockResolvedValue({ _id: "1", name: "Hero", level: 5 }),
       findById: jest
         .fn()
-        .mockResolvedValue({ id: "1", name: "Hero", level: 5 }),
+        .mockResolvedValue({ _id: "1", name: "Hero", level: 5 }),
     };
     service = new CharactersService(repositoryMock as CharactersRepository);
   });
@@ -20,13 +20,13 @@ describe("CharactersService", () => {
     const dto = { name: "Hero", level: 5 };
     const result = await service.createCharacter(dto);
     expect(repositoryMock.create).toHaveBeenCalledWith(dto);
-    expect(result).toEqual({ id: "1", name: "Hero", level: 5 });
+    expect(result).toEqual({ _id: "1", name: "Hero", level: 5 });
   });
 
   it("should get a character by id via repository", async () => {
     const id = "1";
     const result = await service.getCharacter(id);
     expect(repositoryMock.findById).toHaveBeenCalledWith(id);
-    expect(result).toEqual({ id: "1", name: "Hero", level: 5 });
+    expect(result).toEqual({ _id: "1", name: "Hero", level: 5 });
   });
 });

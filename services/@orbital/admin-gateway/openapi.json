@@ -106,12 +106,12 @@
         ]
       }
     },
-    "/areas/{id}": {
+    "/areas/{_id}": {
       "get": {
         "operationId": "AreasController_getById",
         "parameters": [
           {
-            "name": "id",
+            "name": "_id",
             "required": true,
             "in": "path",
             "schema": {
@@ -132,7 +132,7 @@
         "operationId": "AreasController_update",
         "parameters": [
           {
-            "name": "id",
+            "name": "_id",
             "required": true,
             "in": "path",
             "schema": {
@@ -153,7 +153,7 @@
         "operationId": "AreasController_delete",
         "parameters": [
           {
-            "name": "id",
+            "name": "_id",
             "required": true,
             "in": "path",
             "schema": {
@@ -171,12 +171,12 @@
         ]
       }
     },
-    "/areas/{id}/map": {
+    "/areas/{_id}/map": {
       "get": {
         "operationId": "AreasController_getMap",
         "parameters": [
           {
-            "name": "id",
+            "name": "_id",
             "required": true,
             "in": "path",
             "schema": {

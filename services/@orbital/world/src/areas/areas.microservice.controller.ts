@@ -20,21 +20,21 @@ export class AreasMicroserviceController {
   }
 
   @MessagePattern()
-  async getArea(id: string): Promise<AreaModel | null> {
-    return this.areasService.getArea(id);
+  async getArea(_id: string): Promise<AreaModel | null> {
+    return this.areasService.getArea(_id);
   }
 
   @MessagePattern()
   async updateArea(payload: {
-    id: string;
-    updateAreaDto: UpdateAreaDto;
+    _id: string;
+    updateDto: UpdateAreaDto;
   }): Promise<AreaModel | null> {
-    return this.areasService.updateArea(payload.id, payload.updateAreaDto);
+    return this.areasService.updateArea(payload._id, payload.updateDto);
   }
 
   @MessagePattern()
-  async deleteArea(id: string): Promise<AreaModel | null> {
-    return this.areasService.deleteArea(id);
+  async deleteArea(_id: string): Promise<AreaModel | null> {
+    return this.areasService.deleteArea(_id);
   }
 
   @MessagePattern()

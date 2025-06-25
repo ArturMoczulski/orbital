@@ -13,7 +13,7 @@ describe("AreasRepository", () => {
 
   // Convert the Area to an AreaModel-like object
   const mockAreaModel = {
-    _id: mockArea.id,
+    _id: mockArea._id,
     name: mockArea.name,
     description: mockArea.description,
     position: mockArea.position,
@@ -81,10 +81,10 @@ describe("AreasRepository", () => {
 
   describe("findById", () => {
     it("should find an area by id", async () => {
-      const result = await repository.findById(mockArea.id);
+      const result = await repository.findById(mockArea._id);
 
       expect(result).toEqual(mockAreaModel);
-      expect(areaModelMock.findById).toHaveBeenCalledWith(mockArea.id);
+      expect(areaModelMock.findById).toHaveBeenCalledWith(mockArea._id);
     });
   });
 
@@ -107,11 +107,11 @@ describe("AreasRepository", () => {
         description: "Updated Description",
       };
 
-      const result = await repository.update(mockArea.id, updateAreaDto);
+      const result = await repository.update(mockArea._id, updateAreaDto);
 
       expect(result).toEqual(mockAreaModel);
       expect(areaModelMock.findByIdAndUpdate).toHaveBeenCalledWith(
-        mockArea.id,
+        mockArea._id,
         updateAreaDto,
         { new: true }
       );
@@ -120,10 +120,12 @@ describe("AreasRepository", () => {
 
   describe("delete", () => {
     it("should delete an area by id", async () => {
-      const result = await repository.delete(mockArea.id);
+      const result = await repository.delete(mockArea._id);
 
       expect(result).toEqual(mockAreaModel);
-      expect(areaModelMock.findByIdAndDelete).toHaveBeenCalledWith(mockArea.id);
+      expect(areaModelMock.findByIdAndDelete).toHaveBeenCalledWith(
+        mockArea._id
+      );
     });
   });
 

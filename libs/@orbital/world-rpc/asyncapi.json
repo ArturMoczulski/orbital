@@ -17,7 +17,7 @@
   "tags": [],
   "servers": {
     "nats": {
-      "url": "nats://localhost:4222",
+      "url": "nats://localhost:4223",
       "protocol": "nats"
     }
   },
@@ -103,9 +103,9 @@
           "payload": {
             "type": "object",
             "properties": {
-              "id": {
+              "_id": {
                 "type": "string",
-                "description": "Parameter id for getArea"
+                "description": "Parameter _id for getArea"
               }
             }
           }
@@ -177,7 +177,7 @@
           "payload": {
             "type": "object",
             "properties": {
-              "id": {
+              "_id": {
                 "type": "string",
                 "description": "Filter parameter for deleteArea"
               }

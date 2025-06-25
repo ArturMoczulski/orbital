@@ -77,7 +77,7 @@ describe("Areas API (e2e)", () => {
         .get(`/areas/${createdAreaId}/map`)
         .expect(200);
 
-      expect(response.body).toHaveProperty("id", createdAreaId);
+      expect(response.body).toHaveProperty("_id", createdAreaId);
       expect(response.body).toHaveProperty("width");
       expect(response.body).toHaveProperty("height");
       expect(response.body).toHaveProperty("grid");

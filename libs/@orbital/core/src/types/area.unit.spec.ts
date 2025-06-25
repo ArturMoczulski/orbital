@@ -16,8 +16,8 @@ describe("Area", () => {
       expect(area.position.x).toBe(10);
       expect(area.position.y).toBe(20);
       expect(area.position.z).toBe(30);
-      expect(typeof area.id).toBe("string");
-      expect(area.id.length).toBeGreaterThan(0);
+      expect(typeof area._id).toBe("string");
+      expect(area._id.length).toBeGreaterThan(0);
     });
 
     it("should throw if required fields are missing or invalid", () => {
@@ -30,7 +30,7 @@ describe("Area", () => {
     it("should return a valid Area instance with random data", () => {
       const mockArea = Area.mock();
       expect(mockArea).toBeInstanceOf(Area);
-      expect(typeof mockArea.id).toBe("string");
+      expect(typeof mockArea._id).toBe("string");
       expect(mockArea.name).toEqual(expect.any(String));
       expect(mockArea.parentId).toEqual(expect.any(String));
       expect(mockArea.position).toBeInstanceOf(Position);

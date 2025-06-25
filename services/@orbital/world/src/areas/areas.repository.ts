@@ -15,8 +15,8 @@ export class AreasRepository {
     return (await created.save()) as unknown as AreaModel;
   }
 
-  async findById(id: string): Promise<AreaModel | null> {
-    return (await this.areaModel.findById(id).exec()) as unknown as AreaModel;
+  async findById(_id: string): Promise<AreaModel | null> {
+    return (await this.areaModel.findById(_id).exec()) as unknown as AreaModel;
   }
 
   async findAll(
@@ -29,11 +29,11 @@ export class AreasRepository {
   }
 
   async update(
-    id: string,
+    _id: string,
     updateDto: Partial<AreaModel>
   ): Promise<AreaModel | null> {
     return (await this.areaModel
-      .findByIdAndUpdate(id, updateDto, { new: true })
+      .findByIdAndUpdate(_id, updateDto, { new: true })
       .exec()) as unknown as AreaModel;
   }
 
@@ -49,9 +49,9 @@ export class AreasRepository {
       .exec()) as unknown as AreaModel[];
   }
 
-  async delete(id: string): Promise<AreaModel | null> {
+  async delete(_id: string): Promise<AreaModel | null> {
     return (await this.areaModel
-      .findByIdAndDelete(id)
+      .findByIdAndDelete(_id)
       .exec()) as unknown as AreaModel;
   }
 

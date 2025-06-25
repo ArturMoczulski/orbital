@@ -24,7 +24,7 @@ describe("CreateAreaDto", () => {
     // Check for specific validation errors
     const errorProperties = errors.map((error) => error.property);
     expect(errorProperties).toContain("name");
-    expect(errorProperties).toContain("description");
+    // description is now optional
     expect(errorProperties).toContain("position");
     expect(errorProperties).toContain("worldId");
   });
@@ -32,7 +32,7 @@ describe("CreateAreaDto", () => {
   it("should validate with optional properties", async () => {
     const dto = new CreateAreaDto();
     dto.name = "Test Area";
-    dto.description = "Test Description";
+    // description is now optional, so we can test without it
     dto.position = new Position({ x: 0, y: 0, z: 0 });
     dto.worldId = "world1";
     dto.parentId = "parent1";
