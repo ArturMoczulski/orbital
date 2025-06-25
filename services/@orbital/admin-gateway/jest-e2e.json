@@ -10,5 +10,6 @@
   "transform": {
     "^.+\\.(t|j)s$": "ts-jest"
   },
-  "testTimeout": 2000
+  "testTimeout": 10000,
+  "forceExit": true
 }

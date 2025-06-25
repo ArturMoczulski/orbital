@@ -26,7 +26,7 @@ async function bootstrap() {
   });
 
   // Apply global exception filter for RPC exceptions
-  app.useGlobalFilters(new MicroserviceExceptionFilter());
+  // app.useGlobalFilters(new MicroserviceExceptionFilter());
 
   // Start both HTTP and microservice interfaces
   await app.startAllMicroservices();

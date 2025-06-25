@@ -19,7 +19,7 @@ import {
  */
 export abstract class Microservice {
   /** Default RPC timeout in milliseconds */
-  static DEFAULT_TIMEOUT = 15_000;
+  static DEFAULT_TIMEOUT = 3_000; // Reduced from 15_000 to fail fast on errors
 
   /** Skip timeout when debugging under --inspect */
   private readonly isDebug = process.execArgv.some((arg: string) =>

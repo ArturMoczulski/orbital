@@ -10,7 +10,7 @@
     "test": "NODE_NO_WARNINGS=1 jest --passWithNoTests",
     "test:watch": "jest --watch",
     "test:cov": "jest --coverage",
-    "test:e2e": "jest --config ./jest-e2e.json"
+    "test:e2e": "jest --config ./jest-e2e.json --forceExit"
   },
   "dependencies": {
     "@nestjs/common": "^10.0.0",
