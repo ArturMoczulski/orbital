@@ -9,7 +9,7 @@
     "noEmit": true,
     "esModuleInterop": true,
     "module": "esnext",
-    "moduleResolution": "bundler",
+    "moduleResolution": "node",
     "resolveJsonModule": true,
     "isolatedModules": true,
     "jsx": "preserve",
@@ -27,7 +27,9 @@
       "@orbital/phaser-ui": ["../../libs/@orbital/phaser-ui/src"],
       "@orbital/phaser-ui/*": ["../../libs/@orbital/phaser-ui/src/*"],
       "@orbital/phaser": ["../../libs/@orbital/phaser/src"],
-      "@orbital/phaser/*": ["../../libs/@orbital/phaser/src/*"]
+      "@orbital/phaser/*": ["../../libs/@orbital/phaser/src/*"],
+      "@orbital/react-ui": ["../../libs/@orbital/react-ui/src"],
+      "@orbital/react-ui/*": ["../../libs/@orbital/react-ui/src/*"]
     }
   },
   "include": [

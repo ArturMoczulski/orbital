@@ -16,12 +16,12 @@
     "jsx": "react-jsx",
     "declaration": true,
     "outDir": "dist",
-    "rootDir": "src",
-    "baseUrl": "src",
+    "rootDir": ".",
+    "baseUrl": ".",
     "paths": {
       "@components/*": ["src/components/*"]
     }
   },
-  "include": ["src"],
+  "include": ["src", "cypress", "src/**/*.tsx", "cypress/**/*.{ts,tsx}"],
   "exclude": ["node_modules", "dist"]
 }

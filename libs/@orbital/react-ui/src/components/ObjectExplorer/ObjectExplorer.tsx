@@ -9,8 +9,11 @@ import Dialog from "@mui/material/Dialog";
 import DialogTitle from "@mui/material/DialogTitle";
 import AddIcon from "@mui/icons-material/Add";
 import { useTheme } from "@mui/material/styles";
-import { ExplorerObject, ObjectExplorerProps } from "./types";
-import { useOrbitalTheme } from "../theme/ThemeContext";
+import { ExplorerObject, ObjectExplorerProps } from "../types";
+import { useOrbitalTheme } from "../../theme/ThemeContext";
+import { AutoForm } from "uniforms-mui";
+import { z } from "zod";
+import { ZodBridge } from "uniforms-bridge-zod";
 
 /**
  * A generic tree-view component for displaying hierarchical objects
@@ -123,6 +126,14 @@ export function ObjectExplorer<T extends ExplorerObject>({
 
   const rootObjects = objects.filter((o) => !o.parentId);
 
+  const userSchema = z.object({
+    username: z.string(),
+    password: z.string().min(8),
+  });
+  const schema = new ZodBridge({ schema: userSchema });
+
+  console.log("ObjectExplorer component rendered - updated version");
+
   return (
     <>
       <Box
@@ -163,7 +174,6 @@ export function ObjectExplorer<T extends ExplorerObject>({
             <AddIcon />
           </IconButton>
         </Box>
-
         {/* Body or Empty State */}
         <Box sx={{ flexGrow: 1, overflow: "auto", p: 1 }}>
           {rootObjects.length === 0 ? (
@@ -183,7 +193,7 @@ export function ObjectExplorer<T extends ExplorerObject>({
               <IconButton
                 size="large"
                 onClick={openAddModal}
-                title="Add object"
+                title="Add new object"
                 data-testid="add-object-button-empty"
                 sx={{
                   bgcolor: "primary.main",
@@ -229,7 +239,10 @@ export function ObjectExplorer<T extends ExplorerObject>({
           },
         }}
       >
-        <DialogTitle>Add Object</DialogTitle>
+        <DialogTitle>Add New Object</DialogTitle>
+        <Box sx={{ p: 3 }}>
+          <AutoForm schema={schema} onSubmit={console.log} />
+        </Box>
       </Dialog>
     </>
   );

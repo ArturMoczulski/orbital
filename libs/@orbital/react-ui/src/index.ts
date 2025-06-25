@@ -4,9 +4,7 @@ export type {
   QueryResult,
   ObjectExplorerProps,
 } from "./components/types";
-
-// Export the ObjectExplorer component
-export { ObjectExplorer } from "./components/ObjectExplorer";
+export { ObjectExplorer } from "./components/ObjectExplorer/ObjectExplorer";
 
 // Export theme components
 export { OrbitalThemeProvider, useOrbitalTheme } from "./theme/ThemeContext";

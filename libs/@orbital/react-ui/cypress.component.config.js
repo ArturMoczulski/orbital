@@ -41,7 +41,7 @@ module.exports = defineConfig({
       webpackConfig: require("./webpack.config.js"),
     },
     // Use absolute paths for spec files
-    specPattern: [path.join(componentsDir, "*.cy.tsx")],
+    specPattern: ["src/components/**/*.cy.{ts,tsx}"],
     supportFile: path.join(__dirname, "cypress/support/component.ts"),
   },
 });

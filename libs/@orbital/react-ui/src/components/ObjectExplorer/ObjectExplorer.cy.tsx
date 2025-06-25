@@ -1,7 +1,7 @@
 // @ts-nocheck
 /// <reference types="cypress" />
 import React from "react";
-import { ObjectExplorer } from "./ObjectExplorer";
+import { ObjectExplorer } from "./ObjectExplorer/ObjectExplorer";
 
 describe("ObjectExplorer Component", () => {
   beforeEach(() => {
