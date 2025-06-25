@@ -2,12 +2,9 @@ import "reflect-metadata";
 import type { AppProps } from "next/app";
 import { Provider } from "react-redux";
 import { store } from "../store";
-import {
-  ThemeProvider,
-  createTheme,
-  CssBaseline,
-  StyledEngineProvider,
-} from "@mui/material";
+import { ThemeProvider, createTheme } from "@mui/material/styles";
+import CssBaseline from "@mui/material/CssBaseline";
+import { StyledEngineProvider } from "@mui/styled-engine";
 import { OrbitalThemeProvider } from "@orbital/react-ui";
 import "../styles/global.css";
 

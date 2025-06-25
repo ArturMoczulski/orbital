@@ -1,9 +1,20 @@
 const path = require("path");
+const withTM = require("next-transpile-modules")([
+  "@orbital/phaser-ui",
+  "@orbital/react-ui",
+  "@orbital/phaser",
+  "@orbital/core",
+  "@mui/material",
+  "@mui/system",
+  "@mui/styled-engine",
+  "@mui/icons-material",
+  "@mui/lab",
+  "@mui/x-tree-view",
+]);
 
 /** @type {import('next').NextConfig} */
-module.exports = {
+const nextConfig = withTM({
   reactStrictMode: true,
-  transpilePackages: ["@orbital/phaser-ui", "@orbital/react-ui"],
   webpack(config, { dev }) {
     config.resolve.alias = {
       ...(config.resolve.alias || {}),
@@ -18,6 +29,15 @@ module.exports = {
         dev
           ? "../../../libs/@orbital/react-ui/src"
           : "../../../libs/@orbital/react-ui/dist"
+      ),
+      // force every import to hit the *one* hoisted copy
+      "@emotion/react": path.resolve(
+        __dirname,
+        "../../../node_modules/@emotion/react"
+      ),
+      "@emotion/styled": path.resolve(
+        __dirname,
+        "../../../node_modules/@emotion/styled"
       ),
     };
     return config;
@@ -34,4 +54,6 @@ module.exports = {
       },
     ];
   },
-};
+});
+
+module.exports = nextConfig;

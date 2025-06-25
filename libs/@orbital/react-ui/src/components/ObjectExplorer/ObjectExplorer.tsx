@@ -132,7 +132,7 @@ export function ObjectExplorer<T extends ExplorerObject>({
   });
   const schema = new ZodBridge({ schema: userSchema });
 
-  console.log("ObjectExplorer component rendered - updated version");
+  console.log("ObjectExplorer component rendered - updated version 2");
 
   return (
     <>

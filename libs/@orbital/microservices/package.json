@@ -34,7 +34,7 @@
     "@nestjs/core": "^10.0.0",
     "@nestjs/event-emitter": "^2.0.4",
     "@nestjs/microservices": "^10.0.0",
-    "@types/node": "^24.0.3",
+    "@types/node": "^24.0.4",
     "commander": "^11.1.0",
     "nats": "^2.19.0",
     "reflect-metadata": "^0.1.13",
