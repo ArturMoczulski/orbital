@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
+import { kebabCase } from "lodash";
 import Box from "@mui/material/Box";
 import IconButton from "@mui/material/IconButton";
 import MapIcon from "@mui/icons-material/Map";
@@ -24,8 +25,11 @@ export function ObjectExplorer<T extends ExplorerObject>({
   type,
   objectTypeName,
   renderNode,
+  schema: providedSchema,
+  onAdd,
 }: ObjectExplorerProps<T>) {
   const typeName = objectTypeName ?? `${type.name}s`;
+  const typePrefix = kebabCase(type.name.toLowerCase());
   const theme = useOrbitalTheme() || useTheme();
 
   const { data, isLoading, error } = queryResult;
@@ -126,13 +130,16 @@ export function ObjectExplorer<T extends ExplorerObject>({
 
   const rootObjects = objects.filter((o) => !o.parentId);
 
-  const userSchema = z.object({
-    username: z.string(),
-    password: z.string().min(8),
+  // Create a very simple schema for the form with basic types
+  // that are known to work with ZodBridge
+  const simpleSchema = z.object({
+    name: z.string().min(1, "Name is required"),
+    parentId: z.string().optional(),
+    worldId: z.string().optional(),
   });
-  const schema = new ZodBridge({ schema: userSchema });
 
-  console.log("ObjectExplorer component rendered - updated version 2");
+  // Create the form schema bridge
+  const formSchema = new ZodBridge({ schema: simpleSchema });
 
   return (
     <>
@@ -145,6 +152,7 @@ export function ObjectExplorer<T extends ExplorerObject>({
           flexDirection: "column",
         }}
         data-testid="object-explorer"
+        data-cy={`${typePrefix}-explorer`}
       >
         {/* Header */}
         <Box
@@ -165,6 +173,7 @@ export function ObjectExplorer<T extends ExplorerObject>({
             onClick={openAddModal}
             title="Add object"
             data-testid="add-object-button"
+            data-cy={`${typePrefix}-add-button`}
             sx={{
               bgcolor: "primary.main",
               color: "primary.contrastText",
@@ -195,6 +204,7 @@ export function ObjectExplorer<T extends ExplorerObject>({
                 onClick={openAddModal}
                 title="Add new object"
                 data-testid="add-object-button-empty"
+                data-cy={`${typePrefix}-add-button-empty`}
                 sx={{
                   bgcolor: "primary.main",
                   color: "primary.contrastText",
@@ -226,6 +236,7 @@ export function ObjectExplorer<T extends ExplorerObject>({
 
       {/* Add Object Modal */}
       <Dialog
+        data-cy={`${typePrefix}-add-dialog`}
         open={showAddModal}
         onClose={closeAddModal}
         fullWidth
@@ -240,8 +251,18 @@ export function ObjectExplorer<T extends ExplorerObject>({
         }}
       >
         <DialogTitle>Add New Object</DialogTitle>
-        <Box sx={{ p: 3 }}>
-          <AutoForm schema={schema} onSubmit={console.log} />
+        <Box sx={{ p: 3 }} data-cy={`${typePrefix}-add-form`}>
+          <AutoForm
+            schema={formSchema}
+            onSubmit={(data) => {
+              if (onAdd) {
+                onAdd(data);
+                closeAddModal();
+              } else {
+                console.log("Form submitted:", data);
+              }
+            }}
+          />
         </Box>
       </Dialog>
     </>

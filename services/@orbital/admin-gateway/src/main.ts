@@ -5,6 +5,11 @@ import * as fs from "fs";
 import * as path from "path";
 import { SwaggerModule, DocumentBuilder } from "@nestjs/swagger";
 import { MicroserviceExceptionFilter } from "@orbital/microservices";
+import { RpcExceptionFilter } from "./filters/rpc-exception.filter";
+import { GlobalExceptionHandler } from "./global-exception.handler";
+
+// Register global exception handlers
+GlobalExceptionHandler.register();
 
 async function bootstrap() {
   dotenv.config({ path: "../.env.local" });
@@ -18,8 +23,11 @@ async function bootstrap() {
     },
   });
 
-  // Apply global exception filter for RPC exceptions
-  app.useGlobalFilters(new MicroserviceExceptionFilter());
+  // Apply global exception filters
+  app.useGlobalFilters(
+    new RpcExceptionFilter(),
+    new MicroserviceExceptionFilter()
+  );
 
   // Setup Swagger
   const config = new DocumentBuilder()

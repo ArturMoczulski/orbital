@@ -51,4 +51,16 @@ export interface ObjectExplorerProps<T extends ExplorerObject> {
     toggleExpand: () => void,
     handleSelect: (e: React.MouseEvent) => void
   ) => React.ReactNode;
+
+  /**
+   * Optional Zod schema for the AutoForm in the add object dialog
+   * If provided, this schema will be used instead of the default schema
+   */
+  schema?: any;
+
+  /**
+   * Optional callback function when a new object is added
+   * This will be called with the form data when the add form is submitted
+   */
+  onAdd?: (data: any) => void;
 }

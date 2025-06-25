@@ -12,7 +12,9 @@
     "start": "next start",
     "lint": "next lint",
     "test": "npx jest --config jest.config.cjs",
-    "e2e": "cypress run --headed",
+    "e2e": "cypress run --headed --config-file cypress.config.ts",
+    "cypress:open": "cypress open --config-file cypress.config.ts",
+    "cypress:run": "cypress run --config-file cypress.config.ts",
     "generate:api": "rtk-query-codegen-openapi openapi-config.cjs"
   },
   "dependencies": {
