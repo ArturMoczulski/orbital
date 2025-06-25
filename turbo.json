@@ -12,10 +12,11 @@
     },
     "dev": {
       "dependsOn": [
-        "^build"
+        "^dev"
       ],
       "cache": false,
-      "persistent": true
+      "persistent": true,
+      "outputs": []
     },
     "test": {
       "dependsOn": [
