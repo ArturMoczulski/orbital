@@ -27,7 +27,10 @@
         "../../libs/*": "${workspaceFolder}/libs/*",
         "../libs/*": "${workspaceFolder}/libs/*",
         "/src/*": "${workspaceFolder}/services/@orbital/world/src/*",
-        "src/*": "${workspaceFolder}/services/@orbital/world/src/*"
+        "src/*": "${workspaceFolder}/services/@orbital/world/src/*",
+        "libs/@orbital/microservices/src/*": "${workspaceFolder}/libs/@orbital/microservices/src/*",
+        "../../../libs/@orbital/microservices/src/*": "${workspaceFolder}/libs/@orbital/microservices/src/*",
+        "../../libs/@orbital/microservices/src/*": "${workspaceFolder}/libs/@orbital/microservices/src/*"
       },
       "stopOnEntry": true,
       "restart": true
@@ -58,7 +61,13 @@
         "../../libs/*": "${workspaceFolder}/libs/*",
         "../libs/*": "${workspaceFolder}/libs/*",
         "/src/*": "${workspaceFolder}/services/@orbital/admin-gateway/src/*",
-        "src/*": "${workspaceFolder}/services/@orbital/admin-gateway/src/*"
+        "src/*": "${workspaceFolder}/services/@orbital/admin-gateway/src/*",
+        "/src/filters/*": "${workspaceFolder}/services/@orbital/admin-gateway/src/filters/*",
+        "src/filters/*": "${workspaceFolder}/services/@orbital/admin-gateway/src/filters/*",
+        "filters/*": "${workspaceFolder}/services/@orbital/admin-gateway/src/filters/*",
+        "libs/@orbital/microservices/src/*": "${workspaceFolder}/libs/@orbital/microservices/src/*",
+        "../../../libs/@orbital/microservices/src/*": "${workspaceFolder}/libs/@orbital/microservices/src/*",
+        "../../libs/@orbital/microservices/src/*": "${workspaceFolder}/libs/@orbital/microservices/src/*"
       },
       "stopOnEntry": true,
       "restart": true

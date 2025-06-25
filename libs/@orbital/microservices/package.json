@@ -4,7 +4,7 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
-    "build": "tsc -p tsconfig.json",
+    "build": "tsc -p tsconfig.json --sourceMap --inlineSources",
     "postbuild": "chmod +x bin/generate-asyncapi.js bin/generate-spec.js bin/generate-proxy.js bin/generate-client.js",
     "generate-asyncapi": "node bin/generate-asyncapi.js"
   },
