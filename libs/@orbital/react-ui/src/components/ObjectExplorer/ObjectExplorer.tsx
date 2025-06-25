@@ -43,14 +43,14 @@ export function ObjectExplorer<T extends ExplorerObject>({
   const openAddModal = () => setShowAddModal(true);
   const closeAddModal = () => setShowAddModal(false);
 
-  const toggleNode = (id: string) => {
-    setExpandedNodes((prev) => ({ ...prev, [id]: !prev[id] }));
+  const toggleNode = (_id: string) => {
+    setExpandedNodes((prev) => ({ ...prev, [_id]: !prev[_id] }));
   };
 
-  const handleSelectClick = (id: string, event: React.MouseEvent) => {
+  const handleSelectClick = (_id: string, event: React.MouseEvent) => {
     event.stopPropagation();
-    const selected = objects.find((o) => o.id === id);
-    if (selected) onSelect(selected.id);
+    const selected = objects.find((o) => o._id === _id);
+    if (selected) onSelect(selected._id);
   };
 
   const DefaultTreeNode = ({
@@ -60,11 +60,11 @@ export function ObjectExplorer<T extends ExplorerObject>({
     object: T;
     level?: number;
   }) => {
-    const children = objects.filter((o) => o.parentId === object.id);
-    const isExpanded = !!expandedNodes[object.id];
+    const children = objects.filter((o) => o.parentId === object._id);
+    const isExpanded = !!expandedNodes[object._id];
 
     return (
-      <Box key={object.id} sx={{ ml: level * 2 }}>
+      <Box key={object._id} sx={{ ml: level * 2 }}>
         <Box
           sx={{
             display: "flex",
@@ -75,8 +75,8 @@ export function ObjectExplorer<T extends ExplorerObject>({
             borderRadius: 1,
             "&:hover": { bgcolor: "secondary.main" },
           }}
-          onClick={() => toggleNode(object.id)}
-          data-testid={`tree-node-${object.id}`}
+          onClick={() => toggleNode(object._id)}
+          data-testid={`tree-node-${object._id}`}
         >
           {children.length > 0 ? (
             isExpanded ? (
@@ -90,9 +90,9 @@ export function ObjectExplorer<T extends ExplorerObject>({
           <Typography sx={{ flexGrow: 1, ml: 1 }}>{object.name}</Typography>
           <IconButton
             size="small"
-            onClick={(e) => handleSelectClick(object.id, e)}
+            onClick={(e) => handleSelectClick(object._id, e)}
             title={`Select ${type.name}`}
-            data-testid={`select-button-${object.id}`}
+            data-testid={`select-button-${object._id}`}
           >
             <MapIcon fontSize="small" />
           </IconButton>
@@ -101,7 +101,7 @@ export function ObjectExplorer<T extends ExplorerObject>({
           <Box>
             {children.map((child) => (
               <DefaultTreeNode
-                key={child.id}
+                key={child._id}
                 object={child}
                 level={level + 1}
               />
@@ -217,14 +217,14 @@ export function ObjectExplorer<T extends ExplorerObject>({
           ) : (
             rootObjects.map((obj) =>
               !renderNode ? (
-                <DefaultTreeNode key={obj.id} object={obj} />
+                <DefaultTreeNode key={obj._id} object={obj} />
               ) : (
-                <Box key={obj.id}>
+                <Box key={obj._id}>
                   {
                     renderNode(
                       obj,
-                      () => toggleNode(obj.id),
-                      (e) => handleSelectClick(obj.id, e)
+                      () => toggleNode(obj._id),
+                      (e) => handleSelectClick(obj._id, e)
                     ) as React.ReactElement
                   }
                 </Box>

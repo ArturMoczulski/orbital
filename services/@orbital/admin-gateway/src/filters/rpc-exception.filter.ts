@@ -10,6 +10,20 @@ import { RpcException } from "@nestjs/microservices";
 import { Request, Response } from "express";
 
 /**
+ * Interface for the error response body
+ */
+interface ErrorResponseBody {
+  statusCode: HttpStatus;
+  timestamp: string;
+  path: string;
+  method: string;
+  message: string;
+  error: string;
+  details?: any;
+  stack?: string;
+}
+
+/**
  * Filter to catch RPC exceptions and convert them to appropriate HTTP responses.
  * This is specifically designed to handle validation errors and other exceptions
  * from microservices and present them in a user-friendly way to HTTP clients.
@@ -77,16 +91,38 @@ export class RpcExceptionFilter implements ExceptionFilter {
         exception instanceof Error ? exception.stack : JSON.stringify(exception)
       );
 
-      // Format the response
-      const responseBody = {
+      // Log the full error object for debugging
+      this.logger.error(
+        `Full error details: ${JSON.stringify(
+          {
+            error,
+            originalError: error.originalError,
+            isValidationError,
+            errorType: error.constructor?.name,
+            exceptionType: exception.constructor?.name,
+            exceptionCause: exception.cause,
+          },
+          null,
+          2
+        )}`
+      );
+
+      // Format the response - pass through the original error object
+      const responseBody: ErrorResponseBody = {
         statusCode: status,
         timestamp: new Date().toISOString(),
         path: request.url,
         method: request.method,
         message: errorMessage,
         error: isValidationError ? "Bad Request" : "Bad Gateway",
-        details: typeof error === "object" ? error : undefined,
+        // Pass through the complete error object as-is, including originalError if available
+        details: error.originalError || error,
       };
+
+      // Include stack trace in non-production environments
+      if (process.env.NODE_ENV !== "production" && exception instanceof Error) {
+        responseBody.stack = exception.stack;
+      }
 
       // Send the response
       response.status(status).json(responseBody);
@@ -108,14 +144,24 @@ export class RpcExceptionFilter implements ExceptionFilter {
           const response = ctx.getResponse<Response>();
           const request = ctx.getRequest<Request>();
 
-          response.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
+          const errorResponse: ErrorResponseBody = {
             statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
             timestamp: new Date().toISOString(),
             path: request.url,
             method: request.method,
             message: "Internal server error in exception filter",
             error: "Internal Server Error",
-          });
+          };
+
+          // Include stack trace in non-production environments
+          if (
+            process.env.NODE_ENV !== "production" &&
+            innerException instanceof Error
+          ) {
+            errorResponse.stack = innerException.stack;
+          }
+
+          response.status(HttpStatus.INTERNAL_SERVER_ERROR).json(errorResponse);
         }
       } catch (finalException) {
         // Absolute last resort - just log the error

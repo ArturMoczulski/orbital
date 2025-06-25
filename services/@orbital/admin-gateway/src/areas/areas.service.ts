@@ -22,24 +22,9 @@ export class AreasService {
   }
 
   async create(body: any): Promise<any> {
-    // Ensure required fields are present
-    const areaData = {
-      ...body,
-      // Ensure position is present
-      position: body.position || { x: 0, y: 0, z: 0 },
-      // Ensure description is present (optional in database model now)
-      description: body.description || "",
-      // Ensure worldId is present if not provided (optional in database model now)
-      worldId: body.worldId || "default",
-      // Ensure name is present (required by database model)
-      name: body.name || "New Area",
-    };
-
-    // Note: _id is now optional with a default value in the model
-    // We don't need to explicitly set it here anymore
-
-    this.logger.log(`Creating area: ${JSON.stringify(areaData)}`);
-    return this.worldMicroservice.areas.createArea(areaData);
+    // Pass the body directly without adding defaults
+    this.logger.log(`Creating area: ${JSON.stringify(body)}`);
+    return this.worldMicroservice.areas.createArea(body);
   }
 
   async update(_id: string, body: any): Promise<any> {

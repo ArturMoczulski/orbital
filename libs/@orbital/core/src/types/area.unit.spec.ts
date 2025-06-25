@@ -13,9 +13,9 @@ describe("Area", () => {
       expect(area.name).toBe("Test Area");
       expect(area.parentId).toBe("parent-1");
       expect(area.position).toBeInstanceOf(Position);
-      expect(area.position.x).toBe(10);
-      expect(area.position.y).toBe(20);
-      expect(area.position.z).toBe(30);
+      expect(area.position!.x).toBe(10);
+      expect(area.position!.y).toBe(20);
+      expect(area.position!.z).toBe(30);
       expect(typeof area._id).toBe("string");
       expect(area._id.length).toBeGreaterThan(0);
     });
@@ -45,9 +45,9 @@ describe("Area", () => {
       const mockArea = Area.mock(override);
       expect(mockArea.name).toBe("Override Area");
       expect(mockArea.parentId).toBe("override-parent");
-      expect(mockArea.position.x).toBe(1);
-      expect(mockArea.position.y).toBe(2);
-      expect(mockArea.position.z).toBe(3);
+      expect(mockArea.position!.x).toBe(1);
+      expect(mockArea.position!.y).toBe(2);
+      expect(mockArea.position!.z).toBe(3);
     });
   });
 });

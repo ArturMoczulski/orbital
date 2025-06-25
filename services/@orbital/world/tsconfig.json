@@ -16,6 +16,10 @@
     "emitDecoratorMetadata": true,
     "moduleResolution": "node",
     "esModuleInterop": true,
+    "sourceMap": true,
+    "inlineSources": true,
+    "sourceRoot": "",
+    "declaration": true,
     "baseUrl": ".",
     "paths": {
       "@orbital/characters": ["../../../libs/@orbital/characters/dist"],

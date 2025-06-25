@@ -30,19 +30,25 @@ export class UnrecognizedMessagePatternError extends RpcException {
 
 /**
  * Thrown when the remote handler throws an unexpected error.
- * Preserves the remote stack trace in this.stack.
+ * Preserves the remote stack trace in this.stack and the original error details.
  */
 export class RemoteMicroserviceError extends RpcException {
   readonly stack?: string;
+  readonly originalError?: any;
 
   constructor(service: string, pattern: string, payload: any) {
+    // Pass through the entire payload to preserve all error details
     super({
-      code: "REMOTE_MICROSERVICE_ERROR",
+      code: payload?.code || "REMOTE_MICROSERVICE_ERROR",
       service,
       pattern,
       message: payload?.message,
+      originalError: payload?.originalError || payload,
     });
+
+    // Store the original error for access by error handlers
     (this as any).cause = payload;
+    this.originalError = payload?.originalError || payload;
     this.stack = payload?.stack;
   }
 }

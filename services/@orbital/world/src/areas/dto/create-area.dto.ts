@@ -6,13 +6,21 @@ import { AreaSchema, PositionSchema } from "@orbital/core";
  * Zod schema for creating an area
  * Based on the validation rules from the original class-validator based DTO
  */
-const CreateAreaSchema = AreaSchema.omit({ _id: true }).extend({
+const CreateAreaSchema = AreaSchema.extend({
+  _id: z
+    .string()
+    .optional()
+    .describe(
+      "Unique identifier for the area (auto-generated if not provided)"
+    ),
   name: z.string().min(1).describe("Name of the area"),
   description: z
     .string()
     .optional()
     .describe("Detailed description of the area"),
-  position: PositionSchema.describe("Central position of the area in 3D space"),
+  position: PositionSchema.optional().describe(
+    "Central position of the area in 3D space"
+  ),
   worldId: z
     .string()
     .min(1)

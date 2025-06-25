@@ -12,7 +12,10 @@
     "forceConsistentCasingInFileNames": true,
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
-    "composite": true
+    "composite": true,
+    "sourceMap": true,
+    "inlineSources": true,
+    "sourceRoot": ""
   },
   "references": [{ "path": "../characters" }, { "path": "../core" }],
   "include": ["src", "src/types"]

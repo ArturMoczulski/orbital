@@ -2,7 +2,7 @@
  * Base interface for objects that can be displayed in the ObjectExplorer
  */
 export interface ExplorerObject {
-  id: string;
+  _id: string;
   parentId?: string | null;
   name: string;
   [key: string]: any; // Allow for additional properties

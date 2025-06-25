@@ -1,0 +1,73 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "type": "node",
+      "request": "attach",
+      "name": "Debug World Service",
+      "port": 9229,
+      "sourceMaps": true,
+      "sourceMapRenames": true,
+      "cwd": "${workspaceFolder}",
+      "outFiles": [
+        "${workspaceFolder}/services/@orbital/world/dist/**/*.js",
+        "${workspaceFolder}/libs/@orbital/microservices/dist/**/*.js",
+        "${workspaceFolder}/libs/@scout/core/dist/**/*.js",
+        "${workspaceFolder}/libs/@orbital/core/dist/**/*.js",
+        "${workspaceFolder}/libs/@orbital/typegoose/dist/**/*.js"
+      ],
+      "skipFiles": [
+        "<node_internals>/**",
+        "${workspaceFolder}/node_modules/**"
+      ],
+      "sourceMapPathOverrides": {
+        "webpack:///./~/*": "${workspaceFolder}/node_modules/*",
+        "webpack:///./*": "${workspaceFolder}/*",
+        "../../../libs/*": "${workspaceFolder}/libs/*",
+        "../../libs/*": "${workspaceFolder}/libs/*",
+        "../libs/*": "${workspaceFolder}/libs/*",
+        "/src/*": "${workspaceFolder}/services/@orbital/world/src/*",
+        "src/*": "${workspaceFolder}/services/@orbital/world/src/*"
+      },
+      "stopOnEntry": true,
+      "restart": true
+    },
+    {
+      "type": "node",
+      "request": "attach",
+      "name": "Debug Admin Gateway",
+      "port": 9230,
+      "sourceMaps": true,
+      "sourceMapRenames": true,
+      "cwd": "${workspaceFolder}",
+      "outFiles": [
+        "${workspaceFolder}/services/@orbital/admin-gateway/dist/**/*.js",
+        "${workspaceFolder}/libs/@orbital/microservices/dist/**/*.js",
+        "${workspaceFolder}/libs/@scout/core/dist/**/*.js",
+        "${workspaceFolder}/libs/@orbital/core/dist/**/*.js",
+        "${workspaceFolder}/libs/@orbital/typegoose/dist/**/*.js"
+      ],
+      "skipFiles": [
+        "<node_internals>/**",
+        "${workspaceFolder}/node_modules/**"
+      ],
+      "sourceMapPathOverrides": {
+        "webpack:///./~/*": "${workspaceFolder}/node_modules/*",
+        "webpack:///./*": "${workspaceFolder}/*",
+        "../../../libs/*": "${workspaceFolder}/libs/*",
+        "../../libs/*": "${workspaceFolder}/libs/*",
+        "../libs/*": "${workspaceFolder}/libs/*",
+        "/src/*": "${workspaceFolder}/services/@orbital/admin-gateway/src/*",
+        "src/*": "${workspaceFolder}/services/@orbital/admin-gateway/src/*"
+      },
+      "stopOnEntry": true,
+      "restart": true
+    }
+  ],
+  "compounds": [
+    {
+      "name": "Debug All Services",
+      "configurations": ["Debug World Service", "Debug Admin Gateway"]
+    }
+  ]
+}

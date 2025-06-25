@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { Area, AreaSchema } from "@orbital/core/src/types/area";
 import { AreaMap } from "@orbital/core/src/types/area-map";
 import {
@@ -7,6 +7,12 @@ import {
   useAreasControllerCreateMutation,
 } from "../services/adminApi.generated";
 import { ObjectExplorer, QueryResult } from "@orbital/react-ui";
+
+// Define an interface that extends Area but adds the id property
+interface AreaWithId extends Omit<Area, "_id"> {
+  id: string;
+  _id?: string;
+}
 
 interface AreaExplorerProps {
   onSelect: (areaId: string, areaMap: AreaMap) => void;
@@ -28,7 +34,7 @@ export default function AreaExplorer({ onSelect }: AreaExplorerProps) {
     isLoading: isMapLoading,
     error: mapError,
   } = useAreasControllerGetMapQuery(
-    { id: selectedMapId! },
+    { _id: selectedMapId! },
     { skip: !selectedMapId }
   ) as { data?: AreaMap; isLoading: boolean; error?: unknown };
 
@@ -38,26 +44,40 @@ export default function AreaExplorer({ onSelect }: AreaExplorerProps) {
     }
   }, [selectedMapId, mapData, onSelect]);
 
-  const areasQuery =
-    useAreasControllerGetAllQuery() as unknown as QueryResult<Area>;
+  // Get the areas data
+  const areasQueryResult = useAreasControllerGetAllQuery();
+
+  // Transform the areas to include an id property that maps to _id
+  const adaptedAreas = useMemo(() => {
+    if (!areasQueryResult.data) return [];
+
+    return (areasQueryResult.data as Area[]).map((area) => ({
+      ...area,
+      id: area._id, // Add id property that maps to _id
+    })) as AreaWithId[];
+  }, [areasQueryResult.data]);
+
+  // Create an adapted query result
+  const areasQuery = {
+    ...areasQueryResult,
+    data: adaptedAreas,
+  } as unknown as QueryResult<AreaWithId>;
 
   // Handle adding a new area
   const handleAddArea = async (formData: any) => {
     try {
-      // Create a new Area object with the form data and ensure all required fields
-      const newArea = {
+      // Add default values for required fields if they're not provided
+      const areaData = {
         ...formData,
-        // Required fields with defaults if not provided
-        name: formData.name || "New Area",
-        position: formData.position || { x: 0, y: 0, z: 0 },
-        description: formData.description || "",
-        worldId: formData.worldId || "default",
+        // worldId is still required
+        worldId: formData.worldId || "default-world",
+        // position is now optional, so we don't need to provide a default
       };
 
-      console.log("Creating new area:", newArea);
+      console.log("Creating new area:", areaData);
 
       // Call the create mutation and unwrap to catch HTTP errors
-      await createArea(newArea).unwrap();
+      await createArea(areaData).unwrap();
 
       console.log("Area created successfully");
       // Notify user of success
@@ -83,5 +103,5 @@ export default function AreaExplorer({ onSelect }: AreaExplorerProps) {
   };
 
   // Use type assertion to tell TypeScript that ObjectExplorer accepts these props
-  return <ObjectExplorer<Area> {...(explorerProps as any)} />;
+  return <ObjectExplorer<AreaWithId> {...(explorerProps as any)} />;
 }

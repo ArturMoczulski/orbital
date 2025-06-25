@@ -24,10 +24,7 @@ async function bootstrap() {
   });
 
   // Apply global exception filters
-  // app.useGlobalFilters(
-  //   new RpcExceptionFilter(),
-  //   new MicroserviceExceptionFilter()
-  // );
+  // app.useGlobalFilters(new MicroserviceExceptionFilter());
 
   // Setup Swagger
   const config = new DocumentBuilder()

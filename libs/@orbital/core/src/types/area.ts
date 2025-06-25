@@ -17,14 +17,14 @@ export type AreaProps = z.infer<typeof AreaSchema>;
 /** Zod schema for Area */
 export const AreaSchema = z
   .object({
-    _id: z.string().optional().describe("Unique identifier for the area"),
+    _id: z.string().describe("Unique identifier for the area"),
     parentId: z
       .string()
       .nullable()
       .optional()
       .describe("Identifier of the parent area, if any"),
     name: z.string().describe("Descriptive name of the area"),
-    position: PositionSchema.describe(
+    position: PositionSchema.optional().describe(
       "Central position of the area in 3D space"
     ),
     areaMap: AreaMapSchema.optional().describe(
@@ -50,7 +50,7 @@ export class Area
 {
   parentId?: string | null;
   name: string = "";
-  position: Position = new Position();
+  position?: Position;
   /** Map representation of this area */
   areaMap?: AreaMap;
   /** Detailed description of the area */
@@ -69,7 +69,8 @@ export class Area
     const base: Partial<AreaProps> = {
       parentId: faker.string.uuid(),
       name: faker.lorem.word(),
-      position: Position.mock(),
+      // Position is optional, but include it in mock by default unless explicitly set to undefined
+      position: "position" in overrides ? overrides.position : Position.mock(),
       areaMap:
         overrides.areaMap || (Math.random() > 0.5 ? AreaMap.mock() : undefined),
       worldId: faker.string.uuid(),
@@ -94,12 +95,15 @@ export class Area
     // Pass the clean data to the parent constructor
     super(cleanData);
 
-    // Ensure position is properly instantiated as a Position class
-    const positionData = validated.position;
-    const position =
-      positionData instanceof Position
-        ? positionData
-        : new Position(positionData);
+    // Handle position if provided
+    let position: Position | undefined = undefined;
+    if (validated.position) {
+      const positionData = validated.position;
+      position =
+        positionData instanceof Position
+          ? positionData
+          : new Position(positionData);
+    }
 
     // Handle areaMap if provided
     let areaMap: AreaMap | undefined = undefined;

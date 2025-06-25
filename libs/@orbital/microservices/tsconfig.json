@@ -18,7 +18,10 @@
     "forceConsistentCasingInFileNames": true,
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
-    "moduleResolution": "node"
+    "moduleResolution": "node",
+    "sourceMap": true,
+    "inlineSources": true,
+    "sourceRoot": ""
   },
   "include": ["src", "src/types/*.d.ts"]
 }

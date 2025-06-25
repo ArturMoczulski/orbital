@@ -27,7 +27,10 @@
     "orb": "yarn workspace @orbital/orb run build && node tools/@orbital/orb/dist/src/index.js",
     "start:dev": "turbo run dev --parallel",
     "start:staging": "turbo run dev --env=staging --parallel",
-    "start:prod": "turbo run dev --env=production --parallel"
+    "start:prod": "turbo run dev --env=production --parallel",
+    "debug:services": "yarn workspace @orbital/core build && yarn workspace @orbital/microservices build && yarn workspace @orbital/typegoose build && yarn workspace @scout/core build && concurrently \"yarn workspace @orbital/admin-gateway debug\" \"yarn workspace @orbital/world debug\" \"yarn workspace @orbital/phaser-maps dev\"",
+    "debug:admin-gateway": "yarn workspace @orbital/core build && yarn workspace @orbital/microservices build && yarn workspace @orbital/typegoose build && yarn workspace @scout/core build && yarn workspace @orbital/admin-gateway debug",
+    "debug:world": "yarn workspace @orbital/core build && yarn workspace @orbital/microservices build && yarn workspace @orbital/typegoose build && yarn workspace @scout/core build && yarn workspace @orbital/world debug"
   },
   "devDependencies": {
     "@babel/core": "^7.22.15",
@@ -36,6 +39,7 @@
     "@types/jest": "^29.5.14",
     "@types/node": "^24.0.4",
     "babel-jest": "^30.0.0",
+    "concurrently": "^9.2.0",
     "execa": "^9.6.0",
     "jest": "^30.0.0",
     "jest-util": "^29.7.0",

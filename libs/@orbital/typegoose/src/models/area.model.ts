@@ -6,17 +6,17 @@ import { randomUUID } from "crypto";
   schemaOptions: { collection: "areas", timestamps: true },
 })
 export class AreaModel {
-  @prop({ required: false, auto: true, default: () => randomUUID() })
+  @prop({ required: true, auto: true, default: () => randomUUID() })
   _id!: string;
 
   @prop({ required: true })
   name!: string;
 
-  @prop({ required: false, default: "" })
+  @prop({ required: false })
   description?: string;
 
-  @prop({ type: () => Object, required: true })
-  position!: Position;
+  @prop({ type: () => Object, required: false })
+  position?: Position;
 
   @prop({ type: () => Object })
   areaMap?: AreaMap;
