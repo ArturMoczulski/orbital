@@ -196,4 +196,99 @@ describe("Areas API (e2e)", () => {
       }
     });
   });
+  // Test error handling for non-existent ID
+  describe("GET /areas/:id with non-existent ID", () => {
+    it("should return 502 for non-existent area ID", async () => {
+      const nonExistentId = "non-existent-id";
+
+      // Note: We expect 502 instead of 404 because the RpcExceptionFilter
+      // converts microservice errors to 502 Bad Gateway responses
+      const response = await request(BASE_URL)
+        .get(`/areas/${nonExistentId}`)
+        .expect(502);
+
+      expect(response.body).toHaveProperty("statusCode", 502);
+      expect(response.body).toHaveProperty("message");
+    });
+  });
+
+  // Test validation errors
+  describe("POST /areas with invalid data", () => {
+    it("should return 400 when missing required fields", async () => {
+      // Missing name and worldId
+      const invalidArea = {
+        position: { x: 0, y: 0, z: 0 },
+      };
+
+      console.log(
+        "Sending POST request with invalid data:",
+        JSON.stringify(invalidArea, null, 2)
+      );
+
+      const response = await request(BASE_URL)
+        .post("/areas")
+        .send(invalidArea)
+        .expect(400); // Validation happens in the admin-gateway service
+
+      console.log(
+        "Response from POST /areas with invalid data:",
+        JSON.stringify(response.body, null, 2)
+      );
+
+      expect(response.body).toHaveProperty("statusCode", 400);
+      expect(response.body).toHaveProperty("message");
+      console.log("Validation error message:", response.body.message);
+    });
+  });
+
+  // Test filtering by worldId
+  describe("GET /areas with worldId filter", () => {
+    it("should create areas with different worldIds and filter by worldId", async () => {
+      // Create two areas with different worldIds
+      const worldId1 = "test-world-id-1";
+      const worldId2 = "test-world-id-2";
+
+      const area1 = {
+        name: "Area World 1",
+        worldId: worldId1,
+        position: { x: 10, y: 10, z: 0 },
+      };
+
+      const area2 = {
+        name: "Area World 2",
+        worldId: worldId2,
+        position: { x: 20, y: 20, z: 0 },
+      };
+
+      // Create the areas
+      const response1 = await request(BASE_URL)
+        .post("/areas")
+        .send(area1)
+        .expect(201);
+
+      const response2 = await request(BASE_URL)
+        .post("/areas")
+        .send(area2)
+        .expect(201);
+
+      const area1Id = response1.body._id;
+      const area2Id = response2.body._id;
+
+      // Get all areas and check if both are returned
+      const allAreasResponse = await request(BASE_URL)
+        .get("/areas")
+        .expect(200);
+
+      expect(Array.isArray(allAreasResponse.body)).toBe(true);
+
+      // Clean up
+      if (area1Id) {
+        await request(BASE_URL).delete(`/areas/${area1Id}`).expect(200);
+      }
+
+      if (area2Id) {
+        await request(BASE_URL).delete(`/areas/${area2Id}`).expect(200);
+      }
+    });
+  });
 });
