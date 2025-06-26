@@ -74,6 +74,77 @@ To test only the monorepo template itself:
 yarn orb monorepo test
 ```
 
+## PM2 Process Management
+
+The monorepo includes PM2 integration for managing services and clients. These commands provide Docker Compose-like functionality for starting, stopping, and managing processes.
+
+### Basic PM2 Commands
+
+- **start**: `yarn start`
+  Starts all services in production mode.
+
+- **dev**: `yarn dev` or `yarn orb dev [service1 service2 ...]`
+  Starts services in development mode (watch mode by default). If no services are specified, all services are started.
+  Examples:
+
+  - `yarn orb dev world admin-gateway` - Start specific services
+  - `yarn orb dev --debug world` - Start world service in debug mode
+  - `yarn orb dev --prod phaser-maps` - Start phaser-maps in production mode
+  - `yarn orb dev --list` - List all available services
+
+- **watch**: `yarn watch` or `yarn orb watch [service1 service2 ...]`
+  Starts services in watch mode. If no services are specified, all services are started.
+  Examples:
+
+  - `yarn orb watch world admin-gateway` - Start specific services
+  - `yarn orb watch` - Start all services
+  - `yarn orb watch --list` - List all available services
+
+- **debug**: `yarn debug`
+  Starts all services in debug mode.
+
+- **logs**: `yarn logs` or `yarn orb logs [service1 service2 ...]`
+  Views logs for specified services.
+  Examples:
+
+  - `yarn orb logs world phaser-maps` - View logs for specific services
+  - `yarn orb logs -w` or `yarn orb logs --watch` - Stream logs continuously
+  - `yarn orb logs --list` - List all available services
+
+- **restart**: `yarn restart` or `yarn orb restart [service1 service2 ...]`
+  Restarts specified services. If no services are specified, all services are restarted.
+  Examples:
+
+  - `yarn orb restart world admin-gateway` - Restart specific services
+  - `yarn orb restart --watch world` - Restart only watch mode for world service
+  - `yarn orb restart --list` - List all available services
+
+- **down**: `yarn down` or `yarn orb down [service1 service2 ...]`
+  Stops and deletes specified services. If no services are specified, all services are stopped and deleted.
+  Examples:
+
+  - `yarn orb down phaser-maps phaser-game` - Stop and delete specific services
+  - `yarn orb down --debug world` - Stop and delete only debug mode for world service
+  - `yarn orb down --list` - List all available services
+
+- **status**: `yarn status`
+  Shows the status of all PM2 processes.
+
+- **stop**: `yarn stop`
+  Stops all services but keeps them in PM2's process list.
+
+- **delete**: `yarn delete`
+  Deletes all services from PM2's process list.
+
+### Service Names
+
+The following service names can be used with the commands above:
+
+- `world` or `@orbital/world`: World microservice
+- `admin-gateway` or `@orbital/admin-gateway`: Admin Gateway service
+- `phaser-maps` or `@orbital/phaser-maps`: Phaser Maps client
+- `phaser-game` or `@orbital/phaser-game`: Phaser Game client
+
 Or equivalently:
 
 ```bash

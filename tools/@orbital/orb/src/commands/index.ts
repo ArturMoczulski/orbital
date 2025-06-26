@@ -1,6 +1,11 @@
 import create from "./create/index.js";
+import dev from "./dev/index.js";
+import down from "./down/index.js";
+import logs from "./logs/index.js";
 import manage from "./manage/index.js";
 import monorepo from "./monorepo/index.js";
 import profile from "./profile/index.js";
+import restart from "./restart/index.js";
+import watch from "./watch/index.js";
 
-export { create, manage, monorepo, profile };
+export { create, dev, down, logs, manage, monorepo, profile, restart, watch };

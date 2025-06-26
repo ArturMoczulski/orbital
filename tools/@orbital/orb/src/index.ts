@@ -1,11 +1,11 @@
 #!/usr/bin/env node
-import { createRequire } from "module";
-const require = createRequire(import.meta.url);
-const figlet = require("figlet");
 import { program } from "commander";
 import * as fs from "fs";
+import { createRequire } from "module";
 import * as path from "path";
 import { fileURLToPath } from "url";
+const require = createRequire(import.meta.url);
+const figlet = require("figlet");
 
 const scriptPath = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(scriptPath);
@@ -23,11 +23,26 @@ program.version(
     .version
 );
 
-import { create, monorepo, profile, manage } from "./commands/index.js";
+import {
+  create,
+  dev,
+  down,
+  logs,
+  manage,
+  monorepo,
+  profile,
+  restart,
+  watch,
+} from "./commands/index.js";
 
 program.addCommand(create);
 program.addCommand(monorepo);
 program.addCommand(profile);
 program.addCommand(manage);
+program.addCommand(watch);
+program.addCommand(logs);
+program.addCommand(restart);
+program.addCommand(down);
+program.addCommand(dev);
 
 program.parse(process.argv);

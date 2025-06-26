@@ -1,7 +1,7 @@
 {
   "jest.jestCommandLine": "yarn test --",
   "typescript.tsdk": "node_modules/typescript/lib",
-  "debug.javascript.autoAttachFilter": "smart",
+  "debug.javascript.autoAttachFilter": "disabled",
   "debug.javascript.usePreview": true,
   "debug.javascript.terminalOptions": {
     "skipFiles": ["<node_internals>/**"]

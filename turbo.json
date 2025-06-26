@@ -18,6 +18,40 @@
       "persistent": true,
       "outputs": []
     },
+    "start": {
+      "dependsOn": [
+        "^build"
+      ],
+      "cache": false,
+      "persistent": false,
+      "outputs": []
+    },
+    "watch": {
+      "dependsOn": [
+        "^build"
+      ],
+      "cache": false,
+      "persistent": true,
+      "outputs": []
+    },
+    "debug": {
+      "dependsOn": [
+        "^build"
+      ],
+      "cache": false,
+      "persistent": false,
+      "outputs": []
+    },
+    "restart": {
+      "cache": false,
+      "persistent": false,
+      "outputs": []
+    },
+    "down": {
+      "cache": false,
+      "persistent": false,
+      "outputs": []
+    },
     "test": {
       "dependsOn": [
         "build"
