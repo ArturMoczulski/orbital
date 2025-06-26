@@ -415,9 +415,23 @@ export function viewServiceLogs(
 ): void {
   const services = getAvailableServices();
 
+  // Get running PM2 processes
+  let runningProcesses: string[] = [];
+  try {
+    // Get list of running PM2 processes
+    const pmList = execSync("npx pm2 jlist", { encoding: "utf8", cwd: root });
+    const processes = JSON.parse(pmList);
+    runningProcesses = processes
+      .filter((p: any) => p.pm2_env.status === "online")
+      .map((p: any) => p.name);
+  } catch (error) {
+    console.error("Error getting PM2 process list:", error);
+  }
+
   // If no services specified, view logs for all services
   if (serviceNames.length === 0) {
     try {
+      // Use PM2 logs command for all services
       execSync(`npx pm2 logs ${watch ? "" : "--lines 100 --nostream"}`, {
         stdio: "inherit",
         cwd: root,
@@ -440,21 +454,36 @@ export function viewServiceLogs(
     }
 
     for (const service of matchingServices) {
-      // Add all process names for this service
-      processNames.push(service.prodName);
-      processNames.push(service.watchName);
-      processNames.push(service.debugName);
+      // Only add process names that are actually running
+      const possibleNames = [
+        service.prodName,
+        service.watchName,
+        service.debugName,
+      ];
+
+      const runningNames = possibleNames.filter((name) =>
+        runningProcesses.includes(name)
+      );
+
+      if (runningNames.length > 0) {
+        // If running processes found, only show logs for those
+        processNames.push(...runningNames);
+      } else {
+        // If no running processes found, add all possible names as fallback
+        processNames.push(...possibleNames);
+      }
     }
   }
 
   if (processNames.length > 0) {
+    // Use PM2 logs command with specific process names
+    const command = `npx pm2 logs ${processNames.join(" ")} ${
+      watch ? "" : "--lines 100 --nostream"
+    }`;
+
     try {
-      execSync(
-        `npx pm2 logs ${processNames.join(" ")} ${
-          watch ? "" : "--lines 100 --nostream"
-        }`,
-        { stdio: "inherit", cwd: root }
-      );
+      // Execute the command with inherit stdio to see the output
+      execSync(command, { stdio: "inherit", cwd: root });
     } catch (error) {
       console.error("Error viewing logs:", error);
     }
