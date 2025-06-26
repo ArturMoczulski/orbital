@@ -35,6 +35,7 @@ export class UnrecognizedMessagePatternError extends RpcException {
 export class RemoteMicroserviceError extends RpcException {
   readonly stack?: string;
   readonly originalError?: any;
+  private readonly payload: any;
 
   constructor(service: string, pattern: string, payload: any) {
     // Pass through the entire payload to preserve all error details
@@ -50,5 +51,13 @@ export class RemoteMicroserviceError extends RpcException {
     (this as any).cause = payload;
     this.originalError = payload?.originalError || payload;
     this.stack = payload?.stack;
+    this.payload = payload;
+  }
+
+  /**
+   * Override the getError method to return the full payload
+   */
+  getError(): any {
+    return this.payload;
   }
 }

@@ -9,10 +9,10 @@ import {
 } from "@nestjs/core";
 import { EventEmitter2, EventEmitterModule } from "@nestjs/event-emitter";
 import { ClientsModule, Transport } from "@nestjs/microservices";
+import { PassThroughRpcExceptionFilter } from "@orbital/microservices";
 import { AreasModule } from "./areas/areas.module";
 import { CharactersModule } from "./characters/characters.module";
 import { DatabaseModule } from "./database.module";
-import { WorldExceptionFilter } from "./filters/world-exception.filter";
 import { WorldsModule } from "./worlds/worlds.module";
 
 @Module({
@@ -51,7 +51,9 @@ import { WorldsModule } from "./worlds/worlds.module";
     DiscoveryService,
     {
       provide: APP_FILTER,
-      useClass: WorldExceptionFilter,
+      useFactory: () => {
+        return new PassThroughRpcExceptionFilter("world");
+      },
     },
   ],
 })

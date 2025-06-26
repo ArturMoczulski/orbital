@@ -3,18 +3,19 @@ import { MongooseModule, getConnectionToken } from "@nestjs/mongoose";
 import { Test, TestingModule } from "@nestjs/testing";
 import { MongoMemoryServer } from "mongodb-memory-server";
 import { Connection } from "mongoose";
-import request from "supertest";
 import { AuthModule } from "../../src/auth/auth.module";
+import { AuthService } from "../../src/auth/auth.service";
 import { User, UserSchema } from "../../src/users/schemas/user.schema";
 import { UsersModule } from "../../src/users/users.module";
 import { UsersService } from "../../src/users/users.service";
+const request = require("supertest");
 
 describe("Auth E2E", () => {
   let app: INestApplication;
   let mongoServer: MongoMemoryServer;
   let mongoConnection: Connection;
   let usersService: UsersService;
-  let authService: any; // Using any type to avoid importing AuthService
+  let authService: AuthService;
 
   beforeAll(async () => {
     mongoServer = await MongoMemoryServer.create();
@@ -34,15 +35,16 @@ describe("Auth E2E", () => {
 
     mongoConnection = app.get<Connection>(getConnectionToken());
     usersService = moduleFixture.get<UsersService>(UsersService);
+    authService = moduleFixture.get<AuthService>(AuthService);
   });
 
   beforeEach(async () => {
     // Clear the database and create a user before each test
     await mongoConnection.collection("users").deleteMany({});
-    const createResult = await usersService.create([
-      { username: "testuser", password: "testpassword" },
-    ]);
-    console.log("User creation result:", JSON.stringify(createResult, null, 2));
+
+    // Use authService.signup instead of usersService.create to ensure password is hashed
+    const signupResult = await authService.signup("testuser", "testpassword");
+    console.log("User signup result:", JSON.stringify(signupResult, null, 2));
 
     // Verify the user was created correctly
     const findResult = await usersService.findByUsername(["testuser"]);

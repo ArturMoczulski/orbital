@@ -23,5 +23,11 @@
     "inlineSources": true,
     "sourceRoot": ""
   },
-  "include": ["src", "src/types/*.d.ts"]
+  "include": ["src", "src/types/*.d.ts"],
+  "exclude": [
+    "**/*.spec.ts",
+    "**/*.integration.spec.ts",
+    "**/*.test.ts",
+    "**/__tests__/**"
+  ]
 }

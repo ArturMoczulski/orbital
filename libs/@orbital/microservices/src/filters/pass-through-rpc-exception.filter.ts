@@ -1,24 +1,34 @@
 import { ArgumentsHost, Catch, ExceptionFilter, Logger } from "@nestjs/common";
 import { RpcException } from "@nestjs/microservices";
-import { RemoteMicroserviceError } from "@orbital/microservices";
 import { Observable, throwError } from "rxjs";
+import { RemoteMicroserviceError } from "../errors";
 
 /**
- * Exception filter for the World microservice.
- * Preserves the original error message and stack trace in RPC responses.
+ * Exception filter for microservices that preserves original error details in RPC responses.
+ *
+ * This filter is designed to be used in microservices to ensure that error details,
+ * including stack traces and additional context, are properly serialized and passed
+ * through to the client. This makes debugging easier by preserving the original
+ * error information across service boundaries.
  */
 @Catch()
-export class WorldExceptionFilter implements ExceptionFilter {
-  private readonly logger = new Logger(WorldExceptionFilter.name);
-  private readonly serviceName = "world";
+export class PassThroughRpcExceptionFilter implements ExceptionFilter {
+  private readonly logger = new Logger(PassThroughRpcExceptionFilter.name);
+  private readonly serviceName: string;
+
+  /**
+   * Creates a new instance of the PassThroughRpcExceptionFilter.
+   *
+   * @param serviceName The name of the microservice using this filter.
+   *                    Used to identify the source of errors.
+   */
+  constructor(serviceName?: string) {
+    this.serviceName = serviceName || process.env.SERVICE_NAME || "unknown";
+  }
 
   catch(exception: any, host: ArgumentsHost): Observable<never> | void {
-    console.log("🚨 WorldExceptionFilter.catch() called");
-    console.log("Exception type:", exception?.constructor?.name);
-    console.log("Exception message:", exception?.message);
-    console.log("Context type:", host.getType());
-    this.logger.error(`triggered world exception filter`);
     const ctxType = host.getType();
+    this.logger.error(`triggered ${this.serviceName} exception filter`);
 
     // Log the exception with more details
     this.logger.error(

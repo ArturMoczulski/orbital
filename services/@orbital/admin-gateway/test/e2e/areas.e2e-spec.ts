@@ -1,4 +1,4 @@
-import request from "supertest";
+const request = require("supertest");
 
 // Base URL from environment variables
 const BASE_URL = process.env.BASE_URL || "http://localhost:4054";

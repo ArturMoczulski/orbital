@@ -432,10 +432,13 @@ export function viewServiceLogs(
   if (serviceNames.length === 0) {
     try {
       // Use PM2 logs command for all services
-      execSync(`npx pm2 logs ${watch ? "" : "--lines 100 --nostream"}`, {
-        stdio: "inherit",
-        cwd: root,
-      });
+      execSync(
+        `npx pm2 logs ${watch ? "--lines 200" : "--lines 200 --nostream"}`,
+        {
+          stdio: "inherit",
+          cwd: root,
+        }
+      );
     } catch (error) {
       console.error("Error viewing logs:", error);
     }
@@ -478,7 +481,7 @@ export function viewServiceLogs(
   if (processNames.length > 0) {
     // Use PM2 logs command with specific process names
     const command = `npx pm2 logs ${processNames.join(" ")} ${
-      watch ? "" : "--lines 100 --nostream"
+      watch ? "--lines 200" : "--lines 200 --nostream"
     }`;
 
     try {

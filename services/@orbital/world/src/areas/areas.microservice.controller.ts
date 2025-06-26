@@ -1,13 +1,16 @@
 import { Controller, UseFilters } from "@nestjs/common";
-import { MessagePattern, MicroserviceController } from "@orbital/microservices";
+import {
+  MessagePattern,
+  MicroserviceController,
+  PassThroughRpcExceptionFilter,
+} from "@orbital/microservices";
 import type { AreaModel } from "@orbital/typegoose";
-import { WorldExceptionFilter } from "../filters/world-exception.filter";
 import { AreasService } from "./areas.service";
 import { CreateAreaDto, UpdateAreaDto } from "./dto";
 
 @MicroserviceController("world")
 @Controller()
-@UseFilters(WorldExceptionFilter)
+@UseFilters(new PassThroughRpcExceptionFilter("world"))
 export class AreasMicroserviceController {
   constructor(private readonly areasService: AreasService) {}
 

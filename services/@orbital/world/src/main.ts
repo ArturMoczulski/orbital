@@ -1,9 +1,9 @@
 import { NestFactory } from "@nestjs/core";
 import { MicroserviceOptions, Transport } from "@nestjs/microservices";
+import { PassThroughRpcExceptionFilter } from "@orbital/microservices";
 import * as dotenv from "dotenv";
 import "reflect-metadata";
 import { AppModule } from "./app.module";
-import { WorldExceptionFilter } from "./filters/world-exception.filter";
 
 async function bootstrap() {
   dotenv.config({ path: "../.env.local" });
@@ -12,7 +12,7 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule, { cors: true });
 
   // Apply global exception filter
-  app.useGlobalFilters(new WorldExceptionFilter());
+  app.useGlobalFilters(new PassThroughRpcExceptionFilter("world"));
 
   // Connect to NATS for microservice communication
   app.connectMicroservice<MicroserviceOptions>({
