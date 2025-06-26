@@ -1,19 +1,19 @@
 import { Module } from "@nestjs/common";
 import { ConfigModule, ConfigService } from "@nestjs/config";
-import { EventEmitterModule } from "@nestjs/event-emitter";
-import { EventEmitter2 } from "@nestjs/event-emitter";
-import { ClientsModule, Transport } from "@nestjs/microservices";
-import { DiscoveryModule, DiscoveryService } from "@nestjs/core";
-import { MetadataScanner } from "@nestjs/core";
-import { Reflector } from "@nestjs/core";
 import {
-  MicroserviceManagerModule,
-  MicroserviceManagerService,
-} from "@orbital/microservices";
-import { DatabaseModule } from "./database.module";
-import { CharactersModule } from "./characters/characters.module";
-import { WorldsModule } from "./worlds/worlds.module";
+  APP_FILTER,
+  DiscoveryModule,
+  DiscoveryService,
+  MetadataScanner,
+  Reflector,
+} from "@nestjs/core";
+import { EventEmitter2, EventEmitterModule } from "@nestjs/event-emitter";
+import { ClientsModule, Transport } from "@nestjs/microservices";
 import { AreasModule } from "./areas/areas.module";
+import { CharactersModule } from "./characters/characters.module";
+import { DatabaseModule } from "./database.module";
+import { WorldExceptionFilter } from "./filters/world-exception.filter";
+import { WorldsModule } from "./worlds/worlds.module";
 
 @Module({
   imports: [
@@ -44,6 +44,15 @@ import { AreasModule } from "./areas/areas.module";
     WorldsModule,
     AreasModule,
   ],
-  providers: [EventEmitter2, MetadataScanner, Reflector, DiscoveryService],
+  providers: [
+    EventEmitter2,
+    MetadataScanner,
+    Reflector,
+    DiscoveryService,
+    {
+      provide: APP_FILTER,
+      useClass: WorldExceptionFilter,
+    },
+  ],
 })
 export class AppModule {}

@@ -1,10 +1,10 @@
 import { NestFactory } from "@nestjs/core";
-import { AppModule } from "./app.module";
+import { DocumentBuilder, SwaggerModule } from "@nestjs/swagger";
+import { MicroserviceExceptionFilter } from "@orbital/microservices";
 import * as dotenv from "dotenv";
 import * as fs from "fs";
 import * as path from "path";
-import { SwaggerModule, DocumentBuilder } from "@nestjs/swagger";
-import { MicroserviceExceptionFilter } from "@orbital/microservices";
+import { AppModule } from "./app.module";
 import { RpcExceptionFilter } from "./filters/rpc-exception.filter";
 import { GlobalExceptionHandler } from "./global-exception.handler";
 
@@ -24,7 +24,14 @@ async function bootstrap() {
   });
 
   // Apply global exception filters
-  app.useGlobalFilters(new MicroserviceExceptionFilter());
+  app.useGlobalFilters(
+    new MicroserviceExceptionFilter(),
+    new RpcExceptionFilter()
+  );
+
+  console.log(
+    "MicroserviceExceptionFilter and RpcExceptionFilter registered globally in admin-gateway"
+  );
 
   // Setup Swagger
   const config = new DocumentBuilder()

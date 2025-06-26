@@ -30,7 +30,14 @@
     "start:prod": "turbo run dev --env=production --parallel",
     "debug:services": "yarn workspace @orbital/core build && yarn workspace @orbital/microservices build && yarn workspace @orbital/typegoose build && yarn workspace @scout/core build && concurrently \"yarn workspace @orbital/admin-gateway debug\" \"yarn workspace @orbital/world debug\" \"yarn workspace @orbital/phaser-maps dev\"",
     "debug:admin-gateway": "yarn workspace @orbital/core build && yarn workspace @orbital/microservices build && yarn workspace @orbital/typegoose build && yarn workspace @scout/core build && yarn workspace @orbital/admin-gateway debug",
-    "debug:world": "yarn workspace @orbital/core build && yarn workspace @orbital/microservices build && yarn workspace @orbital/typegoose build && yarn workspace @scout/core build && yarn workspace @orbital/world debug"
+    "debug:world": "yarn workspace @orbital/core build && yarn workspace @orbital/microservices build && yarn workspace @orbital/typegoose build && yarn workspace @scout/core build && yarn workspace @orbital/world debug",
+    "pm2:world:start": "cd services/@orbital/world && npx pm2 start ecosystem.config.js",
+    "pm2:world:stop": "npx pm2 stop world-service",
+    "pm2:world:restart": "npx pm2 restart world-service",
+    "pm2:world:logs": "npx pm2 logs world-service",
+    "pm2:world:status": "npx pm2 status world-service",
+    "pm2:world:delete": "npx pm2 delete world-service",
+    "dev:world": "yarn workspace @orbital/world dev"
   },
   "devDependencies": {
     "@babel/core": "^7.22.15",
@@ -45,6 +52,7 @@
     "jest-util": "^29.7.0",
     "node-plop": "^0.32.0",
     "plop": "^4.0.1",
+    "pm2": "^5.3.1",
     "rimraf": "^6.0.1",
     "ts-jest": "^29.1.0",
     "turbo": "^2.5.4",

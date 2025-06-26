@@ -1,9 +1,9 @@
 import { NestFactory } from "@nestjs/core";
 import { MicroserviceOptions, Transport } from "@nestjs/microservices";
-import { MicroserviceExceptionFilter } from "@orbital/microservices";
 import * as dotenv from "dotenv";
 import "reflect-metadata";
 import { AppModule } from "./app.module";
+import { WorldExceptionFilter } from "./filters/world-exception.filter";
 
 async function bootstrap() {
   dotenv.config({ path: "../.env.local" });
@@ -11,12 +11,15 @@ async function bootstrap() {
   // Create the NestJS application
   const app = await NestFactory.create(AppModule, { cors: true });
 
+  // Apply global exception filter
+  app.useGlobalFilters(new WorldExceptionFilter());
+
   // Connect to NATS for microservice communication
   app.connectMicroservice<MicroserviceOptions>({
     transport: Transport.NATS,
     options: {
       servers: [process.env.NATS_URL || "nats://localhost:4222"],
-      name: "world-service",
+      name: "world",
       // Enable NATS Service Framework for service discovery
       headers: {
         "nats.service.name": "world",
@@ -24,9 +27,6 @@ async function bootstrap() {
       },
     },
   });
-
-  // Apply global exception filter for RPC exceptions
-  app.useGlobalFilters(new MicroserviceExceptionFilter());
 
   // Start both HTTP and microservice interfaces
   await app.startAllMicroservices();

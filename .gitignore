@@ -16,3 +16,7 @@
 .DS_Store
 node_modules
 **/dist/
+
+# PM2 and application logs
+**/logs/
+*.log
