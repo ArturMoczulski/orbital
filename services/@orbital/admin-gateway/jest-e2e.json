@@ -10,6 +10,9 @@
   "transform": {
     "^.+\\.(t|j)s$": "ts-jest"
   },
+  "setupFilesAfterEnv": [
+    "<rootDir>/jest.setup.e2e.js"
+  ],
   "testTimeout": 10000,
   "forceExit": true
 }

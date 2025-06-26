@@ -1,12 +1,12 @@
-import { Test, TestingModule } from "@nestjs/testing";
 import { INestApplication } from "@nestjs/common";
-import request from "supertest";
-import { MongoMemoryServer } from "mongodb-memory-server";
 import { MongooseModule, getConnectionToken } from "@nestjs/mongoose";
+import { Test, TestingModule } from "@nestjs/testing";
+import { MongoMemoryServer } from "mongodb-memory-server";
 import { Connection } from "mongoose";
+import request from "supertest";
 import { AuthModule } from "../../src/auth/auth.module";
-import { UsersModule } from "../../src/users/users.module";
 import { User, UserSchema } from "../../src/users/schemas/user.schema";
+import { UsersModule } from "../../src/users/users.module";
 import { UsersService } from "../../src/users/users.service";
 
 describe("Auth E2E", () => {
@@ -14,6 +14,7 @@ describe("Auth E2E", () => {
   let mongoServer: MongoMemoryServer;
   let mongoConnection: Connection;
   let usersService: UsersService;
+  let authService: any; // Using any type to avoid importing AuthService
 
   beforeAll(async () => {
     mongoServer = await MongoMemoryServer.create();
@@ -38,9 +39,14 @@ describe("Auth E2E", () => {
   beforeEach(async () => {
     // Clear the database and create a user before each test
     await mongoConnection.collection("users").deleteMany({});
-    await usersService.create([
+    const createResult = await usersService.create([
       { username: "testuser", password: "testpassword" },
     ]);
+    console.log("User creation result:", JSON.stringify(createResult, null, 2));
+
+    // Verify the user was created correctly
+    const findResult = await usersService.findByUsername(["testuser"]);
+    console.log("User find result:", JSON.stringify(findResult, null, 2));
   });
 
   it("/api/auth/signup (POST)", async () => {
@@ -53,10 +59,14 @@ describe("Auth E2E", () => {
 
   it("/api/auth/login (POST)", async () => {
     // User is already created in beforeEach
-    await request(app.getHttpServer())
+    console.log("Attempting to login with testuser/testpassword");
+
+    const response = await request(app.getHttpServer())
       .post("/api/auth/login")
       .send({ username: "testuser", password: "testpassword" })
       .expect(200); // Assuming 200 OK for successful login
+
+    console.log("Login response:", response.body);
   });
 
   afterEach(async () => {
