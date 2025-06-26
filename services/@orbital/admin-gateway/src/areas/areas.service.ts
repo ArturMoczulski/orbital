@@ -1,5 +1,4 @@
 import { Injectable, Logger } from "@nestjs/common";
-import { AreaMap } from "@orbital/core/src/types/area-map";
 import { WorldMicroservice } from "@orbital/world-rpc";
 
 @Injectable()
