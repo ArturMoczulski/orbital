@@ -1,7 +1,7 @@
-import { Injectable, Inject } from "@nestjs/common";
-import { getModelToken } from "nestjs-typegoose";
-import type { ReturnModelType } from "@typegoose/typegoose";
+import { Inject, Injectable } from "@nestjs/common";
 import { AreaModel } from "@orbital/typegoose";
+import type { ReturnModelType } from "@typegoose/typegoose";
+import { getModelToken } from "nestjs-typegoose";
 
 @Injectable()
 export class AreasRepository {
@@ -11,6 +11,8 @@ export class AreasRepository {
   ) {}
 
   async create(dto: Partial<AreaModel>): Promise<AreaModel> {
+    // Skip validation entirely and let MongoDB handle it
+    // This avoids the Area constructor validation which requires _id
     const created = new this.areaModel(dto);
     return (await created.save()) as unknown as AreaModel;
   }

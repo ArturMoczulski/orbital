@@ -212,12 +212,27 @@ export function startServices(
     console.log(`Starting all services in ${modeName} mode...`);
     for (const service of services) {
       try {
-        const processName = getProcessName(service, mode);
-        execSync(
-          `cd ${service.path} && npx pm2 start ecosystem.config.js --only ${processName}`,
-          { stdio: "inherit", cwd: root }
-        );
-        console.log(`${service.fullName} started in ${modeName} mode.`);
+        // Special case for phaser-maps service
+        if (service.name === "phaser-maps") {
+          console.log(
+            `Starting ${service.fullName} directly with next dev in background...`
+          );
+          // Use nohup to run the process in the background
+          execSync(
+            `nohup bash -c 'cd ${service.path} && yarn run dotenv -e .env.local next dev > ${service.path}/logs/next.log 2>&1 &'`,
+            { stdio: "ignore", cwd: root }
+          );
+          console.log(
+            `${service.fullName} started in background. Check http://localhost:4052`
+          );
+        } else {
+          const processName = getProcessName(service, mode);
+          execSync(
+            `cd ${service.path} && npx pm2 start ecosystem.config.js --only ${processName}`,
+            { stdio: "inherit", cwd: root }
+          );
+          console.log(`${service.fullName} started in ${modeName} mode.`);
+        }
       } catch (error) {
         console.error(`Error starting ${service.fullName}:`, error);
       }
@@ -239,12 +254,27 @@ export function startServices(
 
     for (const service of matchingServices) {
       try {
-        const processName = getProcessName(service, mode);
-        execSync(
-          `cd ${service.path} && npx pm2 start ecosystem.config.js --only ${processName}`,
-          { stdio: "inherit", cwd: root }
-        );
-        console.log(`${service.fullName} started in ${modeName} mode.`);
+        // Special case for phaser-maps service
+        if (service.name === "phaser-maps") {
+          console.log(
+            `Starting ${service.fullName} directly with next dev in background...`
+          );
+          // Use nohup to run the process in the background
+          execSync(
+            `nohup bash -c 'cd ${service.path} && yarn run dotenv -e .env.local next dev > ${service.path}/logs/next.log 2>&1 &'`,
+            { stdio: "ignore", cwd: root }
+          );
+          console.log(
+            `${service.fullName} started in background. Check http://localhost:4052`
+          );
+        } else {
+          const processName = getProcessName(service, mode);
+          execSync(
+            `cd ${service.path} && npx pm2 start ecosystem.config.js --only ${processName}`,
+            { stdio: "inherit", cwd: root }
+          );
+          console.log(`${service.fullName} started in ${modeName} mode.`);
+        }
       } catch (error) {
         console.error(`Error starting ${service.fullName}:`, error);
       }

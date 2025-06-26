@@ -1,8 +1,8 @@
-import { randomUUID } from "crypto";
 import { faker } from "@faker-js/faker";
-import { BaseObject } from "./base-object";
 import { z } from "zod";
 import { ZodSchema } from "../decorators/zod-schema.decorator";
+import { generateUUID } from "../utils/data-generators";
+import { BaseObject } from "./base-object";
 
 /**
  * Interface for objects that have a unique identifier
@@ -28,7 +28,7 @@ export class IdentifiableObject
   public _id!: string;
 
   constructor(data?: IdentifiableObjectProps) {
-    const _id = data?._id ?? randomUUID();
+    const _id = data?._id ?? generateUUID();
     super({ ...data, _id });
     this._id = _id;
   }

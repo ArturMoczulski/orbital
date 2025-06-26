@@ -1,11 +1,11 @@
 import { z } from "zod";
-import { randomUUID } from "crypto";
+import { ZodSchema } from "../decorators/zod-schema.decorator";
+import { generateUUID } from "../utils/data-generators";
+import { AreaMapTiles } from "./area-map-tiles";
 import {
   IdentifiableObject,
   IdentifiableObjectProps,
 } from "./identifiable-object";
-import { ZodSchema } from "../decorators/zod-schema.decorator";
-import { AreaMapTiles } from "./area-map-tiles";
 
 /**
  * Zod schema for AreaMapGrid
@@ -91,7 +91,7 @@ export class AreaMap
   constructor(data: unknown) {
     // Validate input against schema
     const validated = AreaMapSchema.parse(data);
-    const _id = (validated as any)._id || randomUUID();
+    const _id = (validated as any)._id || generateUUID();
     super({ _id });
 
     // Assign validated properties

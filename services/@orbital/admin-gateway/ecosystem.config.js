@@ -7,7 +7,7 @@
 //
 // Process Management:
 // - Only one mode should run at a time (admin-gateway, admin-gateway-watch, or admin-gateway-debug)
-// - All modes use the same HTTP port (4054)
+// - All modes use the same HTTP port (4051)
 // - Each script stops any existing processes before starting
 module.exports = {
   apps: [
@@ -19,7 +19,7 @@ module.exports = {
       ignore_watch: ["node_modules", "logs"],
       env: {
         NODE_ENV: "production",
-        PORT: "4054",
+        PORT: "4051",
       },
       log_date_format: "YYYY-MM-DD HH:mm:ss",
       error_file: "logs/admin-gateway.log",
@@ -37,7 +37,7 @@ module.exports = {
       node_args: "--inspect=localhost:9230",
       env: {
         NODE_ENV: "development",
-        PORT: "4054",
+        PORT: "4051",
       },
       log_date_format: "YYYY-MM-DD HH:mm:ss",
       error_file: "logs/admin-gateway.log",
@@ -55,7 +55,7 @@ module.exports = {
       node_args: "--inspect-brk=localhost:9230",
       env: {
         NODE_ENV: "development",
-        PORT: "4054",
+        PORT: "4051",
       },
       log_date_format: "YYYY-MM-DD HH:mm:ss",
       error_file: "logs/admin-gateway.log",

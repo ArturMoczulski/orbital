@@ -86,9 +86,10 @@
         "parameters": [],
         "responses": {
           "200": {
-            "description": ""
+            "description": "Returns all areas"
           }
         },
+        "summary": "Get all areas",
         "tags": [
           "areas"
         ]
@@ -96,11 +97,22 @@
       "post": {
         "operationId": "AreasController_create",
         "parameters": [],
-        "responses": {
-          "201": {
-            "description": ""
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateAreaDto"
+              }
+            }
           }
         },
+        "responses": {
+          "201": {
+            "description": "The area has been successfully created."
+          }
+        },
+        "summary": "Create a new area",
         "tags": [
           "areas"
         ]
@@ -114,6 +126,7 @@
             "name": "_id",
             "required": true,
             "in": "path",
+            "description": "The ID of the area to retrieve",
             "schema": {
               "type": "string"
             }
@@ -121,9 +134,13 @@
         ],
         "responses": {
           "200": {
-            "description": ""
+            "description": "Returns the area with the specified ID"
+          },
+          "404": {
+            "description": "Area not found"
           }
         },
+        "summary": "Get area by ID",
         "tags": [
           "areas"
         ]
@@ -135,16 +152,28 @@
             "name": "_id",
             "required": true,
             "in": "path",
+            "description": "The ID of the area to update",
             "schema": {
               "type": "string"
             }
           }
         ],
-        "responses": {
-          "200": {
-            "description": ""
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateAreaDto"
+              }
+            }
           }
         },
+        "responses": {
+          "200": {
+            "description": "The area has been successfully updated."
+          }
+        },
+        "summary": "Update an existing area",
         "tags": [
           "areas"
         ]
@@ -156,6 +185,7 @@
             "name": "_id",
             "required": true,
             "in": "path",
+            "description": "The ID of the area to delete",
             "schema": {
               "type": "string"
             }
@@ -163,9 +193,13 @@
         ],
         "responses": {
           "200": {
-            "description": ""
+            "description": "The area has been successfully deleted"
+          },
+          "404": {
+            "description": "Area not found"
           }
         },
+        "summary": "Delete an area",
         "tags": [
           "areas"
         ]
@@ -179,6 +213,7 @@
             "name": "_id",
             "required": true,
             "in": "path",
+            "description": "The ID of the area to get the map for",
             "schema": {
               "type": "string"
             }
@@ -186,9 +221,10 @@
         ],
         "responses": {
           "200": {
-            "description": ""
+            "description": "Returns the map for the specified area"
           }
         },
+        "summary": "Get map for an area",
         "tags": [
           "areas"
         ]
@@ -213,6 +249,179 @@
   ],
   "servers": [],
   "components": {
-    "schemas": {}
+    "schemas": {
+      "CreateAreaDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Descriptive name of the area"
+          },
+          "worldId": {
+            "type": "string",
+            "description": "Identifier of the world this area belongs to"
+          },
+          "parentId": {
+            "type": "object",
+            "description": "Identifier of the parent area, if any"
+          },
+          "position": {
+            "type": "object",
+            "description": "Central position of the area in 3D space",
+            "properties": {
+              "x": {
+                "type": "number",
+                "description": "X coordinate of the position, in meters from origin"
+              },
+              "y": {
+                "type": "number",
+                "description": "Y coordinate of the position, in meters from origin"
+              },
+              "z": {
+                "type": "number",
+                "description": "Z coordinate (height), in meters above ground"
+              }
+            }
+          },
+          "areaMap": {
+            "type": "object",
+            "description": "Map representation of this area",
+            "properties": {
+              "width": {
+                "type": "number",
+                "description": "Width of the map in cells"
+              },
+              "height": {
+                "type": "number",
+                "description": "Height of the map in cells"
+              },
+              "grid": {
+                "type": "array",
+                "description": "2D grid of map tiles",
+                "items": {
+                  "type": "array",
+                  "items": {
+                    "type": "number"
+                  }
+                }
+              }
+            }
+          },
+          "tags": {
+            "type": "array",
+            "description": "Tags for categorizing the area",
+            "items": {
+              "type": "string"
+            }
+          },
+          "description": {
+            "type": "string",
+            "description": "Detailed description of the area"
+          },
+          "landmarks": {
+            "type": "array",
+            "description": "Notable landmarks or features in this area",
+            "items": {
+              "type": "string"
+            }
+          },
+          "connections": {
+            "type": "array",
+            "description": "Names of other areas this area connects to",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "name",
+          "worldId"
+        ]
+      },
+      "UpdateAreaDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Descriptive name of the area"
+          },
+          "worldId": {
+            "type": "string",
+            "description": "Identifier of the world this area belongs to"
+          },
+          "parentId": {
+            "type": "object",
+            "description": "Identifier of the parent area, if any"
+          },
+          "position": {
+            "type": "object",
+            "description": "Central position of the area in 3D space",
+            "properties": {
+              "x": {
+                "type": "number",
+                "description": "X coordinate of the position, in meters from origin"
+              },
+              "y": {
+                "type": "number",
+                "description": "Y coordinate of the position, in meters from origin"
+              },
+              "z": {
+                "type": "number",
+                "description": "Z coordinate (height), in meters above ground"
+              }
+            }
+          },
+          "areaMap": {
+            "type": "object",
+            "description": "Map representation of this area",
+            "properties": {
+              "width": {
+                "type": "number",
+                "description": "Width of the map in cells"
+              },
+              "height": {
+                "type": "number",
+                "description": "Height of the map in cells"
+              },
+              "grid": {
+                "type": "array",
+                "description": "2D grid of map tiles",
+                "items": {
+                  "type": "array",
+                  "items": {
+                    "type": "number"
+                  }
+                }
+              }
+            }
+          },
+          "tags": {
+            "type": "array",
+            "description": "Tags for categorizing the area",
+            "items": {
+              "type": "string"
+            }
+          },
+          "description": {
+            "type": "string",
+            "description": "Detailed description of the area"
+          },
+          "landmarks": {
+            "type": "array",
+            "description": "Notable landmarks or features in this area",
+            "items": {
+              "type": "string"
+            }
+          },
+          "connections": {
+            "type": "array",
+            "description": "Names of other areas this area connects to",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    }
   }
 }

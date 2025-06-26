@@ -5,8 +5,8 @@
   "packageManager": "yarn@4.9.2",
   "scripts": {
     "predev": "yarn generate:api",
-    "dev": "yarn stop && mkdir -p logs && npx pm2 start ecosystem.config.js --only phaser-maps-watch",
-    "watch": "yarn dev",
+    "dev": "yarn run dotenv -e .env.local next dev",
+    "watch": "yarn run dotenv -e .env.local next dev",
     "dev:next": "yarn run dotenv -e .env.local next dev",
     "prebuild": "yarn generate:api",
     "build": "next build",
@@ -42,6 +42,7 @@
     "@orbital/react-ui": "workspace:*",
     "@reduxjs/toolkit": "^2.8.2",
     "antd": "^5.26.2",
+    "fantasy-name-generator": "^2.0.0",
     "inversify": "6.0.1",
     "next": "^14.0.0",
     "next-transpile-modules": "^10.0.1",

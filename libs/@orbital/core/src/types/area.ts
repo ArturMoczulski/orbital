@@ -1,13 +1,18 @@
-import { z } from "zod";
 import { faker } from "@faker-js/faker";
-import { randomUUID } from "crypto";
+import { z } from "zod";
+import { ZodSchema } from "../decorators/zod-schema.decorator";
+import {
+  generateFantasyAreaName,
+  generateUUID,
+} from "../utils/data-generators";
+import { AreaMap, AreaMapSchema } from "./area-map";
 import {
   IdentifiableObject,
   IdentifiableObjectProps,
 } from "./identifiable-object";
 import { Position, PositionSchema } from "./position";
-import { ZodSchema } from "../decorators/zod-schema.decorator";
-import { AreaMap, AreaMapSchema } from "./area-map";
+
+// Use the generateUUID function from data-generators.ts
 
 /**
  * Represents a named area with a position.
@@ -66,9 +71,16 @@ export class Area
 
   /** Create a fake Area instance with randomized data */
   static mock(overrides: Partial<AreaProps> = {}): Area {
+    // No need to select a style explicitly as it's random by default
     const base: Partial<AreaProps> = {
       parentId: faker.string.uuid(),
-      name: faker.lorem.word(),
+      // Generate a rich fantasy name with the enhanced generator
+      name: generateFantasyAreaName({
+        // Style is random by default
+        includeAdjective: Math.random() > 0.3, // 70% chance to include an adjective
+        includeLocationType: Math.random() > 0.1, // 90% chance to include a location type
+        allowCompoundNames: Math.random() > 0.7, // 30% chance for compound names
+      }),
       // Position is optional, but include it in mock by default unless explicitly set to undefined
       position: "position" in overrides ? overrides.position : Position.mock(),
       areaMap:
@@ -89,7 +101,7 @@ export class Area
 
     // Create a clean object with properly instantiated properties
     const cleanData = {
-      _id: (validated as any)._id || randomUUID(),
+      _id: (validated as any)._id || generateUUID(),
     };
 
     // Pass the clean data to the parent constructor

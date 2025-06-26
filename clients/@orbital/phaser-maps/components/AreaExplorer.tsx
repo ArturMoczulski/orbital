@@ -52,12 +52,26 @@ export default function AreaExplorer({ onSelect }: AreaExplorerProps) {
         // position is now optional, so we don't need to provide a default
       };
 
+      // Add detailed logging for area creation
       console.log("Creating new area:", areaData);
+      console.log("Area name:", areaData.name);
+      console.log("Area worldId:", areaData.worldId);
 
-      // Call the create mutation and unwrap to catch HTTP errors
-      await createArea(areaData).unwrap();
+      // For comparison, log what an Area.mock() would generate
+      try {
+        const mockArea = Area.mock();
+        console.log("For comparison, Area.mock() generated:", {
+          name: mockArea.name,
+          worldId: mockArea.worldId,
+        });
+      } catch (mockError) {
+        console.error("Error generating mock area:", mockError);
+      }
 
-      console.log("Area created successfully");
+      // Wrap the data in createAreaDto as expected by the API
+      const response = await createArea({ createAreaDto: areaData }).unwrap();
+
+      console.log("Area created successfully:", response);
       // Notify user of success
       alert("Area created successfully");
     } catch (error: any) {
