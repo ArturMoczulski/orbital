@@ -1,18 +1,12 @@
-import React, { useState, useEffect, useMemo } from "react";
 import { Area, AreaSchema } from "@orbital/core/src/types/area";
 import { AreaMap } from "@orbital/core/src/types/area-map";
+import { ObjectExplorer } from "@orbital/react-ui";
+import { useEffect, useState } from "react";
 import {
+  useAreasControllerCreateMutation,
   useAreasControllerGetAllQuery,
   useAreasControllerGetMapQuery,
-  useAreasControllerCreateMutation,
 } from "../services/adminApi.generated";
-import { ObjectExplorer, QueryResult } from "@orbital/react-ui";
-
-// Define an interface that extends Area but adds the id property
-interface AreaWithId extends Omit<Area, "_id"> {
-  id: string;
-  _id?: string;
-}
 
 interface AreaExplorerProps {
   onSelect: (areaId: string, areaMap: AreaMap) => void;
@@ -45,23 +39,7 @@ export default function AreaExplorer({ onSelect }: AreaExplorerProps) {
   }, [selectedMapId, mapData, onSelect]);
 
   // Get the areas data
-  const areasQueryResult = useAreasControllerGetAllQuery();
-
-  // Transform the areas to include an id property that maps to _id
-  const adaptedAreas = useMemo(() => {
-    if (!areasQueryResult.data) return [];
-
-    return (areasQueryResult.data as Area[]).map((area) => ({
-      ...area,
-      id: area._id, // Add id property that maps to _id
-    })) as AreaWithId[];
-  }, [areasQueryResult.data]);
-
-  // Create an adapted query result
-  const areasQuery = {
-    ...areasQueryResult,
-    data: adaptedAreas,
-  } as unknown as QueryResult<AreaWithId>;
+  const areasQuery = useAreasControllerGetAllQuery();
 
   // Handle adding a new area
   const handleAddArea = async (formData: any) => {
@@ -103,5 +81,5 @@ export default function AreaExplorer({ onSelect }: AreaExplorerProps) {
   };
 
   // Use type assertion to tell TypeScript that ObjectExplorer accepts these props
-  return <ObjectExplorer<AreaWithId> {...(explorerProps as any)} />;
+  return <ObjectExplorer<Area> {...(explorerProps as any)} />;
 }

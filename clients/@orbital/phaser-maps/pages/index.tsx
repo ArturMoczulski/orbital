@@ -1,10 +1,10 @@
 "use client";
-import React, { useState } from "react";
-import dynamic from "next/dynamic";
 import Box from "@mui/material/Box";
+import type { AreaMap } from "@orbital/core/src/types/area-map";
+import dynamic from "next/dynamic";
+import { useState } from "react";
 import AreaExplorer from "../components/AreaExplorer";
 import { useAreasControllerGetByIdQuery } from "../services/adminApi.generated";
-import type { AreaMap } from "@orbital/core/src/types/area-map";
 
 // Dynamically load PhaserClient without SSR
 const PhaserClient = dynamic(() => import("../components/PhaserClient"), {
@@ -16,8 +16,8 @@ export default function ExplorerPage() {
   const [selectedAreaMap, setSelectedAreaMap] = useState<AreaMap | null>(null);
 
   // Handle area selection with map
-  const handleSelectArea = (id: string, areaMap: AreaMap) => {
-    setSelectedAreaId(id);
+  const handleSelectArea = (_id: string, areaMap: AreaMap) => {
+    setSelectedAreaId(_id);
     setSelectedAreaMap(areaMap);
   };
 
@@ -26,7 +26,7 @@ export default function ExplorerPage() {
     isLoading,
     error,
   } = useAreasControllerGetByIdQuery(
-    { id: selectedAreaId! },
+    { _id: selectedAreaId! },
     { skip: !selectedAreaId }
   );
 
