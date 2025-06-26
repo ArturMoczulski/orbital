@@ -29,7 +29,7 @@ export class AreasService {
   async update(_id: string, body: any): Promise<any> {
     return this.worldMicroservice.areas.updateArea({
       _id,
-      updateData: body,
+      ...body,
     });
   }
 

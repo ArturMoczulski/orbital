@@ -18,10 +18,7 @@ interface AreasController {
   createArea(createAreaData: Partial<Area>): Promise<AreaModel | null>;
   getAllAreas(): Promise<AreaModel[] | null>;
   getArea(_id: string): Promise<AreaModel | null>;
-  updateArea(payload: {
-    _id: string;
-    updateData: Partial<Area>;
-  }): Promise<AreaModel | null>;
+  updateArea(updateAreaData: Partial<Area>): Promise<AreaModel | null>;
   deleteArea(_id: string): Promise<AreaModel | null>;
   getAreasByWorldId(worldId: string): Promise<AreaModel[] | null>;
   getAreasByParentId(parentId: string | null): Promise<AreaModel[] | null>;
@@ -50,11 +47,8 @@ export class WorldMicroservice extends Microservice {
       getArea: async (_id: string) => {
         return this.request<AreaModel | null>('world.AreasMicroserviceController.getArea', _id);
       },
-      updateArea: async (payload: {
-    _id: string;
-    updateData: Partial<Area>;
-  }) => {
-        return this.request<AreaModel | null>('world.AreasMicroserviceController.updateArea', payload);
+      updateArea: async (updateAreaData: Partial<Area>) => {
+        return this.request<AreaModel | null>('world.AreasMicroserviceController.updateArea', updateAreaData);
       },
       deleteArea: async (_id: string) => {
         return this.request<AreaModel | null>('world.AreasMicroserviceController.deleteArea', _id);

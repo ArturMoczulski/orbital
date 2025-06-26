@@ -222,7 +222,7 @@ describe("AreasService", () => {
       expect(mockWorldMicroservice.areas.updateArea).toHaveBeenCalledTimes(1);
       expect(mockWorldMicroservice.areas.updateArea).toHaveBeenCalledWith({
         _id: areaId,
-        updateDto: updateAreaDto,
+        ...updateAreaDto,
       });
     });
 

@@ -30,11 +30,9 @@ export class AreasMicroserviceController {
   }
 
   @MessagePattern()
-  async updateArea(payload: {
-    _id: string;
-    updateData: Partial<Area>;
-  }): Promise<AreaModel | null> {
-    return this.areasService.updateArea(payload._id, payload.updateData);
+  async updateArea(updateAreaData: Partial<Area>): Promise<AreaModel | null> {
+    const { _id, ...updateData } = updateAreaData;
+    return this.areasService.updateArea(_id as string, updateData);
   }
 
   @MessagePattern()
