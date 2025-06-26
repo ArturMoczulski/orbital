@@ -15,6 +15,9 @@ const withTM = require("next-transpile-modules")([
 /** @type {import('next').NextConfig} */
 const nextConfig = withTM({
   reactStrictMode: true,
+  pageExtensions: ["tsx", "ts", "jsx", "js"].filter(
+    (ext) => !ext.includes("cy.")
+  ),
   webpack(config, { dev }) {
     config.resolve.alias = {
       ...(config.resolve.alias || {}),
@@ -28,7 +31,7 @@ const nextConfig = withTM({
         __dirname,
         dev
           ? "../../../libs/@orbital/react-ui/src"
-          : "../../../libs/@orbital/react-ui/dist"
+          : "../../../libs/@orbital/react-ui/dist/src"
       ),
       // force every import to hit the *one* hoisted copy
       "@emotion/react": path.resolve(
