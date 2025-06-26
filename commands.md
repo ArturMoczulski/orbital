@@ -76,15 +76,12 @@ yarn orb monorepo test
 
 ## PM2 Process Management
 
-The monorepo includes PM2 integration for managing services and clients. These commands provide Docker Compose-like functionality for starting, stopping, and managing processes.
+The monorepo includes PM2 integration for managing services and clients through the Orbital Orb CLI. These commands provide Docker Compose-like functionality for starting, stopping, and managing processes.
 
-### Basic PM2 Commands
+### Orb CLI PM2 Commands
 
-- **start**: `yarn start`
-  Starts all services in production mode.
-
-- **dev**: `yarn dev` or `yarn orb dev [service1 service2 ...]`
-  Starts services in development mode (watch mode by default). If no services are specified, all services are started.
+- **dev**: `yarn orb dev [service1 service2 ...]`
+  Starts services in development mode (watch mode by default).
   Examples:
 
   - `yarn orb dev world admin-gateway` - Start specific services
@@ -92,18 +89,15 @@ The monorepo includes PM2 integration for managing services and clients. These c
   - `yarn orb dev --prod phaser-maps` - Start phaser-maps in production mode
   - `yarn orb dev --list` - List all available services
 
-- **watch**: `yarn watch` or `yarn orb watch [service1 service2 ...]`
-  Starts services in watch mode. If no services are specified, all services are started.
+- **watch**: `yarn orb watch [service1 service2 ...]`
+  Starts services in watch mode (alias for `dev`).
   Examples:
 
   - `yarn orb watch world admin-gateway` - Start specific services
   - `yarn orb watch` - Start all services
   - `yarn orb watch --list` - List all available services
 
-- **debug**: `yarn debug`
-  Starts all services in debug mode.
-
-- **logs**: `yarn logs` or `yarn orb logs [service1 service2 ...]`
+- **logs**: `yarn orb logs [service1 service2 ...]`
   Views logs for specified services.
   Examples:
 
@@ -111,7 +105,7 @@ The monorepo includes PM2 integration for managing services and clients. These c
   - `yarn orb logs -w` or `yarn orb logs --watch` - Stream logs continuously
   - `yarn orb logs --list` - List all available services
 
-- **restart**: `yarn restart` or `yarn orb restart [service1 service2 ...]`
+- **restart**: `yarn orb restart [service1 service2 ...]`
   Restarts specified services. If no services are specified, all services are restarted.
   Examples:
 
@@ -119,7 +113,7 @@ The monorepo includes PM2 integration for managing services and clients. These c
   - `yarn orb restart --watch world` - Restart only watch mode for world service
   - `yarn orb restart --list` - List all available services
 
-- **down**: `yarn down` or `yarn orb down [service1 service2 ...]`
+- **down**: `yarn orb down [service1 service2 ...]`
   Stops and deletes specified services. If no services are specified, all services are stopped and deleted.
   Examples:
 
