@@ -1,57 +1,30 @@
-import { Injectable, Inject } from "@nestjs/common";
-import { ClientProxy } from "@nestjs/microservices";
-import { Microservice } from "@orbital/microservices";
-import { AreaModel } from "@orbital/typegoose";
-import { Position } from "@orbital/core";
+import { Injectable, Inject } from '@nestjs/common';
+import { ClientProxy } from '@nestjs/microservices';
+import { Microservice } from '@orbital/microservices';
+import { AreaModel } from '@orbital/typegoose';
+import { Area } from '@orbital/core';
 
 /**
- * DTO Type Definitions
+ * Type Definitions
  * These are included directly in the proxy file to make it self-contained
  */
 
-/**
- * Create Area DTO interface - for creating a new area
- */
-export interface CreateAreaDto {
-  name: string;
-  description: string;
-  position: Position;
-  worldId: string;
-  parentId?: string | null;
-  landmarks?: string[];
-  connections?: string[];
-  tags?: string[];
-}
-
-/**
- * Update Area DTO interface - for updating an existing area
- */
-export interface UpdateAreaDto {
-  name?: string;
-  description?: string;
-  position?: Position;
-  worldId?: string;
-  parentId?: string | null;
-  landmarks?: string[];
-  connections?: string[];
-  tags?: string[];
-}
 
 /**
  * Controller interfaces
  */
 
 interface AreasController {
-  createArea(createAreaDto: CreateAreaDto): Promise<AreaModel | null>;
+  createArea(createAreaData: Partial<Area>): Promise<AreaModel | null>;
   getAllAreas(): Promise<AreaModel[] | null>;
   getArea(_id: string): Promise<AreaModel | null>;
   updateArea(payload: {
     _id: string;
-    updateDto: UpdateAreaDto;
+    updateData: Partial<Area>;
   }): Promise<AreaModel | null>;
   deleteArea(_id: string): Promise<AreaModel | null>;
   getAreasByWorldId(worldId: string): Promise<AreaModel[] | null>;
-  getAreasByParentId(parentId: string): Promise<AreaModel[] | null>;
+  getAreasByParentId(parentId: string | null): Promise<AreaModel[] | null>;
   getAreasByTags(tags: string[]): Promise<AreaModel[] | null>;
 }
 
@@ -62,63 +35,40 @@ export class WorldMicroservice extends Microservice {
    */
   public readonly areas: AreasController;
 
-  constructor(@Inject("NATS_CLIENT") client: ClientProxy) {
-    super(client, "world");
+  constructor(@Inject('NATS_CLIENT') client: ClientProxy) {
+    super(client, 'world');
 
     // Initialize areas controller
     this.areas = {
-      createArea: async (createAreaDto: CreateAreaDto) => {
-        return this.request<AreaModel>(
-          "world.AreasMicroserviceController.createArea",
-          createAreaDto
-        );
+      createArea: async (createAreaData: Partial<Area>) => {
+        return this.request<AreaModel>('world.AreasMicroserviceController.createArea', createAreaData);
       },
       getAllAreas: async () => {
-        const result = await this.request<AreaModel[]>(
-          "world.AreasMicroserviceController.getAllAreas"
-        );
+        const result = await this.request<AreaModel[]>('world.AreasMicroserviceController.getAllAreas');
         return result || [];
       },
       getArea: async (_id: string) => {
-        return this.request<AreaModel | null>(
-          "world.AreasMicroserviceController.getArea",
-          _id
-        );
+        return this.request<AreaModel | null>('world.AreasMicroserviceController.getArea', _id);
       },
       updateArea: async (payload: {
-        _id: string;
-        updateDto: UpdateAreaDto;
-      }) => {
-        return this.request<AreaModel | null>(
-          "world.AreasMicroserviceController.updateArea",
-          payload
-        );
+    _id: string;
+    updateData: Partial<Area>;
+  }) => {
+        return this.request<AreaModel | null>('world.AreasMicroserviceController.updateArea', payload);
       },
       deleteArea: async (_id: string) => {
-        return this.request<AreaModel | null>(
-          "world.AreasMicroserviceController.deleteArea",
-          _id
-        );
+        return this.request<AreaModel | null>('world.AreasMicroserviceController.deleteArea', _id);
       },
       getAreasByWorldId: async (worldId: string) => {
-        const result = await this.request<AreaModel[]>(
-          "world.AreasMicroserviceController.getAreasByWorldId",
-          worldId
-        );
+        const result = await this.request<AreaModel[]>('world.AreasMicroserviceController.getAreasByWorldId', worldId);
         return result || [];
       },
-      getAreasByParentId: async (parentId: string) => {
-        const result = await this.request<AreaModel[]>(
-          "world.AreasMicroserviceController.getAreasByParentId",
-          parentId
-        );
+      getAreasByParentId: async (parentId: string | null) => {
+        const result = await this.request<AreaModel[]>('world.AreasMicroserviceController.getAreasByParentId', parentId);
         return result || [];
       },
       getAreasByTags: async (tags: string[]) => {
-        const result = await this.request<AreaModel[]>(
-          "world.AreasMicroserviceController.getAreasByTags",
-          tags
-        );
+        const result = await this.request<AreaModel[]>('world.AreasMicroserviceController.getAreasByTags', tags);
         return result || [];
       },
     };

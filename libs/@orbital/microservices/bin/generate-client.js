@@ -11,7 +11,8 @@
  *     [--title "Service Name"] \
  *     [--version "1.0.0"] \
  *     [--service "serviceName"] \
- *     [--nats-client-token "NATS_CLIENT"]
+ *     [--nats-client-token "NATS_CLIENT"] \
+ *     [--src-dir "src"]
  *
  * All parameters have sensible defaults based on the current package:
  * - entry: dist/app.module.js
@@ -20,6 +21,7 @@
  * - title: {Package Name}
  * - service: {package name without owner}
  * - nats-client-token: "NATS_CLIENT"
+ * - src-dir: "src"
  */
 const { program } = require("commander");
 const path = require("path");
@@ -76,6 +78,7 @@ const defaultSpecOut = `../../../libs/${rpcPackagePath}/asyncapi.json`;
 const defaultProxyOut = `../../../libs/${rpcPackagePath}/src`;
 const defaultTitle = packageInfo.packageName;
 const defaultService = packageInfo.serviceName;
+const defaultSrcDir = "src";
 
 program
   .description("Generate AsyncAPI spec and proxy client from a NestJS service")
@@ -102,6 +105,11 @@ program
     "NATS client injection token",
     "NATS_CLIENT"
   )
+  .option(
+    "--src-dir <dir>",
+    "Source directory to analyze controller files",
+    defaultSrcDir
+  )
   .parse(process.argv);
 
 const opts = program.opts();
@@ -114,6 +122,7 @@ console.log(`- Title: ${opts.title}`);
 console.log(`- Version: ${opts.version}`);
 console.log(`- Service: ${opts.service}`);
 console.log(`- NATS Client Token: ${opts.natsClientToken}`);
+console.log(`- Source Directory: ${opts.srcDir}`);
 
 // Resolve paths to the generate-spec.js and generate-proxy.js scripts
 const generateSpecPath = path.resolve(__dirname, "generate-spec.js");
@@ -173,6 +182,8 @@ const proxyResult = spawnSync(
     opts.service,
     "--nats-client-token",
     opts.natsClientToken,
+    "--src-dir",
+    opts.srcDir,
   ],
   { stdio: "inherit" }
 );

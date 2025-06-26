@@ -1,4 +1,5 @@
 import { Controller, UseFilters } from "@nestjs/common";
+import { Area } from "@orbital/core";
 import {
   MessagePattern,
   MicroserviceController,
@@ -6,7 +7,6 @@ import {
 } from "@orbital/microservices";
 import type { AreaModel } from "@orbital/typegoose";
 import { AreasService } from "./areas.service";
-import { CreateAreaDto, UpdateAreaDto } from "./dto";
 
 @MicroserviceController("world")
 @Controller()
@@ -15,8 +15,8 @@ export class AreasMicroserviceController {
   constructor(private readonly areasService: AreasService) {}
 
   @MessagePattern()
-  async createArea(createAreaDto: CreateAreaDto): Promise<AreaModel> {
-    return this.areasService.createArea(createAreaDto);
+  async createArea(createAreaData: Partial<Area>): Promise<AreaModel> {
+    return this.areasService.createArea(createAreaData);
   }
 
   @MessagePattern()
@@ -32,9 +32,9 @@ export class AreasMicroserviceController {
   @MessagePattern()
   async updateArea(payload: {
     _id: string;
-    updateDto: UpdateAreaDto;
+    updateData: Partial<Area>;
   }): Promise<AreaModel | null> {
-    return this.areasService.updateArea(payload._id, payload.updateDto);
+    return this.areasService.updateArea(payload._id, payload.updateData);
   }
 
   @MessagePattern()

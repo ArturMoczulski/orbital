@@ -3,6 +3,7 @@
 const fs = require("fs");
 const path = require("path");
 const { program } = require("commander");
+const ts = require("typescript");
 
 program
   .description("Generate proxy services from AsyncAPI spec")
@@ -13,6 +14,11 @@ program
     "--nats-client-token <token>",
     "NATS client injection token",
     "NATS_CLIENT"
+  )
+  .option(
+    "--src-dir <dir>",
+    "Source directory to analyze controller files",
+    "src"
   )
   .parse(process.argv);
 
@@ -82,9 +88,185 @@ Object.keys(controllers).forEach((controllerName) => {
   });
 });
 
+// Function to find controller source files
+function findControllerFiles(serviceName, controllerNames) {
+  const srcDir = path.resolve(process.cwd(), options.srcDir);
+  const controllerFiles = {};
+  const controllerPattern = /\.controller\.ts$/;
+  const microserviceControllerPattern = /\.microservice\.controller\.ts$/;
+
+  // Function to recursively search for controller files
+  function searchDir(dir) {
+    const files = fs.readdirSync(dir);
+
+    for (const file of files) {
+      const filePath = path.join(dir, file);
+      const stat = fs.statSync(filePath);
+
+      if (stat.isDirectory()) {
+        searchDir(filePath);
+      } else if (
+        (controllerPattern.test(file) ||
+          microserviceControllerPattern.test(file)) &&
+        controllerNames.some((name) =>
+          file.includes(
+            name
+              .replace(/Controller$|MicroserviceController$/, "")
+              .toLowerCase()
+          )
+        )
+      ) {
+        const content = fs.readFileSync(filePath, "utf8");
+        const controllerName = controllerNames.find((name) =>
+          file.includes(
+            name
+              .replace(/Controller$|MicroserviceController$/, "")
+              .toLowerCase()
+          )
+        );
+
+        if (controllerName) {
+          controllerFiles[controllerName] = {
+            path: filePath,
+            content,
+          };
+        }
+      }
+    }
+  }
+
+  searchDir(srcDir);
+  return controllerFiles;
+}
+
+// Function to parse TypeScript source and extract method parameter types
+function extractMethodTypes(sourceContent) {
+  const sourceFile = ts.createSourceFile(
+    "temp.ts",
+    sourceContent,
+    ts.ScriptTarget.Latest,
+    true
+  );
+
+  const methodTypes = {};
+  const imports = [];
+
+  // Function to visit nodes and extract method information
+  function visit(node) {
+    // Extract imports
+    if (ts.isImportDeclaration(node)) {
+      const importText = node.getText(sourceFile);
+      imports.push(importText);
+    }
+
+    // Extract method declarations
+    if (ts.isMethodDeclaration(node) && node.name) {
+      const methodName = node.name.getText(sourceFile);
+
+      // Extract parameter types
+      const parameters = [];
+      if (node.parameters) {
+        node.parameters.forEach((param) => {
+          const paramName = param.name.getText(sourceFile);
+          let paramType = "any";
+
+          if (param.type) {
+            paramType = param.type.getText(sourceFile);
+          }
+
+          parameters.push({
+            name: paramName,
+            type: paramType,
+          });
+        });
+      }
+
+      // Extract return type
+      let returnType = "any";
+      if (node.type) {
+        returnType = node.type.getText(sourceFile);
+      }
+
+      methodTypes[methodName] = {
+        parameters,
+        returnType,
+      };
+    }
+
+    ts.forEachChild(node, visit);
+  }
+
+  visit(sourceFile);
+
+  return { methodTypes, imports };
+}
+
+// Function to analyze imports and determine external vs internal types
+function analyzeImports(imports) {
+  const externalImports = new Map();
+  const internalImports = new Set();
+
+  imports.forEach((importStr) => {
+    // Extract the module path
+    const match = importStr.match(/from\s+['"]([^'"]+)['"]/);
+    if (match) {
+      const modulePath = match[1];
+
+      // Check if it's an external module (starts with @)
+      if (modulePath.startsWith("@")) {
+        // Extract imported types
+        const typesMatch = importStr.match(
+          /import\s+(?:{([^}]+)}|type\s+{([^}]+)})/
+        );
+        if (typesMatch) {
+          const types = (typesMatch[1] || typesMatch[2])
+            .split(",")
+            .map((t) => t.trim());
+
+          // Store by module path to avoid duplicates
+          if (!externalImports.has(modulePath)) {
+            externalImports.set(modulePath, new Set());
+          }
+
+          types.forEach((type) => {
+            // Handle "as" aliases
+            const typeName = type.split(" as ")[0].trim();
+            externalImports.get(modulePath).add(typeName);
+          });
+        }
+      } else {
+        internalImports.add(importStr);
+      }
+    }
+  });
+
+  return { externalImports, internalImports };
+}
+
 // Generate a microservice file for each service
 Object.keys(serviceControllers).forEach((serviceName) => {
   const serviceControllersArray = serviceControllers[serviceName];
+
+  // Find controller source files
+  const controllerNames = serviceControllersArray.map(
+    (controller) => controller.name
+  );
+  const controllerFiles = findControllerFiles(serviceName, controllerNames);
+
+  // Extract method types and imports from controller files
+  const controllerMethodTypes = {};
+  const allImports = [];
+
+  Object.keys(controllerFiles).forEach((controllerName) => {
+    const { methodTypes, imports } = extractMethodTypes(
+      controllerFiles[controllerName].content
+    );
+    controllerMethodTypes[controllerName] = methodTypes;
+    allImports.push(...imports);
+  });
+
+  // Analyze imports to determine external vs internal types
+  const { externalImports, internalImports } = analyzeImports(allImports);
 
   // Collect imports needed
   const imports = new Set([
@@ -93,47 +275,22 @@ Object.keys(serviceControllers).forEach((serviceName) => {
     `import { Microservice } from '@orbital/microservices';`,
   ]);
 
-  // Map controller names to their model types
-  const controllerModelMap = new Map();
+  // Add external imports (avoiding duplicates)
   const modelTypes = new Set();
-  const dtoTypes = new Set();
   const coreTypes = new Set();
 
-  // First pass: group channels by controller and determine model types
-  Object.keys(asyncApiSpec.channels).forEach((channelName) => {
-    const parts = channelName.split(".");
-    if (parts.length !== 3) return;
-
-    const serviceName = parts[0];
-    const controllerName = parts[1];
-    const methodName = parts[2];
-
-    // Extract controller base name (without Controller suffix)
-    const controllerBaseName = controllerName.replace(
-      /Controller$|MicroserviceController$/,
-      ""
-    );
-
-    // Determine the entity name from the controller name
-    // e.g., "AreasMicroserviceController" -> "Area"
-    const entityName = controllerBaseName.replace(/s$/, "");
-
-    // Store the model type for this controller
-    controllerModelMap.set(controllerName, `${entityName}Model`);
-
-    // Add to the set of model types
-    modelTypes.add(`${entityName}Model`);
-
-    // Check for DTOs
-    if (methodName.startsWith("create")) {
-      dtoTypes.add(`Create${entityName}Dto`);
-    } else if (methodName.startsWith("update")) {
-      dtoTypes.add(`Update${entityName}Dto`);
-    }
-
-    // Add core types needed
-    if (entityName === "Area") {
-      coreTypes.add("Position");
+  // Process external imports by module
+  externalImports.forEach((types, modulePath) => {
+    if (modulePath === "@orbital/typegoose") {
+      types.forEach((type) => {
+        if (type.endsWith("Model")) {
+          modelTypes.add(type);
+        }
+      });
+    } else if (modulePath === "@orbital/core") {
+      types.forEach((type) => {
+        coreTypes.add(type);
+      });
     }
   });
 
@@ -153,67 +310,38 @@ Object.keys(serviceControllers).forEach((serviceName) => {
     );
   }
 
-  // Generate DTO type definitions
+  // Map controller names to their model types
+  const controllerModelMap = new Map();
+
+  // First pass: group channels by controller and determine model types
+  Object.keys(asyncApiSpec.channels).forEach((channelName) => {
+    const parts = channelName.split(".");
+    if (parts.length !== 3) return;
+
+    const serviceName = parts[0];
+    const controllerName = parts[1];
+
+    // Extract controller base name (without Controller suffix)
+    const controllerBaseName = controllerName.replace(
+      /Controller$|MicroserviceController$/,
+      ""
+    );
+
+    // Determine the entity name from the controller name
+    // e.g., "AreasMicroserviceController" -> "Area"
+    const entityName = controllerBaseName.replace(/s$/, "");
+
+    // Store the model type for this controller
+    controllerModelMap.set(controllerName, `${entityName}Model`);
+  });
+
+  // Generate internal type definitions for types that are not imported from external libraries
   let typeDefinitions = `/**
- * DTO Type Definitions
+ * Type Definitions
  * These are included directly in the proxy file to make it self-contained
  */
 
 `;
-
-  // Generate DTO interfaces
-  dtoTypes.forEach((dtoType) => {
-    if (dtoType === "CreateAreaDto") {
-      typeDefinitions += `/**
- * Create Area DTO interface - for creating a new area
- */
-export interface ${dtoType} {
-  name: string;
-  description: string;
-  position: Position;
-  worldId: string;
-  parentId?: string | null;
-  landmarks?: string[];
-  connections?: string[];
-  tags?: string[];
-}
-
-`;
-    } else if (dtoType === "UpdateAreaDto") {
-      typeDefinitions += `/**
- * Update Area DTO interface - for updating an existing area
- */
-export interface ${dtoType} {
-  name?: string;
-  description?: string;
-  position?: Position;
-  worldId?: string;
-  parentId?: string | null;
-  landmarks?: string[];
-  connections?: string[];
-  tags?: string[];
-}
-
-`;
-    } else {
-      // Generic DTO interface for other entity types
-      const entityName = dtoType
-        .replace(/^(Create|Update)/, "")
-        .replace("Dto", "");
-      const isCreate = dtoType.startsWith("Create");
-
-      typeDefinitions += `/**
- * ${dtoType} interface
- */
-export interface ${dtoType} {
-  ${
-    isCreate ? "" : "// All fields are optional for update DTOs\n  "
-  }[key: string]: any;
-}
-
-`;
-    }
-  });
 
   // Start building the microservice class
   let microserviceContent =
@@ -245,110 +373,125 @@ interface ${
     }Controller {`;
 
     controller.methods.forEach((method) => {
-      // Determine parameter and return types based on AsyncAPI spec
+      // Get method types from extracted controller information
+      const methodInfo = controllerMethodTypes[controllerName]?.[method.name];
+
+      // Default parameter and return types
       let paramType = "any";
       let returnType = "any";
       let paramName = "payload";
 
-      // Get request and response message schemas
-      const channel = asyncApiSpec.channels[method.channelName];
-      const requestPayload = channel.subscribe?.message?.payload;
-      const responsePayload = channel.publish?.message?.payload;
-
-      // Determine parameter type and name from request payload
-      if (requestPayload && requestPayload.type === "object") {
-        const properties = requestPayload.properties || {};
-        const propNames = Object.keys(properties);
-
-        if (propNames.length === 0) {
-          // No parameters
+      // Use extracted method types if available
+      if (methodInfo) {
+        // Handle parameters
+        if (methodInfo.parameters.length === 0) {
           paramType = "void";
           paramName = "";
-        } else if (propNames.length === 1) {
-          // Single parameter
-          paramName = propNames[0];
-
-          // Try to determine parameter type
-          const prop = properties[paramName];
-          if (prop.type === "string") {
-            paramType = "string";
-            if (paramName.endsWith("Id") && prop.nullable) {
-              paramType += " | null";
-            }
-          } else if (prop.type === "array") {
-            if (prop.items?.type === "string") {
-              paramType = "string[]";
-            } else {
-              paramType = "any[]";
-            }
-          } else if (prop.type === "object") {
-            // Try to infer DTO type from method name
-            if (method.name.startsWith("create")) {
-              // Get entity name from controller name
-              const entityName = controllerBaseName.replace(/s$/, "");
-              // Ensure first letter is capitalized
-              const capitalizedEntityName =
-                entityName.charAt(0).toUpperCase() + entityName.slice(1);
-              paramType = `Create${capitalizedEntityName}Dto`;
-            } else if (method.name.startsWith("update")) {
-              // Get entity name from controller name
-              const entityName = controllerBaseName.replace(/s$/, "");
-              // Ensure first letter is capitalized
-              const capitalizedEntityName =
-                entityName.charAt(0).toUpperCase() + entityName.slice(1);
-              paramType = `Update${capitalizedEntityName}Dto`;
-            } else {
-              paramType = "any";
-            }
-          } else {
-            paramType = prop.type || "any";
-          }
+        } else if (methodInfo.parameters.length === 1) {
+          paramName = methodInfo.parameters[0].name;
+          paramType = methodInfo.parameters[0].type;
         } else {
           // Multiple parameters - create an object type
           paramType =
             "{ " +
-            propNames
-              .map((name) => {
-                const prop = properties[name];
-                let type = "any";
-
-                if (prop.type === "string") {
-                  type = "string";
-                } else if (prop.type === "object") {
-                  // Try to infer DTO type
-                  const entityName = controllerBaseName.replace(/s$/, "");
-                  // Ensure first letter is capitalized
-                  const capitalizedEntityName =
-                    entityName.charAt(0).toUpperCase() + entityName.slice(1);
-                  if (name.includes("update")) {
-                    type = `Update${capitalizedEntityName}Dto`;
-                  } else if (name.includes("create")) {
-                    type = `Create${capitalizedEntityName}Dto`;
-                  } else {
-                    type = "any";
-                  }
-                }
-
-                return `${name}: ${type}`;
-              })
+            methodInfo.parameters
+              .map((p) => `${p.name}: ${p.type}`)
               .join("; ") +
             " }";
         }
-      }
 
-      // Determine return type from response payload
-      if (responsePayload) {
-        // Get the model type for this controller
-        const modelType = controllerModelMap.get(controllerName) || "any";
+        // Handle return type
+        returnType = methodInfo.returnType.replace(/Promise<(.+)>/, "$1");
+      } else {
+        // Fallback to AsyncAPI spec if method types not found
+        // Get request and response message schemas
+        const channel = asyncApiSpec.channels[method.channelName];
+        const requestPayload = channel.subscribe?.message?.payload;
+        const responsePayload = channel.publish?.message?.payload;
 
-        if (responsePayload.type === "array") {
-          returnType = `${modelType}[]`;
-        } else if (responsePayload.type === "object") {
-          returnType = modelType;
+        // Determine parameter type and name from request payload
+        if (requestPayload && requestPayload.type === "object") {
+          const properties = requestPayload.properties || {};
+          const propNames = Object.keys(properties);
 
-          // Add nullable if specified
-          if (responsePayload.nullable) {
-            returnType += " | null";
+          if (propNames.length === 0) {
+            // No parameters
+            paramType = "void";
+            paramName = "";
+          } else if (propNames.length === 1) {
+            // Single parameter
+            paramName = propNames[0];
+
+            // Try to determine parameter type
+            const prop = properties[paramName];
+            if (prop.type === "string") {
+              paramType = "string";
+              if (paramName.endsWith("Id") && prop.nullable) {
+                paramType += " | null";
+              }
+            } else if (prop.type === "array") {
+              if (prop.items?.type === "string") {
+                paramType = "string[]";
+              } else {
+                paramType = "any[]";
+              }
+            } else if (prop.type === "object") {
+              // Try to infer type from method name
+              if (method.name.startsWith("create")) {
+                // Use Partial<Entity> for create methods
+                paramType = `Partial<${capitalizedEntityName}>`;
+              } else if (method.name.startsWith("update")) {
+                // Use Partial<Entity> for update methods
+                paramType = `Partial<${capitalizedEntityName}>`;
+              } else {
+                paramType = "any";
+              }
+            } else {
+              paramType = prop.type || "any";
+            }
+          } else {
+            // Multiple parameters - create an object type
+            paramType =
+              "{ " +
+              propNames
+                .map((name) => {
+                  const prop = properties[name];
+                  let type = "any";
+
+                  if (prop.type === "string") {
+                    type = "string";
+                  } else if (prop.type === "object") {
+                    // Try to infer type
+                    if (name.includes("update")) {
+                      type = `Partial<${capitalizedEntityName}>`;
+                    } else if (name.includes("create")) {
+                      type = `Partial<${capitalizedEntityName}>`;
+                    } else {
+                      type = "any";
+                    }
+                  }
+
+                  return `${name}: ${type}`;
+                })
+                .join("; ") +
+              " }";
+          }
+        }
+
+        // Determine return type from response payload
+        if (responsePayload) {
+          // Get the model type for this controller
+          const modelType = controllerModelMap.get(controllerName) || "any";
+
+          if (responsePayload.type === "array") {
+            returnType = `${modelType}[]`;
+          } else if (responsePayload.type === "object") {
+            returnType = modelType;
+
+            // Add nullable if specified
+            if (responsePayload.nullable) {
+              returnType += " | null";
+            }
           }
         }
       }
@@ -416,110 +559,125 @@ export class ${capitalizedServiceName}Microservice extends Microservice {`;
     this.${controllerBaseName} = {`;
 
     controller.methods.forEach((method) => {
-      // Determine parameter and return types based on AsyncAPI spec
+      // Get method types from extracted controller information
+      const methodInfo = controllerMethodTypes[controllerName]?.[method.name];
+
+      // Default parameter and return types
       let paramType = "any";
       let returnType = "any";
       let paramName = "payload";
 
-      // Get request and response message schemas
-      const channel = asyncApiSpec.channels[method.channelName];
-      const requestPayload = channel.subscribe?.message?.payload;
-      const responsePayload = channel.publish?.message?.payload;
-
-      // Determine parameter type and name from request payload
-      if (requestPayload && requestPayload.type === "object") {
-        const properties = requestPayload.properties || {};
-        const propNames = Object.keys(properties);
-
-        if (propNames.length === 0) {
-          // No parameters
+      // Use extracted method types if available
+      if (methodInfo) {
+        // Handle parameters
+        if (methodInfo.parameters.length === 0) {
           paramType = "void";
           paramName = "";
-        } else if (propNames.length === 1) {
-          // Single parameter
-          paramName = propNames[0];
-
-          // Try to determine parameter type
-          const prop = properties[paramName];
-          if (prop.type === "string") {
-            paramType = "string";
-            if (paramName.endsWith("Id") && prop.nullable) {
-              paramType += " | null";
-            }
-          } else if (prop.type === "array") {
-            if (prop.items?.type === "string") {
-              paramType = "string[]";
-            } else {
-              paramType = "any[]";
-            }
-          } else if (prop.type === "object") {
-            // Try to infer DTO type from method name
-            if (method.name.startsWith("create")) {
-              // Get entity name from controller name
-              const entityName = controllerBaseName.replace(/s$/, "");
-              // Ensure first letter is capitalized
-              const capitalizedEntityName =
-                entityName.charAt(0).toUpperCase() + entityName.slice(1);
-              paramType = `Create${capitalizedEntityName}Dto`;
-            } else if (method.name.startsWith("update")) {
-              // Get entity name from controller name
-              const entityName = controllerBaseName.replace(/s$/, "");
-              // Ensure first letter is capitalized
-              const capitalizedEntityName =
-                entityName.charAt(0).toUpperCase() + entityName.slice(1);
-              paramType = `Update${capitalizedEntityName}Dto`;
-            } else {
-              paramType = "any";
-            }
-          } else {
-            paramType = prop.type || "any";
-          }
+        } else if (methodInfo.parameters.length === 1) {
+          paramName = methodInfo.parameters[0].name;
+          paramType = methodInfo.parameters[0].type;
         } else {
           // Multiple parameters - create an object type
           paramType =
             "{ " +
-            propNames
-              .map((name) => {
-                const prop = properties[name];
-                let type = "any";
-
-                if (prop.type === "string") {
-                  type = "string";
-                } else if (prop.type === "object") {
-                  // Try to infer DTO type
-                  const entityName = controllerBaseName.replace(/s$/, "");
-                  // Ensure first letter is capitalized
-                  const capitalizedEntityName =
-                    entityName.charAt(0).toUpperCase() + entityName.slice(1);
-                  if (name.includes("update")) {
-                    type = `Update${capitalizedEntityName}Dto`;
-                  } else if (name.includes("create")) {
-                    type = `Create${capitalizedEntityName}Dto`;
-                  } else {
-                    type = "any";
-                  }
-                }
-
-                return `${name}: ${type}`;
-              })
+            methodInfo.parameters
+              .map((p) => `${p.name}: ${p.type}`)
               .join("; ") +
             " }";
         }
-      }
 
-      // Determine return type from response payload
-      if (responsePayload) {
-        // Get the model type for this controller
-        const modelType = controllerModelMap.get(controllerName) || "any";
+        // Handle return type
+        returnType = methodInfo.returnType.replace(/Promise<(.+)>/, "$1");
+      } else {
+        // Fallback to AsyncAPI spec if method types not found
+        // Get request and response message schemas
+        const channel = asyncApiSpec.channels[method.channelName];
+        const requestPayload = channel.subscribe?.message?.payload;
+        const responsePayload = channel.publish?.message?.payload;
 
-        if (responsePayload.type === "array") {
-          returnType = `${modelType}[]`;
-        } else if (responsePayload.type === "object") {
-          returnType = modelType;
+        // Determine parameter type and name from request payload
+        if (requestPayload && requestPayload.type === "object") {
+          const properties = requestPayload.properties || {};
+          const propNames = Object.keys(properties);
 
-          // Add nullable if specified
-          if (responsePayload.nullable) {
-            returnType += " | null";
+          if (propNames.length === 0) {
+            // No parameters
+            paramType = "void";
+            paramName = "";
+          } else if (propNames.length === 1) {
+            // Single parameter
+            paramName = propNames[0];
+
+            // Try to determine parameter type
+            const prop = properties[paramName];
+            if (prop.type === "string") {
+              paramType = "string";
+              if (paramName.endsWith("Id") && prop.nullable) {
+                paramType += " | null";
+              }
+            } else if (prop.type === "array") {
+              if (prop.items?.type === "string") {
+                paramType = "string[]";
+              } else {
+                paramType = "any[]";
+              }
+            } else if (prop.type === "object") {
+              // Try to infer type from method name
+              if (method.name.startsWith("create")) {
+                // Use Partial<Entity> for create methods
+                paramType = `Partial<${capitalizedEntityName}>`;
+              } else if (method.name.startsWith("update")) {
+                // Use Partial<Entity> for update methods
+                paramType = `Partial<${capitalizedEntityName}>`;
+              } else {
+                paramType = "any";
+              }
+            } else {
+              paramType = prop.type || "any";
+            }
+          } else {
+            // Multiple parameters - create an object type
+            paramType =
+              "{ " +
+              propNames
+                .map((name) => {
+                  const prop = properties[name];
+                  let type = "any";
+
+                  if (prop.type === "string") {
+                    type = "string";
+                  } else if (prop.type === "object") {
+                    // Try to infer type
+                    if (name.includes("update")) {
+                      type = `Partial<${capitalizedEntityName}>`;
+                    } else if (name.includes("create")) {
+                      type = `Partial<${capitalizedEntityName}>`;
+                    } else {
+                      type = "any";
+                    }
+                  }
+
+                  return `${name}: ${type}`;
+                })
+                .join("; ") +
+              " }";
+          }
+        }
+
+        // Determine return type from response payload
+        if (responsePayload) {
+          // Get the model type for this controller
+          const modelType = controllerModelMap.get(controllerName) || "any";
+
+          if (responsePayload.type === "array") {
+            returnType = `${modelType}[]`;
+          } else if (responsePayload.type === "object") {
+            returnType = modelType;
+
+            // Add nullable if specified
+            if (responsePayload.nullable) {
+              returnType += " | null";
+            }
           }
         }
       }

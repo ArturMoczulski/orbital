@@ -1,8 +1,7 @@
 import { Test, TestingModule } from "@nestjs/testing";
-import { AreasService } from "./areas.service";
-import { AreasRepository } from "./areas.repository";
 import { Area } from "@orbital/core";
-import { CreateAreaDto, UpdateAreaDto } from "./dto";
+import { AreasRepository } from "./areas.repository";
+import { AreasService } from "./areas.service";
 
 describe("AreasService", () => {
   let service: AreasService;
@@ -55,7 +54,7 @@ describe("AreasService", () => {
 
   describe("createArea", () => {
     it("should create a new area", async () => {
-      const createAreaDto: CreateAreaDto = {
+      const createAreaData: Partial<Area> = {
         name: mockArea.name,
         description: mockArea.description,
         position: mockArea.position,
@@ -64,10 +63,10 @@ describe("AreasService", () => {
 
       mockAreasRepository.create.mockResolvedValue(mockAreaModel);
 
-      const result = await service.createArea(createAreaDto);
+      const result = await service.createArea(createAreaData);
 
       expect(result).toEqual(mockAreaModel);
-      expect(mockAreasRepository.create).toHaveBeenCalledWith(createAreaDto);
+      expect(mockAreasRepository.create).toHaveBeenCalledWith(createAreaData);
     });
   });
 
@@ -112,7 +111,7 @@ describe("AreasService", () => {
 
   describe("updateArea", () => {
     it("should update an area by id", async () => {
-      const updateAreaDto: UpdateAreaDto = {
+      const updateAreaData: Partial<Area> = {
         name: "Updated Area",
         description: "Updated Description",
       };
@@ -123,7 +122,7 @@ describe("AreasService", () => {
         description: "Updated Description",
       });
 
-      const result = await service.updateArea(mockArea._id, updateAreaDto);
+      const result = await service.updateArea(mockArea._id, updateAreaData);
 
       expect(result).toEqual({
         ...mockAreaModel,
@@ -132,23 +131,23 @@ describe("AreasService", () => {
       });
       expect(mockAreasRepository.update).toHaveBeenCalledWith(
         mockArea._id,
-        updateAreaDto
+        updateAreaData
       );
     });
 
     it("should return null if area not found", async () => {
-      const updateAreaDto: UpdateAreaDto = {
+      const updateAreaData: Partial<Area> = {
         name: "Updated Area",
       };
 
       mockAreasRepository.update.mockResolvedValue(null);
 
-      const result = await service.updateArea("nonexistent-id", updateAreaDto);
+      const result = await service.updateArea("nonexistent-id", updateAreaData);
 
       expect(result).toBeNull();
       expect(mockAreasRepository.update).toHaveBeenCalledWith(
         "nonexistent-id",
-        updateAreaDto
+        updateAreaData
       );
     });
   });

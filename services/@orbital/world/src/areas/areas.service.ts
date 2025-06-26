@@ -1,19 +1,18 @@
 import { Injectable } from "@nestjs/common";
-import { AreaMap, Position } from "@orbital/core";
+import { Area, AreaMap, Position } from "@orbital/core";
 import type { AreaModel } from "@orbital/typegoose";
 import { AreasRepository } from "./areas.repository";
-import { CreateAreaDto, UpdateAreaDto } from "./dto";
 
 @Injectable()
 export class AreasService {
   constructor(private readonly areasRepository: AreasRepository) {}
 
   /**
-   * Convert DTO to model instance
+   * Convert data to model instance
    * This ensures that Position and AreaMap are proper class instances
    */
-  private dtoToModel(dto: any): any {
-    const model: any = { ...dto };
+  private dataToModel(data: any): any {
+    const model: any = { ...data };
 
     // Transform position to a Position instance if it exists
     if (model.position) {
@@ -28,8 +27,8 @@ export class AreasService {
     return model;
   }
 
-  async createArea(dto: CreateAreaDto): Promise<AreaModel> {
-    const modelData = this.dtoToModel(dto);
+  async createArea(data: Partial<Area>): Promise<AreaModel> {
+    const modelData = this.dataToModel(data);
     return this.areasRepository.create(modelData);
   }
 
@@ -46,9 +45,9 @@ export class AreasService {
 
   async updateArea(
     _id: string,
-    updateDto: UpdateAreaDto
+    updateData: Partial<Area>
   ): Promise<AreaModel | null> {
-    const modelData = this.dtoToModel(updateDto);
+    const modelData = this.dataToModel(updateData);
     return this.areasRepository.update(_id, modelData);
   }
 
