@@ -1,9 +1,9 @@
-import "reflect-metadata";
-import * as dotenv from "dotenv";
 import { NestFactory } from "@nestjs/core";
 import { MicroserviceOptions, Transport } from "@nestjs/microservices";
-import { AppModule } from "./app.module";
 import { MicroserviceExceptionFilter } from "@orbital/microservices";
+import * as dotenv from "dotenv";
+import "reflect-metadata";
+import { AppModule } from "./app.module";
 
 async function bootstrap() {
   dotenv.config({ path: "../.env.local" });
@@ -26,7 +26,7 @@ async function bootstrap() {
   });
 
   // Apply global exception filter for RPC exceptions
-  // app.useGlobalFilters(new MicroserviceExceptionFilter());
+  app.useGlobalFilters(new MicroserviceExceptionFilter());
 
   // Start both HTTP and microservice interfaces
   await app.startAllMicroservices();

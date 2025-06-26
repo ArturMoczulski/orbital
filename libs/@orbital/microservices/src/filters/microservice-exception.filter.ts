@@ -2,16 +2,16 @@ import {
   ArgumentsHost,
   Catch,
   ExceptionFilter,
-  Logger,
   HttpException,
   HttpStatus,
+  Logger,
 } from "@nestjs/common";
 import { RpcException } from "@nestjs/microservices";
 import { Observable, throwError } from "rxjs";
 import {
   MicroserviceUnavailableError,
-  UnrecognizedMessagePatternError,
   RemoteMicroserviceError,
+  UnrecognizedMessagePatternError,
 } from "../errors";
 
 /**

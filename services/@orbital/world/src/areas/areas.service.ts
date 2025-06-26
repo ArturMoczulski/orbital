@@ -1,8 +1,8 @@
 import { Injectable } from "@nestjs/common";
-import { AreasRepository } from "./areas.repository";
+import { AreaMap, Position } from "@orbital/core";
 import type { AreaModel } from "@orbital/typegoose";
+import { AreasRepository } from "./areas.repository";
 import { CreateAreaDto, UpdateAreaDto } from "./dto";
-import { Position, AreaMap } from "@orbital/core";
 
 @Injectable()
 export class AreasService {
