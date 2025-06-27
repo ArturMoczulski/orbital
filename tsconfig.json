@@ -22,7 +22,7 @@
         "libs/@orbital/world-rpc/src/*",
         "libs/@orbital/world-rpc/dist/*"
       ],
-      "@scout/core/*": ["libs/@scout/core/src/*", "libs/@scout/core/dist/*"],
+      "@scout/core/*": ["libs/@scout/core/dist/*"],
       "@orbital/core": ["libs/@orbital/core/src", "libs/@orbital/core/dist"],
       "@orbital/microservices": [
         "libs/@orbital/microservices/src",
@@ -40,7 +40,7 @@
         "libs/@orbital/world-rpc/src",
         "libs/@orbital/world-rpc/dist"
       ],
-      "@scout/core": ["libs/@scout/core/src", "libs/@scout/core/dist"]
+      "@scout/core": ["libs/@scout/core/dist"]
     },
     "composite": true,
     "declaration": true,
@@ -58,7 +58,6 @@
     { "path": "libs/@orbital/typegoose" },
     { "path": "libs/@orbital/characters" },
     { "path": "libs/@orbital/world-rpc" },
-    { "path": "libs/@scout/core" },
     { "path": "services/@orbital/admin-gateway" },
     { "path": "services/@orbital/world" }
   ]
