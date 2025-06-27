@@ -1,13 +1,13 @@
+import stringify from "json-stringify-safe";
 import {
   BulkOperationResultItemDTO,
   BulkOperationResultItemError,
   BulkOperationResultItemStatus,
 } from "./types";
-import * as stringify from "json-stringify-safe";
 
 export abstract class BulkOperationResultItem<
   DataItemType = any,
-  ResultItemDataType = any,
+  ResultItemDataType = any
 > {
   public readonly group?: string;
   constructor(
@@ -71,7 +71,7 @@ export abstract class BulkOperationResultItem<
 
 export class BulkOperationSuccessItem<
   DataItemType = any,
-  ResultItemDataType = any,
+  ResultItemDataType = any
 > extends BulkOperationResultItem<DataItemType, ResultItemDataType> {
   constructor(
     public readonly item: DataItemType,
@@ -94,7 +94,7 @@ export class BulkOperationSuccessItem<
 
 export class BulkOperationFailItem<
   DataItemType = any,
-  ResultItemDataType = any,
+  ResultItemDataType = any
 > extends BulkOperationResultItem<DataItemType, ResultItemDataType> {
   constructor(
     public readonly item: DataItemType,

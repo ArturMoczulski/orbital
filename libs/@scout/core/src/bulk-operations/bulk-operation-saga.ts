@@ -1,17 +1,16 @@
 // services/shared/core/src/bulk-operations/bulk-operation-saga.ts
 
+import stringify from "json-stringify-safe";
 import { BulkItemizedResponse } from "./bulk-itemized-response";
+import { BulkOperationResultItem } from "./bulk-operation-result-item";
 import {
-  BulkOperationSagaBuilder,
   BuilderOptions,
+  BulkOperationSagaBuilder,
 } from "./bulk-operation-saga-bulider";
 import {
   BulkOperationResponseStatus,
-  BulkOperationResultItemError,
   BulkOperationResultItemStatus,
 } from "./types";
-import { BulkOperationResultItem } from "./bulk-operation-result-item";
-import * as stringify from "json-stringify-safe";
 
 //
 // Chapter typings (inlined for simplicity). These allow chapters
@@ -615,7 +614,7 @@ export function BulkSaga(
     T extends (
       items: any[],
       saga?: BulkOperationSagaBuilder<any>
-    ) => Promise<any>,
+    ) => Promise<any>
   >(
     target: Object,
     propertyKey: string | symbol,

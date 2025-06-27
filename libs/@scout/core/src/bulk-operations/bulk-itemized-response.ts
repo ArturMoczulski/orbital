@@ -1,5 +1,5 @@
-import * as archy from "archy";
-import * as stringify from "json-stringify-safe";
+import archy from "archy";
+import stringify from "json-stringify-safe";
 import { BulkCountedResponse } from "./bulk-counted-response";
 import {
   BulkOperationFailItem,
@@ -7,12 +7,11 @@ import {
   BulkOperationSuccessItem,
 } from "./bulk-operation-result-item";
 import { BulkOperationResponseDTO, BulkOperationResponseStatus } from "./types";
-import { BulkResponse } from "./bulk-response";
 
 export class BulkItemizedResponse<
   DataItemType = any,
   ResultItemDataType = any,
-  G extends string = never,
+  G extends string = never
 > extends BulkCountedResponse<G> {
   constructor(
     public status?: BulkOperationResponseStatus,
@@ -396,7 +395,7 @@ export function filterBy<OrigType, NestedType, KeyType>(
 export function successForAll<
   OrigType = any,
   NestedType = any,
-  ResultDataType = any,
+  ResultDataType = any
 >(
   originalItems: OrigType[],
   nestedResponse: BulkItemizedResponse<NestedType, ResultDataType>,

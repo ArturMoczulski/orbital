@@ -1,14 +1,14 @@
 import {
-  Injectable,
-  NestInterceptor,
-  ExecutionContext,
   CallHandler,
+  ExecutionContext,
+  Injectable,
   Logger,
+  NestInterceptor,
 } from "@nestjs/common";
+import stringify from "json-stringify-safe";
+import * as client from "prom-client";
 import { Observable } from "rxjs";
 import { tap } from "rxjs/operators";
-import * as client from "prom-client";
-import * as stringify from "json-stringify-safe";
 
 // Histogram for RPC request message sizes
 const rpcRequestSizeHistogram = new client.Histogram({

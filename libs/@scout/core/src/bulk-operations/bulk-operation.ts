@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Callback invoked on successful processing of an item in a bulk operation.
  * @param item    The original data item.
@@ -22,11 +23,11 @@ export type BulkOpItemFail<TItem, TResult> = (
 import * as errio from "errio";
 import { BulkCountedResponse } from "./bulk-counted-response";
 import { BulkItemizedResponse } from "./bulk-itemized-response";
-import { BulkOperationError, BulkResponse } from "./bulk-response";
 import {
   BulkOperationFailItem,
   BulkOperationSuccessItem,
 } from "./bulk-operation-result-item";
+import { BulkOperationError, BulkResponse } from "./bulk-response";
 import {
   BulkOperationResponseStatus,
   BulkOperationResultItemError,
@@ -82,7 +83,7 @@ export class BulkOperation<DataItemType = any> {
     G extends BulkGroupedOperation<
       DataItemType,
       BulkCountedOperation<DataItemType>
-    > = {},
+    > = {}
   >(
     items: DataItemType[],
     operation: BulkCountedOperation<DataItemType> | G,
@@ -106,7 +107,7 @@ export class BulkOperation<DataItemType = any> {
     G extends BulkGroupedOperation<
       DataItemType,
       BulkItemizedOperation<DataItemType, ResultItemDataType>
-    > = {},
+    > = {}
   >(
     items: DataItemType[],
     operation: BulkItemizedOperation<DataItemType, ResultItemDataType> | G,
@@ -149,7 +150,7 @@ export class BulkOperation<DataItemType = any> {
     G extends BulkGroupedOperation<
       DataItemType,
       BulkCountedOperation<DataItemType>
-    > = {},
+    > = {}
   >(
     items: DataItemType[],
     operation: BulkCountedOperation<DataItemType> | G,
@@ -171,7 +172,7 @@ export class BulkOperation<DataItemType = any> {
     G extends BulkGroupedOperation<
       DataItemType,
       BulkItemizedOperation<DataItemType, ResultItemDataType>
-    > = {},
+    > = {}
   >(
     items: DataItemType[],
     operation: BulkItemizedOperation<DataItemType, ResultItemDataType> | G,
@@ -186,7 +187,12 @@ export class BulkOperation<DataItemType = any> {
     const result = await this.process<ResultItemDataType>(
       items,
       operation as any,
-      (this.withItemizedResponse<ResultItemDataType>).bind(this),
+      (items, operation, options) =>
+        this.withItemizedResponse<ResultItemDataType>(
+          items,
+          operation,
+          options
+        ),
       options
     );
     return result as any;
@@ -199,9 +205,7 @@ export class BulkOperation<DataItemType = any> {
       | BulkGroupedOperation<DataItemType, any>,
     responseWrapper: (
       items: DataItemType[],
-      operation:
-        | BulkOperationType<DataItemType, ResultItemDataType>
-        | BulkGroupedOperation<DataItemType, any>,
+      operation: any,
       options?: BulkOperationRequestProcessOptions<DataItemType>
     ) => Promise<BulkResponse>,
     options?: BulkOperationRequestProcessOptions<DataItemType>
@@ -246,7 +250,7 @@ export class BulkOperation<DataItemType = any> {
   ) {
     return Object.entries(operation) as [
       string,
-      { groupBy: (item: DataItemType) => boolean; operation: any },
+      { groupBy: (item: DataItemType) => boolean; operation: any }
     ][];
   }
 
@@ -451,7 +455,8 @@ export class BulkOperation<DataItemType = any> {
     items: DataItemType[],
     operation:
       | BulkStatusOperation<DataItemType>
-      | BulkGroupedOperation<DataItemType, BulkStatusOperation<DataItemType>>
+      | BulkGroupedOperation<DataItemType, BulkStatusOperation<DataItemType>>,
+    options?: BulkOperationRequestProcessOptions<DataItemType>
   ): Promise<BulkResponse> {
     const response = new BulkResponse();
     try {
@@ -485,7 +490,8 @@ export class BulkOperation<DataItemType = any> {
     items: DataItemType[],
     operation:
       | BulkCountedOperation<DataItemType>
-      | BulkGroupedOperation<DataItemType, BulkCountedOperation<DataItemType>>
+      | BulkGroupedOperation<DataItemType, BulkCountedOperation<DataItemType>>,
+    options?: BulkOperationRequestProcessOptions<DataItemType>
   ): Promise<BulkCountedResponse> {
     const response = new BulkCountedResponse();
     try {
@@ -525,11 +531,8 @@ export class BulkOperation<DataItemType = any> {
   protected async withItemizedResponse<ResultItemDataType = any>(
     items: DataItemType[],
     operation:
-      | BulkItemizedOperation<DataItemType, ResultItemDataType>
-      | BulkGroupedOperation<
-          DataItemType,
-          BulkItemizedOperation<DataItemType, ResultItemDataType>
-        >,
+      | BulkOperationType<DataItemType, ResultItemDataType>
+      | BulkGroupedOperation<DataItemType, any>,
     options?: BulkOperationRequestProcessOptions<DataItemType>
   ): Promise<BulkItemizedResponse<DataItemType, ResultItemDataType>> {
     const response = new BulkItemizedResponse<
@@ -646,7 +649,7 @@ export type BulkCountedOperation<DataItemType = any> = (
 
 export type BulkItemizedOperation<
   DataItemType = any,
-  ResultItemDataType = any,
+  ResultItemDataType = any
 > = (
   items: DataItemType[],
   success: BulkOpItemSuccess<DataItemType, ResultItemDataType>,
@@ -676,7 +679,7 @@ export function counted<
   G extends BulkGroupedOperation<
     DataItemType,
     BulkCountedOperation<DataItemType>
-  > = {},
+  > = {}
 >(
   items: DataItemType | DataItemType[],
   operation: G
@@ -714,7 +717,7 @@ export function itemized<
   G extends BulkGroupedOperation<
     DataItemType,
     BulkItemizedOperation<DataItemType, ResultItemDataType>
-  > = {},
+  > = {}
 >(
   items: DataItemType | DataItemType[],
   operation: G

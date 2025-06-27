@@ -1,9 +1,9 @@
+import stringify from "json-stringify-safe";
 import { BulkResponse } from "./bulk-response";
 import { BulkOperationResponseDTO, BulkOperationResponseStatus } from "./types";
-import * as stringify from "json-stringify-safe";
 
 export class BulkCountedResponse<
-  G extends string = never,
+  G extends string = never
 > extends BulkResponse {
   constructor(
     public status?: BulkOperationResponseStatus,
@@ -104,8 +104,8 @@ export class BulkCountedResponse<
       this.counts.success === 0
         ? BulkOperationResponseStatus.FAIL
         : this.counts.fail > 0
-          ? BulkOperationResponseStatus.PARTIAL_SUCCESS
-          : BulkOperationResponseStatus.SUCCESS;
+        ? BulkOperationResponseStatus.PARTIAL_SUCCESS
+        : BulkOperationResponseStatus.SUCCESS;
     return this;
   }
 
