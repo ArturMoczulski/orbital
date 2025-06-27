@@ -319,6 +319,53 @@ describe("CrudRepository", () => {
     });
   });
 
+  describe("findOne", () => {
+    it("should find a single entity with filter and projection", async () => {
+      const filter = { name: "Test Entity" };
+      const projection = { name: 1, count: 1 };
+
+      const result = await repository.findOne(filter, projection);
+
+      expect(result).toEqual(mockModelInstance);
+      expect(modelMock.find).toHaveBeenCalledWith(filter, projection);
+
+      // Verify limit was set to 1
+      const findQuery = modelMock.find.mock.results[0].value;
+      expect(findQuery.limit).toHaveBeenCalledWith(1);
+    });
+
+    it("should return null if no entity matches the filter", async () => {
+      // Mock find to return empty array
+      modelMock.find.mockReturnValueOnce({
+        limit: jest.fn().mockReturnThis(),
+        exec: jest.fn().mockResolvedValue([]),
+      });
+
+      const result = await repository.findOne({ name: "Nonexistent" });
+
+      expect(result).toBeNull();
+    });
+
+    it("should apply query options except limit", async () => {
+      const filter = { name: "Test Entity" };
+      const projection = { name: 1, count: 1 };
+      const options = {
+        sort: { createdAt: -1 },
+        skip: 10,
+        limit: 20, // This should be overridden to 1
+        populate: "relatedField",
+      };
+
+      await repository.findOne(filter, projection, options);
+
+      const findQuery = modelMock.find.mock.results[0].value;
+      expect(findQuery.sort).toHaveBeenCalledWith(options.sort);
+      expect(findQuery.skip).toHaveBeenCalledWith(options.skip);
+      expect(findQuery.limit).toHaveBeenCalledWith(1); // Should always be 1
+      expect(findQuery.populate).toHaveBeenCalledWith(options.populate);
+    });
+  });
+
   describe("findById", () => {
     it("should find an entity by id", async () => {
       const result = await repository.findById(mockEntity._id!);
@@ -328,11 +375,27 @@ describe("CrudRepository", () => {
         { _id: mockEntity._id },
         undefined
       );
+
+      // Verify limit was set to 1 (via findOne)
+      const findQuery = modelMock.find.mock.results[0].value;
+      expect(findQuery.limit).toHaveBeenCalledWith(1);
+    });
+
+    it("should find an entity by id with projection", async () => {
+      const projection = { name: 1, count: 1 };
+      const result = await repository.findById(mockEntity._id!, projection);
+
+      expect(result).toEqual(mockModelInstance);
+      expect(modelMock.find).toHaveBeenCalledWith(
+        { _id: mockEntity._id },
+        projection
+      );
     });
 
     it("should return null if entity not found", async () => {
       // Mock find to return empty array
       modelMock.find.mockReturnValueOnce({
+        limit: jest.fn().mockReturnThis(),
         exec: jest.fn().mockResolvedValue([]),
       });
 

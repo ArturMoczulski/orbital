@@ -69,14 +69,16 @@ export abstract class CrudService<T, R extends CrudRepository<T>> {
   /**
    * Delete an entity
    * @param id The entity ID
-   * @returns The deleted entity or null
+   * @returns null (the entity is no longer available after deletion)
    */
   async delete(id: string): Promise<T | null> {
     const result = await this.repository.delete(id);
-    // If the result is a BulkCountedResponse, return null (entity was already returned before deletion)
+    // If the result is a BulkCountedResponse, return null
     if (result instanceof BulkCountedResponse) {
       return null;
     }
-    return result;
+    // If the result is boolean (true) or null, return null
+    // The repository now returns true for successful deletion instead of the deleted entity
+    return null;
   }
 }

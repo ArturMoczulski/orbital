@@ -100,13 +100,40 @@ export abstract class CrudRepository<T> {
   }
 
   /**
+   * Find a single entity matching the filter criteria
+   * @param filter Query filter criteria
+   * @param projection Optional fields to project
+   * @param options Optional query options (except limit, which is set to 1)
+   * @returns The found entity or null if not found
+   */
+  async findOne(
+    filter: Record<string, any> = {},
+    projection?: Record<string, any>,
+    options?: Record<string, any>
+  ): Promise<T | null> {
+    // Create a new options object with limit set to 1
+    const findOneOptions = { ...(options || {}), limit: 1 };
+
+    const results = await this.find(filter, projection, findOneOptions);
+    return results.length > 0 ? results[0] : null;
+  }
+
+  /**
    * Find an entity by ID
    * @param _id The entity ID
    * @returns The found entity or null
    */
-  async findById(_id: string): Promise<T | null> {
-    const results = await this.find({ _id });
-    return results.length > 0 ? results[0] : null;
+  /**
+   * Find an entity by ID
+   * @param _id The entity ID
+   * @param projection Optional fields to project
+   * @returns The found entity or null
+   */
+  async findById(
+    _id: string,
+    projection?: Record<string, any>
+  ): Promise<T | null> {
+    return this.findOne({ _id }, projection);
   }
 
   /**
@@ -227,13 +254,23 @@ export abstract class CrudRepository<T> {
    * @param ids Single ID or array of IDs to delete
    * @returns BulkCountedResponse for multiple IDs or true if input was singular and deletion was successful
    */
+  /**
+   * Delete one or more entities by ID(s)
+   * @param ids The ID(s) of the entity/entities to delete
+   * @returns For singular input, returns true if deleted, null if not found. For array input, returns a BulkCountedResponse.
+   */
+  /**
+   * Delete one or more entities by ID(s)
+   * @param ids The ID(s) of the entity/entities to delete
+   * @returns For singular input, returns true if deleted, null if not found. For array input, returns a BulkCountedResponse.
+   */
   async delete(
     ids: string | string[]
   ): Promise<boolean | null | BulkCountedResponse> {
     const isSingular = !Array.isArray(ids);
     const items = isSingular ? [ids] : ids;
 
-    // Check if entity exists for singular input
+    // For singular input, check if entity exists first
     if (isSingular) {
       const entityExists = await this.model.findById(items[0]).exec();
       if (!entityExists) return null;
