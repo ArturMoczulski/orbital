@@ -1,28 +1,23 @@
 import { Test, TestingModule } from "@nestjs/testing";
+import { Area as CoreArea } from "@orbital/core";
 import { getModelToken } from "nestjs-typegoose";
 import { AreasRepository } from "./areas.repository";
-import { AreaModel } from "@orbital/typegoose";
-import { Area } from "@orbital/core";
 
 describe("AreasRepository", () => {
   let repository: AreasRepository;
   let areaModelMock: any;
 
-  // Use Area.mock() to create a mock area
-  const mockArea = Area.mock();
-
-  // Convert the Area to an AreaModel-like object
-  const mockAreaModel = {
-    _id: mockArea._id,
-    name: mockArea.name,
-    description: mockArea.description,
-    position: mockArea.position,
-    areaMap: mockArea.areaMap,
-    parentId: mockArea.parentId,
+  // Create a mock area using CoreArea.mock()
+  const mockArea = CoreArea.mock({
+    _id: "test-id-123",
+    name: "Test Area",
     worldId: "world1",
-    landmarks: mockArea.landmarks,
-    connections: mockArea.connections,
     tags: ["tag1", "tag2"],
+  });
+
+  // Create a mock area model with save method for testing
+  const mockAreaModel = {
+    ...mockArea,
     save: jest.fn().mockResolvedValue(mockArea),
   };
 
@@ -30,13 +25,13 @@ describe("AreasRepository", () => {
     // Reset all mocks before each test
     jest.clearAllMocks();
 
-    // Create a mock for the AreaModel
-    areaModelMock = function () {
+    // Create a mock for the Area model
+    areaModelMock = jest.fn().mockImplementation(() => {
       return {
         ...mockAreaModel,
         save: jest.fn().mockResolvedValue(mockAreaModel),
       };
-    };
+    });
     areaModelMock.find = jest.fn().mockReturnValue({
       exec: jest.fn().mockResolvedValue([mockAreaModel]),
     });

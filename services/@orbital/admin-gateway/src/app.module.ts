@@ -1,21 +1,20 @@
 import { Module } from "@nestjs/common";
 import { ConfigModule, ConfigService } from "@nestjs/config";
-import { MongooseModule } from "@nestjs/mongoose";
+import { APP_INTERCEPTOR } from "@nestjs/core";
 import { EventEmitterModule } from "@nestjs/event-emitter";
 import { ClientsModule, Transport } from "@nestjs/microservices";
-import { PingController } from "./ping/ping.controller";
-import { AuthModule } from "./auth/auth.module";
-import { UsersModule } from "./users/users.module";
+import { MongooseModule } from "@nestjs/mongoose";
 import { AreasModule } from "./areas/areas.module";
-import { APP_INTERCEPTOR } from "@nestjs/core";
+import { AuthModule } from "./auth/auth.module";
 import { LoggingInterceptor } from "./common/logging.interceptor";
-import { MicroserviceManagerModule } from "@orbital/microservices";
+import { PingController } from "./ping/ping.controller";
+import { UsersModule } from "./users/users.module";
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
-      envFilePath: ".env.local",
+      envFilePath: process.env.NODE_ENV === "test" ? ".env.test" : ".env.local",
       expandVariables: true,
     }),
     EventEmitterModule.forRoot(),
@@ -35,7 +34,7 @@ import { MicroserviceManagerModule } from "@orbital/microservices";
           transport: Transport.NATS,
           options: {
             servers: [
-              configService.get<string>("NATS_URL", "nats://localhost:4222"),
+              configService.get<string>("NATS_URL", "nats://localhost:4223"),
             ],
           },
         }),

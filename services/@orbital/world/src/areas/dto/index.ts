@@ -1,5 +1,0 @@
-export * from "./area-map.dto";
-export * from "./area.dto";
-export * from "./create-area.dto";
-export * from "./position.dto";
-export * from "./update-area.dto";

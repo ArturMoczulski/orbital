@@ -1,9 +1,9 @@
 import { Test } from "@nestjs/testing";
-import { AreasModule } from "./areas.module";
-import { AreasMicroserviceController } from "./areas.microservice.controller";
-import { AreasService } from "./areas.service";
-import { AreasRepository } from "./areas.repository";
 import { getModelToken } from "nestjs-typegoose";
+import { AreasMicroserviceController } from "./areas.microservice.controller";
+import { AreasModule } from "./areas.module";
+import { AreasRepository } from "./areas.repository";
+import { AreasService } from "./areas.service";
 
 describe("AreasModule", () => {
   it("should compile the module", async () => {

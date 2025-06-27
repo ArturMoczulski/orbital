@@ -1,14 +1,12 @@
 import { faker } from "@faker-js/faker";
 import { z } from "zod";
 import { ZodSchema } from "../decorators/zod-schema.decorator";
-import {
-  generateFantasyAreaName,
-  generateUUID,
-} from "../utils/data-generators";
+import { generateFantasyAreaName } from "../utils/data-generators";
 import { AreaMap, AreaMapSchema } from "./area-map";
 import {
   IdentifiableObject,
   IdentifiableObjectProps,
+  IdentifiableObjectSchema,
 } from "./identifiable-object";
 import { Position, PositionSchema } from "./position";
 
@@ -20,30 +18,23 @@ import { Position, PositionSchema } from "./position";
 export type AreaProps = z.infer<typeof AreaSchema>;
 
 /** Zod schema for Area */
-export const AreaSchema = z
-  .object({
-    _id: z.string().describe("Unique identifier for the area"),
-    parentId: z
-      .string()
-      .nullable()
-      .optional()
-      .describe("Identifier of the parent area, if any"),
-    name: z.string().describe("Descriptive name of the area"),
-    position: PositionSchema.optional().describe(
-      "Central position of the area in 3D space"
-    ),
-    areaMap: AreaMapSchema.optional().describe(
-      "Map representation of this area"
-    ),
-    worldId: z
-      .string()
-      .describe("Identifier of the world this area belongs to"),
-    tags: z
-      .array(z.string())
-      .optional()
-      .describe("Tags for categorizing the area"),
-  })
-  .describe("A named area in the game world with a specific position");
+export const AreaSchema = IdentifiableObjectSchema.extend({
+  parentId: z
+    .string()
+    .nullable()
+    .optional()
+    .describe("Identifier of the parent area, if any"),
+  name: z.string().describe("Descriptive name of the area"),
+  position: PositionSchema.optional().describe(
+    "Central position of the area in 3D space"
+  ),
+  areaMap: AreaMapSchema.optional().describe("Map representation of this area"),
+  worldId: z.string().describe("Identifier of the world this area belongs to"),
+  tags: z
+    .array(z.string())
+    .optional()
+    .describe("Tags for categorizing the area"),
+}).describe("A named area in the game world with a specific position");
 
 /**
  * Domain class for Area with auto-assignment and validation.
@@ -99,13 +90,8 @@ export class Area
     // Validate the data
     const validated = AreaSchema.parse(data);
 
-    // Create a clean object with properly instantiated properties
-    const cleanData = {
-      _id: (validated as any)._id || generateUUID(),
-    };
-
-    // Pass the clean data to the parent constructor
-    super(cleanData);
+    // Pass to parent constructor which handles _id
+    super(validated);
 
     // Handle position if provided
     let position: Position | undefined = undefined;

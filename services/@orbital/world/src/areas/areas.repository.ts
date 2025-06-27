@@ -1,65 +1,44 @@
 import { Inject, Injectable } from "@nestjs/common";
-import { AreaModel } from "@orbital/typegoose";
+import { CrudRepository } from "@orbital/nest";
+import { AreaModel as Area } from "@orbital/typegoose";
 import type { ReturnModelType } from "@typegoose/typegoose";
 import { getModelToken } from "nestjs-typegoose";
 
 @Injectable()
-export class AreasRepository {
+export class AreasRepository extends CrudRepository<Area> {
   constructor(
     @Inject(getModelToken("AreaModel"))
-    private readonly areaModel: ReturnModelType<typeof AreaModel>
-  ) {}
-
-  async create(dto: Partial<AreaModel>): Promise<AreaModel> {
-    // Skip validation entirely and let MongoDB handle it
-    // This avoids the Area constructor validation which requires _id
-    const created = new this.areaModel(dto);
-    return (await created.save()) as unknown as AreaModel;
+    areaModel: ReturnModelType<typeof Area>
+  ) {
+    super(areaModel);
   }
 
-  async findById(_id: string): Promise<AreaModel | null> {
-    return (await this.areaModel.findById(_id).exec()) as unknown as AreaModel;
+  /**
+   * Find areas by parent ID
+   * @param parentId The parent area ID or null for top-level areas
+   * @returns Array of areas
+   */
+  async findByParentId(parentId: string | null): Promise<Area[]> {
+    return (await this.model.find({ parentId }).exec()) as unknown as Area[];
   }
 
-  async findAll(
-    filter: Record<string, any> = {},
-    projection?: any
-  ): Promise<AreaModel[]> {
-    return (await this.areaModel
-      .find(filter, projection)
-      .exec()) as unknown as AreaModel[];
-  }
-
-  async update(
-    _id: string,
-    updateDto: Partial<AreaModel>
-  ): Promise<AreaModel | null> {
-    return (await this.areaModel
-      .findByIdAndUpdate(_id, updateDto, { new: true })
-      .exec()) as unknown as AreaModel;
-  }
-
-  async findByParentId(parentId: string | null): Promise<AreaModel[]> {
-    return (await this.areaModel
-      .find({ parentId })
-      .exec()) as unknown as AreaModel[];
-  }
-
-  async findByTags(tags: string[]): Promise<AreaModel[]> {
-    return (await this.areaModel
+  /**
+   * Find areas by tags
+   * @param tags Array of tags to search for
+   * @returns Array of areas with any of the specified tags
+   */
+  async findByTags(tags: string[]): Promise<Area[]> {
+    return (await this.model
       .find({ tags: { $in: tags } })
-      .exec()) as unknown as AreaModel[];
+      .exec()) as unknown as Area[];
   }
 
-  async delete(_id: string): Promise<AreaModel | null> {
-    return (await this.areaModel
-      .findByIdAndDelete(_id)
-      .exec()) as unknown as AreaModel;
-  }
-
-  async findByWorldId(worldId: string): Promise<AreaModel[]> {
-    return (await this.areaModel
-      .find({ worldId })
-      .exec()) as unknown as AreaModel[];
+  /**
+   * Find areas by world ID
+   * @param worldId The world ID
+   * @returns Array of areas in the specified world
+   */
+  async findByWorldId(worldId: string): Promise<Area[]> {
+    return (await this.model.find({ worldId }).exec()) as unknown as Area[];
   }
 }

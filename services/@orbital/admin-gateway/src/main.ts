@@ -12,7 +12,12 @@ import { GlobalExceptionHandler } from "./global-exception.handler";
 GlobalExceptionHandler.register();
 
 async function bootstrap() {
-  dotenv.config({ path: "../.env.local" });
+  // Load environment variables based on NODE_ENV
+  if (process.env.NODE_ENV === "test") {
+    dotenv.config({ path: "../.env.test" });
+  } else {
+    dotenv.config({ path: "../.env.local" });
+  }
   const app = await NestFactory.create(AppModule, {
     cors: {
       origin: "*", // Allow all origins for development

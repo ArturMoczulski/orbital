@@ -1,22 +1,39 @@
-import { prop, modelOptions } from "@typegoose/typegoose";
-import { Types } from "mongoose";
+import { World as CoreWorld } from "@orbital/core";
+import { modelOptions, prop } from "@typegoose/typegoose";
+import { randomUUID } from "crypto";
 
 @modelOptions({
   schemaOptions: { collection: "worlds", timestamps: true },
 })
-export class WorldModel {
-  @prop({ required: true, auto: true })
-  _id!: string;
+export class World extends CoreWorld {
+  // Override _id to add Typegoose decorator
+  @prop({ required: true, auto: true, default: () => randomUUID() })
+  override _id!: string;
+
+  // Add Typegoose decorators to inherited properties
+  @prop({ required: true })
+  override name!: string;
 
   @prop({ required: true })
-  name!: string;
+  override shard!: string;
 
   @prop({ required: true })
-  shard!: string;
+  override techLevel!: number;
 
-  @prop({ required: true })
-  techLevel!: number;
+  @prop({ type: () => [String], ref: "Location" })
+  override locations?: string[];
 
-  @prop({ type: String, ref: "Location" })
-  locations?: string[];
+  // Add database-specific properties
+  @prop()
+  createdAt!: Date;
+
+  @prop()
+  updatedAt!: Date;
+
+  constructor(data?: unknown) {
+    super(data || {});
+  }
 }
+
+// Export the World class as WorldModel for backward compatibility
+export { World as WorldModel };

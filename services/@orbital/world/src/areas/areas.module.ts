@@ -1,12 +1,16 @@
 import { Module } from "@nestjs/common";
+import { AreaModel as Area } from "@orbital/typegoose";
 import { TypegooseModule } from "nestjs-typegoose";
-import { AreaModel } from "@orbital/typegoose";
+import { AreasMicroserviceController } from "./areas.microservice.controller";
 import { AreasRepository } from "./areas.repository";
 import { AreasService } from "./areas.service";
-import { AreasMicroserviceController } from "./areas.microservice.controller";
 
 @Module({
-  imports: [TypegooseModule.forFeature([AreaModel])],
+  imports: [
+    TypegooseModule.forFeature([
+      { typegooseClass: Area, schemaOptions: { collection: "areas" } },
+    ]),
+  ],
   providers: [AreasRepository, AreasService],
   controllers: [AreasMicroserviceController],
   exports: [AreasService],

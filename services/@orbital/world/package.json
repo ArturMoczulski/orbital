@@ -32,6 +32,7 @@
     "@nestjs/swagger": "^11.2.0",
     "@orbital/core": "workspaces:*",
     "@orbital/microservices": "workspaces:*",
+    "@orbital/nest": "workspaces:*",
     "@orbital/typegoose": "workspaces:*",
     "@typegoose/typegoose": "^7.6.3",
     "class-validator": "^0.14.2",

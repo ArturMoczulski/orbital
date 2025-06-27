@@ -1,0 +1,20 @@
+{
+  "name": "@orbital/nest",
+  "version": "0.0.1",
+  "description": "NestJS utilities for Orbital",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "test": "jest"
+  },
+  "dependencies": {
+    "@nestjs/common": "^10.0.0",
+    "@typegoose/typegoose": "^11.0.0",
+    "nestjs-typegoose": "^7.1.38",
+    "zod": "^3.21.4"
+  },
+  "peerDependencies": {
+    "@orbital/core": "*"
+  }
+}

@@ -1,5 +1,6 @@
 import { Test, TestingModule } from "@nestjs/testing";
-import { Area } from "@orbital/core";
+import { Area as CoreArea } from "@orbital/core";
+import { AreaModel as Area } from "@orbital/typegoose";
 import { AreasRepository } from "./areas.repository";
 import { AreasService } from "./areas.service";
 
@@ -7,21 +8,19 @@ describe("AreasService", () => {
   let service: AreasService;
   let repository: AreasRepository;
 
-  // Use Area.mock() to create a mock area
-  const mockArea = Area.mock();
-
-  // Convert the Area to an AreaModel-like object
-  const mockAreaModel = {
-    _id: mockArea._id,
-    name: mockArea.name,
-    description: mockArea.description,
-    position: mockArea.position,
-    areaMap: mockArea.areaMap,
-    parentId: mockArea.parentId,
+  // Create a mock area using CoreArea.mock()
+  const mockArea = CoreArea.mock({
+    _id: "test-id-123",
+    name: "Test Area",
     worldId: "world1",
-    landmarks: mockArea.landmarks,
-    connections: mockArea.connections,
     tags: ["tag1", "tag2"],
+  });
+
+  // Create a mock Area by adding database-specific properties
+  const mockAreaModel = {
+    ...mockArea,
+    createdAt: new Date(),
+    updatedAt: new Date(),
   };
 
   const mockAreasRepository = {

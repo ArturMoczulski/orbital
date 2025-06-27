@@ -1,25 +1,33 @@
-import { Injectable, Inject } from "@nestjs/common";
-import { getModelToken } from "nestjs-typegoose";
+import { Inject, Injectable } from "@nestjs/common";
+import { CrudRepository } from "@orbital/nest";
+import { WorldModel as World } from "@orbital/typegoose";
 import type { ReturnModelType } from "@typegoose/typegoose";
-import { WorldModel } from "@orbital/typegoose";
+import { getModelToken } from "nestjs-typegoose";
 
 @Injectable()
-export class WorldsRepository {
+export class WorldsRepository extends CrudRepository<World> {
   constructor(
-    @Inject(getModelToken("WorldModel"))
-    private readonly worldModel: ReturnModelType<typeof WorldModel>
-  ) {}
-
-  async create(dto: Partial<WorldModel>): Promise<WorldModel> {
-    const doc = new this.worldModel(dto);
-    return doc.save() as unknown as WorldModel;
+    @Inject(getModelToken("World"))
+    worldModel: ReturnModelType<typeof World>
+  ) {
+    super(worldModel);
   }
 
-  async findById(id: string): Promise<WorldModel | null> {
-    return this.worldModel.findById(id).exec() as unknown as WorldModel;
+  /**
+   * Find worlds by shard
+   * @param shard The shard identifier
+   * @returns Array of worlds in the specified shard
+   */
+  async findByShard(shard: string): Promise<World[]> {
+    return this.findAll({ shard });
   }
 
-  async findAll(): Promise<WorldModel[]> {
-    return this.worldModel.find().exec() as unknown as WorldModel[];
+  /**
+   * Find worlds by technology level
+   * @param techLevel The technology level
+   * @returns Array of worlds with the specified technology level
+   */
+  async findByTechLevel(techLevel: number): Promise<World[]> {
+    return this.findAll({ techLevel });
   }
 }

@@ -6,7 +6,12 @@ import "reflect-metadata";
 import { AppModule } from "./app.module";
 
 async function bootstrap() {
-  dotenv.config({ path: "../.env.local" });
+  // Load environment variables based on NODE_ENV
+  if (process.env.NODE_ENV === "test") {
+    dotenv.config({ path: "../.env.test" });
+  } else {
+    dotenv.config({ path: "../.env.local" });
+  }
 
   // Create the NestJS application
   const app = await NestFactory.create(AppModule, { cors: true });
@@ -18,7 +23,7 @@ async function bootstrap() {
   app.connectMicroservice<MicroserviceOptions>({
     transport: Transport.NATS,
     options: {
-      servers: [process.env.NATS_URL || "nats://localhost:4222"],
+      servers: [process.env.NATS_URL || "nats://localhost:4223"],
       name: "world",
       // Enable NATS Service Framework for service discovery
       headers: {
