@@ -1,7 +1,3 @@
-import {
-  BulkCountedResponse,
-  BulkItemizedResponse,
-} from "@scout/core/src/bulk-operations";
 import { CrudRepository } from "../repositories/crud.repository";
 
 /**
@@ -22,30 +18,31 @@ export abstract class CrudService<T, R extends CrudRepository<T>> {
    * @returns The created entity
    */
   async create(createDto: Partial<T>): Promise<T> {
-    const result = await this.repository.create(createDto);
-    // If the result is a BulkItemizedResponse, extract the single entity
-    if (result instanceof BulkItemizedResponse) {
-      return result.asSingle() as T;
-    }
-    return result as T;
+    return this.repository.create(createDto) as Promise<T>;
   }
 
   /**
-   * Get an entity by ID
+   * Find an entity by ID
    * @param id The entity ID
    * @returns The entity or null
    */
-  async getById(id: string): Promise<T | null> {
+  async findById(id: string): Promise<T | null> {
     return this.repository.findById(id);
   }
 
   /**
-   * Get all entities matching a filter
+   * Find entities matching a filter
    * @param filter Optional filter criteria
+   * @param projection Optional fields to project
+   * @param options Optional query options
    * @returns Array of entities
    */
-  async getAll(filter: Record<string, any> = {}): Promise<T[]> {
-    return this.repository.find(filter);
+  async find(
+    filter: Record<string, any> = {},
+    projection?: Record<string, any>,
+    options?: Record<string, any>
+  ): Promise<T[]> {
+    return this.repository.find(filter, projection, options);
   }
 
   /**
@@ -54,31 +51,15 @@ export abstract class CrudService<T, R extends CrudRepository<T>> {
    * @returns The updated entity or null
    */
   async update(entity: Partial<T> & { _id: string }): Promise<T | null> {
-    const result = await this.repository.update(entity);
-    // If the result is a BulkItemizedResponse, extract the single entity or return null
-    if (result instanceof BulkItemizedResponse) {
-      try {
-        return result.asSingle() as T;
-      } catch (error) {
-        return null;
-      }
-    }
-    return result;
+    return this.repository.update(entity) as Promise<T | null>;
   }
 
   /**
    * Delete an entity
    * @param id The entity ID
-   * @returns null (the entity is no longer available after deletion)
+   * @returns The result of the deletion operation
    */
-  async delete(id: string): Promise<T | null> {
-    const result = await this.repository.delete(id);
-    // If the result is a BulkCountedResponse, return null
-    if (result instanceof BulkCountedResponse) {
-      return null;
-    }
-    // If the result is boolean (true) or null, return null
-    // The repository now returns true for successful deletion instead of the deleted entity
-    return null;
+  async delete(id: string): Promise<boolean | null> {
+    return this.repository.delete(id) as Promise<boolean | null>;
   }
 }

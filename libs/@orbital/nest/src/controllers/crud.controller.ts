@@ -26,21 +26,27 @@ export abstract class CrudController<T, S extends CrudService<T, any>> {
   }
 
   /**
-   * Get an entity by ID
+   * Find an entity by ID
    * @param id The entity ID
    * @returns The entity or null
    */
-  async getById(id: string): Promise<T | null> {
-    return this.service.getById(id);
+  async findById(id: string): Promise<T | null> {
+    return this.service.findById(id);
   }
 
   /**
-   * Get all entities matching a filter
+   * Find entities matching a filter
    * @param filter Optional filter criteria
+   * @param projection Optional fields to project
+   * @param options Optional query options
    * @returns Array of entities
    */
-  async getAll(filter: Record<string, any> = {}): Promise<T[]> {
-    return this.service.getAll(filter);
+  async find(
+    filter: Record<string, any> = {},
+    projection?: Record<string, any>,
+    options?: Record<string, any>
+  ): Promise<T[]> {
+    return this.service.find(filter, projection, options);
   }
 
   /**
@@ -55,9 +61,9 @@ export abstract class CrudController<T, S extends CrudService<T, any>> {
   /**
    * Delete an entity
    * @param id The entity ID
-   * @returns The deleted entity or null
+   * @returns The result of the deletion operation
    */
-  async delete(id: string): Promise<T | null> {
+  async delete(id: string): Promise<boolean | null> {
     return this.service.delete(id);
   }
 }
