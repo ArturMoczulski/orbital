@@ -8,5 +8,14 @@ export type {
   QueryResult,
 } from "./components/types";
 
+// Export notification components
+export {
+  NotificationProvider,
+  NotificationProviderExample,
+  useNotification,
+  type NotificationContextType,
+  type NotificationProviderProps,
+} from "./components/NotificationProvider";
+
 // Export theme components
 export { OrbitalThemeProvider, useOrbitalTheme } from "./theme/ThemeContext";

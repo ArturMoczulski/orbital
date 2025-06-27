@@ -1,7 +1,7 @@
 import CssBaseline from "@mui/material/CssBaseline";
 import { ThemeProvider, createTheme } from "@mui/material/styles";
 import { StyledEngineProvider } from "@mui/styled-engine";
-import { OrbitalThemeProvider } from "@orbital/react-ui";
+import { NotificationProvider, OrbitalThemeProvider } from "@orbital/react-ui";
 import type { AppProps } from "next/app";
 import { Provider } from "react-redux";
 import "reflect-metadata";
@@ -52,7 +52,9 @@ function MyApp({ Component, pageProps }: AppProps) {
         <CssBaseline />
         <Provider store={store}>
           <OrbitalThemeProvider theme={artilioTheme}>
-            <Component {...pageProps} />
+            <NotificationProvider>
+              <Component {...pageProps} />
+            </NotificationProvider>
           </OrbitalThemeProvider>
         </Provider>
       </ThemeProvider>

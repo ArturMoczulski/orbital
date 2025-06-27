@@ -26,6 +26,7 @@
   },
   "dependencies": {
     "@hookform/resolvers": "^5.1.1",
+    "notistack": "^3.0.2",
     "react-hook-form": "^7.58.1",
     "uniforms": "^4.0.0",
     "uniforms-antd": "^4.0.0",

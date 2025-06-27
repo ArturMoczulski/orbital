@@ -1,6 +1,5 @@
 import AddIcon from "@mui/icons-material/Add";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
-import DeleteIcon from "@mui/icons-material/Delete";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import Box from "@mui/material/Box";
 import Dialog from "@mui/material/Dialog";
@@ -8,35 +7,182 @@ import DialogTitle from "@mui/material/DialogTitle";
 import IconButton from "@mui/material/IconButton";
 import { useTheme } from "@mui/material/styles";
 import Typography from "@mui/material/Typography";
-import { kebabCase } from "lodash";
-import React, { useState } from "react";
+import { kebabCase, lowerFirst } from "lodash";
+import React, { useEffect, useState } from "react";
 import { ZodBridge } from "uniforms-bridge-zod";
 import { AutoForm } from "uniforms-mui";
 import { z } from "zod";
 import { useOrbitalTheme } from "../../theme/ThemeContext";
-import { ExplorerObject, ObjectExplorerProps } from "../types";
-import { ObjectExplorerItemActionButton } from "./ObjectExplorerItemActionButton";
+import { useNotification } from "../NotificationProvider/NotificationProvider";
+import { ExplorerObject, ObjectExplorerProps, QueryResult } from "../types";
+import { DefaultItemActions } from "./DefaultItemActions";
+
+/**
+ * Extracts API hooks based on naming conventions
+ */
+function extractApiHooks<T>(api: any, type: string) {
+  // Convert type to proper format for hook names (e.g., "Area" -> "areas")
+  const typeLower = lowerFirst(type);
+  const typePlural = `${typeLower}s`; // Simple pluralization
+  const typeCapitalized =
+    typePlural.charAt(0).toUpperCase() + typePlural.slice(1);
+
+  // Query hook for fetching objects (e.g., useAreasControllerGetAllQuery)
+  // RTK Query adds "Query" suffix to query hooks
+  const queryHookName = `use${typeCapitalized}ControllerGetAllQuery`;
+  // Fallback to FindAll if GetAll doesn't exist
+  const fallbackQueryHookName = `use${typeCapitalized}ControllerFindAllQuery`;
+  const queryHook = api[queryHookName] || api[fallbackQueryHookName];
+
+  // Mutation hooks for create and delete
+  // RTK Query already includes "Mutation" suffix
+  const createHookName = `use${typeCapitalized}ControllerCreateMutation`;
+  const deleteHookName = `use${typeCapitalized}ControllerDeleteMutation`;
+  const createHook = api[createHookName];
+  const deleteHook = api[deleteHookName];
+
+  return {
+    queryHook,
+    queryHookName: queryHook
+      ? api[queryHookName]
+        ? queryHookName
+        : fallbackQueryHookName
+      : null,
+    createHook,
+    createHookName,
+    deleteHook,
+    deleteHookName,
+  };
+}
 
 /**
  * A generic tree-view component for displaying hierarchical objects
  */
 export function ObjectExplorer<T extends ExplorerObject>({
-  queryResult,
+  queryResult: providedQueryResult,
   onSelect,
   type,
   objectTypeName,
   renderNode,
   schema: providedSchema,
-  onAdd,
-  onDelete,
+  onAdd: providedOnAdd,
+  onDelete: providedOnDelete,
   itemActions,
+  api,
+  query: customQuery,
 }: ObjectExplorerProps<T>) {
-  const typeName = objectTypeName ?? `${type.name}s`;
-  const typePrefix = kebabCase(type.name.toLowerCase());
+  // Infer type name and prefix from type
+  const typeName = objectTypeName ?? `${type}s`;
+  const typePrefix = kebabCase(lowerFirst(type));
   const theme = useOrbitalTheme() || useTheme();
+
+  // Extract API hooks if API is provided
+  const apiHooks = api
+    ? extractApiHooks<T>(api, type)
+    : {
+        queryHook: null,
+        queryHookName: null,
+        createHook: null,
+        createHookName: null,
+        deleteHook: null,
+        deleteHookName: null,
+      };
+
+  // Determine which query to use
+  let queryResult: QueryResult<T>;
+
+  if (providedQueryResult) {
+    // Use the provided query result
+    queryResult = providedQueryResult;
+  } else if (customQuery) {
+    // Use the custom query hook
+    queryResult = customQuery();
+  } else if (apiHooks.queryHook) {
+    // Use the inferred query hook
+    queryResult = apiHooks.queryHook();
+  } else {
+    // No query available, throw an error
+    throw new Error(
+      `No query available for type '${type}'. Either provide 'queryResult', 'query', or ensure the API has a '${
+        apiHooks.queryHookName || `use${type}sControllerGetAll/FindAll`
+      }' hook.`
+    );
+  }
 
   const { data, isLoading, error } = queryResult;
   const objects: T[] = data ?? [];
+
+  // Use the mutation hooks if available
+  const [createMutation] = apiHooks.createHook ? apiHooks.createHook() : [null];
+  const [deleteMutation] = apiHooks.deleteHook ? apiHooks.deleteHook() : [null];
+
+  // Create handlers that use the API hooks
+  const { notify } = useNotification();
+
+  // Show notification when there's an error in the query result
+  useEffect(() => {
+    if (error) {
+      const errorMessage =
+        error?.data?.message ||
+        error?.message ||
+        `Error loading ${lowerFirst(typeName)}`;
+      notify(errorMessage, "error");
+    }
+  }, [error, notify, typeName]);
+
+  const handleApiAdd = async (object: Partial<T>) => {
+    if (!createMutation) {
+      const errorMessage = `No create endpoint function found for type '${type}'. Expected '${apiHooks.createHookName}' in the provided API.`;
+      notify(errorMessage, "error");
+      throw new Error(errorMessage);
+    }
+
+    // RTK Query endpoints for admin API expect an object with a DTO property
+    // The property name follows the convention: create{Type}Dto
+    const createDtoName = `create${type}Dto`;
+
+    // Create the payload with the correct structure
+    // For example: { createAreaDto: object }
+    const payload = { [createDtoName]: object };
+
+    try {
+      return await createMutation(payload).unwrap();
+    } catch (error: any) {
+      const errorMessage =
+        error?.data?.message ||
+        error?.message ||
+        `Failed to create ${lowerFirst(type)}`;
+      notify(errorMessage, "error");
+      console.error("Error in handleApiAdd:", error);
+      throw error;
+    }
+  };
+
+  const handleApiDelete = async (objectId: string) => {
+    if (!deleteMutation) {
+      const errorMessage = `No delete endpoint function found for type '${type}'. Expected '${apiHooks.deleteHookName}' in the provided API.`;
+      notify(errorMessage, "error");
+      throw new Error(errorMessage);
+    }
+
+    try {
+      return await deleteMutation({ _id: objectId }).unwrap();
+    } catch (error: any) {
+      const errorMessage =
+        error?.data?.message ||
+        error?.message ||
+        `Failed to delete ${lowerFirst(type)}`;
+      notify(errorMessage, "error");
+      console.error("Error in handleApiDelete:", error);
+      throw error;
+    }
+  };
+
+  // Use provided handlers or fall back to API-based handlers
+  const onAdd =
+    providedOnAdd || (apiHooks.createHook ? handleApiAdd : undefined);
+  const onDelete =
+    providedOnDelete || (apiHooks.deleteHook ? handleApiDelete : undefined);
 
   const [expandedNodes, setExpandedNodes] = useState<Record<string, boolean>>(
     {}
@@ -58,13 +204,23 @@ export function ObjectExplorer<T extends ExplorerObject>({
 
   const handleDeleteClick = (_id: string, event: React.MouseEvent) => {
     event.stopPropagation();
-    if (
-      onDelete &&
-      confirm(
-        `Are you sure you want to delete this ${type.name.toLowerCase()}?`
-      )
-    ) {
-      onDelete(_id);
+    if (onDelete) {
+      // Use the notification system to confirm deletion
+      if (
+        window.confirm(
+          `Are you sure you want to delete this ${lowerFirst(type)}?`
+        )
+      ) {
+        try {
+          onDelete(_id);
+          notify(`${type} deleted successfully`, "success");
+        } catch (error: any) {
+          // Error handling is already in handleApiDelete, this is just a fallback
+          const errorMessage =
+            error?.message || `Failed to delete ${lowerFirst(type)}`;
+          notify(errorMessage, "error");
+        }
+      }
     }
   };
 
@@ -107,21 +263,23 @@ export function ObjectExplorer<T extends ExplorerObject>({
 
           {/* Action buttons container */}
           <Box sx={{ display: "flex", alignItems: "center" }}>
-            {/* Custom item actions */}
-            {itemActions && itemActions(object)}
+            {/* Render default actions or custom actions */}
+            {(() => {
+              // Create the default actions component
+              const defaultActions = (
+                <DefaultItemActions
+                  object={object}
+                  type={type}
+                  typePrefix={typePrefix}
+                  onDelete={onDelete ? handleDeleteClick : undefined}
+                />
+              );
 
-            {/* Delete button (if onDelete is provided) */}
-            {onDelete && (
-              <ObjectExplorerItemActionButton
-                icon={<DeleteIcon fontSize="small" />}
-                onClick={(e: React.MouseEvent) =>
-                  handleDeleteClick(object._id, e)
-                }
-                title={`Delete ${type.name}`}
-                testId={`${typePrefix}-delete-button-${object._id}`}
-                dataCy={`${typePrefix}-delete-button-${object._id}`}
-              />
-            )}
+              // If custom item actions are provided, pass them the default actions
+              return itemActions
+                ? itemActions(object, defaultActions)
+                : defaultActions;
+            })()}
           </Box>
         </Box>
         {isExpanded && children.length > 0 && (
@@ -287,12 +445,20 @@ export function ObjectExplorer<T extends ExplorerObject>({
         <Box sx={{ p: 3 }} data-cy={`${typePrefix}-add-form`}>
           <AutoForm
             schema={formSchema}
-            onSubmit={(data) => {
+            onSubmit={async (data) => {
               if (onAdd) {
-                onAdd(data);
-                closeAddModal();
+                try {
+                  await onAdd(data as Partial<T>);
+                  notify(`${type} created successfully`, "success");
+                  closeAddModal();
+                } catch (error: any) {
+                  // Error handling is already in handleApiAdd, this is just a fallback
+                  // The modal will stay open so the user can correct the input
+                  console.error("Form submission error:", error);
+                }
               } else {
                 console.log("Form submitted:", data);
+                notify("No handler provided for form submission", "warning");
               }
             }}
           />
