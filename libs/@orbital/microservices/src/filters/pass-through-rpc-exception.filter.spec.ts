@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, jest } from "@jest/globals";
 import { ArgumentsHost } from "@nestjs/common";
 import { RpcException } from "@nestjs/microservices";
+import { OrbitalMicroservices } from "@orbital/contracts";
 import { lastValueFrom } from "rxjs";
 import { RemoteMicroserviceError } from "../errors";
 import { PassThroughRpcExceptionFilter } from "./pass-through-rpc-exception.filter";
@@ -36,6 +37,13 @@ describe("PassThroughRpcExceptionFilter", () => {
     it("should use the provided service name", () => {
       const customFilter = new PassThroughRpcExceptionFilter("custom-service");
       expect(customFilter["serviceName"]).toBe("custom-service");
+    });
+
+    it("should accept OrbitalMicroservices enum value", () => {
+      const enumFilter = new PassThroughRpcExceptionFilter(
+        OrbitalMicroservices.World
+      );
+      expect(enumFilter["serviceName"]).toBe(OrbitalMicroservices.World);
     });
 
     it("should use SERVICE_NAME env var if no name provided", () => {

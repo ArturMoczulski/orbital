@@ -1,22 +1,23 @@
 import { Controller, UseFilters } from "@nestjs/common";
+import { OrbitalMicroservices } from "@orbital/contracts";
 import {
   MessagePattern,
   MicroserviceController,
   PassThroughRpcExceptionFilter,
 } from "@orbital/microservices";
 import { CrudController } from "@orbital/nest";
-import { WorldModel as World } from "@orbital/typegoose";
+import { PartialWithoutId, WorldModel as World } from "@orbital/typegoose";
 import { WorldsService } from "./worlds.service";
 
-@MicroserviceController("world")
+@MicroserviceController(OrbitalMicroservices.World)
 @Controller()
-@UseFilters(new PassThroughRpcExceptionFilter("world"))
+@UseFilters(new PassThroughRpcExceptionFilter(OrbitalMicroservices.World))
 export class WorldsMicroserviceController extends CrudController<
   World,
   WorldsService
 > {
   constructor(worldsService: WorldsService) {
-    super(worldsService, "World");
+    super(worldsService);
   }
 
   /**
@@ -25,8 +26,8 @@ export class WorldsMicroserviceController extends CrudController<
    * @returns The created world
    */
   @MessagePattern()
-  async createWorld(createWorldData: Partial<World>): Promise<World> {
-    return this.create(createWorldData);
+  async create(createWorldData: PartialWithoutId<World>): Promise<World> {
+    return super.create(createWorldData);
   }
 
   /**
@@ -34,8 +35,8 @@ export class WorldsMicroserviceController extends CrudController<
    * @returns Array of all worlds
    */
   @MessagePattern()
-  async getAllWorlds(): Promise<World[]> {
-    return this.getAll();
+  async find(): Promise<World[]> {
+    return super.find();
   }
 
   /**
@@ -44,8 +45,8 @@ export class WorldsMicroserviceController extends CrudController<
    * @returns The world or null
    */
   @MessagePattern()
-  async getWorld(_id: string): Promise<World | null> {
-    return this.getById(_id);
+  async findById(_id: string): Promise<World | null> {
+    return super.findById(_id);
   }
 
   /**
@@ -54,38 +55,38 @@ export class WorldsMicroserviceController extends CrudController<
    * @returns The updated world or null
    */
   @MessagePattern()
-  async updateWorld(updateWorldData: Partial<World>): Promise<World | null> {
+  async update(updateWorldData: Partial<World>): Promise<World | null> {
     const { _id, ...updateData } = updateWorldData;
-    return this.update({ _id: _id as string, updateDto: updateData });
+    return super.update({ _id: _id as string, ...updateData });
   }
 
   /**
    * Delete a world
    * @param _id The world ID
-   * @returns The deleted world or null
+   * @returns True if deleted, null if not found
    */
   @MessagePattern()
-  async deleteWorld(_id: string): Promise<World | null> {
-    return this.delete(_id);
+  async delete(_id: string): Promise<boolean | null> {
+    return super.delete(_id);
   }
 
   /**
-   * Get worlds by shard
+   * Find worlds by shard
    * @param shard The shard identifier
    * @returns Array of worlds in the specified shard
    */
   @MessagePattern()
-  async getWorldsByShard(shard: string): Promise<World[]> {
-    return this.service.getWorldsByShard(shard);
+  async findByShard(shard: string): Promise<World[]> {
+    return this.service.findByShard(shard);
   }
 
   /**
-   * Get worlds by technology level
+   * Find worlds by technology level
    * @param techLevel The technology level
    * @returns Array of worlds with the specified technology level
    */
   @MessagePattern()
-  async getWorldsByTechLevel(techLevel: number): Promise<World[]> {
-    return this.service.getWorldsByTechLevel(techLevel);
+  async findByTechLevel(techLevel: number): Promise<World[]> {
+    return this.service.findByTechLevel(techLevel);
   }
 }

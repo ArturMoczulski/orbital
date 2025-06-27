@@ -86,12 +86,12 @@ describe("AreasRepository", () => {
     });
   });
 
-  describe("findAll", () => {
+  describe("find", () => {
     it("should find all areas with optional filter and projection", async () => {
       const filter = { worldId: "world1" };
       const projection = { name: 1, description: 1 };
 
-      const result = await repository.findAll(filter, projection);
+      const result = await repository.find(filter, projection);
 
       expect(result).toEqual([mockAreaModel]);
       expect(areaModelMock.find).toHaveBeenCalledWith(filter, projection);

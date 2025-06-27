@@ -1,3 +1,4 @@
+import { PartialWithoutId } from "@orbital/typegoose";
 import { CrudService } from "../services/crud.service";
 
 /**
@@ -9,11 +10,11 @@ export abstract class CrudController<T, S extends CrudService<T, any>> {
   /**
    * Constructor for the MicroserviceCrudController
    * @param service The service instance
-   * @param entityName The name of the entity (e.g., 'Area', 'World')
+   * @param entityName Optional name of the entity (e.g., 'Area', 'World')
    */
   constructor(
     protected readonly service: S,
-    protected readonly entityName: string
+    protected readonly entityName?: string
   ) {}
 
   /**
@@ -21,7 +22,7 @@ export abstract class CrudController<T, S extends CrudService<T, any>> {
    * @param createDto Partial entity data
    * @returns The created entity
    */
-  async create(createDto: Partial<T>): Promise<T> {
+  async create(createDto: PartialWithoutId<T>): Promise<T> {
     return this.service.create(createDto);
   }
 

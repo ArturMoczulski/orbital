@@ -26,7 +26,7 @@ describe("AreasService", () => {
   const mockAreasRepository = {
     create: jest.fn(),
     findById: jest.fn(),
-    findAll: jest.fn(),
+    find: jest.fn(),
     update: jest.fn(),
     delete: jest.fn(),
     findByWorldId: jest.fn(),
@@ -69,11 +69,11 @@ describe("AreasService", () => {
     });
   });
 
-  describe("getById", () => {
+  describe("findById", () => {
     it("should get an area by id", async () => {
       mockAreasRepository.findById.mockResolvedValue(mockAreaModel);
 
-      const result = await service.getById(mockArea._id);
+      const result = await service.findById(mockArea._id);
 
       expect(result).toEqual(mockAreaModel);
       expect(mockAreasRepository.findById).toHaveBeenCalledWith(mockArea._id);
@@ -82,7 +82,7 @@ describe("AreasService", () => {
     it("should return null if area not found", async () => {
       mockAreasRepository.findById.mockResolvedValue(null);
 
-      const result = await service.getById("nonexistent-id");
+      const result = await service.findById("nonexistent-id");
 
       expect(result).toBeNull();
       expect(mockAreasRepository.findById).toHaveBeenCalledWith(
@@ -91,17 +91,17 @@ describe("AreasService", () => {
     });
   });
 
-  describe("getAll", () => {
+  describe("find", () => {
     it("should get all areas with optional filter and projection", async () => {
       const filter = { worldId: "world1" };
       const projection = { name: 1, description: 1 };
 
-      mockAreasRepository.findAll.mockResolvedValue([mockAreaModel]);
+      mockAreasRepository.find.mockResolvedValue([mockAreaModel]);
 
-      const result = await service.getAll(filter);
+      const result = await service.find(filter);
 
       expect(result).toEqual([mockAreaModel]);
-      expect(mockAreasRepository.findAll).toHaveBeenCalledWith(filter);
+      expect(mockAreasRepository.find).toHaveBeenCalledWith(filter);
     });
   });
 
@@ -170,35 +170,35 @@ describe("AreasService", () => {
     });
   });
 
-  describe("getAreasByWorldId", () => {
+  describe("findByWorldId", () => {
     it("should get areas by world id", async () => {
       mockAreasRepository.findByWorldId.mockResolvedValue([mockAreaModel]);
 
-      const result = await service.getAreasByWorldId("world1");
+      const result = await service.findByWorldId("world1");
 
       expect(result).toEqual([mockAreaModel]);
       expect(mockAreasRepository.findByWorldId).toHaveBeenCalledWith("world1");
     });
   });
 
-  describe("getAreasByParentId", () => {
+  describe("findByParentId", () => {
     it("should get areas by parent id", async () => {
       const parentId = mockArea.parentId || null;
       mockAreasRepository.findByParentId.mockResolvedValue([mockAreaModel]);
 
-      const result = await service.getAreasByParentId(parentId);
+      const result = await service.findByParentId(parentId);
 
       expect(result).toEqual([mockAreaModel]);
       expect(mockAreasRepository.findByParentId).toHaveBeenCalledWith(parentId);
     });
   });
 
-  describe("getAreasByTags", () => {
+  describe("findByTags", () => {
     it("should get areas by tags", async () => {
       const tags = ["tag1", "tag2"];
       mockAreasRepository.findByTags.mockResolvedValue([mockAreaModel]);
 
-      const result = await service.getAreasByTags(tags);
+      const result = await service.findByTags(tags);
 
       expect(result).toEqual([mockAreaModel]);
       expect(mockAreasRepository.findByTags).toHaveBeenCalledWith(tags);

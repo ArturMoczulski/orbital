@@ -10,29 +10,29 @@ export class AreasService extends CrudService<Area, AreasRepository> {
   }
 
   /**
-   * Get areas by world ID
+   * Find areas by world ID
    * @param worldId The world ID
    * @returns Array of areas in the specified world
    */
-  async getAreasByWorldId(worldId: string): Promise<Area[]> {
+  async findByWorldId(worldId: string): Promise<Area[]> {
     return this.repository.findByWorldId(worldId);
   }
 
   /**
-   * Get areas by parent ID
+   * Find areas by parent ID
    * @param parentId The parent area ID or null for top-level areas
    * @returns Array of areas
    */
-  async getAreasByParentId(parentId: string | null): Promise<Area[]> {
+  async findByParentId(parentId: string | null): Promise<Area[]> {
     return this.repository.findByParentId(parentId);
   }
 
   /**
-   * Get areas by tags
+   * Find areas by tags
    * @param tags Array of tags to search for
    * @returns Array of areas with any of the specified tags
    */
-  async getAreasByTags(tags: string[]): Promise<Area[]> {
+  async findByTags(tags: string[]): Promise<Area[]> {
     return this.repository.findByTags(tags);
   }
 }

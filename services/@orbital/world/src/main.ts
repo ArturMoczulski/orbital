@@ -1,23 +1,22 @@
 import { NestFactory } from "@nestjs/core";
 import { MicroserviceOptions, Transport } from "@nestjs/microservices";
+import { OrbitalMicroservices } from "@orbital/contracts";
 import { PassThroughRpcExceptionFilter } from "@orbital/microservices";
 import * as dotenv from "dotenv";
 import "reflect-metadata";
 import { AppModule } from "./app.module";
 
-async function bootstrap() {
-  // Load environment variables based on NODE_ENV
-  if (process.env.NODE_ENV === "test") {
-    dotenv.config({ path: "../.env.test" });
-  } else {
-    dotenv.config({ path: "../.env.local" });
-  }
+// Load environment variables from .env.local
+dotenv.config({ path: "../.env.local" });
 
+async function bootstrap() {
   // Create the NestJS application
   const app = await NestFactory.create(AppModule, { cors: true });
 
   // Apply global exception filter
-  app.useGlobalFilters(new PassThroughRpcExceptionFilter("world"));
+  app.useGlobalFilters(
+    new PassThroughRpcExceptionFilter(OrbitalMicroservices.World)
+  );
 
   // Connect to NATS for microservice communication
   app.connectMicroservice<MicroserviceOptions>({

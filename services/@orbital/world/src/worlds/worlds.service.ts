@@ -10,20 +10,20 @@ export class WorldsService extends CrudService<World, WorldsRepository> {
   }
 
   /**
-   * Get worlds by shard
+   * Find worlds by shard
    * @param shard The shard identifier
    * @returns Array of worlds in the specified shard
    */
-  async getWorldsByShard(shard: string): Promise<World[]> {
+  async findByShard(shard: string): Promise<World[]> {
     return this.repository.findByShard(shard);
   }
 
   /**
-   * Get worlds by technology level
+   * Find worlds by technology level
    * @param techLevel The technology level
    * @returns Array of worlds with the specified technology level
    */
-  async getWorldsByTechLevel(techLevel: number): Promise<World[]> {
+  async findByTechLevel(techLevel: number): Promise<World[]> {
     return this.repository.findByTechLevel(techLevel);
   }
 }

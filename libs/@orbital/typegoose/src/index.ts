@@ -1,3 +1,6 @@
+// Utility types
+export * from "./types/utils";
+
 // Character models
 export * from "./models/attributes.model";
 export * from "./models/character-skill.model";

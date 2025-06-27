@@ -1,4 +1,10 @@
 {
   "extends": "./tsconfig.json",
-  "exclude": ["src/**/*.spec.ts", "src/**/*.test.ts"]
+  "compilerOptions": {
+    "skipLibCheck": true,
+    "noEmitOnError": false,
+    "allowJs": true,
+    "checkJs": false
+  },
+  "exclude": ["src/**/*.spec.ts", "src/**/*.test.ts", "node_modules"]
 }

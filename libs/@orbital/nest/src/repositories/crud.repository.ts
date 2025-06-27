@@ -1,16 +1,18 @@
+import { PartialWithoutId } from "@orbital/typegoose";
 import {
   BulkCountedResponse,
   BulkItemizedResponse,
   BulkOperation,
 } from "@scout/core/src/bulk-operations";
 import { ReturnModelType } from "@typegoose/typegoose";
-import { ZodObject } from "zod";
+import { ZodError, ZodObject } from "zod";
 
 /**
  * Generic CRUD repository for MongoDB models using Typegoose
  * @template T The entity type (e.g., Area, World)
+ * @template TCreateInput The type for create operations, defaults to PartialWithoutId<T>
  */
-export abstract class CrudRepository<T> {
+export abstract class CrudRepository<T, TCreateInput = PartialWithoutId<T>> {
   /**
    * Constructor for the CrudRepository
    * @param model The Typegoose model
@@ -27,13 +29,13 @@ export abstract class CrudRepository<T> {
    * @returns BulkItemizedResponse for multiple entities or a single entity if input was singular
    */
   async create(
-    dto: Partial<T> | Partial<T>[]
-  ): Promise<T | BulkItemizedResponse<Partial<T>, T>> {
+    dto: TCreateInput | TCreateInput[]
+  ): Promise<T | BulkItemizedResponse<TCreateInput, T>> {
     const isSingular = !Array.isArray(dto);
     const items = isSingular ? [dto] : dto;
 
     // Use BulkOperation.itemized for bulk creation
-    const response = await BulkOperation.itemized<Partial<T>, T>(
+    const response = await BulkOperation.itemized<TCreateInput, T>(
       items,
       async (dtos, success, fail) => {
         try {
@@ -132,6 +134,52 @@ export abstract class CrudRepository<T> {
     projection?: Record<string, any>
   ): Promise<T | null> {
     return this.findOne({ _id }, projection);
+  }
+
+  /**
+   * Find entities by parent ID
+   * @param parentId The parent ID or null for top-level entities
+   * @returns Array of entities with the specified parent ID
+   * @throws Error if the entity schema doesn't have a parentId field
+   */
+  async findByParentId(parentId: string | null): Promise<T[]> {
+    // Check if the schema has a parentId field
+    if (!this.schema.shape.parentId) {
+      throw new ZodError([
+        {
+          code: "invalid_type",
+          expected: "object",
+          received: "undefined",
+          path: ["parentId"],
+          message: "Entity schema does not have a parentId field",
+        },
+      ]);
+    }
+
+    return this.find({ parentId });
+  }
+
+  /**
+   * Find entities by tags
+   * @param tags Array of tags to search for
+   * @returns Array of entities with any of the specified tags
+   * @throws Error if the entity schema doesn't have a tags field
+   */
+  async findByTags(tags: string[]): Promise<T[]> {
+    // Check if the schema has a tags field
+    if (!this.schema.shape.tags) {
+      throw new ZodError([
+        {
+          code: "invalid_type",
+          expected: "object",
+          received: "undefined",
+          path: ["tags"],
+          message: "Entity schema does not have a tags field",
+        },
+      ]);
+    }
+
+    return this.find({ tags: { $in: tags } });
   }
 
   /**

@@ -28,10 +28,7 @@ describe("AreasMicroserviceController (e2e)", () => {
       await Promise.all(
         testAreas.map((area) =>
           lastValueFrom(
-            client.send(
-              "world.AreasMicroserviceController.deleteArea",
-              area._id
-            )
+            client.send("world.AreasMicroserviceController.delete", area._id)
           )
         )
       );
@@ -43,7 +40,7 @@ describe("AreasMicroserviceController (e2e)", () => {
     await client.close();
   });
 
-  describe("createArea", () => {
+  describe("create", () => {
     it("should create a new area", async () => {
       // Create test data using CoreArea.mock()
       const createAreaDto = CoreArea.mock({
@@ -55,10 +52,7 @@ describe("AreasMicroserviceController (e2e)", () => {
 
       // Send the RPC message
       const result = await lastValueFrom(
-        client.send(
-          "world.AreasMicroserviceController.createArea",
-          createAreaDto
-        )
+        client.send("world.AreasMicroserviceController.create", createAreaDto)
       );
 
       // Store for cleanup
@@ -86,7 +80,7 @@ describe("AreasMicroserviceController (e2e)", () => {
         // This should throw an error
         await lastValueFrom(
           client.send(
-            "world.AreasMicroserviceController.createArea",
+            "world.AreasMicroserviceController.create",
             invalidAreaDto
           )
         );
@@ -118,7 +112,7 @@ describe("AreasMicroserviceController (e2e)", () => {
     });
   });
 
-  describe("getAllAreas", () => {
+  describe("find", () => {
     beforeAll(async () => {
       // Create some test areas using CoreArea.mock()
       const createAreaDtos = Array.from({ length: 3 }, (_, i) =>
@@ -134,7 +128,7 @@ describe("AreasMicroserviceController (e2e)", () => {
       const createdAreas = await Promise.all(
         createAreaDtos.map((dto) =>
           lastValueFrom(
-            client.send("world.AreasMicroserviceController.createArea", dto)
+            client.send("world.AreasMicroserviceController.create", dto)
           )
         )
       );
@@ -146,7 +140,7 @@ describe("AreasMicroserviceController (e2e)", () => {
     it("should return all areas", async () => {
       // Send the RPC message
       const result = await lastValueFrom(
-        client.send("world.AreasMicroserviceController.getAllAreas", {})
+        client.send("world.AreasMicroserviceController.find", {})
       );
 
       // Assertions
@@ -156,7 +150,7 @@ describe("AreasMicroserviceController (e2e)", () => {
     });
   });
 
-  describe("getArea", () => {
+  describe("findById", () => {
     let testArea: TypegooseArea;
 
     beforeAll(async () => {
@@ -170,10 +164,7 @@ describe("AreasMicroserviceController (e2e)", () => {
 
       // Create the area
       testArea = await lastValueFrom(
-        client.send(
-          "world.AreasMicroserviceController.createArea",
-          createAreaDto
-        )
+        client.send("world.AreasMicroserviceController.create", createAreaDto)
       );
 
       // Store for cleanup
@@ -183,7 +174,7 @@ describe("AreasMicroserviceController (e2e)", () => {
     it("should return an area by ID", async () => {
       // Send the RPC message
       const result = await lastValueFrom(
-        client.send("world.AreasMicroserviceController.getArea", testArea._id)
+        client.send("world.AreasMicroserviceController.findById", testArea._id)
       );
 
       // Assertions
@@ -195,7 +186,7 @@ describe("AreasMicroserviceController (e2e)", () => {
     it("should return null for non-existent ID", async () => {
       // Send the RPC message with a non-existent ID
       const result = await lastValueFrom(
-        client.send("world.AreasMicroserviceController.getArea", randomUUID())
+        client.send("world.AreasMicroserviceController.findById", randomUUID())
       );
 
       // Assertions
@@ -203,7 +194,7 @@ describe("AreasMicroserviceController (e2e)", () => {
     });
   });
 
-  describe("updateArea", () => {
+  describe("update", () => {
     let testArea: TypegooseArea;
 
     beforeAll(async () => {
@@ -217,10 +208,7 @@ describe("AreasMicroserviceController (e2e)", () => {
 
       // Create the area
       testArea = await lastValueFrom(
-        client.send(
-          "world.AreasMicroserviceController.createArea",
-          createAreaDto
-        )
+        client.send("world.AreasMicroserviceController.create", createAreaDto)
       );
 
       // Store for cleanup
@@ -237,7 +225,7 @@ describe("AreasMicroserviceController (e2e)", () => {
 
       // Send the RPC message
       const result = await lastValueFrom(
-        client.send("world.AreasMicroserviceController.updateArea", {
+        client.send("world.AreasMicroserviceController.update", {
           _id: testArea._id,
           updateDto,
         })
@@ -267,7 +255,7 @@ describe("AreasMicroserviceController (e2e)", () => {
 
       // Send the RPC message with a non-existent ID
       const result = await lastValueFrom(
-        client.send("world.AreasMicroserviceController.updateArea", {
+        client.send("world.AreasMicroserviceController.update", {
           _id: randomUUID(),
           updateDto,
         })
@@ -278,7 +266,7 @@ describe("AreasMicroserviceController (e2e)", () => {
     });
   });
 
-  describe("deleteArea", () => {
+  describe("delete", () => {
     let testArea: TypegooseArea;
 
     beforeEach(async () => {
@@ -292,20 +280,14 @@ describe("AreasMicroserviceController (e2e)", () => {
 
       // Create the area
       testArea = await lastValueFrom(
-        client.send(
-          "world.AreasMicroserviceController.createArea",
-          createAreaDto
-        )
+        client.send("world.AreasMicroserviceController.create", createAreaDto)
       );
     });
 
     it("should delete an area", async () => {
       // Send the RPC message
       const result = await lastValueFrom(
-        client.send(
-          "world.AreasMicroserviceController.deleteArea",
-          testArea._id
-        )
+        client.send("world.AreasMicroserviceController.delete", testArea._id)
       );
 
       // Assertions
@@ -314,7 +296,7 @@ describe("AreasMicroserviceController (e2e)", () => {
 
       // Verify the area is deleted
       const deletedArea = await lastValueFrom(
-        client.send("world.AreasMicroserviceController.getArea", testArea._id)
+        client.send("world.AreasMicroserviceController.findById", testArea._id)
       );
       expect(deletedArea).toBeNull();
     });
@@ -322,10 +304,7 @@ describe("AreasMicroserviceController (e2e)", () => {
     it("should return null for non-existent ID", async () => {
       // Send the RPC message with a non-existent ID
       const result = await lastValueFrom(
-        client.send(
-          "world.AreasMicroserviceController.deleteArea",
-          randomUUID()
-        )
+        client.send("world.AreasMicroserviceController.delete", randomUUID())
       );
 
       // Assertions
@@ -333,7 +312,7 @@ describe("AreasMicroserviceController (e2e)", () => {
     });
   });
 
-  describe("getAreasByWorldId", () => {
+  describe("findByWorldId", () => {
     const testWorldId = randomUUID();
 
     beforeAll(async () => {
@@ -351,7 +330,7 @@ describe("AreasMicroserviceController (e2e)", () => {
       const createdAreas = await Promise.all(
         createAreaDtos.map((dto) =>
           lastValueFrom(
-            client.send("world.AreasMicroserviceController.createArea", dto)
+            client.send("world.AreasMicroserviceController.create", dto)
           )
         )
       );
@@ -364,7 +343,7 @@ describe("AreasMicroserviceController (e2e)", () => {
       // Send the RPC message
       const result = await lastValueFrom(
         client.send(
-          "world.AreasMicroserviceController.getAreasByWorldId",
+          "world.AreasMicroserviceController.findByWorldId",
           testWorldId
         )
       );
@@ -382,7 +361,7 @@ describe("AreasMicroserviceController (e2e)", () => {
       // Send the RPC message with a non-existent worldId
       const result = await lastValueFrom(
         client.send(
-          "world.AreasMicroserviceController.getAreasByWorldId",
+          "world.AreasMicroserviceController.findByWorldId",
           randomUUID()
         )
       );
@@ -394,7 +373,7 @@ describe("AreasMicroserviceController (e2e)", () => {
     });
   });
 
-  describe("getAreasByParentId", () => {
+  describe("findByParentId", () => {
     const parentId = randomUUID();
 
     beforeAll(async () => {
@@ -413,7 +392,7 @@ describe("AreasMicroserviceController (e2e)", () => {
       const createdAreas = await Promise.all(
         createAreaDtos.map((dto) =>
           lastValueFrom(
-            client.send("world.AreasMicroserviceController.createArea", dto)
+            client.send("world.AreasMicroserviceController.create", dto)
           )
         )
       );
@@ -426,7 +405,7 @@ describe("AreasMicroserviceController (e2e)", () => {
       // Send the RPC message
       const result = await lastValueFrom(
         client.send(
-          "world.AreasMicroserviceController.getAreasByParentId",
+          "world.AreasMicroserviceController.findByParentId",
           parentId
         )
       );
@@ -444,7 +423,7 @@ describe("AreasMicroserviceController (e2e)", () => {
       // Send the RPC message with a non-existent parentId
       const result = await lastValueFrom(
         client.send(
-          "world.AreasMicroserviceController.getAreasByParentId",
+          "world.AreasMicroserviceController.findByParentId",
           randomUUID()
         )
       );
@@ -456,7 +435,7 @@ describe("AreasMicroserviceController (e2e)", () => {
     });
   });
 
-  describe("getAreasByTags", () => {
+  describe("findByTags", () => {
     const uniqueTag = `unique-tag-${randomUUID()}`;
 
     beforeAll(async () => {
@@ -474,7 +453,7 @@ describe("AreasMicroserviceController (e2e)", () => {
       const createdAreas = await Promise.all(
         createAreaDtos.map((dto) =>
           lastValueFrom(
-            client.send("world.AreasMicroserviceController.createArea", dto)
+            client.send("world.AreasMicroserviceController.create", dto)
           )
         )
       );
@@ -486,9 +465,7 @@ describe("AreasMicroserviceController (e2e)", () => {
     it("should return areas by tags", async () => {
       // Send the RPC message
       const result = await lastValueFrom(
-        client.send("world.AreasMicroserviceController.getAreasByTags", [
-          uniqueTag,
-        ])
+        client.send("world.AreasMicroserviceController.findByTags", [uniqueTag])
       );
 
       // Assertions
@@ -503,7 +480,7 @@ describe("AreasMicroserviceController (e2e)", () => {
     it("should return empty array for non-existent tag", async () => {
       // Send the RPC message with a non-existent tag
       const result = await lastValueFrom(
-        client.send("world.AreasMicroserviceController.getAreasByTags", [
+        client.send("world.AreasMicroserviceController.findByTags", [
           `non-existent-tag-${randomUUID()}`,
         ])
       );
@@ -528,7 +505,7 @@ describe("AreasMicroserviceController (e2e)", () => {
         // This should throw an error
         await lastValueFrom(
           client.send(
-            "world.AreasMicroserviceController.createArea",
+            "world.AreasMicroserviceController.create",
             invalidAreaDto
           )
         );
@@ -589,7 +566,7 @@ describe("AreasMicroserviceController (e2e)", () => {
         // This should throw an error
         await lastValueFrom(
           client.send(
-            "world.AreasMicroserviceController.createArea",
+            "world.AreasMicroserviceController.create",
             invalidAreaDto
           )
         );

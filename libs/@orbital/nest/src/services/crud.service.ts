@@ -1,3 +1,4 @@
+import { PartialWithoutId } from "@orbital/typegoose";
 import { CrudRepository } from "../repositories/crud.repository";
 
 /**
@@ -17,7 +18,7 @@ export abstract class CrudService<T, R extends CrudRepository<T>> {
    * @param createDto Partial entity data
    * @returns The created entity
    */
-  async create(createDto: Partial<T>): Promise<T> {
+  async create(createDto: PartialWithoutId<T>): Promise<T> {
     return this.repository.create(createDto) as Promise<T>;
   }
 

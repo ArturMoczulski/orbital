@@ -9,6 +9,7 @@ import {
 } from "@nestjs/core";
 import { EventEmitter2, EventEmitterModule } from "@nestjs/event-emitter";
 import { ClientsModule, Transport } from "@nestjs/microservices";
+import { OrbitalMicroservices } from "@orbital/contracts";
 import { PassThroughRpcExceptionFilter } from "@orbital/microservices";
 import { AreasModule } from "./areas/areas.module";
 import { CharactersModule } from "./characters/characters.module";
@@ -32,7 +33,7 @@ import { WorldsModule } from "./worlds/worlds.module";
           transport: Transport.NATS,
           options: {
             servers: [
-              configService.get<string>("NATS_URL", "nats://localhost:4222"),
+              configService.get<string>("NATS_URL", "nats://localhost:4223"),
             ],
           },
         }),
@@ -52,7 +53,7 @@ import { WorldsModule } from "./worlds/worlds.module";
     {
       provide: APP_FILTER,
       useFactory: () => {
-        return new PassThroughRpcExceptionFilter("world");
+        return new PassThroughRpcExceptionFilter(OrbitalMicroservices.World);
       },
     },
   ],

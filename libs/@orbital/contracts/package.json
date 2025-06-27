@@ -1,12 +1,11 @@
 {
-  "name": "@orbital/microservices",
+  "name": "@orbital/contracts",
   "version": "1.0.0",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
     "build": "tsc -p tsconfig.json --sourceMap --inlineSources",
     "postbuild": "chmod +x bin/generate-asyncapi.js bin/generate-spec.js bin/generate-proxy.js bin/generate-client.js",
-    "generate-asyncapi": "node bin/generate-asyncapi.js",
     "test": "jest",
     "test:unit": "jest --config jest.unit.config.js",
     "test:integration": "jest --config jest.integration.config.js",
@@ -15,7 +14,6 @@
   "dependencies": {
     "@asyncapi/generator": "1.9.0",
     "@asyncapi/ts-nats-template": "^0.2.1",
-    "@orbital/contracts": "^1.0.0",
     "nestjs-asyncapi": "^1.0.0",
     "react": "^16.14.0",
     "react-dom": "^16.14.0"

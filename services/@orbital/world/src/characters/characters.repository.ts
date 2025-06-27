@@ -1,7 +1,7 @@
-import { Injectable, Inject } from "@nestjs/common";
-import { getModelToken } from "nestjs-typegoose";
+import { Inject, Injectable } from "@nestjs/common";
+import { CharacterModel, PartialWithoutId } from "@orbital/typegoose";
 import type { ReturnModelType } from "@typegoose/typegoose";
-import { CharacterModel } from "@orbital/typegoose";
+import { getModelToken } from "nestjs-typegoose";
 
 @Injectable()
 export class CharactersRepository {
@@ -10,7 +10,7 @@ export class CharactersRepository {
     private readonly characterModel: ReturnModelType<typeof CharacterModel>
   ) {}
 
-  async create(dto: Partial<CharacterModel>): Promise<CharacterModel> {
+  async create(dto: PartialWithoutId<CharacterModel>): Promise<CharacterModel> {
     const created = new this.characterModel(dto);
     return (await created.save()) as unknown as CharacterModel;
   }

@@ -1,5 +1,6 @@
 import { ArgumentsHost, Catch, ExceptionFilter, Logger } from "@nestjs/common";
 import { RpcException } from "@nestjs/microservices";
+import { OrbitalMicroservices } from "@orbital/contracts";
 import { Observable, throwError } from "rxjs";
 import { RemoteMicroserviceError } from "../errors";
 
@@ -21,9 +22,11 @@ export class PassThroughRpcExceptionFilter implements ExceptionFilter {
    *
    * @param serviceName The name of the microservice using this filter.
    *                    Used to identify the source of errors.
+   *                    Can be a string or an OrbitalMicroservices enum value.
    */
-  constructor(serviceName?: string) {
-    this.serviceName = serviceName || process.env.SERVICE_NAME || "unknown";
+  constructor(serviceName?: string | OrbitalMicroservices) {
+    this.serviceName =
+      serviceName?.toString() || process.env.SERVICE_NAME || "unknown";
   }
 
   catch(exception: any, host: ArgumentsHost): Observable<never> | void {

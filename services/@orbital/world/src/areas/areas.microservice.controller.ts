@@ -1,22 +1,23 @@
 import { Controller, UseFilters } from "@nestjs/common";
+import { OrbitalMicroservices } from "@orbital/contracts";
 import {
   MessagePattern,
   MicroserviceController,
   PassThroughRpcExceptionFilter,
 } from "@orbital/microservices";
 import { CrudController } from "@orbital/nest";
-import { AreaModel as Area } from "@orbital/typegoose";
+import { AreaModel as Area, PartialWithoutId } from "@orbital/typegoose";
 import { AreasService } from "./areas.service";
 
-@MicroserviceController("world")
+@MicroserviceController(OrbitalMicroservices.World)
 @Controller()
-@UseFilters(new PassThroughRpcExceptionFilter("world"))
+@UseFilters(new PassThroughRpcExceptionFilter(OrbitalMicroservices.World))
 export class AreasMicroserviceController extends CrudController<
   Area,
   AreasService
 > {
   constructor(areasService: AreasService) {
-    super(areasService, "Area");
+    super(areasService);
   }
 
   /**
@@ -25,8 +26,8 @@ export class AreasMicroserviceController extends CrudController<
    * @returns The created area
    */
   @MessagePattern()
-  async createArea(createAreaData: Partial<Area>): Promise<Area> {
-    return this.create(createAreaData);
+  async create(createAreaData: PartialWithoutId<Area>): Promise<Area> {
+    return super.create(createAreaData);
   }
 
   /**
@@ -34,8 +35,8 @@ export class AreasMicroserviceController extends CrudController<
    * @returns Array of all areas
    */
   @MessagePattern()
-  async getAllAreas(): Promise<Area[]> {
-    return this.getAll();
+  async find(): Promise<Area[]> {
+    return super.find();
   }
 
   /**
@@ -44,8 +45,8 @@ export class AreasMicroserviceController extends CrudController<
    * @returns The area or null
    */
   @MessagePattern()
-  async getArea(_id: string): Promise<Area | null> {
-    return this.getById(_id);
+  async findById(_id: string): Promise<Area | null> {
+    return super.findById(_id);
   }
 
   /**
@@ -54,48 +55,48 @@ export class AreasMicroserviceController extends CrudController<
    * @returns The updated area or null
    */
   @MessagePattern()
-  async updateArea(updateAreaData: Partial<Area>): Promise<Area | null> {
+  async update(updateAreaData: Partial<Area>): Promise<Area | null> {
     const { _id, ...updateData } = updateAreaData;
-    return this.update({ _id: _id as string, updateDto: updateData });
+    return super.update({ _id: _id as string, ...updateData });
   }
 
   /**
    * Delete an area
    * @param _id The area ID
-   * @returns The deleted area or null
+   * @returns True if deleted, null if not found
    */
   @MessagePattern()
-  async deleteArea(_id: string): Promise<Area | null> {
-    return this.delete(_id);
+  async delete(_id: string): Promise<boolean | null> {
+    return super.delete(_id);
   }
 
   /**
-   * Get areas by world ID
+   * Find areas by world ID
    * @param worldId The world ID
    * @returns Array of areas in the specified world
    */
   @MessagePattern()
-  async getAreasByWorldId(worldId: string): Promise<Area[]> {
-    return this.service.getAreasByWorldId(worldId);
+  async findByWorldId(worldId: string): Promise<Area[]> {
+    return this.service.findByWorldId(worldId);
   }
 
   /**
-   * Get areas by parent ID
+   * Find areas by parent ID
    * @param parentId The parent area ID or null for top-level areas
    * @returns Array of areas
    */
   @MessagePattern()
-  async getAreasByParentId(parentId: string | null): Promise<Area[]> {
-    return this.service.getAreasByParentId(parentId);
+  async findByParentId(parentId: string | null): Promise<Area[]> {
+    return this.service.findByParentId(parentId);
   }
 
   /**
-   * Get areas by tags
+   * Find areas by tags
    * @param tags Array of tags to search for
    * @returns Array of areas with any of the specified tags
    */
   @MessagePattern()
-  async getAreasByTags(tags: string[]): Promise<Area[]> {
-    return this.service.getAreasByTags(tags);
+  async findByTags(tags: string[]): Promise<Area[]> {
+    return this.service.findByTags(tags);
   }
 }

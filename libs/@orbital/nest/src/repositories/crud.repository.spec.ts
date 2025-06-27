@@ -1,6 +1,6 @@
 import { BulkOperation } from "@scout/core/src/bulk-operations";
 import { ReturnModelType } from "@typegoose/typegoose";
-import { z } from "zod";
+import { z, ZodError } from "zod";
 import { CrudRepository } from "./crud.repository";
 
 // Spy on BulkOperation methods instead of mocking the entire module
@@ -27,6 +27,7 @@ const testEntitySchema = z.object({
   name: z.string(),
   description: z.string().optional(),
   count: z.number().int().positive(),
+  parentId: z.string().nullable().optional(),
   tags: z.array(z.string()).optional(),
   createdAt: z.date().optional(),
   updatedAt: z.date().optional(),
@@ -402,6 +403,86 @@ describe("CrudRepository", () => {
       const result = await repository.findById("nonexistent-id");
 
       expect(result).toBeNull();
+    });
+  });
+
+  describe("findByParentId", () => {
+    it("should find entities by parent ID", async () => {
+      const parentId = "parent-id-123";
+
+      await repository.findByParentId(parentId);
+
+      expect(modelMock.find).toHaveBeenCalledWith({ parentId }, undefined);
+    });
+
+    it("should find top-level entities with null parentId", async () => {
+      await repository.findByParentId(null);
+
+      expect(modelMock.find).toHaveBeenCalledWith(
+        { parentId: null },
+        undefined
+      );
+    });
+
+    it("should throw ZodError if schema doesn't have parentId field", async () => {
+      // Create a schema without parentId
+      const schemaWithoutParentId = z.object({
+        name: z.string(),
+        count: z.number(),
+      });
+
+      // Create a repository with the limited schema
+      const limitedRepository = new TestRepository(
+        modelMock,
+        schemaWithoutParentId
+      );
+
+      try {
+        await limitedRepository.findByParentId("any-id");
+        fail("Should have thrown a ZodError");
+      } catch (error) {
+        expect(error).toBeInstanceOf(ZodError);
+        expect(error.issues[0].message).toBe(
+          "Entity schema does not have a parentId field"
+        );
+      }
+    });
+  });
+
+  describe("findByTags", () => {
+    it("should find entities by tags", async () => {
+      const tags = ["tag1", "tag2", "tag3"];
+
+      await repository.findByTags(tags);
+
+      expect(modelMock.find).toHaveBeenCalledWith(
+        { tags: { $in: tags } },
+        undefined
+      );
+    });
+
+    it("should throw ZodError if schema doesn't have tags field", async () => {
+      // Create a schema without tags
+      const schemaWithoutTags = z.object({
+        name: z.string(),
+        count: z.number(),
+      });
+
+      // Create a repository with the limited schema
+      const limitedRepository = new TestRepository(
+        modelMock,
+        schemaWithoutTags
+      );
+
+      try {
+        await limitedRepository.findByTags(["tag1"]);
+        fail("Should have thrown a ZodError");
+      } catch (error) {
+        expect(error).toBeInstanceOf(ZodError);
+        expect(error.issues[0].message).toBe(
+          "Entity schema does not have a tags field"
+        );
+      }
     });
   });
 
