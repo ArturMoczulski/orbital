@@ -1,3 +1,8 @@
+import {
+  BulkCountedResponse,
+  BulkItemizedResponse,
+  BulkOperation,
+} from "@scout/core/src/bulk-operations";
 import { ReturnModelType } from "@typegoose/typegoose";
 import { ZodObject } from "zod";
 
@@ -17,31 +22,57 @@ export abstract class CrudRepository<T> {
   ) {}
 
   /**
-   * Create a new entity
-   * @param dto Partial entity data without _id
-   * @returns The created entity
+   * Create one or more entities
+   * @param dto Single entity or array of entities to create
+   * @returns BulkItemizedResponse for multiple entities or a single entity if input was singular
    */
-  async create(dto: Partial<T>): Promise<T> {
-    // Validate with Zod schema if provided
-    if (this.schema) {
-      // Skip _id validation since it's not required for creation
-      const { _id, ...rest } = dto as any;
-      this.schema.parse(rest);
-    }
+  async create(
+    dto: Partial<T> | Partial<T>[]
+  ): Promise<T | BulkItemizedResponse<Partial<T>, T>> {
+    const isSingular = !Array.isArray(dto);
+    const items = isSingular ? [dto] : dto;
 
-    // Convert to plain object if it's a class instance with toPlainObject method
-    const plainData =
-      dto &&
-      typeof dto === "object" &&
-      "toPlainObject" in dto &&
-      typeof dto.toPlainObject === "function"
-        ? dto.toPlainObject()
-        : dto;
+    // Use BulkOperation.itemized for bulk creation
+    const response = await BulkOperation.itemized<Partial<T>, T>(
+      items,
+      async (dtos, success, fail) => {
+        try {
+          // Validate and prepare all items
+          const validItems = dtos.map((item) => {
+            // Validate with Zod schema if provided
+            if (this.schema) {
+              // Skip _id validation since it's not required for creation
+              const { _id, ...rest } = item as any;
+              this.schema.parse(rest);
+            }
 
-    // Create the entity by calling the model as a function
-    // This matches the behavior expected by the tests
-    const created = this.model(plainData);
-    return (await created.save()) as unknown as T;
+            // Convert to plain object if it's a class instance with toPlainObject method
+            return item &&
+              typeof item === "object" &&
+              "toPlainObject" in item &&
+              typeof item.toPlainObject === "function"
+              ? item.toPlainObject()
+              : item;
+          });
+
+          // Use insertMany for bulk insertion instead of individual saves
+          const createdItems = await this.model.insertMany(validItems);
+
+          // Mark each item as success
+          createdItems.forEach((created: any, index: number) => {
+            success(dtos[index], created as unknown as T);
+          });
+        } catch (error) {
+          // If there's a global error, mark all items as failed
+          dtos.forEach((item) => {
+            fail(item, { message: error.message });
+          });
+        }
+      }
+    );
+
+    // If input was singular, return the single result
+    return isSingular ? (response.asSingle() as T) : response;
   }
 
   /**
@@ -92,55 +123,139 @@ export abstract class CrudRepository<T> {
   }
 
   /**
-   * Update an entity
-   * @param entity Partial entity data with required _id property
-   * @returns The updated entity or null
+   * Update one or more entities
+   * @param entities Single entity or array of entities with required _id property
+   * @returns BulkItemizedResponse for multiple entities or a single entity if input was singular
    */
-  async update(entity: Partial<T> & { _id: string }): Promise<T | null> {
-    const { _id, ...updateData } = entity as any;
+  async update(
+    entities: (Partial<T> & { _id: string }) | (Partial<T> & { _id: string })[]
+  ): Promise<T | null | BulkItemizedResponse<Partial<T> & { _id: string }, T>> {
+    const isSingular = !Array.isArray(entities);
+    const items = isSingular ? [entities] : entities;
 
-    // Validate with Zod schema if provided
-    if (this.schema && Object.keys(updateData).length > 0) {
-      // Get the fields that are being updated
-      const updateFields = Object.keys(updateData);
+    // Use BulkOperation.itemized for bulk updates
+    const response = await BulkOperation.itemized<
+      Partial<T> & { _id: string },
+      T
+    >(items, async (updateItems, success, fail) => {
+      try {
+        // Prepare bulk write operations
+        const bulkOps = updateItems.map((entity) => {
+          const { _id, ...updateData } = entity as any;
 
-      // Create a partial schema that only validates the fields being updated
-      // This makes all fields optional and only includes fields in the update data
-      const partialSchema = this.schema.partial().pick(
-        updateFields.reduce((acc, field) => {
-          acc[field] = true;
-          return acc;
-        }, {} as Record<string, true>)
-      );
+          // Validate with Zod schema if provided
+          if (this.schema && Object.keys(updateData).length > 0) {
+            try {
+              // Get the fields that are being updated
+              const updateFields = Object.keys(updateData);
 
-      // Validate the update data against the partial schema
-      // This will throw an error if validation fails
-      partialSchema.parse(updateData);
+              // Create a partial schema that only validates the fields being updated
+              const partialSchema = this.schema.partial().pick(
+                updateFields.reduce((acc, field) => {
+                  acc[field] = true;
+                  return acc;
+                }, {} as Record<string, true>)
+              );
+
+              // Validate the update data against the partial schema
+              partialSchema.parse(updateData);
+            } catch (validationError) {
+              throw new Error(
+                `Validation error for item with _id ${_id}: ${validationError.message}`
+              );
+            }
+          }
+
+          // Convert to plain object if it's a class instance with toPlainObject method
+          const plainData =
+            entity &&
+            typeof entity === "object" &&
+            "toPlainObject" in entity &&
+            typeof entity.toPlainObject === "function"
+              ? entity.toPlainObject()
+              : entity;
+
+          // Extract _id from the plain data for the query
+          const { _id: plainId, ...plainUpdateData } = plainData as any;
+
+          // Return the update operation for bulkWrite
+          return {
+            updateOne: {
+              filter: { _id: plainId },
+              update: plainUpdateData,
+              upsert: false,
+            },
+          };
+        });
+
+        // Execute bulk write operation
+        const result = await this.model.bulkWrite(bulkOps);
+
+        // Process results
+        for (let i = 0; i < updateItems.length; i++) {
+          const item = updateItems[i];
+          const _id = item._id;
+
+          // Find the updated document
+          const updatedDoc = await this.model.findById(_id).exec();
+
+          if (updatedDoc) {
+            success(item, updatedDoc as unknown as T);
+          } else {
+            fail(item, { message: `Entity with _id ${_id} not found` });
+          }
+        }
+      } catch (error) {
+        // If there's a global error, mark all items as failed
+        updateItems.forEach((item) => {
+          fail(item, { message: error.message });
+        });
+      }
+    });
+
+    // If input was singular, return the single result
+    // Let any errors throw naturally
+    if (isSingular) {
+      return response.asSingle() as T;
     }
 
-    // Convert to plain object if it's a class instance with toPlainObject method
-    const plainData =
-      entity &&
-      typeof entity === "object" &&
-      "toPlainObject" in entity &&
-      typeof entity.toPlainObject === "function"
-        ? entity.toPlainObject()
-        : entity;
-
-    // Extract _id from the plain data for the query
-    const { _id: plainId, ...plainUpdateData } = plainData as any;
-
-    return (await this.model
-      .findByIdAndUpdate(plainId, plainUpdateData, { new: true })
-      .exec()) as unknown as T;
+    return response;
   }
 
   /**
-   * Delete an entity
-   * @param _id The entity ID
-   * @returns The deleted entity or null
+   * Delete one or more entities by ID
+   * @param ids Single ID or array of IDs to delete
+   * @returns BulkCountedResponse for multiple IDs or true if input was singular and deletion was successful
    */
-  async delete(_id: string): Promise<T | null> {
-    return (await this.model.findByIdAndDelete(_id).exec()) as unknown as T;
+  async delete(
+    ids: string | string[]
+  ): Promise<boolean | null | BulkCountedResponse> {
+    const isSingular = !Array.isArray(ids);
+    const items = isSingular ? [ids] : ids;
+
+    // Check if entity exists for singular input
+    if (isSingular) {
+      const entityExists = await this.model.findById(items[0]).exec();
+      if (!entityExists) return null;
+    }
+
+    // Use BulkOperation.counted for bulk deletion
+    const response = await BulkOperation.counted<string>(
+      items,
+      async (idList) => {
+        try {
+          // Use deleteMany for bulk deletion
+          const result = await this.model
+            .deleteMany({ _id: { $in: idList } })
+            .exec();
+          return result.deletedCount;
+        } catch (error) {
+          return 0;
+        }
+      }
+    );
+
+    // If input was singular, return true (success) or null (already handled above)
+    return isSingular ? true : response;
   }
 }

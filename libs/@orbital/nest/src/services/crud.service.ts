@@ -1,3 +1,7 @@
+import {
+  BulkCountedResponse,
+  BulkItemizedResponse,
+} from "@scout/core/src/bulk-operations";
 import { CrudRepository } from "../repositories/crud.repository";
 
 /**
@@ -18,7 +22,12 @@ export abstract class CrudService<T, R extends CrudRepository<T>> {
    * @returns The created entity
    */
   async create(createDto: Partial<T>): Promise<T> {
-    return this.repository.create(createDto);
+    const result = await this.repository.create(createDto);
+    // If the result is a BulkItemizedResponse, extract the single entity
+    if (result instanceof BulkItemizedResponse) {
+      return result.asSingle() as T;
+    }
+    return result as T;
   }
 
   /**
@@ -45,7 +54,16 @@ export abstract class CrudService<T, R extends CrudRepository<T>> {
    * @returns The updated entity or null
    */
   async update(entity: Partial<T> & { _id: string }): Promise<T | null> {
-    return this.repository.update(entity);
+    const result = await this.repository.update(entity);
+    // If the result is a BulkItemizedResponse, extract the single entity or return null
+    if (result instanceof BulkItemizedResponse) {
+      try {
+        return result.asSingle() as T;
+      } catch (error) {
+        return null;
+      }
+    }
+    return result;
   }
 
   /**
@@ -54,6 +72,11 @@ export abstract class CrudService<T, R extends CrudRepository<T>> {
    * @returns The deleted entity or null
    */
   async delete(id: string): Promise<T | null> {
-    return this.repository.delete(id);
+    const result = await this.repository.delete(id);
+    // If the result is a BulkCountedResponse, return null (entity was already returned before deletion)
+    if (result instanceof BulkCountedResponse) {
+      return null;
+    }
+    return result;
   }
 }
