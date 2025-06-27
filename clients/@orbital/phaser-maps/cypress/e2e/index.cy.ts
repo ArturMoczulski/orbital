@@ -1,4 +1,3 @@
-import { faker } from "@faker-js/faker";
 import { generateFantasyAreaName } from "@orbital/core/src/utils/data-generators";
 
 describe("Index page area creation", () => {
@@ -24,7 +23,8 @@ describe("Index page area creation", () => {
       includeAdjective: true,
       includeLocationType: true,
     });
-    const testWorldId = faker.string.uuid();
+    // Use "world1" to match the default world in WorldExplorer
+    const testWorldId = "world1";
 
     // Log the generated area name to see what's being produced
     cy.log(`Generated random fantasy area name: ${testName}`);
