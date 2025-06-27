@@ -2,8 +2,19 @@ import { faker } from "@faker-js/faker";
 import { generateFantasyAreaName } from "@orbital/core/src/utils/data-generators";
 
 describe("Index page area creation", () => {
+  // Store the test area name to use in afterEach for cleanup
+  let testAreaName: string;
+
   beforeEach(() => {
     cy.visit("/");
+  });
+
+  // Clean up after each test by deleting the created area
+  afterEach(() => {
+    if (testAreaName) {
+      cy.log(`Cleaning up: Deleting area "${testAreaName}"`);
+      cy.deleteObjectByName("area", testAreaName);
+    }
   });
 
   it("adds a new area", () => {
@@ -18,6 +29,9 @@ describe("Index page area creation", () => {
     // Log the generated area name to see what's being produced
     cy.log(`Generated random fantasy area name: ${testName}`);
     console.log(`Generated random fantasy area name: ${testName}`);
+
+    // Store the test name for cleanup in afterEach
+    testAreaName = testName;
 
     // Log the final test data
     cy.log(`Using test name: ${testName}`);

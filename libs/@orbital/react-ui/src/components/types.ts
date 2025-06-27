@@ -29,8 +29,9 @@ export interface ObjectExplorerProps<T extends ExplorerObject> {
 
   /**
    * Callback function when an object is selected
+   * Note: This is being deprecated in favor of itemActions
    */
-  onSelect: (objectId: string) => void;
+  onSelect?: (objectId: string) => void;
 
   /**
    * Constructor for type inference, used to derive display name from class name.
@@ -63,4 +64,16 @@ export interface ObjectExplorerProps<T extends ExplorerObject> {
    * This will be called with the form data when the add form is submitted
    */
   onAdd?: (data: any) => void;
+
+  /**
+   * Optional callback function when an object is deleted
+   * This will be called with the object ID when the delete button is clicked
+   */
+  onDelete?: (objectId: string) => void;
+
+  /**
+   * Optional function to render custom action buttons for each item
+   * Will be placed next to each item in the tree
+   */
+  itemActions?: (object: T) => React.ReactNode;
 }

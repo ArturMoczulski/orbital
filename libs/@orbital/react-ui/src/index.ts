@@ -1,10 +1,12 @@
 // Export components
+export { ObjectExplorer } from "./components/ObjectExplorer/ObjectExplorer";
+export { ObjectExplorerItemActionButton } from "./components/ObjectExplorer/ObjectExplorerItemActionButton";
+export type { ObjectExplorerItemActionButtonProps } from "./components/ObjectExplorer/ObjectExplorerItemActionButton";
 export type {
   ExplorerObject,
-  QueryResult,
   ObjectExplorerProps,
+  QueryResult,
 } from "./components/types";
-export { ObjectExplorer } from "./components/ObjectExplorer/ObjectExplorer";
 
 // Export theme components
 export { OrbitalThemeProvider, useOrbitalTheme } from "./theme/ThemeContext";

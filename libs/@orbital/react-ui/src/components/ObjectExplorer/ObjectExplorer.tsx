@@ -1,20 +1,21 @@
-import React, { useState, useMemo } from "react";
-import { kebabCase } from "lodash";
-import Box from "@mui/material/Box";
-import IconButton from "@mui/material/IconButton";
-import MapIcon from "@mui/icons-material/Map";
-import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
+import AddIcon from "@mui/icons-material/Add";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
-import Typography from "@mui/material/Typography";
+import DeleteIcon from "@mui/icons-material/Delete";
+import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
+import Box from "@mui/material/Box";
 import Dialog from "@mui/material/Dialog";
 import DialogTitle from "@mui/material/DialogTitle";
-import AddIcon from "@mui/icons-material/Add";
+import IconButton from "@mui/material/IconButton";
 import { useTheme } from "@mui/material/styles";
-import { ExplorerObject, ObjectExplorerProps } from "../types";
-import { useOrbitalTheme } from "../../theme/ThemeContext";
+import Typography from "@mui/material/Typography";
+import { kebabCase } from "lodash";
+import React, { useState } from "react";
+import { ZodBridge } from "uniforms-bridge-zod";
 import { AutoForm } from "uniforms-mui";
 import { z } from "zod";
-import { ZodBridge } from "uniforms-bridge-zod";
+import { useOrbitalTheme } from "../../theme/ThemeContext";
+import { ExplorerObject, ObjectExplorerProps } from "../types";
+import { ObjectExplorerItemActionButton } from "./ObjectExplorerItemActionButton";
 
 /**
  * A generic tree-view component for displaying hierarchical objects
@@ -27,6 +28,8 @@ export function ObjectExplorer<T extends ExplorerObject>({
   renderNode,
   schema: providedSchema,
   onAdd,
+  onDelete,
+  itemActions,
 }: ObjectExplorerProps<T>) {
   const typeName = objectTypeName ?? `${type.name}s`;
   const typePrefix = kebabCase(type.name.toLowerCase());
@@ -50,7 +53,19 @@ export function ObjectExplorer<T extends ExplorerObject>({
   const handleSelectClick = (_id: string, event: React.MouseEvent) => {
     event.stopPropagation();
     const selected = objects.find((o) => o._id === _id);
-    if (selected) onSelect(selected._id);
+    if (selected && onSelect) onSelect(selected._id);
+  };
+
+  const handleDeleteClick = (_id: string, event: React.MouseEvent) => {
+    event.stopPropagation();
+    if (
+      onDelete &&
+      confirm(
+        `Are you sure you want to delete this ${type.name.toLowerCase()}?`
+      )
+    ) {
+      onDelete(_id);
+    }
   };
 
   const DefaultTreeNode = ({
@@ -76,7 +91,8 @@ export function ObjectExplorer<T extends ExplorerObject>({
             "&:hover": { bgcolor: "secondary.main" },
           }}
           onClick={() => toggleNode(object._id)}
-          data-testid={`tree-node-${object._id}`}
+          data-testid={`${typePrefix}-tree-node-${object._id}`}
+          data-cy={`${typePrefix}-tree-node-${object._id}`}
         >
           {children.length > 0 ? (
             isExpanded ? (
@@ -88,14 +104,25 @@ export function ObjectExplorer<T extends ExplorerObject>({
             <Box sx={{ width: 24 }} />
           )}
           <Typography sx={{ flexGrow: 1, ml: 1 }}>{object.name}</Typography>
-          <IconButton
-            size="small"
-            onClick={(e) => handleSelectClick(object._id, e)}
-            title={`Select ${type.name}`}
-            data-testid={`select-button-${object._id}`}
-          >
-            <MapIcon fontSize="small" />
-          </IconButton>
+
+          {/* Action buttons container */}
+          <Box sx={{ display: "flex", alignItems: "center" }}>
+            {/* Custom item actions */}
+            {itemActions && itemActions(object)}
+
+            {/* Delete button (if onDelete is provided) */}
+            {onDelete && (
+              <ObjectExplorerItemActionButton
+                icon={<DeleteIcon fontSize="small" />}
+                onClick={(e: React.MouseEvent) =>
+                  handleDeleteClick(object._id, e)
+                }
+                title={`Delete ${type.name}`}
+                testId={`${typePrefix}-delete-button-${object._id}`}
+                dataCy={`${typePrefix}-delete-button-${object._id}`}
+              />
+            )}
+          </Box>
         </Box>
         {isExpanded && children.length > 0 && (
           <Box>
@@ -114,7 +141,10 @@ export function ObjectExplorer<T extends ExplorerObject>({
 
   if (isLoading) {
     return (
-      <Box sx={{ p: 2, color: "text.primary" }} data-testid="loading-state">
+      <Box
+        sx={{ p: 2, color: "text.primary" }}
+        data-testid={`${typePrefix}-loading-state`}
+      >
         Loading {typeName.toLowerCase()}...
       </Box>
     );
@@ -122,7 +152,10 @@ export function ObjectExplorer<T extends ExplorerObject>({
 
   if (error) {
     return (
-      <Box sx={{ p: 2, color: "error.main" }} data-testid="error-state">
+      <Box
+        sx={{ p: 2, color: "error.main" }}
+        data-testid={`${typePrefix}-error-state`}
+      >
         Error loading {typeName.toLowerCase()}
       </Box>
     );
@@ -151,7 +184,7 @@ export function ObjectExplorer<T extends ExplorerObject>({
           display: "flex",
           flexDirection: "column",
         }}
-        data-testid="object-explorer"
+        data-testid={`${typePrefix}-explorer`}
         data-cy={`${typePrefix}-explorer`}
       >
         {/* Header */}
@@ -172,7 +205,7 @@ export function ObjectExplorer<T extends ExplorerObject>({
             size="small"
             onClick={openAddModal}
             title="Add object"
-            data-testid="add-object-button"
+            data-testid={`${typePrefix}-add-button`}
             data-cy={`${typePrefix}-add-button`}
             sx={{
               bgcolor: "primary.main",
@@ -194,7 +227,7 @@ export function ObjectExplorer<T extends ExplorerObject>({
                 alignItems: "center",
                 height: "100%",
               }}
-              data-testid="empty-state"
+              data-testid={`${typePrefix}-empty-state`}
             >
               <Typography color="text.secondary" sx={{ mb: 1 }}>
                 No {typeName.toLowerCase()} available
@@ -203,7 +236,7 @@ export function ObjectExplorer<T extends ExplorerObject>({
                 size="large"
                 onClick={openAddModal}
                 title="Add new object"
-                data-testid="add-object-button-empty"
+                data-testid={`${typePrefix}-add-button-empty`}
                 data-cy={`${typePrefix}-add-button-empty`}
                 sx={{
                   bgcolor: "primary.main",

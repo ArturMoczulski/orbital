@@ -38,6 +38,41 @@ Cypress.Commands.add("getAddObjectSubmitButton", (typePrefix: string) => {
   cy.get(`[data-cy="${typePrefix}-add-form"]`).find('button[type="submit"]');
 });
 
+/**
+ * Deletes an object by its name
+ * @param typePrefix - The prefix for the explorer type (e.g., 'area', 'character')
+ * @param objectName - The name of the object to delete
+ */
+Cypress.Commands.add(
+  "deleteObjectByName",
+  (typePrefix: string, objectName: string) => {
+    // Intercept the DELETE request
+    cy.intercept("DELETE", `/api/admin/${typePrefix}s/*`).as("deleteObject");
+
+    // Find the object by name and get its container
+    cy.contains(objectName)
+      .parents(`[data-cy^="${typePrefix}-tree-node-"]`)
+      .within(() => {
+        // Click the delete button within this container
+        cy.get(`[data-cy^="${typePrefix}-delete-button-"]`).click();
+      });
+
+    // Handle the confirmation dialog
+    cy.on("window:confirm", () => true);
+
+    // Wait for the DELETE request to complete
+    cy.wait("@deleteObject").then((interception) => {
+      cy.log(
+        `Delete API Response: ${JSON.stringify(interception.response?.body)}`
+      );
+      expect(interception.response?.statusCode).to.eq(200);
+    });
+
+    // Verify the object is no longer visible
+    cy.contains(objectName).should("not.exist");
+  }
+);
+
 // Add TypeScript type definitions
 declare global {
   namespace Cypress {
@@ -69,6 +104,16 @@ declare global {
        * @param typePrefix - The prefix for the explorer type (e.g., 'area', 'character')
        */
       getAddObjectSubmitButton(typePrefix: string): Chainable<Element>;
+
+      /**
+       * Deletes an object by its name
+       * @param typePrefix - The prefix for the explorer type (e.g., 'area', 'character')
+       * @param objectName - The name of the object to delete
+       */
+      deleteObjectByName(
+        typePrefix: string,
+        objectName: string
+      ): Chainable<Element>;
     }
   }
 }

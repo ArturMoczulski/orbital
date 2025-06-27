@@ -1,9 +1,14 @@
+import MapIcon from "@mui/icons-material/Map";
 import { Area, AreaSchema } from "@orbital/core/src/types/area";
 import { AreaMap } from "@orbital/core/src/types/area-map";
-import { ObjectExplorer } from "@orbital/react-ui";
+import {
+  ObjectExplorer,
+  ObjectExplorerItemActionButton,
+} from "@orbital/react-ui";
 import { useEffect, useState } from "react";
 import {
   useAreasControllerCreateMutation,
+  useAreasControllerDeleteMutation,
   useAreasControllerGetAllQuery,
   useAreasControllerGetMapQuery,
 } from "../services/adminApi.generated";
@@ -22,6 +27,10 @@ export default function AreaExplorer({ onSelect }: AreaExplorerProps) {
   // Add the create mutation
   const [createArea, { isLoading: isCreating }] =
     useAreasControllerCreateMutation();
+
+  // Add the delete mutation
+  const [deleteArea, { isLoading: isDeleting }] =
+    useAreasControllerDeleteMutation();
 
   const {
     data: mapData,
@@ -85,13 +94,54 @@ export default function AreaExplorer({ onSelect }: AreaExplorerProps) {
     }
   };
 
-  // Define the props with the schema property and onAdd callback
+  // Handle deleting an area
+  const handleDeleteArea = async (areaId: string) => {
+    try {
+      console.log("Deleting area:", areaId);
+
+      // Call the delete mutation
+      const response = await deleteArea({ _id: areaId }).unwrap();
+
+      console.log("Area deleted successfully:", response);
+      // Notify user of success
+      alert("Area deleted successfully");
+
+      // If the deleted area was selected, clear the selection
+      if (selectedMapId === areaId) {
+        setSelectedMapId(null);
+      }
+    } catch (error: any) {
+      console.error("Error deleting area:", error);
+      // Extract meaningful error message
+      const errMsg =
+        (error.data && (error.data.message || error.data.code)) ||
+        error.message ||
+        "Unknown error";
+      alert(`Error deleting area: ${errMsg}`);
+    }
+  };
+
+  // Create a custom item actions component for the map button
+  const renderItemActions = (area: Area) => {
+    return (
+      <ObjectExplorerItemActionButton
+        icon={<MapIcon fontSize="small" />}
+        onClick={() => setSelectedMapId(area._id)}
+        title="Load Map"
+        testId={`load-map-button-${area._id}`}
+        dataCy={`area-load-map-button-${area._id}`}
+      />
+    );
+  };
+
+  // Define the props with the schema property and callbacks
   const explorerProps = {
     type: Area,
     queryResult: areasQuery,
-    onSelect: (id: string) => setSelectedMapId(id),
     schema: AreaSchema,
     onAdd: handleAddArea,
+    onDelete: handleDeleteArea,
+    itemActions: renderItemActions,
   };
 
   // Use type assertion to tell TypeScript that ObjectExplorer accepts these props
