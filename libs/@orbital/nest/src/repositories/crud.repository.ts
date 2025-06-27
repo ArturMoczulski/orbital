@@ -18,7 +18,7 @@ export abstract class CrudRepository<T> {
    */
   constructor(
     protected readonly model: ReturnModelType<any>,
-    protected readonly schema?: ZodObject<any>
+    protected readonly schema: ZodObject<any>
   ) {}
 
   /**
@@ -39,12 +39,10 @@ export abstract class CrudRepository<T> {
         try {
           // Validate and prepare all items
           const validItems = dtos.map((item) => {
-            // Validate with Zod schema if provided
-            if (this.schema) {
-              // Skip _id validation since it's not required for creation
-              const { _id, ...rest } = item as any;
-              this.schema.parse(rest);
-            }
+            // Validate with Zod schema
+            // Skip _id validation since it's not required for creation
+            const { _id, ...rest } = item as any;
+            this.schema.parse(rest);
 
             // Convert to plain object if it's a class instance with toPlainObject method
             return item &&
@@ -137,19 +135,6 @@ export abstract class CrudRepository<T> {
   }
 
   /**
-   * Find all entities matching a filter
-   * @param filter Optional filter criteria
-   * @param projection Optional projection
-   * @returns Array of entities
-   */
-  async findAll(
-    filter: Record<string, any> = {},
-    projection?: Record<string, any>
-  ): Promise<T[]> {
-    return this.find(filter, projection);
-  }
-
-  /**
    * Update one or more entities
    * @param entities Single entity or array of entities with required _id property
    * @returns BulkItemizedResponse for multiple entities or a single entity if input was singular
@@ -170,8 +155,8 @@ export abstract class CrudRepository<T> {
         const bulkOps = updateItems.map((entity) => {
           const { _id, ...updateData } = entity as any;
 
-          // Validate with Zod schema if provided
-          if (this.schema && Object.keys(updateData).length > 0) {
+          // Validate with Zod schema
+          if (Object.keys(updateData).length > 0) {
             try {
               // Get the fields that are being updated
               const updateFields = Object.keys(updateData);

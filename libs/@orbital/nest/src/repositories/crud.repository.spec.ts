@@ -34,7 +34,7 @@ const testEntitySchema = z.object({
 
 // Create a concrete implementation of CrudRepository for testing
 class TestRepository extends CrudRepository<TestEntity> {
-  constructor(model: ReturnModelType<any>, schema?: z.ZodObject<any>) {
+  constructor(model: ReturnModelType<any>, schema: z.ZodObject<any>) {
     super(model, schema);
   }
 }
@@ -182,7 +182,7 @@ describe("CrudRepository", () => {
       expect(result).toHaveProperty("status");
     });
 
-    it("should validate entity with schema if provided", async () => {
+    it("should validate entity with schema", async () => {
       const createDto: Partial<TestEntity> = {
         name: "New Entity",
         count: 10,
@@ -402,24 +402,6 @@ describe("CrudRepository", () => {
       const result = await repository.findById("nonexistent-id");
 
       expect(result).toBeNull();
-    });
-  });
-
-  describe("findAll", () => {
-    it("should find all entities with optional filter and projection", async () => {
-      const filter = { count: { $gt: 10 } };
-      const projection = { name: 1, count: 1 };
-
-      const result = await repository.findAll(filter, projection);
-
-      expect(result).toEqual([mockModelInstance]);
-      expect(modelMock.find).toHaveBeenCalledWith(filter, projection);
-    });
-
-    it("should use empty filter if none provided", async () => {
-      await repository.findAll();
-
-      expect(modelMock.find).toHaveBeenCalledWith({}, undefined);
     });
   });
 

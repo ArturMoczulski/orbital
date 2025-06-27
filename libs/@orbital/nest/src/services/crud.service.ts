@@ -45,7 +45,7 @@ export abstract class CrudService<T, R extends CrudRepository<T>> {
    * @returns Array of entities
    */
   async getAll(filter: Record<string, any> = {}): Promise<T[]> {
-    return this.repository.findAll(filter);
+    return this.repository.find(filter);
   }
 
   /**
