@@ -51,7 +51,7 @@ describe("AreasService", () => {
     repository = module.get<AreasRepository>(AreasRepository);
   });
 
-  describe("createArea", () => {
+  describe("create", () => {
     it("should create a new area", async () => {
       const createAreaData: Partial<Area> = {
         name: mockArea.name,
@@ -62,18 +62,18 @@ describe("AreasService", () => {
 
       mockAreasRepository.create.mockResolvedValue(mockAreaModel);
 
-      const result = await service.createArea(createAreaData);
+      const result = await service.create(createAreaData);
 
       expect(result).toEqual(mockAreaModel);
       expect(mockAreasRepository.create).toHaveBeenCalledWith(createAreaData);
     });
   });
 
-  describe("getArea", () => {
+  describe("getById", () => {
     it("should get an area by id", async () => {
       mockAreasRepository.findById.mockResolvedValue(mockAreaModel);
 
-      const result = await service.getArea(mockArea._id);
+      const result = await service.getById(mockArea._id);
 
       expect(result).toEqual(mockAreaModel);
       expect(mockAreasRepository.findById).toHaveBeenCalledWith(mockArea._id);
@@ -82,7 +82,7 @@ describe("AreasService", () => {
     it("should return null if area not found", async () => {
       mockAreasRepository.findById.mockResolvedValue(null);
 
-      const result = await service.getArea("nonexistent-id");
+      const result = await service.getById("nonexistent-id");
 
       expect(result).toBeNull();
       expect(mockAreasRepository.findById).toHaveBeenCalledWith(
@@ -91,26 +91,24 @@ describe("AreasService", () => {
     });
   });
 
-  describe("getAllAreas", () => {
+  describe("getAll", () => {
     it("should get all areas with optional filter and projection", async () => {
       const filter = { worldId: "world1" };
       const projection = { name: 1, description: 1 };
 
       mockAreasRepository.findAll.mockResolvedValue([mockAreaModel]);
 
-      const result = await service.getAllAreas(filter, projection);
+      const result = await service.getAll(filter);
 
       expect(result).toEqual([mockAreaModel]);
-      expect(mockAreasRepository.findAll).toHaveBeenCalledWith(
-        filter,
-        projection
-      );
+      expect(mockAreasRepository.findAll).toHaveBeenCalledWith(filter);
     });
   });
 
-  describe("updateArea", () => {
+  describe("update", () => {
     it("should update an area by id", async () => {
-      const updateAreaData: Partial<Area> = {
+      const _id = mockArea._id;
+      const updateData = {
         name: "Updated Area",
         description: "Updated Description",
       };
@@ -121,41 +119,42 @@ describe("AreasService", () => {
         description: "Updated Description",
       });
 
-      const result = await service.updateArea(mockArea._id, updateAreaData);
+      const result = await service.update({ _id, ...updateData });
 
       expect(result).toEqual({
         ...mockAreaModel,
         name: "Updated Area",
         description: "Updated Description",
       });
-      expect(mockAreasRepository.update).toHaveBeenCalledWith(
-        mockArea._id,
-        updateAreaData
-      );
+      expect(mockAreasRepository.update).toHaveBeenCalledWith({
+        _id,
+        ...updateData,
+      });
     });
 
     it("should return null if area not found", async () => {
-      const updateAreaData: Partial<Area> = {
+      const _id = "nonexistent-id";
+      const updateData = {
         name: "Updated Area",
       };
 
       mockAreasRepository.update.mockResolvedValue(null);
 
-      const result = await service.updateArea("nonexistent-id", updateAreaData);
+      const result = await service.update({ _id, ...updateData });
 
       expect(result).toBeNull();
-      expect(mockAreasRepository.update).toHaveBeenCalledWith(
-        "nonexistent-id",
-        updateAreaData
-      );
+      expect(mockAreasRepository.update).toHaveBeenCalledWith({
+        _id,
+        ...updateData,
+      });
     });
   });
 
-  describe("deleteArea", () => {
+  describe("delete", () => {
     it("should delete an area by id", async () => {
       mockAreasRepository.delete.mockResolvedValue(mockAreaModel);
 
-      const result = await service.deleteArea(mockArea._id);
+      const result = await service.delete(mockArea._id);
 
       expect(result).toEqual(mockAreaModel);
       expect(mockAreasRepository.delete).toHaveBeenCalledWith(mockArea._id);
@@ -164,7 +163,7 @@ describe("AreasService", () => {
     it("should return null if area not found", async () => {
       mockAreasRepository.delete.mockResolvedValue(null);
 
-      const result = await service.deleteArea("nonexistent-id");
+      const result = await service.delete("nonexistent-id");
 
       expect(result).toBeNull();
       expect(mockAreasRepository.delete).toHaveBeenCalledWith("nonexistent-id");

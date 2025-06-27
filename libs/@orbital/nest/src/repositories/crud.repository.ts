@@ -1,12 +1,10 @@
-import { Injectable } from "@nestjs/common";
 import { ReturnModelType } from "@typegoose/typegoose";
-import { z, ZodSchema } from "zod";
+import { ZodObject } from "zod";
 
 /**
  * Generic CRUD repository for MongoDB models using Typegoose
  * @template T The entity type (e.g., Area, World)
  */
-@Injectable()
 export abstract class CrudRepository<T> {
   /**
    * Constructor for the CrudRepository
@@ -15,7 +13,7 @@ export abstract class CrudRepository<T> {
    */
   constructor(
     protected readonly model: ReturnModelType<any>,
-    protected readonly schema?: ZodSchema<any>
+    protected readonly schema?: ZodObject<any>
   ) {}
 
   /**
@@ -31,10 +29,43 @@ export abstract class CrudRepository<T> {
       this.schema.parse(rest);
     }
 
+    // Convert to plain object if it's a class instance with toPlainObject method
+    const plainData =
+      dto &&
+      typeof dto === "object" &&
+      "toPlainObject" in dto &&
+      typeof dto.toPlainObject === "function"
+        ? dto.toPlainObject()
+        : dto;
+
     // Create the entity by calling the model as a function
     // This matches the behavior expected by the tests
-    const created = this.model(dto);
+    const created = this.model(plainData);
     return (await created.save()) as unknown as T;
+  }
+
+  /**
+   * Generic find method that accepts any query and projection
+   * @param filter Query filter criteria
+   * @param projection Optional fields to project
+   * @param options Optional query options
+   * @returns Array of entities matching the query
+   */
+  async find(
+    filter: Record<string, any> = {},
+    projection?: Record<string, any>,
+    options?: Record<string, any>
+  ): Promise<T[]> {
+    let query = this.model.find(filter, projection);
+
+    if (options) {
+      if (options.sort) query = query.sort(options.sort);
+      if (options.skip) query = query.skip(options.skip);
+      if (options.limit) query = query.limit(options.limit);
+      if (options.populate) query = query.populate(options.populate);
+    }
+
+    return (await query.exec()) as unknown as T[];
   }
 
   /**
@@ -43,7 +74,8 @@ export abstract class CrudRepository<T> {
    * @returns The found entity or null
    */
   async findById(_id: string): Promise<T | null> {
-    return (await this.model.findById(_id).exec()) as unknown as T;
+    const results = await this.find({ _id });
+    return results.length > 0 ? results[0] : null;
   }
 
   /**
@@ -54,43 +86,52 @@ export abstract class CrudRepository<T> {
    */
   async findAll(
     filter: Record<string, any> = {},
-    projection?: any
+    projection?: Record<string, any>
   ): Promise<T[]> {
-    return (await this.model.find(filter, projection).exec()) as unknown as T[];
+    return this.find(filter, projection);
   }
 
   /**
    * Update an entity
-   * @param _id The entity ID
-   * @param updateDto Partial entity data for update
+   * @param entity Partial entity data with required _id property
    * @returns The updated entity or null
    */
-  async update(_id: string, updateDto: Partial<T>): Promise<T | null> {
+  async update(entity: Partial<T> & { _id: string }): Promise<T | null> {
+    const { _id, ...updateData } = entity as any;
+
     // Validate with Zod schema if provided
-    if (this.schema) {
-      // Skip _id validation for update
-      const { _id: _, ...rest } = updateDto as any;
-      if (Object.keys(rest).length > 0) {
-        // For updates, we'll just validate the fields that are present
-        // This is a simpler approach than creating a partial schema
-        try {
-          this.schema.parse({
-            ...this.getDefaultValues(),
-            ...rest,
-          });
-        } catch (error) {
-          // If validation fails with defaults, try validating just the update fields
-          // This is a fallback for schemas that have required fields
-          const updateSchema = z.object(
-            Object.fromEntries(Object.keys(rest).map((key) => [key, z.any()]))
-          );
-          updateSchema.parse(rest);
-        }
-      }
+    if (this.schema && Object.keys(updateData).length > 0) {
+      // Get the fields that are being updated
+      const updateFields = Object.keys(updateData);
+
+      // Create a partial schema that only validates the fields being updated
+      // This makes all fields optional and only includes fields in the update data
+      const partialSchema = this.schema.partial().pick(
+        updateFields.reduce((acc, field) => {
+          acc[field] = true;
+          return acc;
+        }, {} as Record<string, true>)
+      );
+
+      // Validate the update data against the partial schema
+      // This will throw an error if validation fails
+      partialSchema.parse(updateData);
     }
 
+    // Convert to plain object if it's a class instance with toPlainObject method
+    const plainData =
+      entity &&
+      typeof entity === "object" &&
+      "toPlainObject" in entity &&
+      typeof entity.toPlainObject === "function"
+        ? entity.toPlainObject()
+        : entity;
+
+    // Extract _id from the plain data for the query
+    const { _id: plainId, ...plainUpdateData } = plainData as any;
+
     return (await this.model
-      .findByIdAndUpdate(_id, updateDto, { new: true })
+      .findByIdAndUpdate(plainId, plainUpdateData, { new: true })
       .exec()) as unknown as T;
   }
 
@@ -101,15 +142,5 @@ export abstract class CrudRepository<T> {
    */
   async delete(_id: string): Promise<T | null> {
     return (await this.model.findByIdAndDelete(_id).exec()) as unknown as T;
-  }
-
-  /**
-   * Get default values for all required fields in the schema
-   * This is used for validation when updating partial entities
-   * @returns An object with default values for all required fields
-   */
-  protected getDefaultValues(): Record<string, any> {
-    // Override this method in derived classes if needed
-    return {};
   }
 }

@@ -26,7 +26,7 @@ export class AreasMicroserviceController extends CrudController<
    */
   @MessagePattern()
   async createArea(createAreaData: Partial<Area>): Promise<Area> {
-    return this.service.createArea(createAreaData);
+    return this.create(createAreaData);
   }
 
   /**
@@ -35,7 +35,7 @@ export class AreasMicroserviceController extends CrudController<
    */
   @MessagePattern()
   async getAllAreas(): Promise<Area[]> {
-    return this.service.getAllAreas();
+    return this.getAll();
   }
 
   /**
@@ -45,7 +45,7 @@ export class AreasMicroserviceController extends CrudController<
    */
   @MessagePattern()
   async getArea(_id: string): Promise<Area | null> {
-    return this.service.getArea(_id);
+    return this.getById(_id);
   }
 
   /**
@@ -56,7 +56,7 @@ export class AreasMicroserviceController extends CrudController<
   @MessagePattern()
   async updateArea(updateAreaData: Partial<Area>): Promise<Area | null> {
     const { _id, ...updateData } = updateAreaData;
-    return this.service.updateArea(_id as string, updateData);
+    return this.update({ _id: _id as string, updateDto: updateData });
   }
 
   /**
@@ -66,7 +66,7 @@ export class AreasMicroserviceController extends CrudController<
    */
   @MessagePattern()
   async deleteArea(_id: string): Promise<Area | null> {
-    return this.service.deleteArea(_id);
+    return this.delete(_id);
   }
 
   /**

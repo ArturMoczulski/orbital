@@ -26,7 +26,7 @@ export class WorldsMicroserviceController extends CrudController<
    */
   @MessagePattern()
   async createWorld(createWorldData: Partial<World>): Promise<World> {
-    return this.service.createWorld(createWorldData);
+    return this.create(createWorldData);
   }
 
   /**
@@ -35,7 +35,7 @@ export class WorldsMicroserviceController extends CrudController<
    */
   @MessagePattern()
   async getAllWorlds(): Promise<World[]> {
-    return this.service.getAllWorlds();
+    return this.getAll();
   }
 
   /**
@@ -45,7 +45,7 @@ export class WorldsMicroserviceController extends CrudController<
    */
   @MessagePattern()
   async getWorld(_id: string): Promise<World | null> {
-    return this.service.getWorld(_id);
+    return this.getById(_id);
   }
 
   /**
@@ -56,7 +56,7 @@ export class WorldsMicroserviceController extends CrudController<
   @MessagePattern()
   async updateWorld(updateWorldData: Partial<World>): Promise<World | null> {
     const { _id, ...updateData } = updateWorldData;
-    return this.service.updateWorld(_id as string, updateData);
+    return this.update({ _id: _id as string, updateDto: updateData });
   }
 
   /**
@@ -66,7 +66,7 @@ export class WorldsMicroserviceController extends CrudController<
    */
   @MessagePattern()
   async deleteWorld(_id: string): Promise<World | null> {
-    return this.service.deleteWorld(_id);
+    return this.delete(_id);
   }
 
   /**

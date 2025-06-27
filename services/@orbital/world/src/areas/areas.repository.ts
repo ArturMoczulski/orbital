@@ -19,7 +19,7 @@ export class AreasRepository extends CrudRepository<Area> {
    * @returns Array of areas
    */
   async findByParentId(parentId: string | null): Promise<Area[]> {
-    return (await this.model.find({ parentId }).exec()) as unknown as Area[];
+    return this.find({ parentId });
   }
 
   /**
@@ -28,9 +28,7 @@ export class AreasRepository extends CrudRepository<Area> {
    * @returns Array of areas with any of the specified tags
    */
   async findByTags(tags: string[]): Promise<Area[]> {
-    return (await this.model
-      .find({ tags: { $in: tags } })
-      .exec()) as unknown as Area[];
+    return this.find({ tags: { $in: tags } });
   }
 
   /**
@@ -39,6 +37,6 @@ export class AreasRepository extends CrudRepository<Area> {
    * @returns Array of areas in the specified world
    */
   async findByWorldId(worldId: string): Promise<Area[]> {
-    return (await this.model.find({ worldId }).exec()) as unknown as Area[];
+    return this.find({ worldId });
   }
 }

@@ -1,4 +1,3 @@
-import { faker } from "@faker-js/faker";
 import { z } from "zod";
 import { zodSchemaRegistry } from "../decorators/zod-schema.decorator";
 
@@ -12,6 +11,74 @@ export class BaseObject<T> {
     }
 
     // Validation can be performed by calling validate() when needed
+  }
+
+  /**
+   * Converts this object to a plain JavaScript object without methods or non-enumerable properties.
+   * This is useful for serialization, especially when saving to databases.
+   *
+   * @returns A plain JavaScript object representation of this instance
+   */
+  toPlainObject(): Record<string, any> {
+    // Create a plain object with all enumerable properties
+    const plainObject: Record<string, any> = {};
+
+    // Copy all enumerable properties
+    for (const key in this) {
+      const value = this[key];
+
+      // Handle different types of values
+      plainObject[key] = this.convertValueToPlain(value);
+    }
+
+    return plainObject;
+  }
+
+  /**
+   * Helper method to convert a value to its plain representation
+   * Handles nested objects, arrays, and primitive values
+   *
+   * @param value The value to convert
+   * @returns The plain representation of the value
+   */
+  private convertValueToPlain(value: any): any {
+    // Handle null or undefined
+    if (value == null) {
+      return value;
+    }
+
+    // Handle arrays by mapping each element
+    if (Array.isArray(value)) {
+      return value.map((item) => this.convertValueToPlain(item));
+    }
+
+    // Handle objects with toPlainObject method
+    if (
+      typeof value === "object" &&
+      "toPlainObject" in value &&
+      typeof value.toPlainObject === "function"
+    ) {
+      return value.toPlainObject();
+    }
+
+    // Handle other objects (like Date, Map, etc.)
+    if (typeof value === "object" && value.constructor !== Object) {
+      // For built-in objects like Date, we'll return them as-is
+      // They should be handled by the JSON serialization process
+      return value;
+    }
+
+    // Handle plain objects recursively
+    if (typeof value === "object") {
+      const plainObj: Record<string, any> = {};
+      for (const key in value) {
+        plainObj[key] = this.convertValueToPlain(value[key]);
+      }
+      return plainObj;
+    }
+
+    // Return primitive values as-is
+    return value;
   }
 
   /**

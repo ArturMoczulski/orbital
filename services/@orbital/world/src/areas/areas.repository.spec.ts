@@ -79,7 +79,10 @@ describe("AreasRepository", () => {
       const result = await repository.findById(mockArea._id);
 
       expect(result).toEqual(mockAreaModel);
-      expect(areaModelMock.findById).toHaveBeenCalledWith(mockArea._id);
+      expect(areaModelMock.find).toHaveBeenCalledWith(
+        { _id: mockArea._id },
+        undefined
+      );
     });
   });
 
@@ -97,17 +100,18 @@ describe("AreasRepository", () => {
 
   describe("update", () => {
     it("should update an area by id", async () => {
-      const updateAreaDto = {
+      const updateData = {
+        _id: mockArea._id,
         name: "Updated Area",
         description: "Updated Description",
       };
 
-      const result = await repository.update(mockArea._id, updateAreaDto);
+      const result = await repository.update(updateData);
 
       expect(result).toEqual(mockAreaModel);
       expect(areaModelMock.findByIdAndUpdate).toHaveBeenCalledWith(
         mockArea._id,
-        updateAreaDto,
+        { name: "Updated Area", description: "Updated Description" },
         { new: true }
       );
     });
@@ -129,7 +133,10 @@ describe("AreasRepository", () => {
       const result = await repository.findByWorldId("world1");
 
       expect(result).toEqual([mockAreaModel]);
-      expect(areaModelMock.find).toHaveBeenCalledWith({ worldId: "world1" });
+      expect(areaModelMock.find).toHaveBeenCalledWith(
+        { worldId: "world1" },
+        undefined
+      );
     });
   });
 
@@ -139,9 +146,7 @@ describe("AreasRepository", () => {
       const result = await repository.findByParentId(parentId);
 
       expect(result).toEqual([mockAreaModel]);
-      expect(areaModelMock.find).toHaveBeenCalledWith({
-        parentId: mockArea.parentId,
-      });
+      expect(areaModelMock.find).toHaveBeenCalledWith({ parentId }, undefined);
     });
   });
 
@@ -151,7 +156,10 @@ describe("AreasRepository", () => {
       const result = await repository.findByTags(tags);
 
       expect(result).toEqual([mockAreaModel]);
-      expect(areaModelMock.find).toHaveBeenCalledWith({ tags: { $in: tags } });
+      expect(areaModelMock.find).toHaveBeenCalledWith(
+        { tags: { $in: tags } },
+        undefined
+      );
     });
   });
 });

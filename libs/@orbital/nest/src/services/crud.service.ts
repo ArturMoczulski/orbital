@@ -1,4 +1,3 @@
-import { Injectable } from "@nestjs/common";
 import { CrudRepository } from "../repositories/crud.repository";
 
 /**
@@ -6,7 +5,6 @@ import { CrudRepository } from "../repositories/crud.repository";
  * @template T The entity type (e.g., Area, World)
  * @template R The repository type (e.g., AreasRepository, WorldsRepository)
  */
-@Injectable()
 export abstract class CrudService<T, R extends CrudRepository<T>> {
   /**
    * Constructor for the CrudService
@@ -43,12 +41,11 @@ export abstract class CrudService<T, R extends CrudRepository<T>> {
 
   /**
    * Update an entity
-   * @param id The entity ID
-   * @param updateDto Partial entity data for update
+   * @param entity Partial entity data with required _id property
    * @returns The updated entity or null
    */
-  async update(id: string, updateDto: Partial<T>): Promise<T | null> {
-    return this.repository.update(id, updateDto);
+  async update(entity: Partial<T> & { _id: string }): Promise<T | null> {
+    return this.repository.update(entity);
   }
 
   /**
