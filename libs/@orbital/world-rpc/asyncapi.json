@@ -2,319 +2,374 @@
   "asyncapi": "2.6.0",
   "info": {
     "title": "@orbital/world",
-    "description": "@orbital/world API Documentation",
-    "version": "1.0.0",
-    "contact": {
-      "name": "Orbital Team",
-      "url": "https://example.com",
-      "email": "info@example.com"
-    },
-    "license": {
-      "name": "MIT",
-      "url": "https://opensource.org/licenses/MIT"
-    }
+    "version": "1.0.0"
   },
-  "tags": [],
   "servers": {
     "nats": {
-      "url": "nats://localhost:4223",
+      "url": "nats://localhost:4222",
       "protocol": "nats"
     }
   },
-  "components": {
-    "schemas": {}
-  },
-  "defaultContentType": "application/json",
   "channels": {
-    "world.AreasMicroserviceController.createArea": {
+    "world.AreasMicroserviceController.create": {
       "subscribe": {
-        "summary": "createArea operation",
-        "operationId": "createArea",
+        "operationId": "create",
         "message": {
-          "name": "createArea",
-          "title": "createArea message",
+          "name": "create",
+          "title": "create message",
           "contentType": "application/json",
           "payload": {
-            "type": "object",
-            "properties": {
-              "createAreaData": {
-                "type": "object",
-                "description": "Create DTO for createArea"
-              }
-            }
+            "type": "object"
           }
         }
       },
       "publish": {
-        "summary": "createArea response",
-        "operationId": "createAreaResponse",
+        "operationId": "createResponse",
         "message": {
-          "name": "createAreaResponse",
-          "title": "createArea response message",
+          "name": "createResponse",
+          "title": "create response message",
           "contentType": "application/json",
           "payload": {
-            "type": "object",
-            "properties": {},
-            "description": "Created resource from createArea"
+            "type": "object"
           }
         }
       }
     },
-    "world.AreasMicroserviceController.getAllAreas": {
+    "world.AreasMicroserviceController.find": {
       "subscribe": {
-        "summary": "getAllAreas operation",
-        "operationId": "getAllAreas",
+        "operationId": "find",
         "message": {
-          "name": "getAllAreas",
-          "title": "getAllAreas message",
+          "name": "find",
+          "title": "find message",
           "contentType": "application/json",
           "payload": {
-            "type": "object",
-            "properties": {}
+            "type": "object"
           }
         }
       },
       "publish": {
-        "summary": "getAllAreas response",
-        "operationId": "getAllAreasResponse",
+        "operationId": "findResponse",
         "message": {
-          "name": "getAllAreasResponse",
-          "title": "getAllAreas response message",
+          "name": "findResponse",
+          "title": "find response message",
           "contentType": "application/json",
           "payload": {
-            "type": "array",
-            "properties": {},
-            "items": {
-              "type": "object",
-              "description": "Item in the getAllAreas response collection"
-            }
+            "type": "object"
           }
         }
       }
     },
-    "world.AreasMicroserviceController.getArea": {
+    "world.AreasMicroserviceController.findById": {
       "subscribe": {
-        "summary": "getArea operation",
-        "operationId": "getArea",
+        "operationId": "findById",
         "message": {
-          "name": "getArea",
-          "title": "getArea message",
+          "name": "findById",
+          "title": "findById message",
           "contentType": "application/json",
           "payload": {
-            "type": "object",
-            "properties": {
-              "_id": {
-                "type": "string",
-                "description": "Parameter _id for getArea"
-              }
-            }
+            "type": "object"
           }
         }
       },
       "publish": {
-        "summary": "getArea response",
-        "operationId": "getAreaResponse",
+        "operationId": "findByIdResponse",
         "message": {
-          "name": "getAreaResponse",
-          "title": "getArea response message",
+          "name": "findByIdResponse",
+          "title": "findById response message",
           "contentType": "application/json",
           "payload": {
-            "type": "object",
-            "properties": {},
-            "nullable": true,
-            "description": "Resource from getArea, may be null if not found"
+            "type": "object"
           }
         }
       }
     },
-    "world.AreasMicroserviceController.updateArea": {
+    "world.AreasMicroserviceController.update": {
       "subscribe": {
-        "summary": "updateArea operation",
-        "operationId": "updateArea",
+        "operationId": "update",
         "message": {
-          "name": "updateArea",
-          "title": "updateArea message",
+          "name": "update",
+          "title": "update message",
           "contentType": "application/json",
           "payload": {
-            "type": "object",
-            "properties": {
-              "id": {
-                "type": "string",
-                "description": "Resource identifier"
-              },
-              "updateDto": {
-                "type": "object",
-                "description": "Update DTO for updateArea"
-              }
-            }
+            "type": "object"
           }
         }
       },
       "publish": {
-        "summary": "updateArea response",
-        "operationId": "updateAreaResponse",
+        "operationId": "updateResponse",
         "message": {
-          "name": "updateAreaResponse",
-          "title": "updateArea response message",
+          "name": "updateResponse",
+          "title": "update response message",
           "contentType": "application/json",
           "payload": {
-            "type": "object",
-            "properties": {},
-            "nullable": true,
-            "description": "Resource from updateArea, may be null if not found"
+            "type": "object"
           }
         }
       }
     },
-    "world.AreasMicroserviceController.deleteArea": {
+    "world.AreasMicroserviceController.delete": {
       "subscribe": {
-        "summary": "deleteArea operation",
-        "operationId": "deleteArea",
+        "operationId": "delete",
         "message": {
-          "name": "deleteArea",
-          "title": "deleteArea message",
+          "name": "delete",
+          "title": "delete message",
           "contentType": "application/json",
           "payload": {
-            "type": "object",
-            "properties": {
-              "_id": {
-                "type": "string",
-                "description": "Filter parameter for deleteArea"
-              }
-            }
+            "type": "object"
           }
         }
       },
       "publish": {
-        "summary": "deleteArea response",
-        "operationId": "deleteAreaResponse",
+        "operationId": "deleteResponse",
         "message": {
-          "name": "deleteAreaResponse",
-          "title": "deleteArea response message",
+          "name": "deleteResponse",
+          "title": "delete response message",
           "contentType": "application/json",
           "payload": {
-            "type": "object",
-            "properties": {},
-            "nullable": true,
-            "description": "Resource from deleteArea, may be null if not found"
+            "type": "object"
           }
         }
       }
     },
-    "world.AreasMicroserviceController.getAreasByWorldId": {
+    "world.AreasMicroserviceController.findByWorldId": {
       "subscribe": {
-        "summary": "getAreasByWorldId operation",
-        "operationId": "getAreasByWorldId",
+        "operationId": "findByWorldId",
         "message": {
-          "name": "getAreasByWorldId",
-          "title": "getAreasByWorldId message",
+          "name": "findByWorldId",
+          "title": "findByWorldId message",
           "contentType": "application/json",
           "payload": {
-            "type": "object",
-            "properties": {
-              "worldId": {
-                "type": "string",
-                "description": "Filter parameter for getAreasByWorldId"
-              }
-            }
+            "type": "object"
           }
         }
       },
       "publish": {
-        "summary": "getAreasByWorldId response",
-        "operationId": "getAreasByWorldIdResponse",
+        "operationId": "findByWorldIdResponse",
         "message": {
-          "name": "getAreasByWorldIdResponse",
-          "title": "getAreasByWorldId response message",
+          "name": "findByWorldIdResponse",
+          "title": "findByWorldId response message",
           "contentType": "application/json",
           "payload": {
-            "type": "array",
-            "properties": {},
-            "items": {
-              "type": "object",
-              "description": "Item in the getAreasByWorldId response collection"
-            }
+            "type": "object"
           }
         }
       }
     },
-    "world.AreasMicroserviceController.getAreasByParentId": {
+    "world.AreasMicroserviceController.findByParentId": {
       "subscribe": {
-        "summary": "getAreasByParentId operation",
-        "operationId": "getAreasByParentId",
+        "operationId": "findByParentId",
         "message": {
-          "name": "getAreasByParentId",
-          "title": "getAreasByParentId message",
+          "name": "findByParentId",
+          "title": "findByParentId message",
           "contentType": "application/json",
           "payload": {
-            "type": "object",
-            "properties": {
-              "parentId": {
-                "type": "string",
-                "description": "Filter parameter for getAreasByParentId"
-              }
-            }
+            "type": "object"
           }
         }
       },
       "publish": {
-        "summary": "getAreasByParentId response",
-        "operationId": "getAreasByParentIdResponse",
+        "operationId": "findByParentIdResponse",
         "message": {
-          "name": "getAreasByParentIdResponse",
-          "title": "getAreasByParentId response message",
+          "name": "findByParentIdResponse",
+          "title": "findByParentId response message",
           "contentType": "application/json",
           "payload": {
-            "type": "array",
-            "properties": {},
-            "items": {
-              "type": "object",
-              "description": "Item in the getAreasByParentId response collection"
-            }
+            "type": "object"
           }
         }
       }
     },
-    "world.AreasMicroserviceController.getAreasByTags": {
+    "world.AreasMicroserviceController.findByTags": {
       "subscribe": {
-        "summary": "getAreasByTags operation",
-        "operationId": "getAreasByTags",
+        "operationId": "findByTags",
         "message": {
-          "name": "getAreasByTags",
-          "title": "getAreasByTags message",
+          "name": "findByTags",
+          "title": "findByTags message",
           "contentType": "application/json",
           "payload": {
-            "type": "object",
-            "properties": {
-              "tags": {
-                "type": "array",
-                "description": "Filter parameter for getAreasByTags",
-                "items": {
-                  "type": "string"
-                }
-              }
-            }
+            "type": "object"
           }
         }
       },
       "publish": {
-        "summary": "getAreasByTags response",
-        "operationId": "getAreasByTagsResponse",
+        "operationId": "findByTagsResponse",
         "message": {
-          "name": "getAreasByTagsResponse",
-          "title": "getAreasByTags response message",
+          "name": "findByTagsResponse",
+          "title": "findByTags response message",
           "contentType": "application/json",
           "payload": {
-            "type": "array",
-            "properties": {},
-            "items": {
-              "type": "object",
-              "description": "Item in the getAreasByTags response collection"
-            }
+            "type": "object"
+          }
+        }
+      }
+    },
+    "world.WorldsMicroserviceController.create": {
+      "subscribe": {
+        "operationId": "create",
+        "message": {
+          "name": "create",
+          "title": "create message",
+          "contentType": "application/json",
+          "payload": {
+            "type": "object"
+          }
+        }
+      },
+      "publish": {
+        "operationId": "createResponse",
+        "message": {
+          "name": "createResponse",
+          "title": "create response message",
+          "contentType": "application/json",
+          "payload": {
+            "type": "object"
+          }
+        }
+      }
+    },
+    "world.WorldsMicroserviceController.find": {
+      "subscribe": {
+        "operationId": "find",
+        "message": {
+          "name": "find",
+          "title": "find message",
+          "contentType": "application/json",
+          "payload": {
+            "type": "object"
+          }
+        }
+      },
+      "publish": {
+        "operationId": "findResponse",
+        "message": {
+          "name": "findResponse",
+          "title": "find response message",
+          "contentType": "application/json",
+          "payload": {
+            "type": "object"
+          }
+        }
+      }
+    },
+    "world.WorldsMicroserviceController.findById": {
+      "subscribe": {
+        "operationId": "findById",
+        "message": {
+          "name": "findById",
+          "title": "findById message",
+          "contentType": "application/json",
+          "payload": {
+            "type": "object"
+          }
+        }
+      },
+      "publish": {
+        "operationId": "findByIdResponse",
+        "message": {
+          "name": "findByIdResponse",
+          "title": "findById response message",
+          "contentType": "application/json",
+          "payload": {
+            "type": "object"
+          }
+        }
+      }
+    },
+    "world.WorldsMicroserviceController.update": {
+      "subscribe": {
+        "operationId": "update",
+        "message": {
+          "name": "update",
+          "title": "update message",
+          "contentType": "application/json",
+          "payload": {
+            "type": "object"
+          }
+        }
+      },
+      "publish": {
+        "operationId": "updateResponse",
+        "message": {
+          "name": "updateResponse",
+          "title": "update response message",
+          "contentType": "application/json",
+          "payload": {
+            "type": "object"
+          }
+        }
+      }
+    },
+    "world.WorldsMicroserviceController.delete": {
+      "subscribe": {
+        "operationId": "delete",
+        "message": {
+          "name": "delete",
+          "title": "delete message",
+          "contentType": "application/json",
+          "payload": {
+            "type": "object"
+          }
+        }
+      },
+      "publish": {
+        "operationId": "deleteResponse",
+        "message": {
+          "name": "deleteResponse",
+          "title": "delete response message",
+          "contentType": "application/json",
+          "payload": {
+            "type": "object"
+          }
+        }
+      }
+    },
+    "world.WorldsMicroserviceController.findByShard": {
+      "subscribe": {
+        "operationId": "findByShard",
+        "message": {
+          "name": "findByShard",
+          "title": "findByShard message",
+          "contentType": "application/json",
+          "payload": {
+            "type": "object"
+          }
+        }
+      },
+      "publish": {
+        "operationId": "findByShardResponse",
+        "message": {
+          "name": "findByShardResponse",
+          "title": "findByShard response message",
+          "contentType": "application/json",
+          "payload": {
+            "type": "object"
+          }
+        }
+      }
+    },
+    "world.WorldsMicroserviceController.findByTechLevel": {
+      "subscribe": {
+        "operationId": "findByTechLevel",
+        "message": {
+          "name": "findByTechLevel",
+          "title": "findByTechLevel message",
+          "contentType": "application/json",
+          "payload": {
+            "type": "object"
+          }
+        }
+      },
+      "publish": {
+        "operationId": "findByTechLevelResponse",
+        "message": {
+          "name": "findByTechLevelResponse",
+          "title": "findByTechLevel response message",
+          "contentType": "application/json",
+          "payload": {
+            "type": "object"
           }
         }
       }
     }
-  },
-  "id": "https://example.com/apis/@orbital/world"
+  }
 }

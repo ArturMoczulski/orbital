@@ -268,47 +268,36 @@ Object.keys(serviceControllers).forEach((serviceName) => {
   // Analyze imports to determine external vs internal types
   const { externalImports, internalImports } = analyzeImports(allImports);
 
-  // Collect imports needed
+  // Build necessary imports
   const imports = new Set([
     `import { Injectable, Inject } from '@nestjs/common';`,
     `import { ClientProxy } from '@nestjs/microservices';`,
-    `import { Microservice } from '@orbital/microservices';`,
   ]);
+  // Add Microservice for class extension
+  imports.add(`import { Microservice } from '@orbital/microservices';`);
 
-  // Add external imports (avoiding duplicates)
-  const modelTypes = new Set();
-  const coreTypes = new Set();
-
-  // Process external imports by module
+  const skipModules = new Set([
+    "@nestjs/common",
+    "@nestjs/microservices",
+    "@orbital/microservices",
+    "@orbital/contracts",
+    "@orbital/nest",
+  ]);
+  // Dynamically import only used types from external modules
   externalImports.forEach((types, modulePath) => {
-    if (modulePath === "@orbital/typegoose") {
-      types.forEach((type) => {
-        if (type.endsWith("Model")) {
-          modelTypes.add(type);
-        }
-      });
-    } else if (modulePath === "@orbital/core") {
-      types.forEach((type) => {
-        coreTypes.add(type);
-      });
+    if (skipModules.has(modulePath)) return;
+    const typeList = Array.from(types)
+      .filter(Boolean)
+      .map((t) =>
+        modulePath === "@orbital/typegoose" && t.endsWith("Model")
+          ? `${t} as ${t.replace(/Model$/, "")}`
+          : t
+      )
+      .join(", ");
+    if (typeList) {
+      imports.add(`import { ${typeList} } from '${modulePath}';`);
     }
   });
-
-  // Add model imports
-  if (modelTypes.size > 0) {
-    imports.add(
-      `import { ${Array.from(modelTypes).join(
-        ", "
-      )} } from '@orbital/typegoose';`
-    );
-  }
-
-  // Add core type imports
-  if (coreTypes.size > 0) {
-    imports.add(
-      `import { ${Array.from(coreTypes).join(", ")} } from '@orbital/core';`
-    );
-  }
 
   // Map controller names to their model types
   const controllerModelMap = new Map();

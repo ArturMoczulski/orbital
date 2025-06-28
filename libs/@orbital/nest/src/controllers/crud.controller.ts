@@ -24,8 +24,8 @@ export abstract class CrudController<T, S extends CrudService<T, any>> {
    * @returns The created entity
    */
   async create(
-    createDto: Partial<WithoutId<T>> | Partial<WithoutId<T>>[]
-  ): Promise<T | BulkItemizedResponse<Partial<WithoutId<T>>, T>> {
+    createDto: WithoutId<T> | WithoutId<T>[]
+  ): Promise<T | BulkItemizedResponse<WithoutId<T>, T>> {
     return this.service.create(createDto);
   }
 

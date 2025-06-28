@@ -1,0 +1,14 @@
+{
+  "asyncapi": "2.6.0",
+  "info": {
+    "title": "@orbital/world",
+    "version": "1.0.0"
+  },
+  "servers": {
+    "nats": {
+      "url": "nats://localhost:4222",
+      "protocol": "nats"
+    }
+  },
+  "channels": {}
+}

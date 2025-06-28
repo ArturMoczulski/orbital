@@ -147,21 +147,29 @@ console.log("Starting client generation process...");
 
 // Step 1: Generate AsyncAPI spec
 console.log("\n=== Generating AsyncAPI Specification ===");
+// Generate AsyncAPI specification with timeout to prevent hanging
+console.log("\n=== Generating AsyncAPI Specification ===");
 const specResult = spawnSync(
   "node",
   [
     generateSpecPath,
-    "--entry",
-    opts.entry,
+    "--src-dir",
+    opts.srcDir,
     "--out",
     opts.specOut,
     "--title",
     opts.title,
     "--version",
     opts.version,
+    "--service",
+    opts.service,
   ],
-  { stdio: "inherit" }
+  { stdio: "inherit", timeout: 60000 }
 );
+if (specResult.status !== 0) {
+  console.error("Error generating AsyncAPI specification");
+  process.exit(specResult.status || 1);
+}
 
 if (specResult.status !== 0) {
   console.error("Error generating AsyncAPI specification");
@@ -169,6 +177,8 @@ if (specResult.status !== 0) {
 }
 
 // Step 2: Generate proxy client
+console.log("\n=== Generating Proxy Client ===");
+// Generate proxy client with timeout
 console.log("\n=== Generating Proxy Client ===");
 const proxyResult = spawnSync(
   "node",
@@ -185,8 +195,12 @@ const proxyResult = spawnSync(
     "--src-dir",
     opts.srcDir,
   ],
-  { stdio: "inherit" }
+  { stdio: "inherit", timeout: 60000 }
 );
+if (proxyResult.status !== 0) {
+  console.error("Error generating proxy client");
+  process.exit(proxyResult.status || 1);
+}
 
 if (proxyResult.status !== 0) {
   console.error("Error generating proxy client");
@@ -199,3 +213,6 @@ console.log(
   `Proxy Client: ${path.join(opts.proxyOut, `${opts.service}.microservice.ts`)}`
 );
 console.log(`Index File: ${path.join(opts.proxyOut, "index.ts")}`);
+
+// Explicitly exit to avoid hanging after client generation
+process.exit(0);
