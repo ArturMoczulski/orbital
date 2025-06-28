@@ -1,96 +1,194 @@
 import { ClientProxy, RpcException } from "@nestjs/microservices";
+import type { BulkOperationResponseDTO } from "@orbital/bulk-operations";
 import {
-  lastValueFrom,
-  timeout as rxTimeout,
+  BulkCountedResponse,
+  BulkItemizedResponse,
+  BulkOperationError,
+  BulkResponse,
+} from "@orbital/bulk-operations";
+import {
+  catchError,
   defaultIfEmpty,
+  lastValueFrom,
+  OperatorFunction,
+  throwError,
+  timeout,
   TimeoutError,
 } from "rxjs";
-import { NatsError, ErrorCode } from "nats";
-import {
-  MicroserviceUnavailableError,
-  UnrecognizedMessagePatternError,
-  RemoteMicroserviceError,
-} from "./errors";
+import { MicroserviceManagerEvents } from "./manager/microservice-manager.service";
 
-/**
- * Base class for all microservice proxies.
- * Provides a scoped request() method with timeout, null-on-empty,
- * and precise RpcException subclasses.
- */
+export class MicroserviceUnavailable extends RpcException {
+  constructor(public microservice: string) {
+    super({
+      code: "MICROSERVICE_UNAVAILABLE",
+      message: `Microservice '${microservice}' is unavailable`,
+    });
+  }
+}
+
+export class UnrecognizedMicroserviceMessagePattern extends RpcException {
+  constructor(
+    public microservice: string,
+    public messagePattern: string,
+    public args: any
+  ) {
+    super({
+      code: "UNRECOGNIZED_MICROSERVICE_MESSAGE_PATTERN",
+      message: `Microservice '${microservice}' does not recognize message pattern '${messagePattern}'`,
+    });
+  }
+}
+
 export abstract class Microservice {
-  /** Default RPC timeout in milliseconds */
-  static DEFAULT_TIMEOUT = 3_000; // Reduced from 15_000 to fail fast on errors
-
-  /** Skip timeout when debugging under --inspect */
-  private readonly isDebug = process.execArgv.some((arg: string) =>
-    arg.startsWith("--inspect")
-  );
+  static RPC_TIMEOUT = 15 * 1000;
+  private readonly isDebugMode: boolean;
 
   constructor(
-    protected readonly client: ClientProxy,
-    /** Logical name of the target microservice (e.g. 'world') */
-    public readonly serviceName: string
-  ) {}
+    protected readonly clientProxy: ClientProxy,
+    public readonly microservice?: string
+  ) {
+    this.isDebugMode = process.execArgv.some((arg) =>
+      arg.startsWith("--inspect")
+    );
+  }
+
+  private rpcPipeline<T>(
+    message: string,
+    msTimeout: number
+  ): OperatorFunction<T, T | null>[] {
+    const ops: OperatorFunction<T, T | null>[] = [];
+    if (!this.isDebugMode) {
+      ops.push(timeout(msTimeout));
+    }
+    ops.push(defaultIfEmpty(null));
+    ops.push(
+      catchError((err) => {
+        if (err instanceof TimeoutError) {
+          return throwError(
+            () =>
+              new RpcException({
+                code: "MICROSERVICE_TIMEOUT",
+                message: `RPC '${message}' timed out after ${msTimeout}ms: ${
+                  err.message || err
+                }`,
+              })
+          );
+        }
+        return throwError(() => err);
+      })
+    );
+    return ops;
+  }
 
   /**
-   * Send an RPC-style request to the target microservice.
-   * @param pattern NATS subject / message pattern
-   * @param payload Data to send
-   * @param opts Optional overrides for timeout or skipTimeout
-   * @returns The deserialized response, or null if no payload
+   * Sends a request to the microservice and returns the response.
+   * @param message The message pattern to send to the microservice.
+   * @param params The data to send with the message.
    */
-  public async request<Res = unknown>(
-    pattern: string,
-    payload?: unknown,
-    opts?: { timeout?: number; skipTimeout?: boolean }
-  ): Promise<Res | null> {
-    const ms = opts?.timeout ?? Microservice.DEFAULT_TIMEOUT;
-    const skipTimeout = opts?.skipTimeout || this.isDebug;
-
-    let obs$ = this.client.send<Res>(pattern, payload ?? {});
-    if (!skipTimeout) {
-      obs$ = obs$.pipe(rxTimeout(ms));
+  async request<T>(
+    message: string,
+    params?: any,
+    msTimeout = Microservice.RPC_TIMEOUT
+  ): Promise<T | null> {
+    const isHealthCheckCall = message.endsWith("-health-check");
+    let piped$ = this.clientProxy.send<T>(message, params ?? {});
+    for (const op of this.rpcPipeline<T>(message, msTimeout)) {
+      piped$ = piped$.pipe(op);
     }
-    obs$ = obs$.pipe(defaultIfEmpty(null as Res));
-
     try {
-      return await lastValueFrom(obs$);
-    } catch (err: any) {
-      // No responders => service down
-      if (err instanceof NatsError && err.code === ErrorCode.NoResponders) {
-        throw new MicroserviceUnavailableError(this.serviceName, err);
+      return await lastValueFrom(piped$);
+    } catch (err) {
+      const errorPayload =
+        err instanceof RpcException && typeof err.getError === "function"
+          ? (err.getError() as any)
+          : null;
+      if (errorPayload?.code === "MICROSERVICE_TIMEOUT") {
+        this.clientProxy.emit(MicroserviceManagerEvents.Unavailable, {
+          microservice: this.microservice!,
+        });
+        throw new MicroserviceUnavailable(this.microservice!);
       }
-      // Timeout at Rx layer
-      if (err instanceof TimeoutError) {
-        throw new MicroserviceUnavailableError(this.serviceName, err);
-      }
-      // Remote threw an RpcException with payload
-      if (err instanceof RpcException) {
-        const payload = err.getError() as any;
-        // Nest emits UNHANDLED_MESSAGE_PATTERN for no handler
-        if (payload?.code === "UNHANDLED_MESSAGE_PATTERN") {
-          throw new UnrecognizedMessagePatternError(this.serviceName, pattern);
+      const errMsg =
+        err instanceof RpcException && typeof err.getError === "function"
+          ? (() => {
+              const e = err.getError();
+              return typeof e === "string" ? e : (e as any).message;
+            })()
+          : (err as any).message || String(err);
+
+      if (
+        !isHealthCheckCall &&
+        errMsg.includes("There are no subscribers listening to that message")
+      ) {
+        let healthy: boolean;
+        try {
+          const healthRes = await this.request<string>(
+            `${this.microservice}-health-check`,
+            undefined,
+            msTimeout
+          );
+          healthy = healthRes === "ok";
+        } catch {
+          healthy = false;
         }
-        // Anything else is a remote error
-        throw new RemoteMicroserviceError(this.serviceName, pattern, payload);
+        if (healthy) {
+          throw new UnrecognizedMicroserviceMessagePattern(
+            this.microservice!,
+            message,
+            params
+          );
+        } else {
+          this.clientProxy.emit(MicroserviceManagerEvents.Unavailable, {
+            microservice: this.microservice!,
+          });
+          throw new MicroserviceUnavailable(this.microservice!);
+        }
       }
-      // Fallback: rethrow
       throw err;
     }
   }
 
-  /** Bulk-status RPC helper */
-  public statusBulkRequest<T = unknown>(pattern: string, payload?: unknown) {
-    return this.request<T>(pattern, payload);
+  /**
+   * Sends a request to the microservice and wraps the result in a BulkResponse.
+   */
+  async statusBulkRequest(message: string, params: any): Promise<BulkResponse> {
+    try {
+      const result = await this.request<BulkResponse>(message, params);
+      return BulkResponse.fromJson(result);
+    } catch (error) {
+      throw new BulkOperationError(error);
+    }
   }
 
-  /** Bulk-counted RPC helper */
-  public countedBulkRequest<T = unknown>(pattern: string, payload?: unknown) {
-    return this.request<T>(pattern, payload);
+  /**
+   * Sends a request to the microservice and wraps the result in a BulkCountedResponse.
+   */
+  async countedBulkRequest(
+    message: string,
+    params: any
+  ): Promise<BulkCountedResponse> {
+    try {
+      const result = await this.request<BulkCountedResponse>(message, params);
+      return BulkCountedResponse.fromJson(result);
+    } catch (error) {
+      throw new BulkOperationError(error);
+    }
   }
 
-  /** Bulk-itemized RPC helper */
-  public itemizedBulkRequest<T = unknown>(pattern: string, payload?: unknown) {
-    return this.request<T>(pattern, payload);
+  /**
+   * Sends a request to the microservice and wraps the result in a BulkItemizedResponse.
+   */
+  async itemizedBulkRequest<DataItemType = any, ResultItemDataType = any>(
+    message: string,
+    params: any
+  ): Promise<BulkItemizedResponse<DataItemType, ResultItemDataType>> {
+    try {
+      const result = await this.request<
+        BulkItemizedResponse<DataItemType, ResultItemDataType>
+      >(message, params);
+      return BulkItemizedResponse.fromJson(result as BulkOperationResponseDTO);
+    } catch (error) {
+      throw new BulkOperationError(error);
+    }
   }
 }

@@ -3,11 +3,11 @@ import {
   Inject,
   Injectable,
   Logger,
-  OnModuleInit,
   OnModuleDestroy,
+  OnModuleInit,
 } from "@nestjs/common";
-import { ClientProxy } from "@nestjs/microservices";
 import { EventEmitter2 } from "@nestjs/event-emitter";
+import { ClientProxy } from "@nestjs/microservices";
 import { NatsConnection } from "nats";
 import { Microservice } from "../microservice";
 
@@ -67,7 +67,7 @@ export class MicroserviceManagerService
     @Inject("NatsConnection") private readonly nc: NatsConnection,
     private readonly eventEmitter: EventEmitter2
   ) {
-    super(clientProxy, "microservice-manager");
+    super(clientProxy);
   }
 
   /**

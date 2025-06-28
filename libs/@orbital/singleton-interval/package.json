@@ -1,7 +1,7 @@
 {
-  "name": "@orbital/contracts",
-  "version": "1.0.0",
-  "description": "contracts",
+  "name": "@orbital/singleton-interval",
+  "version": "0.0.1",
+  "description": "bulk ops",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {

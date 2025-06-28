@@ -1,13 +1,13 @@
-/** Jest configuration for integration tests */
+/** Jest configuration for end-to-end tests */
 const base = require("./jest.config.base");
 const { name: pkg } = require("./package.json");
 
 module.exports = {
   ...base,
-  displayName: `${pkg}:integration`,
+  displayName: `${pkg}:e2e`,
   setupFilesAfterEnv: [
     "<rootDir>/jest.setup.js",
-    "<rootDir>/jest.setup.integration.js",
+    "<rootDir>/jest.setup.e2e.js",
   ],
-  testMatch: ["**/*.integration.spec.ts"],
+  testMatch: ["**/*.e2e.spec.ts"],
 };

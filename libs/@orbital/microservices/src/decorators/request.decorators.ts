@@ -1,10 +1,13 @@
+import { BulkItemizedResponse } from "@orbital/bulk-operations";
 import { Microservice } from "../microservice";
-import { BulkItemizedResponse } from "@scout/core";
 
 // Helper type to infer parameter types
 type MethodParams = any[];
 
-// Decorator for basic request
+/**
+ * Decorator for basic microservice request.
+ * Appends RPC response as last argument to original method.
+ */
 export function MicroserviceRequest<T = any>(message: string) {
   return function (
     target: Microservice,
@@ -12,22 +15,22 @@ export function MicroserviceRequest<T = any>(message: string) {
     descriptor: PropertyDescriptor
   ) {
     const originalMethod = descriptor.value;
-
     descriptor.value = async function (...args: MethodParams) {
-      const requestFn = (this as Microservice).request as <T>(
+      const requestFn = (this as Microservice).request as <R>(
         msg: string,
-        ...args: any[]
-      ) => Promise<T>;
-      const response = await requestFn.apply(this, [message, ...args]);
-      // Append the response as the last parameter and call the original method
-      return await originalMethod.apply(this, [...args, response]);
+        ...params: any[]
+      ) => Promise<R>;
+      const response = await requestFn.call(this, message, ...args);
+      return await originalMethod.call(this, ...args, response);
     };
-
     return descriptor;
   };
 }
 
-// Decorator for status bulk request
+/**
+ * Decorator for status bulk request.
+ * Appends BulkResponse as last argument to original method.
+ */
 export function MicroserviceStatusBulkRequest(message: string) {
   return function (
     target: Microservice,
@@ -35,23 +38,22 @@ export function MicroserviceStatusBulkRequest(message: string) {
     descriptor: PropertyDescriptor
   ) {
     const originalMethod = descriptor.value;
-
     descriptor.value = async function (...args: MethodParams) {
-      // Call the base class statusBulkRequest method
-      // Cast to any to bypass TypeScript's parameter count check
-      const response = await (this as any).statusBulkRequest.apply(this, [
+      const response = await (this as Microservice).statusBulkRequest.call(
+        this,
         message,
-        ...args,
-      ]);
-      // Append the response as the last parameter and call the original method
+        args[0]
+      );
       return await originalMethod.apply(this, [...args, response]);
     };
-
     return descriptor;
   };
 }
 
-// Decorator for counted bulk request
+/**
+ * Decorator for counted bulk request.
+ * Appends BulkCountedResponse as last argument to original method.
+ */
 export function MicroserviceCountedBulkRequest(message: string) {
   return function (
     target: Microservice,
@@ -59,26 +61,25 @@ export function MicroserviceCountedBulkRequest(message: string) {
     descriptor: PropertyDescriptor
   ) {
     const originalMethod = descriptor.value;
-
     descriptor.value = async function (...args: MethodParams) {
-      // Call the base class countedBulkRequest method
-      // Cast to any to bypass TypeScript's parameter count check
-      const response = await (this as any).countedBulkRequest.apply(this, [
+      const response = await (this as Microservice).countedBulkRequest.call(
+        this,
         message,
-        ...args,
-      ]);
-      // Append the response as the last parameter and call the original method
+        args[0]
+      );
       return await originalMethod.apply(this, [...args, response]);
     };
-
     return descriptor;
   };
 }
 
-// Decorator for itemized bulk request with generics
+/**
+ * Decorator for itemized bulk request.
+ * Appends BulkItemizedResponse<DataItemType, ResultItemDataType> as last argument.
+ */
 export function MicroserviceItemizedBulkRequest<
   DataItemType = any,
-  ResultItemDataType = any
+  ResultItemDataType = any,
 >(message: string) {
   return function (
     target: Microservice,
@@ -86,23 +87,14 @@ export function MicroserviceItemizedBulkRequest<
     descriptor: PropertyDescriptor
   ) {
     const originalMethod = descriptor.value;
-
     descriptor.value = async function (...args: MethodParams) {
-      const requestFn = (this as Microservice).itemizedBulkRequest as <
-        DataItemType,
-        ResultItemDataType
-      >(
+      const requestFn = (this as Microservice).itemizedBulkRequest as <D, R>(
         msg: string,
-        ...args: any[]
-      ) => Promise<BulkItemizedResponse<DataItemType, ResultItemDataType>>;
-
-      // Call the base class itemizedBulkRequest method with generics
-      // Cast to any to bypass TypeScript's parameter count check
-      const response = (requestFn as any).apply(this, [message, ...args]);
-      // Append the response as the last parameter and call the original method
+        ...params: any[]
+      ) => Promise<BulkItemizedResponse<D, R>>;
+      const response = await requestFn.call(this, message, args[0]);
       return await originalMethod.apply(this, [...args, response]);
     };
-
     return descriptor;
   };
 }
