@@ -1,4 +1,4 @@
-import { BulkOperation } from "@scout/core/src/bulk-operations";
+import { BulkOperation } from "@scout/core";
 import { ReturnModelType } from "@typegoose/typegoose";
 import { z, ZodError } from "zod";
 import { CrudRepository } from "./crud.repository";
@@ -27,7 +27,7 @@ const testEntitySchema = z.object({
   name: z.string(),
   description: z.string().optional(),
   count: z.number().int().positive(),
-  parentId: z.string().nullable().optional(),
+  parentId: z.string().optional(),
   tags: z.array(z.string()).optional(),
   createdAt: z.date().optional(),
   updatedAt: z.date().optional(),
@@ -415,13 +415,10 @@ describe("CrudRepository", () => {
       expect(modelMock.find).toHaveBeenCalledWith({ parentId }, undefined);
     });
 
-    it("should find top-level entities with null parentId", async () => {
-      await repository.findByParentId(null);
+    it("should find top-level entities with empty parentId", async () => {
+      await repository.findByParentId("");
 
-      expect(modelMock.find).toHaveBeenCalledWith(
-        { parentId: null },
-        undefined
-      );
+      expect(modelMock.find).toHaveBeenCalledWith({ parentId: "" }, undefined);
     });
 
     it("should throw ZodError if schema doesn't have parentId field", async () => {

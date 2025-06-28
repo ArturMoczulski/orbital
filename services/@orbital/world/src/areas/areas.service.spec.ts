@@ -62,7 +62,7 @@ describe("AreasService", () => {
 
       mockAreasRepository.create.mockResolvedValue(mockAreaModel);
 
-      const result = await service.create(createAreaData);
+      const result = await service.create(createAreaData as any);
 
       expect(result).toEqual(mockAreaModel);
       expect(mockAreasRepository.create).toHaveBeenCalledWith(createAreaData);

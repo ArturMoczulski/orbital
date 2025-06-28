@@ -1,4 +1,5 @@
-import { PartialWithoutId } from "@orbital/typegoose";
+import { WithId, WithoutId } from "@orbital/typegoose";
+import { BulkCountedResponse, BulkItemizedResponse } from "@scout/core";
 import { CrudService } from "../services/crud.service";
 
 /**
@@ -22,17 +23,23 @@ export abstract class CrudController<T, S extends CrudService<T, any>> {
    * @param createDto Partial entity data
    * @returns The created entity
    */
-  async create(createDto: PartialWithoutId<T>): Promise<T> {
+  async create(
+    createDto: Partial<WithoutId<T>> | Partial<WithoutId<T>>[]
+  ): Promise<T | BulkItemizedResponse<Partial<WithoutId<T>>, T>> {
     return this.service.create(createDto);
   }
 
   /**
    * Find an entity by ID
    * @param id The entity ID
+   * @param projection Optional fields to project
    * @returns The entity or null
    */
-  async findById(id: string): Promise<T | null> {
-    return this.service.findById(id);
+  async findById(
+    id: string,
+    projection?: Record<string, any>
+  ): Promise<T | null> {
+    return this.service.findById(id, projection);
   }
 
   /**
@@ -51,11 +58,28 @@ export abstract class CrudController<T, S extends CrudService<T, any>> {
   }
 
   /**
-   * Update an entity
-   * @param entity Partial entity data with required _id property
-   * @returns The updated entity or null
+   * Find entities by parent ID
+   * @param parentId The parent ID
+   * @param projection Optional fields to project
+   * @param options Optional query options
+   * @returns Array of entities
    */
-  async update(entity: Partial<T> & { _id: string }): Promise<T | null> {
+  async findByParentId(
+    parentId: string,
+    projection?: Record<string, any>,
+    options?: Record<string, any>
+  ): Promise<T[]> {
+    return this.service.findByParentId(parentId, projection, options);
+  }
+
+  /**
+   * Update one or more entities
+   * @param entity Single or array of entities with _id
+   * @returns Single updated entity, null, or bulk itemized response
+   */
+  async update(
+    entity: WithId<T> | WithId<T>[]
+  ): Promise<T | null | BulkItemizedResponse<WithId<T>, T>> {
     return this.service.update(entity);
   }
 
@@ -64,7 +88,9 @@ export abstract class CrudController<T, S extends CrudService<T, any>> {
    * @param id The entity ID
    * @returns The result of the deletion operation
    */
-  async delete(id: string): Promise<boolean | null> {
+  async delete(
+    id: string | string[]
+  ): Promise<boolean | null | BulkCountedResponse> {
     return this.service.delete(id);
   }
 }

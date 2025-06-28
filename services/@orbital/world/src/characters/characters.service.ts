@@ -1,5 +1,5 @@
 import { Injectable } from "@nestjs/common";
-import type { CharacterModel, PartialWithoutId } from "@orbital/typegoose";
+import type { CharacterModel, WithoutId } from "@orbital/typegoose";
 import { CharactersRepository } from "./characters.repository";
 
 @Injectable()
@@ -7,7 +7,7 @@ export class CharactersService {
   constructor(private readonly charactersRepository: CharactersRepository) {}
 
   async createCharacter(
-    dto: PartialWithoutId<CharacterModel>
+    dto: WithoutId<CharacterModel>
   ): Promise<CharacterModel> {
     return this.charactersRepository.create(dto);
   }

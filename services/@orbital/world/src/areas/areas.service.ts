@@ -1,6 +1,6 @@
 import { Injectable } from "@nestjs/common";
 import { CrudService } from "@orbital/nest";
-import { AreaModel as Area } from "@orbital/typegoose";
+import { Area } from "@orbital/typegoose";
 import { AreasRepository } from "./areas.repository";
 
 @Injectable()
@@ -16,15 +16,6 @@ export class AreasService extends CrudService<Area, AreasRepository> {
    */
   async findByWorldId(worldId: string): Promise<Area[]> {
     return this.repository.findByWorldId(worldId);
-  }
-
-  /**
-   * Find areas by parent ID
-   * @param parentId The parent area ID or null for top-level areas
-   * @returns Array of areas
-   */
-  async findByParentId(parentId: string | null): Promise<Area[]> {
-    return this.repository.findByParentId(parentId);
   }
 
   /**

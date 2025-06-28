@@ -6,7 +6,8 @@ import {
   PassThroughRpcExceptionFilter,
 } from "@orbital/microservices";
 import { CrudController } from "@orbital/nest";
-import { AreaModel as Area, PartialWithoutId } from "@orbital/typegoose";
+import { AreaModel as Area, WithId, WithoutId } from "@orbital/typegoose";
+import { BulkCountedResponse, BulkItemizedResponse } from "@scout/core";
 import { AreasService } from "./areas.service";
 
 @MicroserviceController(OrbitalMicroservices.World)
@@ -26,8 +27,10 @@ export class AreasMicroserviceController extends CrudController<
    * @returns The created area
    */
   @MessagePattern()
-  async create(createAreaData: PartialWithoutId<Area>): Promise<Area> {
-    return super.create(createAreaData);
+  async create(
+    createDto: Partial<WithoutId<Area>> | Partial<WithoutId<Area>>[]
+  ): Promise<Area | BulkItemizedResponse<Partial<WithoutId<Area>>, Area>> {
+    return super.create(createDto);
   }
 
   /**
@@ -55,9 +58,10 @@ export class AreasMicroserviceController extends CrudController<
    * @returns The updated area or null
    */
   @MessagePattern()
-  async update(updateAreaData: Partial<Area>): Promise<Area | null> {
-    const { _id, ...updateData } = updateAreaData;
-    return super.update({ _id: _id as string, ...updateData });
+  async update(
+    updateDto: WithId<Area> | WithId<Area>[]
+  ): Promise<Area | null | BulkItemizedResponse<WithId<Area>, Area>> {
+    return super.update(updateDto);
   }
 
   /**
@@ -66,8 +70,10 @@ export class AreasMicroserviceController extends CrudController<
    * @returns True if deleted, null if not found
    */
   @MessagePattern()
-  async delete(_id: string): Promise<boolean | null> {
-    return super.delete(_id);
+  async delete(
+    ids: string | string[]
+  ): Promise<boolean | null | BulkCountedResponse> {
+    return super.delete(ids);
   }
 
   /**
@@ -86,8 +92,12 @@ export class AreasMicroserviceController extends CrudController<
    * @returns Array of areas
    */
   @MessagePattern()
-  async findByParentId(parentId: string | null): Promise<Area[]> {
-    return this.service.findByParentId(parentId);
+  async findByParentId(
+    parentId: string,
+    projection?: Record<string, unknown>,
+    options?: Record<string, unknown>
+  ): Promise<Area[]> {
+    return super.findByParentId(parentId, projection, options);
   }
 
   /**

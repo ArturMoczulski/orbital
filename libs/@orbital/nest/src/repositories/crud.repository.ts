@@ -1,18 +1,18 @@
-import { PartialWithoutId } from "@orbital/typegoose";
+import { WithId, WithoutId } from "@orbital/typegoose";
 import {
   BulkCountedResponse,
   BulkItemizedResponse,
   BulkOperation,
-} from "@scout/core/src/bulk-operations";
+} from "@scout/core";
 import { ReturnModelType } from "@typegoose/typegoose";
 import { ZodError, ZodObject } from "zod";
 
 /**
  * Generic CRUD repository for MongoDB models using Typegoose
  * @template T The entity type (e.g., Area, World)
- * @template TCreateInput The type for create operations, defaults to PartialWithoutId<T>
+ * @template TCreateInput The type for create operations, defaults to WithoutId<T>
  */
-export abstract class CrudRepository<T, TCreateInput = PartialWithoutId<T>> {
+export abstract class CrudRepository<T, TCreateInput = Partial<WithoutId<T>>> {
   /**
    * Constructor for the CrudRepository
    * @param model The Typegoose model
@@ -138,11 +138,17 @@ export abstract class CrudRepository<T, TCreateInput = PartialWithoutId<T>> {
 
   /**
    * Find entities by parent ID
-   * @param parentId The parent ID or null for top-level entities
+   * @param parentId The parent ID
+   * @param projection Optional fields to project
+   * @param options Optional query options
    * @returns Array of entities with the specified parent ID
    * @throws Error if the entity schema doesn't have a parentId field
    */
-  async findByParentId(parentId: string | null): Promise<T[]> {
+  async findByParentId(
+    parentId: string,
+    projection?: Record<string, any>,
+    options?: Record<string, any>
+  ): Promise<T[]> {
     // Check if the schema has a parentId field
     if (!this.schema.shape.parentId) {
       throw new ZodError([
@@ -156,7 +162,7 @@ export abstract class CrudRepository<T, TCreateInput = PartialWithoutId<T>> {
       ]);
     }
 
-    return this.find({ parentId });
+    return this.find({ parentId }, projection, options);
   }
 
   /**
@@ -165,7 +171,19 @@ export abstract class CrudRepository<T, TCreateInput = PartialWithoutId<T>> {
    * @returns Array of entities with any of the specified tags
    * @throws Error if the entity schema doesn't have a tags field
    */
-  async findByTags(tags: string[]): Promise<T[]> {
+  /**
+   * Find entities by tags
+   * @param tags Array of tags to search for
+   * @param projection Optional fields to project
+   * @param options Optional query options
+   * @returns Array of entities with any of the specified tags
+   * @throws Error if the entity schema doesn't have a tags field
+   */
+  async findByTags(
+    tags: string[],
+    projection?: Record<string, any>,
+    options?: Record<string, any>
+  ): Promise<T[]> {
     // Check if the schema has a tags field
     if (!this.schema.shape.tags) {
       throw new ZodError([
@@ -179,7 +197,7 @@ export abstract class CrudRepository<T, TCreateInput = PartialWithoutId<T>> {
       ]);
     }
 
-    return this.find({ tags: { $in: tags } });
+    return this.find({ tags: { $in: tags } }, projection, options);
   }
 
   /**
@@ -188,8 +206,8 @@ export abstract class CrudRepository<T, TCreateInput = PartialWithoutId<T>> {
    * @returns BulkItemizedResponse for multiple entities or a single entity if input was singular
    */
   async update(
-    entities: (Partial<T> & { _id: string }) | (Partial<T> & { _id: string })[]
-  ): Promise<T | null | BulkItemizedResponse<Partial<T> & { _id: string }, T>> {
+    entities: WithId<T> | WithId<T>[]
+  ): Promise<T | null | BulkItemizedResponse<WithId<T>, T>> {
     const isSingular = !Array.isArray(entities);
     const items = isSingular ? [entities] : entities;
 

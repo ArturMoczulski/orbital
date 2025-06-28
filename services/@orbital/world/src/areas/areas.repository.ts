@@ -1,14 +1,14 @@
 import { Inject, Injectable } from "@nestjs/common";
 import { AreaSchema } from "@orbital/core";
 import { CrudRepository } from "@orbital/nest";
-import { AreaModel as Area } from "@orbital/typegoose";
+import { Area } from "@orbital/typegoose";
 import type { ReturnModelType } from "@typegoose/typegoose";
 import { getModelToken } from "nestjs-typegoose";
 
 @Injectable()
 export class AreasRepository extends CrudRepository<Area> {
   constructor(
-    @Inject(getModelToken("Area"))
+    @Inject(getModelToken(Area.name))
     areaModel: ReturnModelType<typeof Area>
   ) {
     super(areaModel, AreaSchema);

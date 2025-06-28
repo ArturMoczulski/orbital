@@ -6,7 +6,8 @@ import {
   PassThroughRpcExceptionFilter,
 } from "@orbital/microservices";
 import { CrudController } from "@orbital/nest";
-import { PartialWithoutId, WorldModel as World } from "@orbital/typegoose";
+import { WithId, WithoutId, WorldModel as World } from "@orbital/typegoose";
+import { BulkCountedResponse, BulkItemizedResponse } from "@scout/core";
 import { WorldsService } from "./worlds.service";
 
 @MicroserviceController(OrbitalMicroservices.World)
@@ -26,8 +27,10 @@ export class WorldsMicroserviceController extends CrudController<
    * @returns The created world
    */
   @MessagePattern()
-  async create(createWorldData: PartialWithoutId<World>): Promise<World> {
-    return super.create(createWorldData);
+  async create(
+    createDto: Partial<WithoutId<World>> | Partial<WithoutId<World>>[]
+  ): Promise<World | BulkItemizedResponse<Partial<WithoutId<World>>, World>> {
+    return super.create(createDto);
   }
 
   /**
@@ -55,9 +58,10 @@ export class WorldsMicroserviceController extends CrudController<
    * @returns The updated world or null
    */
   @MessagePattern()
-  async update(updateWorldData: Partial<World>): Promise<World | null> {
-    const { _id, ...updateData } = updateWorldData;
-    return super.update({ _id: _id as string, ...updateData });
+  async update(
+    updateDto: WithId<World> | WithId<World>[]
+  ): Promise<World | null | BulkItemizedResponse<WithId<World>, World>> {
+    return super.update(updateDto);
   }
 
   /**
@@ -66,8 +70,10 @@ export class WorldsMicroserviceController extends CrudController<
    * @returns True if deleted, null if not found
    */
   @MessagePattern()
-  async delete(_id: string): Promise<boolean | null> {
-    return super.delete(_id);
+  async delete(
+    ids: string | string[]
+  ): Promise<boolean | null | BulkCountedResponse> {
+    return super.delete(ids);
   }
 
   /**

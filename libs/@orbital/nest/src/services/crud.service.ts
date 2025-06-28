@@ -1,4 +1,5 @@
-import { PartialWithoutId } from "@orbital/typegoose";
+import { WithId } from "@orbital/typegoose";
+import { BulkCountedResponse, BulkItemizedResponse } from "@scout/core";
 import { CrudRepository } from "../repositories/crud.repository";
 
 /**
@@ -15,20 +16,36 @@ export abstract class CrudService<T, R extends CrudRepository<T>> {
 
   /**
    * Create a new entity
-   * @param createDto Partial entity data
+   * @param data Partial entity data
    * @returns The created entity
    */
-  async create(createDto: PartialWithoutId<T>): Promise<T> {
-    return this.repository.create(createDto) as Promise<T>;
+  /**
+   * Create one or more entities
+   * @param data Single or array of entity data
+   * @returns Single entity or bulk itemized response
+   */
+  /**
+   * Create one or more entities
+   * @param dto Single or array of create input
+   * @returns Created entity or bulk itemized response
+   */
+  async create(
+    dto: Parameters<R["create"]>[0]
+  ): Promise<ReturnType<R["create"]>> {
+    return this.repository.create(dto) as ReturnType<R["create"]>;
   }
 
   /**
    * Find an entity by ID
    * @param id The entity ID
+   * @param projection Optional fields to project
    * @returns The entity or null
    */
-  async findById(id: string): Promise<T | null> {
-    return this.repository.findById(id);
+  async findById(
+    id: string,
+    projection?: Record<string, any>
+  ): Promise<T | null> {
+    return this.repository.findById(id, projection);
   }
 
   /**
@@ -47,12 +64,49 @@ export abstract class CrudService<T, R extends CrudRepository<T>> {
   }
 
   /**
+   * Find entities by parent ID
+   * @param parentId The parent ID
+   * @param projection Optional fields to project
+   * @param options Optional query options
+   * @returns Array of entities with the specified parent ID
+   */
+  async findByParentId(
+    parentId: string,
+    projection?: Record<string, any>,
+    options?: Record<string, any>
+  ): Promise<T[]> {
+    return this.repository.findByParentId(parentId, projection, options);
+  }
+
+  /**
+   * Find entities by tags
+   * @param tags Array of tags to search for
+   * @param projection Optional fields to project
+   * @param options Optional query options
+   * @returns Array of entities with any of the specified tags
+   */
+  async findByTags(
+    tags: string[],
+    projection?: Record<string, any>,
+    options?: Record<string, any>
+  ): Promise<T[]> {
+    return this.repository.findByTags(tags, projection, options);
+  }
+
+  /**
    * Update an entity
    * @param entity Partial entity data with required _id property
    * @returns The updated entity or null
    */
-  async update(entity: Partial<T> & { _id: string }): Promise<T | null> {
-    return this.repository.update(entity) as Promise<T | null>;
+  /**
+   * Update one or more entities
+   * @param entities Single entity or array of entities with required _id
+   * @returns Single entity, null, or bulk itemized response
+   */
+  async update(
+    entities: WithId<T> | WithId<T>[]
+  ): Promise<T | null | BulkItemizedResponse<WithId<T>, T>> {
+    return this.repository.update(entities);
   }
 
   /**
@@ -60,7 +114,14 @@ export abstract class CrudService<T, R extends CrudRepository<T>> {
    * @param id The entity ID
    * @returns The result of the deletion operation
    */
-  async delete(id: string): Promise<boolean | null> {
-    return this.repository.delete(id) as Promise<boolean | null>;
+  /**
+   * Delete one or more entities by ID
+   * @param ids Single ID or array of IDs
+   * @returns Boolean, null, or bulk counted response
+   */
+  async delete(
+    ids: string | string[]
+  ): Promise<boolean | null | BulkCountedResponse> {
+    return this.repository.delete(ids);
   }
 }
