@@ -1,19 +1,27 @@
-/** Jest configuration for unit tests */
-const base = require("./jest.config.base");
-const { name: pkg } = require("./package.json");
+/**
+ * Jest configuration for unit tests
+ * Extends the base configuration with unit-test-specific settings
+ */
+const baseConfig = require("./jest.config");
+const path = require("path");
 
 module.exports = {
-  ...base,
-  displayName: `${pkg}:unit`,
+  ...baseConfig,
+  // Unit test specific patterns
+  testRegex: ".*\\.spec\\.ts$",
+
+  // Additional setup files for unit tests
   setupFilesAfterEnv: [
-    "<rootDir>/jest.setup.js",
-    "<rootDir>/jest.setup.unit.js",
+    ...baseConfig.setupFilesAfterEnv,
+    "<rootDir>/../jest.setup.unit.js",
   ],
-  testMatch: ["**/*.spec.ts"],
-  testPathIgnorePatterns: [
-    "/node_modules/",
-    "/dist/",
-    ".*integration\\.spec\\.ts$",
-    ".*e2e\\.spec\\.ts$",
-  ],
+
+  // Unit test specific coverage settings
+  coverageDirectory: "../coverage/unit",
+
+  // Collect coverage from unit tests
+  collectCoverage: true,
+
+  // Unit tests typically run faster, so we can use a shorter timeout
+  testTimeout: 30000,
 };
