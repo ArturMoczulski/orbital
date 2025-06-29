@@ -1,23 +1,49 @@
 {
   "compilerOptions": {
-    "module": "commonjs",
+    "baseUrl": ".",
+    "paths": {
+      "@orbital/microservices": [
+        "../microservices/src",
+        "../microservices/dist"
+      ],
+      "@orbital/microservices/*": [
+        "../microservices/src/*",
+        "../microservices/dist/*"
+      ],
+      "@orbital/singleton-interval": [
+        "../singleton-interval/src",
+        "../singleton-interval/dist"
+      ],
+      "@orbital/singleton-interval/*": [
+        "../singleton-interval/src/*",
+        "../singleton-interval/dist/*"
+      ]
+    },
+    "target": "ES2017",
+    "module": "CommonJS",
     "declaration": true,
-    "removeComments": true,
-    "emitDecoratorMetadata": true,
-    "experimentalDecorators": true,
-    "allowSyntheticDefaultImports": true,
-    "target": "es2017",
-    "sourceMap": true,
-    "outDir": "./dist",
-    "baseUrl": "./",
-    "incremental": true,
+    "outDir": "dist",
+    "composite": true,
+    "strict": true,
+    "esModuleInterop": true,
     "skipLibCheck": true,
-    "strictNullChecks": false,
-    "noImplicitAny": false,
-    "strictBindCallApply": true,
     "forceConsistentCasingInFileNames": true,
-    "noFallthroughCasesInSwitch": true
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
+    "moduleResolution": "node",
+    "sourceMap": true,
+    "inlineSources": true,
+    "sourceRoot": ""
   },
-  "include": ["src/**/*"],
-  "exclude": ["node_modules", "dist", "**/*.spec.ts"]
+  "include": ["src", "src/types/*.d.ts"],
+  "exclude": [
+    "**/*.spec.ts",
+    "**/*.integration.spec.ts",
+    "**/*.test.ts",
+    "**/__tests__/**"
+  ],
+  "references": [
+    { "path": "../microservices" },
+    { "path": "../singleton-interval" }
+  ]
 }

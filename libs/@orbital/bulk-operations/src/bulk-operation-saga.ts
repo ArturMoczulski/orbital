@@ -255,14 +255,16 @@ export class BulkOperationSaga<DataItemType = any> {
                 e.item === item &&
                 e.error?.message.startsWith(`Failed at chapter: ${chapterName}`)
             );
-            if (entry) {
+            if (entry && entry.error) {
               if (error.message) {
-                entry.error.message += ": " + error.message;
+                entry.error.message =
+                  entry.error.message + ": " + error.message;
               } else {
-                entry.error.message += ": " + stringify(error);
+                entry.error.message =
+                  entry.error.message + ": " + stringify(error);
               }
-              if (error.stack) {
-                entry.error.stack += error.stack + "\n\n" + entry.error.stack;
+              if (error.stack && entry.error.stack) {
+                entry.error.stack = error.stack + "\n\n" + entry.error.stack;
               }
             }
           };
@@ -483,7 +485,7 @@ export class BulkOperationSaga<DataItemType = any> {
     allSuccess.push({
       item,
       data: null,
-      error: null,
+      error: undefined,
       chapterResults: { ...cr },
       status: BulkOperationResultItemStatus.SUCCESS,
     });
@@ -614,7 +616,7 @@ export function BulkSaga(
     T extends (
       items: any[],
       saga?: BulkOperationSagaBuilder<any>
-    ) => Promise<any>
+    ) => Promise<any>,
   >(
     target: Object,
     propertyKey: string | symbol,

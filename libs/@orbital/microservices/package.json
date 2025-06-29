@@ -5,8 +5,7 @@
   "types": "dist/index.d.ts",
   "scripts": {
     "build": "tsc -p tsconfig.json --sourceMap --inlineSources",
-    "postbuild": "chmod +x bin/generate-asyncapi.js bin/generate-spec.js bin/generate-proxy.js bin/generate-client.js",
-    "generate-asyncapi": "node bin/generate-asyncapi.js",
+    "postbuild": "chmod +x bin/generate-spec.js bin/generate-proxy.js bin/generate-client.js",
     "test": "jest",
     "test:unit": "jest --config jest.unit.config.js",
     "test:integration": "jest --config jest.integration.config.js",
@@ -15,7 +14,7 @@
   "dependencies": {
     "@asyncapi/generator": "1.9.0",
     "@asyncapi/ts-nats-template": "^0.2.1",
-    "@orbital/bulk-operations": "workspace:^0.0.1",
+    "@orbital/bulk-operations": "workspace:^1.0.0",
     "@orbital/contracts": "workspace:^1.0.0",
     "nestjs-asyncapi": "^1.0.0",
     "react": "^16.14.0",
@@ -24,7 +23,6 @@
   },
   "bin": {
     "orbital-ms-client": "bin/generate-client.js",
-    "orbital-ms-gen": "bin/generate-asyncapi.js",
     "orbital-ms-proxy": "bin/generate-proxy.js",
     "orbital-ms-spec": "bin/generate-spec.js"
   },
@@ -45,13 +43,14 @@
     "@types/jest": "^30.0.0",
     "@types/node": "^24.0.4",
     "commander": "^11.1.0",
-    "jest": "^29.0.0",
+    "jest": "^30.0.0",
     "nats": "^2.19.0",
     "reflect-metadata": "^0.1.13",
     "rxjs": "^7.8.0",
-    "ts-jest": "^29.0.0",
+    "ts-jest": "^29.1.0",
     "ts-node": "^10.9.1",
     "typescript": "^5.8.3",
     "zod": "^3.22.4"
-  }
+  },
+  "license": "UNLICENSED"
 }

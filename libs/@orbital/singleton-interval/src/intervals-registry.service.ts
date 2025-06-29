@@ -2,13 +2,11 @@ import { Global, Injectable, Logger, OnModuleInit } from "@nestjs/common";
 import { DiscoveryService } from "@nestjs/core";
 import { EventEmitter2, OnEvent } from "@nestjs/event-emitter";
 import { SchedulerRegistry } from "@nestjs/schedule";
-import { SingletonInterval } from "./singleton-interval.decorator";
 import {
-  SingletonIntervalService,
   SingletonIntervalDefinition,
   SingletonIntervalEvents,
+  SingletonIntervalService,
 } from "./singleton-interval.service";
-import { last } from "lodash";
 
 /** Represents the current state of an interval's latest run. */
 export enum IntervalState {

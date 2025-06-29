@@ -1,9 +1,9 @@
-import { WithId, WithoutId } from "@orbital/typegoose";
 import {
   BulkCountedResponse,
   BulkItemizedResponse,
   BulkOperation,
-} from "@scout/core";
+} from "@orbital/bulk-operations";
+import { WithId, WithoutId } from "@orbital/typegoose";
 import { ReturnModelType } from "@typegoose/typegoose";
 import { ZodError, ZodObject } from "zod";
 
@@ -41,18 +41,23 @@ export abstract class CrudRepository<T, TCreateInput = Partial<WithoutId<T>>> {
         try {
           // Validate and prepare all items
           const validItems = dtos.map((item) => {
-            // Validate with Zod schema
-            // Skip _id validation since it's not required for creation
-            const { _id, ...rest } = item as any;
-            this.schema.parse(rest);
-
-            // Convert to plain object if it's a class instance with toPlainObject method
-            return item &&
+            // First convert to plain object if it's a class instance with toPlainObject method
+            const plainObject =
+              item &&
               typeof item === "object" &&
               "toPlainObject" in item &&
               typeof item.toPlainObject === "function"
-              ? item.toPlainObject()
-              : item;
+                ? item.toPlainObject()
+                : { ...item }; // Ensure we have a plain object copy
+
+            // Skip _id validation since it's not required for creation
+            const { _id, ...rest } = plainObject;
+
+            // Clone the schema and make _id optional for creation
+            const createSchema = this.schema.omit({ _id: true });
+            createSchema.parse(rest);
+
+            return plainObject;
           });
 
           // Use insertMany for bulk insertion instead of individual saves
@@ -62,7 +67,7 @@ export abstract class CrudRepository<T, TCreateInput = Partial<WithoutId<T>>> {
           createdItems.forEach((created: any, index: number) => {
             success(dtos[index], created as unknown as T);
           });
-        } catch (error) {
+        } catch (error: any) {
           // If there's a global error, mark all items as failed
           dtos.forEach((item) => {
             fail(item, { message: error.message });
@@ -229,15 +234,18 @@ export abstract class CrudRepository<T, TCreateInput = Partial<WithoutId<T>>> {
 
               // Create a partial schema that only validates the fields being updated
               const partialSchema = this.schema.partial().pick(
-                updateFields.reduce((acc, field) => {
-                  acc[field] = true;
-                  return acc;
-                }, {} as Record<string, true>)
+                updateFields.reduce(
+                  (acc, field) => {
+                    acc[field] = true;
+                    return acc;
+                  },
+                  {} as Record<string, true>
+                )
               );
 
               // Validate the update data against the partial schema
               partialSchema.parse(updateData);
-            } catch (validationError) {
+            } catch (validationError: any) {
               throw new Error(
                 `Validation error for item with _id ${_id}: ${validationError.message}`
               );
@@ -283,7 +291,7 @@ export abstract class CrudRepository<T, TCreateInput = Partial<WithoutId<T>>> {
             fail(item, { message: `Entity with _id ${_id} not found` });
           }
         }
-      } catch (error) {
+      } catch (error: any) {
         // If there's a global error, mark all items as failed
         updateItems.forEach((item) => {
           fail(item, { message: error.message });
@@ -337,7 +345,7 @@ export abstract class CrudRepository<T, TCreateInput = Partial<WithoutId<T>>> {
             .deleteMany({ _id: { $in: idList } })
             .exec();
           return result.deletedCount;
-        } catch (error) {
+        } catch (error: any) {
           return 0;
         }
       }

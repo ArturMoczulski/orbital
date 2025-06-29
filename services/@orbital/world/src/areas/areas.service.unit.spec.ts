@@ -76,7 +76,10 @@ describe("AreasService", () => {
       const result = await service.findById(mockArea._id);
 
       expect(result).toEqual(mockAreaModel);
-      expect(mockAreasRepository.findById).toHaveBeenCalledWith(mockArea._id);
+      expect(mockAreasRepository.findById).toHaveBeenCalledWith(
+        mockArea._id,
+        undefined
+      );
     });
 
     it("should return null if area not found", async () => {
@@ -86,7 +89,8 @@ describe("AreasService", () => {
 
       expect(result).toBeNull();
       expect(mockAreasRepository.findById).toHaveBeenCalledWith(
-        "nonexistent-id"
+        "nonexistent-id",
+        undefined
       );
     });
   });
@@ -101,7 +105,11 @@ describe("AreasService", () => {
       const result = await service.find(filter);
 
       expect(result).toEqual([mockAreaModel]);
-      expect(mockAreasRepository.find).toHaveBeenCalledWith(filter);
+      expect(mockAreasRepository.find).toHaveBeenCalledWith(
+        filter,
+        undefined,
+        undefined
+      );
     });
   });
 
@@ -189,7 +197,11 @@ describe("AreasService", () => {
       const result = await service.findByParentId(parentId);
 
       expect(result).toEqual([mockAreaModel]);
-      expect(mockAreasRepository.findByParentId).toHaveBeenCalledWith(parentId);
+      expect(mockAreasRepository.findByParentId).toHaveBeenCalledWith(
+        parentId,
+        undefined,
+        undefined
+      );
     });
   });
 

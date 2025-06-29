@@ -50,11 +50,7 @@ COPY --from=build /app/services/shared ./services/shared
 # Install production dependencies
 RUN corepack enable && yarn workspaces focus --all --production
 
-# Install missing dependencies
-RUN yarn workspace @scout/core add cli-table3 && \
-    echo "Checking for cli-table3 installation:" && \
-    find /app -name cli-table3 && \
-    ls -la /app/services/shared/scout-core/node_modules || echo "No node_modules in scout-core"
+# Removed references to @scout/core
 
 EXPOSE 3000
 # Run node directly on the main.js file

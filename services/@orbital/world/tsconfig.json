@@ -34,14 +34,26 @@
       "@orbital/core/*": ["../../../libs/@orbital/core/dist/*"],
       "@orbital/typegoose": ["../../../libs/@orbital/typegoose/dist"],
       "@orbital/typegoose/*": ["../../../libs/@orbital/typegoose/dist/*"],
-      "@scout/core": ["../../../libs/@scout/core/dist"],
-      "@scout/core/*": ["../../../libs/@scout/core/dist/*"],
       "@orbital/microservices": ["../../../libs/@orbital/microservices/dist"],
       "@orbital/microservices/*": [
         "../../../libs/@orbital/microservices/dist/*"
       ],
       "@orbital/nest": ["../../../libs/@orbital/nest/dist"],
       "@orbital/nest/*": ["../../../libs/@orbital/nest/dist/*"],
+      "@orbital/bulk-operations": [
+        "../../../libs/@orbital/bulk-operations/dist"
+      ],
+      "@orbital/bulk-operations/*": [
+        "../../../libs/@orbital/bulk-operations/dist/*"
+      ],
+      "@orbital/contracts": [
+        "../../../libs/@orbital/contracts/src",
+        "../../../libs/@orbital/contracts/dist"
+      ],
+      "@orbital/contracts/*": [
+        "../../../libs/@orbital/contracts/src/*",
+        "../../../libs/@orbital/contracts/dist/*"
+      ],
       "@orbital/contracts": ["../../../libs/@orbital/contracts/dist"],
       "@orbital/contracts/*": ["../../../libs/@orbital/contracts/dist/*"]
     }

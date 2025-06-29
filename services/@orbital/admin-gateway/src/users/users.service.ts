@@ -1,6 +1,6 @@
 import { Injectable } from "@nestjs/common";
+import { BulkItemizedResponse, itemized } from "@orbital/bulk-operations";
 import { User, UserDocument } from "./schemas/user.schema";
-import { BulkItemizedResponse, itemized } from "@scout/core";
 import { UsersRepository } from "./users.repository";
 
 @Injectable()

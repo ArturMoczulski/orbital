@@ -1,4 +1,8 @@
 import { Controller, UseFilters } from "@nestjs/common";
+import {
+  BulkCountedResponse,
+  BulkItemizedResponse,
+} from "@orbital/bulk-operations";
 import { OrbitalMicroservices } from "@orbital/contracts";
 import {
   MessagePattern,
@@ -7,7 +11,6 @@ import {
 } from "@orbital/microservices";
 import { CrudController } from "@orbital/nest";
 import { WithId, WithoutId, WorldModel as World } from "@orbital/typegoose";
-import { BulkCountedResponse, BulkItemizedResponse } from "@scout/core";
 import { WorldsService } from "./worlds.service";
 
 @MicroserviceController(OrbitalMicroservices.World)
@@ -28,8 +31,8 @@ export class WorldsMicroserviceController extends CrudController<
    */
   @MessagePattern()
   async create(
-    createDto: Partial<WithoutId<World>> | Partial<WithoutId<World>>[]
-  ): Promise<World | BulkItemizedResponse<Partial<WithoutId<World>>, World>> {
+    createDto: WithoutId<World> | WithoutId<World>[]
+  ): Promise<World | BulkItemizedResponse<WithoutId<World>, World>> {
     return super.create(createDto);
   }
 

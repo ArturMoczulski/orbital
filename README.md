@@ -22,8 +22,11 @@ This repository contains a **living template** for a full-stack monorepo powered
 - Built-in scaffolding CLI (`yarn orb`)
 - Environment management with .env files
 - Preconfigured Jest (unit/integration/e2e) with `ts-jest`
+- Yarn 4.9.2 managed by Corepack for consistent package management
 
 ## Getting Started
+
+This project uses Yarn 4.9.2 managed by Corepack. Please see [YARN-SETUP.md](YARN-SETUP.md) for detailed setup instructions.
 
 Clone or fork the repository:
 
@@ -31,6 +34,15 @@ Clone or fork the repository:
 git clone git@github.com:ArturMoczulski/orbital-monorepo-template.git my-project
 # or fork on GitHub and then clone your fork
 cd my-project
+
+# Enable Corepack and prepare the correct Yarn version
+corepack enable
+corepack prepare yarn@4.9.2 --activate
+
+# Install dependencies
+yarn install
+
+# Initialize the monorepo
 yarn orb monorepo install
 ```
 

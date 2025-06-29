@@ -10,14 +10,7 @@ import { EventEmitter2 } from "@nestjs/event-emitter";
 import { ClientProxy } from "@nestjs/microservices";
 import { NatsConnection } from "nats";
 import { Microservice } from "../microservice";
-
-/**
- * Events emitted when microservices go up or down.
- */
-export enum MicroserviceManagerEvents {
-  Available = "microservice.available",
-  Unavailable = "microservice.unavailable",
-}
+import { MicroserviceManagerEvents } from "./microservice-manager-events";
 
 /**
  * Watches the NATS Service Framework for service-heartbeats

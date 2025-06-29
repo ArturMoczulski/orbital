@@ -1,9 +1,9 @@
 import { Logger, OnModuleInit } from "@nestjs/common";
 import { EventEmitter2 } from "@nestjs/event-emitter";
+import { MicroserviceManagerEvents } from "@orbital/microservices";
 import { makeGaugeProvider } from "@willsoto/nestjs-prometheus";
-import { Job, Queue } from "bull";
-import { Gauge } from "prom-client";
-import { MicroserviceManagerEvents } from "../microservice-manager/microservice-manager.service";
+import type { Job, Queue } from "bull";
+import type { Gauge } from "prom-client";
 import { JobItem } from "./jobs-producer";
 
 export abstract class JobsQueueConsumer<TData = JobItem>

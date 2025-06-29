@@ -8,12 +8,12 @@ export class AreasService {
   constructor(private readonly worldMicroservice: WorldMicroservice) {}
 
   async getAll(): Promise<any[]> {
-    const areas = await this.worldMicroservice.areas.getAllAreas();
+    const areas = await this.worldMicroservice.areas.find();
     return Array.isArray(areas) ? areas : [];
   }
 
   async getById(_id: string): Promise<any> {
-    const area = await this.worldMicroservice.areas.getArea(_id);
+    const area = await this.worldMicroservice.areas.findById(_id);
     if (!area) {
       throw new Error("Area not found");
     }
@@ -23,18 +23,18 @@ export class AreasService {
   async create(body: any): Promise<any> {
     // Pass the body directly without adding defaults
     this.logger.log(`Creating area: ${JSON.stringify(body)}`);
-    return this.worldMicroservice.areas.createArea(body);
+    return this.worldMicroservice.areas.create(body);
   }
 
   async update(_id: string, body: any): Promise<any> {
-    return this.worldMicroservice.areas.updateArea({
+    return this.worldMicroservice.areas.update({
       _id,
       ...body,
     });
   }
 
   async delete(_id: string): Promise<any> {
-    return this.worldMicroservice.areas.deleteArea(_id);
+    return this.worldMicroservice.areas.delete(_id);
   }
 
   async getMap(_id: string): Promise<any> {

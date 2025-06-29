@@ -1,17 +1,24 @@
 {
   "compilerOptions": {
     "baseUrl": ".",
-    "typeRoots": [
-      "../../node_modules/@types",
-      "node_modules/@types",
-      "src/types"
-    ],
-    "types": ["node"],
+    "paths": {
+      "@orbital/contracts": ["../contracts/dist"],
+      "@orbital/contracts/*": ["../contracts/dist/*"],
+      "@orbital/bulk-operations": [
+        "../../@orbital/bulk-operations/dist",
+        "../../@orbital/bulk-operations/src"
+      ],
+      "@orbital/bulk-operations/*": [
+        "../../@orbital/bulk-operations/dist/*",
+        "../../@orbital/bulk-operations/src/*"
+      ]
+    },
     "target": "ES2017",
     "module": "CommonJS",
     "declaration": true,
     "outDir": "dist",
     "rootDir": "src",
+    "composite": true,
     "strict": true,
     "esModuleInterop": true,
     "skipLibCheck": true,

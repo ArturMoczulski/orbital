@@ -8,13 +8,17 @@ export class CallbacksTestService {
   private onErrorCalled = false;
 
   @SingletonInterval(500, {
-    onTerminate: async function () {
+    onTerminate: async function (this: CallbacksTestService) {
       console.log("[CallbacksTestService] onTerminate called!");
-      this.onTerminateCalled = true;
+      // Access the service instance properties directly
+      const service = this as unknown as CallbacksTestService;
+      service.setOnTerminateCalled(true);
     },
-    onError: async function (err) {
+    onError: async function (this: CallbacksTestService, err: Error) {
       console.log("[CallbacksTestService] onError called!", err.message);
-      this.onErrorCalled = true;
+      // Access the service instance properties directly
+      const service = this as unknown as CallbacksTestService;
+      service.setOnErrorCalled(true);
     },
   })
   async overrunMethod() {
@@ -28,5 +32,13 @@ export class CallbacksTestService {
 
   isOnErrorCalled() {
     return this.onErrorCalled;
+  }
+
+  setOnTerminateCalled(value: boolean) {
+    this.onTerminateCalled = value;
+  }
+
+  setOnErrorCalled(value: boolean) {
+    this.onErrorCalled = value;
   }
 }

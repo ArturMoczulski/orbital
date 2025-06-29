@@ -1,12 +1,18 @@
 {
   "ignore_dirs": [
     "node_modules",
-    "dist",
     ".git",
+    "coverage",
     ".turbo",
     ".cache",
-    "tmp",
-    "temp"
+    "**/**/dist",
+    "**/**/node_modules",
+    "**/**/build",
+    "**/**/.turbo",
+    "**/**/.cache",
+    "**/tmp",
+    "**/temp",
+    "**/**/*.log"
   ],
   "fsevents_latency": 0.05,
   "settle": 5000

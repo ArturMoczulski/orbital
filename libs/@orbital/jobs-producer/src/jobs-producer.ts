@@ -1,16 +1,16 @@
 import { Logger, OnModuleInit } from "@nestjs/common";
 import { EventEmitter2 } from "@nestjs/event-emitter";
-import { SchedulerRegistry } from "@nestjs/schedule";
+import type { SchedulerRegistry } from "@nestjs/schedule";
+import { MicroserviceManagerEvents } from "@orbital/microservices";
+import { SingletonIntervalService } from "@orbital/singleton-interval";
 import {
   makeCounterProvider,
   makeGaugeProvider,
 } from "@willsoto/nestjs-prometheus";
-import * as archy from "archy";
-import { Job, Queue } from "bull";
-import * as _ from "lodash";
-import { Counter, Gauge } from "prom-client";
-import { MicroserviceManagerEvents } from "../microservice-manager/microservice-manager.service";
-import { SingletonIntervalService } from "../singleton-interval";
+import archy from "archy";
+import type { Job, Queue } from "bull";
+import _ from "lodash";
+import type { Counter, Gauge } from "prom-client";
 
 export enum JobsProducerMarkProcessingOrder {
   PRE_PRODUCE,
@@ -244,7 +244,9 @@ export abstract class JobsProducer<
    */
   protected abstract pendingItems(): Promise<DataType[]>;
 
-  protected abstract markItemsAsProcessing(items: Job<DataType>[]);
+  protected abstract markItemsAsProcessing(
+    items: Job<DataType>[]
+  ): Promise<void>;
 
   /**
    * Called by persistJobsResults() when one or more jobs have completed.
@@ -320,7 +322,7 @@ export abstract class JobsProducer<
           { producer: producerLabel, queue: this.queue.name },
           durationPending
         );
-      } catch (err) {
+      } catch (err: any) {
         this.logger.error(
           `produce: error fetching pending items: ${err.message}`,
           err.stack
@@ -339,7 +341,7 @@ export abstract class JobsProducer<
         let waitingJobs: Job<DataType>[];
         try {
           waitingJobs = await this.queue.getWaiting();
-        } catch (err) {
+        } catch (err: any) {
           this.logger.error(
             `produce: error fetching waiting jobs: ${err.message}`,
             err.stack
@@ -535,7 +537,7 @@ export abstract class JobsProducer<
 
           // Now remove those completed jobs from Redis in one go:
           await this.queue.clean(0, "completed", completedJobs.length);
-        } catch (err) {
+        } catch (err: any) {
           this.logger.error(`Error in onSuccess: ${err.message}`, err.stack);
         }
       }
@@ -568,7 +570,7 @@ export abstract class JobsProducer<
 
           // Remove those failed jobs from Redis in bulk:
           await this.queue.clean(0, "failed", failedJobs.length);
-        } catch (err) {
+        } catch (err: any) {
           this.logger.error(`Error in onFail: ${err.message}`, err.stack);
         }
       }
@@ -635,7 +637,7 @@ export abstract class JobsProducer<
       const workerInfos = await this.queue.getWorkers();
       const consumerCount = Array.isArray(workerInfos) ? workerInfos.length : 0;
       this.runningConsumersGauge.set({ queue: this.queue.name }, consumerCount);
-    } catch (err) {
+    } catch (err: any) {
       this.logger.warn(`Error updating consumer count: ${err.message}`);
     }
   }

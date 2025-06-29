@@ -10,12 +10,16 @@ import {
   catchError,
   defaultIfEmpty,
   lastValueFrom,
+  Observable,
   OperatorFunction,
   throwError,
   timeout,
   TimeoutError,
 } from "rxjs";
-import { MicroserviceManagerEvents } from "./manager/microservice-manager.service";
+
+// Use string literals instead of importing the enum to break circular dependency
+const MICROSERVICE_AVAILABLE_EVENT = "microservice.available";
+const MICROSERVICE_UNAVAILABLE_EVENT = "microservice.unavailable";
 
 export class MicroserviceUnavailable extends RpcException {
   constructor(public microservice: string) {
@@ -91,8 +95,12 @@ export abstract class Microservice {
     msTimeout = Microservice.RPC_TIMEOUT
   ): Promise<T | null> {
     const isHealthCheckCall = message.endsWith("-health-check");
-    let piped$ = this.clientProxy.send<T>(message, params ?? {});
+    let piped$: Observable<T | null> = this.clientProxy.send<T>(
+      message,
+      params ?? {}
+    );
     for (const op of this.rpcPipeline<T>(message, msTimeout)) {
+      // @ts-ignore TS2345: mismatched OperatorFunction types
       piped$ = piped$.pipe(op);
     }
     try {
@@ -103,7 +111,7 @@ export abstract class Microservice {
           ? (err.getError() as any)
           : null;
       if (errorPayload?.code === "MICROSERVICE_TIMEOUT") {
-        this.clientProxy.emit(MicroserviceManagerEvents.Unavailable, {
+        this.clientProxy.emit(MICROSERVICE_UNAVAILABLE_EVENT, {
           microservice: this.microservice!,
         });
         throw new MicroserviceUnavailable(this.microservice!);
@@ -138,7 +146,7 @@ export abstract class Microservice {
             params
           );
         } else {
-          this.clientProxy.emit(MicroserviceManagerEvents.Unavailable, {
+          this.clientProxy.emit(MICROSERVICE_UNAVAILABLE_EVENT, {
             microservice: this.microservice!,
           });
           throw new MicroserviceUnavailable(this.microservice!);

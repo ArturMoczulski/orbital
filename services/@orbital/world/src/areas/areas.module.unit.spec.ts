@@ -1,4 +1,5 @@
 import { Test } from "@nestjs/testing";
+import { Area } from "@orbital/typegoose";
 import { getModelToken } from "nestjs-typegoose";
 import { AreasMicroserviceController } from "./areas.microservice.controller";
 import { AreasModule } from "./areas.module";
@@ -10,7 +11,7 @@ describe("AreasModule", () => {
     const module = await Test.createTestingModule({
       imports: [AreasModule],
     })
-      .overrideProvider(getModelToken("AreaModel"))
+      .overrideProvider(getModelToken(Area.name))
       .useValue({})
       .compile();
 

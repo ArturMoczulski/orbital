@@ -23,12 +23,12 @@ export { MicroserviceExceptionFilter } from "./filters/microservice-exception.fi
 export { PassThroughRpcExceptionFilter } from "./filters/pass-through-rpc-exception.filter";
 
 // Manager
+export { MicroserviceManagerEvents } from "./manager/microservice-manager-events";
 export {
   MicroserviceManagerModule,
   MicroserviceManagerModuleOptions,
 } from "./manager/microservice-manager.module";
 export {
-  MicroserviceManagerEvents,
   MicroserviceManagerService,
   MicroserviceRegistry,
 } from "./manager/microservice-manager.service";

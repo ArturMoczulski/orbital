@@ -3,7 +3,7 @@ import { BulkResponse } from "./bulk-response";
 import { BulkOperationResponseDTO, BulkOperationResponseStatus } from "./types";
 
 export class BulkCountedResponse<
-  G extends string = never
+  G extends string = never,
 > extends BulkResponse {
   constructor(
     public status?: BulkOperationResponseStatus,
@@ -12,7 +12,7 @@ export class BulkCountedResponse<
     }
   ) {
     super(status);
-    this.counts = counts;
+    this.counts = counts || ({ success: 0, fail: 0 } as any);
   }
 
   static fromJson(json: any): BulkCountedResponse<string> {
@@ -92,6 +92,10 @@ export class BulkCountedResponse<
   }
 
   toString() {
+    if (!this.counts) {
+      return `${super.toString()} | No counts available`;
+    }
+
     return `${super.toString()} | Total: ${
       this.counts.success + this.counts.fail
     }: ✅ ${this.counts.success}${
@@ -100,16 +104,21 @@ export class BulkCountedResponse<
   }
 
   complete(): this {
+    if (!this.counts) {
+      this.status = BulkOperationResponseStatus.FAIL;
+      return this;
+    }
+
     this.status =
       this.counts.success === 0
         ? BulkOperationResponseStatus.FAIL
         : this.counts.fail > 0
-        ? BulkOperationResponseStatus.PARTIAL_SUCCESS
-        : BulkOperationResponseStatus.SUCCESS;
+          ? BulkOperationResponseStatus.PARTIAL_SUCCESS
+          : BulkOperationResponseStatus.SUCCESS;
     return this;
   }
 
   total() {
-    return this.counts.success + this.counts.fail;
+    return this.counts ? this.counts.success + this.counts.fail : 0;
   }
 }

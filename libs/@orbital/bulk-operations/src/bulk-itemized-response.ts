@@ -11,7 +11,7 @@ import { BulkOperationResponseDTO, BulkOperationResponseStatus } from "./types";
 export class BulkItemizedResponse<
   DataItemType = any,
   ResultItemDataType = any,
-  G extends string = never
+  G extends string = never,
 > extends BulkCountedResponse<G> {
   constructor(
     public status?: BulkOperationResponseStatus,
@@ -32,12 +32,20 @@ export class BulkItemizedResponse<
 
   addSuccess(item: BulkOperationResultItem<DataItemType, ResultItemDataType>) {
     this.items.success.push(item);
-    this.counts.success++;
+    if (this.counts) {
+      this.counts.success++;
+    } else {
+      this.counts = { success: 1, fail: 0 } as any;
+    }
   }
 
   addFail(item: BulkOperationResultItem<DataItemType, ResultItemDataType>) {
     this.items.fail.push(item);
-    this.counts.fail++;
+    if (this.counts) {
+      this.counts.fail++;
+    } else {
+      this.counts = { success: 0, fail: 1 } as any;
+    }
   }
 
   // Make the class iterable
@@ -205,12 +213,22 @@ export class BulkItemizedResponse<
 
   asSingle() {
     if (this.status != BulkOperationResponseStatus.SUCCESS) {
-      const error = new Error(this.items.fail[0].error.message);
-      error.stack = this.items.fail[0].error.stack;
-      throw error;
+      if (
+        this.items.fail &&
+        this.items.fail.length > 0 &&
+        this.items.fail[0].error
+      ) {
+        const error = new Error(
+          this.items.fail[0].error.message || "Unknown error"
+        );
+        error.stack = this.items.fail[0].error.stack;
+        throw error;
+      } else {
+        throw new Error("Operation failed with unknown error");
+      }
     }
 
-    return this.items.success[0].data;
+    return this.items.success[0]?.data;
   }
 
   all() {
@@ -225,16 +243,23 @@ export class BulkItemizedResponse<
     const successes = allItems.filter((item) => !item.error);
     const failures = allItems.filter((item) => item.error);
 
-    const formatGroup = (items) => {
+    const formatGroup = (
+      items: BulkOperationResultItem<DataItemType, ResultItemDataType>[]
+    ) => {
       const displayed = items
         .slice(0, maxItems)
-        .map((item, index) => {
-          const symbol = item.error ? "❌" : "✅";
-          const content = item.error
-            ? JSON.stringify({ error: item.error, data: item.data })
-            : JSON.stringify(item.data);
-          return `${index + 1}: ${symbol} ${content}`;
-        })
+        .map(
+          (
+            item: BulkOperationResultItem<DataItemType, ResultItemDataType>,
+            index: number
+          ) => {
+            const symbol = item.error ? "❌" : "✅";
+            const content = item.error
+              ? JSON.stringify({ error: item.error, data: item.data })
+              : JSON.stringify(item.data);
+            return `${index + 1}: ${symbol} ${content}`;
+          }
+        )
         .join("\n");
 
       const remaining = items.length - maxItems;
@@ -252,11 +277,22 @@ export class BulkItemizedResponse<
   }
 
   complete() {
-    const anySuccess = this.counts.success > 0 || this.items.success.length > 0;
-    const anyFails = this.counts.fail > 0 || this.items.fail.length > 0;
+    const successCount = this.counts?.success ?? 0;
+    const failCount = this.counts?.fail ?? 0;
+    const anySuccess = successCount > 0 || this.items.success.length > 0;
+    const anyFails = failCount > 0 || this.items.fail.length > 0;
     this.status = BulkOperationResponseStatus.PARTIAL_SUCCESS;
     if (!anySuccess) this.status = BulkOperationResponseStatus.FAIL;
     if (!anyFails) this.status = BulkOperationResponseStatus.SUCCESS;
+
+    // Ensure counts are updated
+    if (!this.counts) {
+      this.counts = {
+        success: this.items.success.length,
+        fail: this.items.fail.length,
+      } as any;
+    }
+
     return this;
   }
 
@@ -354,10 +390,10 @@ export class BulkItemizedResponse<
         // Build stack trace nodes if available
         const stackNodes =
           f.error && (f.error as Error).stack
-            ? (f.error as Error).stack.split("\n").map((line) => ({
+            ? (f.error as Error).stack?.split("\n").map((line: string) => ({
                 label: line.trim(),
                 nodes: [],
-              }))
+              })) || []
             : [];
         return {
           label: itemLabel,
@@ -395,7 +431,7 @@ export function filterBy<OrigType, NestedType, KeyType>(
 export function successForAll<
   OrigType = any,
   NestedType = any,
-  ResultDataType = any
+  ResultDataType = any,
 >(
   originalItems: OrigType[],
   nestedResponse: BulkItemizedResponse<NestedType, ResultDataType>,

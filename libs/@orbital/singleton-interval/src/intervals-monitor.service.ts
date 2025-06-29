@@ -1,11 +1,10 @@
 import { Global, Injectable, Logger } from "@nestjs/common";
+import humanizeDuration from "humanize-duration";
 import {
   IntervalsRegistryService,
   IntervalState,
 } from "./intervals-registry.service";
-import * as Table from "cli-table3";
-import {} from "cli-table3";
-import humanizeDuration from "humanize-duration";
+const Table = require("cli-table3");
 
 @Global()
 @Injectable()

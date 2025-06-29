@@ -1,5 +1,8 @@
+import {
+  BulkCountedResponse,
+  BulkItemizedResponse,
+} from "@orbital/bulk-operations";
 import { WithId, WithoutId } from "@orbital/typegoose";
-import { BulkCountedResponse, BulkItemizedResponse } from "@scout/core";
 import { CrudService } from "../services/crud.service";
 
 /**

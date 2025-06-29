@@ -1,8 +1,7 @@
-import { Mutex } from "async-mutex";
 import { Logger, LoggerService } from "@nestjs/common";
 import { EventEmitter2 } from "@nestjs/event-emitter";
 import { SchedulerRegistry } from "@nestjs/schedule";
-import {} from "async-mutex";
+import { Mutex } from "async-mutex";
 import humanizeDuration from "humanize-duration";
 
 export enum SingletonIntervalEvents {
@@ -181,7 +180,7 @@ export class SingletonIntervalService {
       return;
     }
     // Prevent duplicate scheduling if already registered
-    if (reg.getIntervals().includes(this.uniqueKey)) {
+    if ((reg as any).getIntervals().includes(this.uniqueKey)) {
       this.logger.warn(
         `Interval '${this.uniqueKey}' already registered, skipping duplicate.`
       );
@@ -190,7 +189,7 @@ export class SingletonIntervalService {
     const timer = setInterval(() => this.run(context, []), this.intervalMs);
     try {
       this.logger.log(`Registering singleton interval: ${this.uniqueKey}`);
-      reg.addInterval(this.uniqueKey, timer);
+      (reg as any).addInterval(this.uniqueKey, timer);
     } catch (err) {
       this.logger.warn(
         `Interval '${this.uniqueKey}' already registered, skipping duplicate.`
@@ -231,7 +230,7 @@ export class SingletonIntervalService {
   private async checkConditions(): Promise<string[]> {
     const notMet: string[] = [];
     for (const [name, fn] of Object.entries(this.combinedConditions)) {
-      let timeoutHandle: NodeJS.Timeout;
+      let timeoutHandle: ReturnType<typeof setTimeout>;
       try {
         const result = await Promise.race([
           fn().catch(() => false),
@@ -339,7 +338,7 @@ export class SingletonIntervalService {
 
   private async preRun(
     emitter?: EventEmitter2
-  ): Promise<() => void | undefined> {
+  ): Promise<(() => void) | undefined> {
     this.emitInit();
     if (this.enabled) {
       if (this.handleAlreadyRunning()) {
@@ -402,7 +401,7 @@ export class SingletonIntervalService {
     );
   }
 
-  private async acquireLock(): Promise<() => void | undefined> {
+  private async acquireLock(): Promise<(() => void) | undefined> {
     try {
       return await this.mutex.acquire();
     } catch (e) {
@@ -417,7 +416,7 @@ export class SingletonIntervalService {
     release: () => void,
     emitter?: EventEmitter2
   ): Promise<void> {
-    let timer: NodeJS.Timeout;
+    let timer: ReturnType<typeof setTimeout>;
     const start = Date.now();
     try {
       const timeout = new Promise<void>((_, rej) => {

@@ -12,7 +12,6 @@
       "outFiles": [
         "${workspaceFolder}/services/@orbital/world/dist/**/*.js",
         "${workspaceFolder}/libs/@orbital/microservices/dist/**/*.js",
-        "${workspaceFolder}/libs/@scout/core/dist/**/*.js",
         "${workspaceFolder}/libs/@orbital/core/dist/**/*.js",
         "${workspaceFolder}/libs/@orbital/typegoose/dist/**/*.js"
       ],
@@ -46,7 +45,6 @@
       "outFiles": [
         "${workspaceFolder}/services/@orbital/admin-gateway/dist/**/*.js",
         "${workspaceFolder}/libs/@orbital/microservices/dist/**/*.js",
-        "${workspaceFolder}/libs/@scout/core/dist/**/*.js",
         "${workspaceFolder}/libs/@orbital/core/dist/**/*.js",
         "${workspaceFolder}/libs/@orbital/typegoose/dist/**/*.js"
       ],

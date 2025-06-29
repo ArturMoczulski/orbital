@@ -1,4 +1,5 @@
 import { ArgumentsHost, Catch, ExceptionFilter, Logger } from "@nestjs/common";
+import process from "process";
 import { throwError } from "rxjs";
 
 /**

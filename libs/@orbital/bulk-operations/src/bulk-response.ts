@@ -16,9 +16,11 @@ export class BulkResponse {
   }
 
   toString() {
-    return `${this.constructor.name} (${
-      BulkOperationResponseStatus[this.status]
-    })`;
+    const statusName =
+      this.status !== undefined
+        ? BulkOperationResponseStatus[this.status]
+        : "UNKNOWN";
+    return `${this.constructor.name} (${statusName})`;
   }
 
   complete(): this {

@@ -1,6 +1,7 @@
 import { ArgumentsHost, Catch, ExceptionFilter, Logger } from "@nestjs/common";
 import { RpcException } from "@nestjs/microservices";
 import { OrbitalMicroservices } from "@orbital/contracts";
+import process from "process";
 import { Observable, throwError } from "rxjs";
 import { RemoteMicroserviceError } from "../errors";
 

@@ -12,10 +12,4 @@ module.exports = {
       },
     ],
   },
-  // Make sure @scout/core is transformed by ts-jest
-  transformIgnorePatterns: ["/node_modules/(?!(@scout/core)/)"],
-  // Map @scout/core imports to the actual source files
-  moduleNameMapper: {
-    "^@scout/core/(.*)$": "<rootDir>/../@scout/core/$1",
-  },
 };

@@ -1,5 +1,13 @@
 {
   "$schema": "https://turborepo.org/schema.json",
+  "globalDependencies": [
+    "package.json"
+  ],
+  "globalEnv": [
+    "PATH",
+    "NODE_ENV",
+    "COREPACK_ROOT"
+  ],
   "tasks": {
     "build": {
       "dependsOn": [

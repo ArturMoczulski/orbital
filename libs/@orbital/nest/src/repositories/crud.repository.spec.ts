@@ -1,4 +1,4 @@
-import { BulkOperation } from "@scout/core";
+import { BulkOperation } from "@orbital/bulk-operations";
 import { ReturnModelType } from "@typegoose/typegoose";
 import { z, ZodError } from "zod";
 import { CrudRepository } from "./crud.repository";

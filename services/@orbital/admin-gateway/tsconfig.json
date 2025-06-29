@@ -1,5 +1,14 @@
 {
   "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@orbital/bulk-operations": [
+        "../../../libs/@orbital/bulk-operations/dist"
+      ],
+      "@orbital/bulk-operations/*": [
+        "../../../libs/@orbital/bulk-operations/dist/*"
+      ]
+    },
     "target": "ES6",
     "module": "commonjs",
     "rootDir": "src",

@@ -1,8 +1,8 @@
 import { Injectable, Inject } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
 import { Microservice } from '@orbital/microservices';
+import { BulkCountedResponse, BulkItemizedResponse } from '@orbital/bulk-operations';
 import { AreaModel as Area, WithId, WithoutId, WorldModel as World } from '@orbital/typegoose';
-import { BulkCountedResponse, BulkItemizedResponse } from '@scout/core';
 
 /**
  * Type Definitions
@@ -15,7 +15,7 @@ import { BulkCountedResponse, BulkItemizedResponse } from '@scout/core';
  */
 
 interface AreasController {
-  create(createDto: Partial<WithoutId<Area>> | Partial<WithoutId<Area>>[]): Promise<Area | BulkItemizedResponse<Partial<WithoutId<Area>>, Area> | null>;
+  create(createDto: WithoutId<Area> | WithoutId<Area>[]): Promise<Area | BulkItemizedResponse<WithoutId<Area>, Area> | null>;
   find(): Promise<Area[] | null>;
   findById(_id: string): Promise<Area | null>;
   update(updateDto: WithId<Area> | WithId<Area>[]): Promise<Area | null | BulkItemizedResponse<WithId<Area>, Area>>;
@@ -51,8 +51,8 @@ export class WorldMicroservice extends Microservice {
 
     // Initialize areas controller
     this.areas = {
-      create: async (createDto: Partial<WithoutId<Area>> | Partial<WithoutId<Area>>[]) => {
-        return this.request<Area | BulkItemizedResponse<Partial<WithoutId<Area>>, Area>>('world.AreasMicroserviceController.create', createDto);
+      create: async (createDto: WithoutId<Area> | WithoutId<Area>[]) => {
+        return this.request<Area | BulkItemizedResponse<WithoutId<Area>, Area>>('world.AreasMicroserviceController.create', createDto);
       },
       find: async () => {
         const result = await this.request<Area[]>('world.AreasMicroserviceController.find');

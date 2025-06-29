@@ -30,15 +30,15 @@ export class PrometheusMonitorService {
 
     // A gauge for the "last run duration" in ms
     @InjectMetric("interval_last_run_duration_ms")
-    private readonly lastRunDurationGauge: Gauge<"interval_name">,
+    private readonly lastRunDurationGauge: Gauge,
 
     // (Optional) a counter for the total runs of each interval
     @InjectMetric("interval_runs_total")
-    private readonly runsCounter: Counter<"interval_name">,
+    private readonly runsCounter: Counter,
 
     // (Optional) a gauge for numeric state code
     @InjectMetric("interval_state_code")
-    private readonly stateGauge: Gauge<"interval_name">
+    private readonly stateGauge: Gauge
   ) {}
 
   public updateIntervalMetrics(): void {
