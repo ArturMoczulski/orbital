@@ -6799,7 +6799,7 @@ __metadata:
     "@orbital/characters": "workspace:^0.1.0"
     "@orbital/core": "workspace:^1.0.0"
     "@typegoose/typegoose": "npm:^7.6.3"
-    "@types/jest": "npm:^29.5.0"
+    "@types/jest": "npm:^30.0.0"
     "@types/mongoose": "npm:^5.11.97"
     dotenv: "npm:^16.0.0"
     jest: "npm:^29.5.0"
