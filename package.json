@@ -28,6 +28,7 @@
     "log": "yarn logs",
     "status": "npx pm2 status",
     "watch": "yarn orb watch",
+    "debug": "yarn orb debug",
     "restart": "yarn orb restart",
     "down": "yarn orb down",
     "delete": "npx pm2 delete all 2>/dev/null || true && echo 'All services deleted.'",

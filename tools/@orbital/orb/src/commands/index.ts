@@ -1,4 +1,5 @@
 import create from "./create/index.js";
+import debug from "./debug/index.js";
 import dev from "./dev/index.js";
 import down from "./down/index.js";
 import logs from "./logs/index.js";
@@ -8,4 +9,15 @@ import profile from "./profile/index.js";
 import restart from "./restart/index.js";
 import watch from "./watch/index.js";
 
-export { create, dev, down, logs, manage, monorepo, profile, restart, watch };
+export {
+  create,
+  debug,
+  dev,
+  down,
+  logs,
+  manage,
+  monorepo,
+  profile,
+  restart,
+  watch,
+};

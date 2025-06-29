@@ -1,8 +1,8 @@
-import { BaseObject } from "./base-object";
-import { Position, PositionSchema } from "./position";
-import { Area, AreaSchema } from "./area";
 import { z } from "zod";
 import { ZodSchema } from "../decorators/zod-schema.decorator";
+import { Area, AreaSchema } from "./area";
+import { BaseObject } from "./base-object";
+import { Position, PositionSchema } from "./position";
 
 describe("BaseObject.zSchema", () => {
   it("should return the registered Zod schema for Position", () => {
@@ -90,16 +90,19 @@ describe("BaseObject.zSchema", () => {
 describe("BaseObject constructor", () => {
   it("should not automatically validate the instance during construction", () => {
     // Arrange
-    const validateSpy = jest.spyOn(BaseObject.prototype, "validate");
+    const validateSchemaSpy = jest.spyOn(
+      BaseObject.prototype,
+      "validateSchema"
+    );
 
     // Act
     new Position({ x: 10, y: 20, z: 30 });
 
     // Assert
-    expect(validateSpy).not.toHaveBeenCalled();
+    expect(validateSchemaSpy).not.toHaveBeenCalled();
 
     // Cleanup
-    validateSpy.mockRestore();
+    validateSchemaSpy.mockRestore();
   });
 
   it("should not throw when construction data is invalid", () => {
@@ -120,13 +123,13 @@ describe("BaseObject constructor", () => {
   });
 });
 
-describe("BaseObject.validate", () => {
+describe("BaseObject.validateSchema", () => {
   it("should validate a valid instance without throwing", () => {
     // Arrange
     const position = new Position({ x: 10, y: 20, z: 30 });
 
     // Act & Assert
-    expect(() => position.validate()).not.toThrow();
+    expect(() => position.validateSchema()).not.toThrow();
   });
 
   it("should return the instance when validation succeeds", () => {
@@ -134,7 +137,7 @@ describe("BaseObject.validate", () => {
     const position = new Position({ x: 10, y: 20, z: 30 });
 
     // Act
-    const result = position.validate();
+    const result = position.validateSchema();
 
     // Assert
     expect(result).toBe(position);
@@ -148,7 +151,7 @@ describe("BaseObject.validate", () => {
     (position as any).x = "not a number";
 
     // Act & Assert
-    expect(() => position.validate()).toThrow();
+    expect(() => position.validateSchema()).toThrow();
   });
 
   it("should use the class's zSchema method for validation", () => {
@@ -163,7 +166,7 @@ describe("BaseObject.validate", () => {
     const position = new Position({ x: 10, y: 20, z: 30 });
 
     // Act
-    position.validate();
+    position.validateSchema();
 
     // Assert
     expect(Position.zSchema).toHaveBeenCalled();
@@ -183,7 +186,7 @@ describe("BaseObject.validate", () => {
     const instance = new TestClass();
 
     // Act & Assert
-    expect(() => instance.validate()).not.toThrow();
+    expect(() => instance.validateSchema()).not.toThrow();
   });
 });
 

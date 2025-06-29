@@ -88,7 +88,7 @@ export class BaseObject<T> {
    * @throws ZodError if validation fails
    * @returns this instance if validation succeeds
    */
-  validate(): this {
+  validateSchema(): this {
     try {
       const constructor = this.constructor as typeof BaseObject;
       const schema = constructor.zSchema();
@@ -111,6 +111,13 @@ export class BaseObject<T> {
         `Validation failed in ${this.constructor.name}: ${error}`
       );
     }
+  }
+
+  /**
+   * @deprecated Use validateSchema() instead to avoid conflicts with Mongoose
+   */
+  validate(): this {
+    return this.validateSchema();
   }
 
   /**

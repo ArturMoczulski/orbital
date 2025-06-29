@@ -25,6 +25,7 @@ program.version(
 
 import {
   create,
+  debug,
   dev,
   down,
   logs,
@@ -40,6 +41,7 @@ program.addCommand(monorepo);
 program.addCommand(profile);
 program.addCommand(manage);
 program.addCommand(watch);
+program.addCommand(debug);
 program.addCommand(logs);
 program.addCommand(restart);
 program.addCommand(down);
