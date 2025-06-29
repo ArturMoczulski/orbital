@@ -12,6 +12,7 @@ export class DocumentRepositoryFactory {
    * @returns A new DocumentRepository instance
    */
   static create<T extends IdentifiableObject, S = any>(
+    // TODO: Replace 'any' with proper Mongoose Model type when type issues are resolved
     model: any, // Mongoose Model
     DomainClass: new (data: any) => T
   ): DocumentRepository<T, S> {

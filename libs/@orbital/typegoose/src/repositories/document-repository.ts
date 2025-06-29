@@ -8,6 +8,8 @@ import { PersistenceMapper } from "../mappers/persistence-mapper";
 import { MongooseDocument, WithDocument } from "../types/with-document";
 import { DocumentHelpers } from "../utils/document-helpers";
 
+// Import types from @types/mongoose
+
 /**
  * Generic repository for working with domain objects and documents
  * @template T The domain class type (must extend IdentifiableObject)
@@ -20,6 +22,7 @@ export class DocumentRepository<
   TCreateInput = Partial<T>,
 > {
   constructor(
+    // TODO: Replace 'any' with proper Mongoose Model type when type issues are resolved
     protected readonly model: any, // Mongoose Model
     protected readonly DomainClass: new (data: any) => T
   ) {}
@@ -90,6 +93,7 @@ export class DocumentRepository<
    * @returns Array of entities matching the query with documents attached
    */
   async find(
+    // TODO: Replace 'Record<string, any>' with proper FilterQuery type when type issues are resolved
     filter: Record<string, any> = {},
     projection?: Record<string, any>,
     options?: Record<string, any>
@@ -122,6 +126,7 @@ export class DocumentRepository<
    * @returns The found entity with document attached or null if not found
    */
   async findOne(
+    // TODO: Replace 'Record<string, any>' with proper FilterQuery type when type issues are resolved
     filter: Record<string, any> = {},
     projection?: Record<string, any>,
     options?: Record<string, any>
@@ -190,6 +195,12 @@ export class DocumentRepository<
     const items = isSingular ? [entities] : entities;
 
     // Use BulkOperation.itemized for bulk updates
+    // For singular input, check if entity exists first
+    if (isSingular) {
+      const entityExists = await this.model.findById(items[0]._id).exec();
+      if (!entityExists) return null;
+    }
+
     const response = await BulkOperation.itemized<T, WithDocument<T, S>>(
       items,
       async (updateItems, success, fail) => {
@@ -237,9 +248,14 @@ export class DocumentRepository<
       }
     );
 
-    // If input was singular, return the single result
+    // If input was singular, return the single result or null if not found
     if (isSingular) {
-      return response.asSingle() as WithDocument<T, S>;
+      // Check if there was a failure and the entity wasn't found
+      const singleResult = response.asSingle();
+      if (!singleResult || (response.counts && response.counts.fail > 0)) {
+        return null;
+      }
+      return singleResult as WithDocument<T, S>;
     }
 
     return response;
@@ -307,6 +323,10 @@ export class DocumentRepository<
       // Create new document
       const data = PersistenceMapper.toPersistence(domainObject);
       const doc = new this.model(data);
+
+      // Save the document to the database
+      await doc.save();
+
       return DocumentHelpers.attachDocument(
         domainObject,
         doc as MongooseDocument & S
@@ -328,7 +348,10 @@ export class DocumentRepository<
    * @param filter Query filter criteria
    * @returns Mongoose query object
    */
-  createQuery(filter: Record<string, any> = {}) {
+  createQuery(
+    // TODO: Replace 'Record<string, any>' with proper FilterQuery type when type issues are resolved
+    filter: Record<string, any> = {}
+  ) {
     return this.model.find(filter);
   }
 
@@ -337,7 +360,9 @@ export class DocumentRepository<
    * @param query Mongoose query object
    * @returns Array of domain objects with documents attached
    */
-  async executeQuery(query: any): Promise<WithDocument<T, S>[]> {
+  async executeQuery(
+    query: any // Mongoose query object
+  ): Promise<WithDocument<T, S>[]> {
     const results = await query.exec();
 
     return results.map((doc: any) => {

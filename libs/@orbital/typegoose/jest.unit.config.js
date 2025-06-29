@@ -7,8 +7,8 @@ const path = require("path");
 
 module.exports = {
   ...baseConfig,
-  // Unit test specific patterns
-  testRegex: ".*\\.spec\\.ts$",
+  // Unit test specific patterns - exclude integration tests
+  testRegex: "^(?!.*\\.integration\\.spec\\.ts$).*\\.spec\\.ts$",
 
   // Additional setup files for unit tests
   setupFilesAfterEnv: [

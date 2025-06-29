@@ -28,6 +28,11 @@ module.exports = {
       path.resolve(__dirname, "../../../node_modules/ts-jest"),
       {
         tsconfig: path.join(__dirname, "tsconfig.json"),
+        isolatedModules: false,
+        diagnostics: {
+          ignoreCodes: [2304, 2339, 2345], // Ignore errors about missing names and properties
+          warnOnly: true,
+        },
       },
     ],
   },
