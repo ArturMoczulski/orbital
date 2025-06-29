@@ -2,15 +2,116 @@ import {
   BulkCountedResponse,
   BulkItemizedResponse,
 } from "@orbital/bulk-operations";
-import { WithId } from "@orbital/typegoose";
-import { CrudRepository } from "../repositories/crud.repository";
+import { IdentifiableObject, IdentifiableObjectProps } from "@orbital/core";
+import { DocumentRepository, WithId, WithoutId } from "@orbital/typegoose";
+
+/**
+ * Interface defining the contract for CRUD operations
+ * @template T The entity type (e.g., Area, World)
+ * @template TEntityProps The props type that the entity constructor accepts
+ * @template TCreateInput The input type for create operations
+ * @template TUpdateInput The input type for update operations
+ */
+export interface ICrudService<
+  T extends IdentifiableObject,
+  TEntityProps extends IdentifiableObjectProps,
+  TCreateInput = WithoutId<TEntityProps>,
+  TUpdateInput = WithId<TEntityProps>,
+> {
+  /**
+   * Create one or more entities
+   * @param dto Single entity or array of entities to create
+   * @returns The created entity or BulkItemizedResponse for multiple entities
+   */
+  create(
+    dto: TCreateInput | TCreateInput[]
+  ): Promise<T | BulkItemizedResponse<TCreateInput, T, never>>;
+
+  /**
+   * Find domain objects by a filter
+   * @param filter Query filter criteria
+   * @param projection Optional fields to project
+   * @param options Optional query options
+   * @returns Array of entities matching the query
+   */
+  find(
+    filter?: Record<string, any>,
+    projection?: Record<string, any>,
+    options?: Record<string, any>
+  ): Promise<T[]>;
+
+  /**
+   * Find a domain object by ID
+   * @param id The entity ID
+   * @param projection Optional fields to project
+   * @returns The found entity or null
+   */
+  findById(id: string, projection?: Record<string, any>): Promise<T | null>;
+
+  /**
+   * Find entities by parent ID
+   * @param parentId The parent ID
+   * @param projection Optional fields to project
+   * @param options Optional query options
+   * @returns Array of entities with the specified parent ID
+   */
+  findByParentId(
+    parentId: string,
+    projection?: Record<string, any>,
+    options?: Record<string, any>
+  ): Promise<T[]>;
+
+  /**
+   * Find entities by tags
+   * @param tags Array of tags to search for
+   * @param projection Optional fields to project
+   * @param options Optional query options
+   * @returns Array of entities with any of the specified tags
+   */
+  findByTags(
+    tags: string[],
+    projection?: Record<string, any>,
+    options?: Record<string, any>
+  ): Promise<T[]>;
+
+  /**
+   * Update one or more entities
+   * @param entities Single entity or array of entities with required _id property
+   * @returns The updated entity or BulkItemizedResponse for multiple entities
+   */
+  update(
+    entities: TUpdateInput | TUpdateInput[]
+  ): Promise<T | null | BulkItemizedResponse<TUpdateInput, T, never>>;
+
+  /**
+   * Delete one or more entities by ID
+   * @param ids Single ID or array of IDs to delete
+   * @returns For singular input, returns true if deleted, null if not found. For array input, returns a BulkCountedResponse.
+   */
+  delete(ids: string | string[]): Promise<boolean | null | BulkCountedResponse>;
+}
 
 /**
  * Generic CRUD service for entities
  * @template T The entity type (e.g., Area, World)
+ * @template TEntityProps The props type that the entity constructor accepts
  * @template R The repository type (e.g., AreasRepository, WorldsRepository)
  */
-export abstract class CrudService<T, R extends CrudRepository<T>> {
+export class CrudService<
+  T extends IdentifiableObject,
+  TEntityProps extends IdentifiableObjectProps,
+  R extends DocumentRepository<T, TEntityProps> = DocumentRepository<
+    T,
+    TEntityProps
+  >,
+> implements
+    ICrudService<
+      T,
+      TEntityProps,
+      Parameters<R["create"]>[0],
+      Parameters<R["update"]>[0]
+    >
+{
   /**
    * Constructor for the CrudService
    * @param repository The repository instance
@@ -18,52 +119,37 @@ export abstract class CrudService<T, R extends CrudRepository<T>> {
   constructor(protected readonly repository: R) {}
 
   /**
-   * Create a new entity
-   * @param data Partial entity data
-   * @returns The created entity
-   */
-  /**
    * Create one or more entities
-   * @param data Single or array of entity data
-   * @returns Single entity or bulk itemized response
+   * @param dto Single entity or array of entities to create
+   * @returns WithDocument<T> for single entity or BulkItemizedResponse for multiple entities
    */
-  /**
-   * Create one or more entities
-   * @param dto Single or array of create input
-   * @returns Created entity or bulk itemized response
-   */
-  async create(
-    dto: Parameters<R["create"]>[0]
-  ): Promise<ReturnType<R["create"]>> {
-    return this.repository.create(dto) as ReturnType<R["create"]>;
+  async create(dto: Parameters<R["create"]>[0]) {
+    return this.repository.create(dto);
   }
 
   /**
-   * Find an entity by ID
-   * @param id The entity ID
-   * @param projection Optional fields to project
-   * @returns The entity or null
-   */
-  async findById(
-    id: string,
-    projection?: Record<string, any>
-  ): Promise<T | null> {
-    return this.repository.findById(id, projection);
-  }
-
-  /**
-   * Find entities matching a filter
-   * @param filter Optional filter criteria
+   * Find domain objects by a filter with documents attached
+   * @param filter Query filter criteria
    * @param projection Optional fields to project
    * @param options Optional query options
-   * @returns Array of entities
+   * @returns Array of entities matching the query with documents attached
    */
   async find(
     filter: Record<string, any> = {},
     projection?: Record<string, any>,
     options?: Record<string, any>
-  ): Promise<T[]> {
+  ) {
     return this.repository.find(filter, projection, options);
+  }
+
+  /**
+   * Find a domain object by ID with document attached
+   * @param id The entity ID
+   * @param projection Optional fields to project
+   * @returns The found entity with document attached or null
+   */
+  async findById(id: string, projection?: Record<string, any>) {
+    return this.repository.findById(id, projection);
   }
 
   /**
@@ -77,7 +163,7 @@ export abstract class CrudService<T, R extends CrudRepository<T>> {
     parentId: string,
     projection?: Record<string, any>,
     options?: Record<string, any>
-  ): Promise<T[]> {
+  ) {
     return this.repository.findByParentId(parentId, projection, options);
   }
 
@@ -92,39 +178,25 @@ export abstract class CrudService<T, R extends CrudRepository<T>> {
     tags: string[],
     projection?: Record<string, any>,
     options?: Record<string, any>
-  ): Promise<T[]> {
+  ) {
     return this.repository.findByTags(tags, projection, options);
   }
 
   /**
-   * Update an entity
-   * @param entity Partial entity data with required _id property
-   * @returns The updated entity or null
-   */
-  /**
    * Update one or more entities
-   * @param entities Single entity or array of entities with required _id
-   * @returns Single entity, null, or bulk itemized response
+   * @param entities Single entity or array of entities with required _id property
+   * @returns WithDocument<T> for single entity or BulkItemizedResponse for multiple entities
    */
-  async update(
-    entities: WithId<T> | WithId<T>[]
-  ): Promise<T | null | BulkItemizedResponse<WithId<T>, T>> {
+  async update(entities: Parameters<R["update"]>[0]) {
     return this.repository.update(entities);
   }
 
   /**
-   * Delete an entity
-   * @param id The entity ID
-   * @returns The result of the deletion operation
-   */
-  /**
    * Delete one or more entities by ID
-   * @param ids Single ID or array of IDs
-   * @returns Boolean, null, or bulk counted response
+   * @param ids Single ID or array of IDs to delete
+   * @returns For singular input, returns true if deleted, null if not found. For array input, returns a BulkCountedResponse.
    */
-  async delete(
-    ids: string | string[]
-  ): Promise<boolean | null | BulkCountedResponse> {
+  async delete(ids: string | string[]) {
     return this.repository.delete(ids);
   }
 }

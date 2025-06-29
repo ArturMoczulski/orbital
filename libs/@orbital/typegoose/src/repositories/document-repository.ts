@@ -3,25 +3,23 @@ import {
   BulkItemizedResponse,
   BulkOperation,
 } from "@orbital/bulk-operations";
-import { IdentifiableObject } from "@orbital/core";
+import { IdentifiableObject, IdentifiableObjectProps } from "@orbital/core";
 import { ReturnModelType } from "@typegoose/typegoose";
 import { ZodError, ZodObject } from "zod";
 import { PersistenceMapper } from "../mappers/persistence-mapper";
-import { WithoutId } from "../types/utils";
+import { WithId, WithoutId } from "../types/utils";
 import { MongooseDocument, WithDocument } from "../types/with-document";
 import { DocumentHelpers } from "../utils/document-helpers";
 
 /**
  * Generic repository for working with domain objects and documents
  * @template TDomainEntity The domain class type (must extend IdentifiableObject)
- * @template TDocumentSchema The Mongoose schema type
- * @template TCreateInput The type for create operations, defaults to Partial<TDomainEntity>
+ * @template TDomainEntityProps The props type that the domain entity constructor accepts
  * @template TModelClass The Typegoose model class type
  */
 export class DocumentRepository<
   TDomainEntity extends IdentifiableObject,
-  TDocumentSchema extends Document = Document,
-  TCreateInput = WithoutId<TDomainEntity>,
+  TDomainEntityProps = IdentifiableObjectProps,
   TModelClass extends { new (...args: any[]): any } = {
     new (...args: any[]): any;
   },
@@ -37,13 +35,18 @@ export class DocumentRepository<
    * @param dto Single entity or array of entities to create
    * @returns WithDocument<T> for single entity or BulkItemizedResponse for multiple entities
    */
+  /**
+   * Create one or more entities
+   * @param dto Single entity or array of entities to create
+   * @returns WithDocument<T> for single entity or BulkItemizedResponse for multiple entities
+   */
   async create(
-    dto: TCreateInput | TCreateInput[]
+    dto: WithoutId<TDomainEntityProps> | WithoutId<TDomainEntityProps>[]
   ): Promise<
-    | WithDocument<TDomainEntity, TDocumentSchema>
+    | WithDocument<TDomainEntity>
     | BulkItemizedResponse<
-        TCreateInput,
-        WithDocument<TDomainEntity, TDocumentSchema>
+        WithoutId<TDomainEntityProps>,
+        WithDocument<TDomainEntity>
       >
   > {
     const isSingular = !Array.isArray(dto);
@@ -51,8 +54,8 @@ export class DocumentRepository<
 
     // Use BulkOperation.itemized for bulk creation
     const response = await BulkOperation.itemized<
-      TCreateInput,
-      WithDocument<TDomainEntity, TDocumentSchema>
+      WithoutId<TDomainEntityProps>,
+      WithDocument<TDomainEntity>
     >(items, async (dtos, success, fail) => {
       // Prepare items for bulk insertion
       const validItems: any[] = [];
@@ -123,7 +126,7 @@ export class DocumentRepository<
             // Attach document to domain object
             const withDoc = DocumentHelpers.attachDocument(
               domainObject,
-              doc as MongooseDocument & TDocumentSchema
+              doc as MongooseDocument & Document
             );
 
             success(originalItem, withDoc);
@@ -134,7 +137,7 @@ export class DocumentRepository<
 
     // If input was singular, return the single result
     return isSingular
-      ? (response.asSingle() as WithDocument<TDomainEntity, TDocumentSchema>)
+      ? (response.asSingle() as WithDocument<TDomainEntity>)
       : response;
   }
 
@@ -150,7 +153,7 @@ export class DocumentRepository<
     filter: Record<string, any> = {},
     projection?: Record<string, any>,
     options?: Record<string, any>
-  ): Promise<WithDocument<TDomainEntity, TDocumentSchema>[]> {
+  ): Promise<WithDocument<TDomainEntity>[]> {
     let query = this.model.find(filter, projection);
 
     if (options) {
@@ -166,7 +169,7 @@ export class DocumentRepository<
       const domainObject = PersistenceMapper.toDomain(this.DomainClass, doc);
       return DocumentHelpers.attachDocument(
         domainObject,
-        doc as MongooseDocument & TDocumentSchema
+        doc as MongooseDocument & Document
       );
     });
   }
@@ -183,7 +186,7 @@ export class DocumentRepository<
     filter: Record<string, any> = {},
     projection?: Record<string, any>,
     options?: Record<string, any>
-  ): Promise<WithDocument<TDomainEntity, TDocumentSchema> | null> {
+  ): Promise<WithDocument<TDomainEntity> | null> {
     // Create a new options object with limit set to 1
     const findOneOptions = { ...(options || {}), limit: 1 };
 
@@ -200,7 +203,7 @@ export class DocumentRepository<
   async findById(
     id: string,
     projection?: Record<string, any>
-  ): Promise<WithDocument<TDomainEntity, TDocumentSchema> | null> {
+  ): Promise<WithDocument<TDomainEntity> | null> {
     return this.findOne({ _id: id }, projection);
   }
 
@@ -215,7 +218,7 @@ export class DocumentRepository<
     parentId: string,
     projection?: Record<string, any>,
     options?: Record<string, any>
-  ): Promise<WithDocument<TDomainEntity, TDocumentSchema>[]> {
+  ): Promise<WithDocument<TDomainEntity>[]> {
     // Check if the schema has a parentId field
     if (this.schema && !this.schema.shape.parentId) {
       throw new ZodError([
@@ -243,7 +246,7 @@ export class DocumentRepository<
     tags: string[],
     projection?: Record<string, any>,
     options?: Record<string, any>
-  ): Promise<WithDocument<TDomainEntity, TDocumentSchema>[]> {
+  ): Promise<WithDocument<TDomainEntity>[]> {
     // Check if the schema has a tags field
     if (this.schema && !this.schema.shape.tags) {
       throw new ZodError([
@@ -265,14 +268,19 @@ export class DocumentRepository<
    * @param entities Single entity or array of entities with required _id property
    * @returns WithDocument<T> for single entity or BulkItemizedResponse for multiple entities
    */
+  /**
+   * Update one or more entities
+   * @param entities Single entity or array of entities with required _id property
+   * @returns WithDocument<T> for single entity or BulkItemizedResponse for multiple entities
+   */
   async update(
-    entities: TDomainEntity | TDomainEntity[]
+    entities: WithId<TDomainEntityProps> | WithId<TDomainEntityProps>[]
   ): Promise<
-    | WithDocument<TDomainEntity, TDocumentSchema>
+    | WithDocument<TDomainEntity>
     | null
     | BulkItemizedResponse<
-        TDomainEntity,
-        WithDocument<TDomainEntity, TDocumentSchema>
+        WithId<TDomainEntityProps>,
+        WithDocument<TDomainEntity>
       >
   > {
     const isSingular = !Array.isArray(entities);
@@ -286,12 +294,12 @@ export class DocumentRepository<
     }
 
     const response = await BulkOperation.itemized<
-      TDomainEntity,
-      WithDocument<TDomainEntity, TDocumentSchema>
+      WithId<TDomainEntityProps>,
+      WithDocument<TDomainEntity>
     >(items, async (updateItems, success, fail) => {
       // Prepare bulk write operations
       const bulkOps: any[] = [];
-      const entitiesMap = new Map<string, TDomainEntity>();
+      const entitiesMap = new Map<string, WithId<TDomainEntityProps>>();
 
       // Process each item
       for (const entity of updateItems) {
@@ -405,14 +413,15 @@ export class DocumentRepository<
           });
 
           // Process results - match entities with their updated documents
-          for (const [_id, entity] of entitiesMap.entries()) {
+          // Convert Map entries to array to avoid downlevelIteration issues
+          for (const [_id, entity] of Array.from(entitiesMap.entries())) {
             const updatedDoc = docsById.get(_id);
 
             if (updatedDoc) {
               // Attach document to domain object
               const withDoc = DocumentHelpers.attachDocument(
-                entity,
-                updatedDoc as MongooseDocument & TDocumentSchema
+                entity as unknown as TDomainEntity,
+                updatedDoc as MongooseDocument & Document
               );
 
               success(entity, withDoc);
@@ -433,7 +442,7 @@ export class DocumentRepository<
       if (!singleResult || (response.counts && response.counts.fail > 0)) {
         return null;
       }
-      return singleResult as WithDocument<TDomainEntity, TDocumentSchema>;
+      return singleResult as WithDocument<TDomainEntity>;
     }
 
     return response;

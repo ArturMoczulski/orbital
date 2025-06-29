@@ -1,28 +1,95 @@
-import { CrudRepository } from "../repositories/crud.repository";
-import { CrudService } from "./crud.service";
+import { IdentifiableObject } from "@orbital/core";
+import { DocumentRepository, WithId } from "@orbital/typegoose";
+import { CrudService, ICrudService } from "./crud.service";
 
-// Define a test entity type
-type TestEntity = {
+interface TestEntityProps {
   _id?: string;
-  name: string;
+  name?: string;
   description?: string;
-  count: number;
+  count?: number;
   tags?: string[];
   createdAt?: Date;
   updatedAt?: Date;
-};
+}
+
+// Define a test entity class that extends IdentifiableObject
+class TestEntity extends IdentifiableObject {
+  name!: string;
+  description?: string;
+  count!: number;
+  tags?: string[];
+
+  constructor(data: TestEntityProps = {}) {
+    super(data);
+    this.name = data.name || "";
+    this.description = data.description;
+    this.count = data.count || 0;
+    this.tags = data.tags;
+  }
+}
 
 // Create a concrete implementation of CrudRepository for testing
-class TestRepository extends CrudRepository<TestEntity> {
+class TestRepository extends DocumentRepository<TestEntity, TestEntityProps> {
   constructor() {
     super(null as any, null as any); // We'll mock all methods, so we don't need actual params
   }
 }
 
-// Create a concrete implementation of CrudService for testing
-class TestService extends CrudService<TestEntity, TestRepository> {
+// Create a service that uses composition with CrudService and implements ICrudService
+class TestService implements ICrudService<TestEntity, TestEntityProps> {
+  protected crudService: CrudService<
+    TestEntity,
+    TestEntityProps,
+    TestRepository
+  >;
+
   constructor(repository: TestRepository) {
-    super(repository);
+    this.crudService = new CrudService<
+      TestEntity,
+      TestEntityProps,
+      TestRepository
+    >(repository);
+  }
+
+  // Proxy methods to the CrudService
+  async create(dto: Parameters<TestRepository["create"]>[0]) {
+    return this.crudService.create(dto);
+  }
+
+  async find(
+    filter: Record<string, any> = {},
+    projection?: Record<string, any>,
+    options?: Record<string, any>
+  ) {
+    return this.crudService.find(filter, projection, options);
+  }
+
+  async findById(id: string, projection?: Record<string, any>) {
+    return this.crudService.findById(id, projection);
+  }
+
+  async findByParentId(
+    parentId: string,
+    projection?: Record<string, any>,
+    options?: Record<string, any>
+  ) {
+    return this.crudService.findByParentId(parentId, projection, options);
+  }
+
+  async findByTags(
+    tags: string[],
+    projection?: Record<string, any>,
+    options?: Record<string, any>
+  ) {
+    return this.crudService.findByTags(tags, projection, options);
+  }
+
+  async update(entity: WithId<TestEntityProps>) {
+    return this.crudService.update(entity);
+  }
+
+  async delete(id: string | string[]) {
+    return this.crudService.delete(id);
   }
 }
 
@@ -31,7 +98,7 @@ describe("CrudService", () => {
   let repositoryMock: jest.Mocked<TestRepository>;
 
   // Mock entity data
-  const mockEntity: TestEntity = {
+  const mockEntity = new TestEntity({
     _id: "test-id-123",
     name: "Test Entity",
     description: "Test Description",
@@ -39,7 +106,7 @@ describe("CrudService", () => {
     tags: ["tag1", "tag2"],
     createdAt: new Date(),
     updatedAt: new Date(),
-  };
+  });
 
   beforeEach(() => {
     // Create a mock for the repository
@@ -48,6 +115,8 @@ describe("CrudService", () => {
       find: jest.fn(),
       findOne: jest.fn(),
       findById: jest.fn(),
+      findByParentId: jest.fn(),
+      findByTags: jest.fn(),
       update: jest.fn(),
       delete: jest.fn(),
     } as unknown as jest.Mocked<TestRepository>;
@@ -58,7 +127,7 @@ describe("CrudService", () => {
 
   describe("create", () => {
     it("should call repository.create with the provided dto", async () => {
-      const createDto: Partial<TestEntity> = {
+      const createDto = {
         name: "New Entity",
         description: "New Description",
         count: 10,
@@ -79,7 +148,10 @@ describe("CrudService", () => {
 
       const result = await service.findById(mockEntity._id!);
 
-      expect(repositoryMock.findById).toHaveBeenCalledWith(mockEntity._id);
+      expect(repositoryMock.findById).toHaveBeenCalledWith(
+        mockEntity._id,
+        undefined
+      );
       expect(result).toEqual(mockEntity);
     });
 
@@ -88,7 +160,10 @@ describe("CrudService", () => {
 
       const result = await service.findById("nonexistent-id");
 
-      expect(repositoryMock.findById).toHaveBeenCalledWith("nonexistent-id");
+      expect(repositoryMock.findById).toHaveBeenCalledWith(
+        "nonexistent-id",
+        undefined
+      );
       expect(result).toBeNull();
     });
   });
@@ -131,7 +206,7 @@ describe("CrudService", () => {
   describe("update", () => {
     it("should call repository.update with the provided entity", async () => {
       const updateData = {
-        _id: mockEntity._id!,
+        _id: mockEntity._id,
         name: "Updated Entity",
         description: "Updated Description",
       };

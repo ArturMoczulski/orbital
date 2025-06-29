@@ -1,6 +1,7 @@
 import { Test, TestingModule } from "@nestjs/testing";
+import { BulkItemizedResponse } from "@orbital/bulk-operations";
 import { Area as CoreArea } from "@orbital/core";
-import { AreaModel as Area } from "@orbital/typegoose";
+import { Area } from "@orbital/typegoose";
 import { AreasRepository } from "./areas.repository";
 import { AreasService } from "./areas.service";
 
@@ -22,6 +23,17 @@ describe("AreasService", () => {
     createdAt: new Date(),
     updatedAt: new Date(),
   };
+
+  // Create a mock WithDocument wrapper (which is the domain object with an optional document property)
+  const createWithDocumentMock = (domainObject, document) => {
+    return {
+      ...domainObject,
+      document,
+    };
+  };
+
+  // Create a mock WithDocument for the area
+  const mockAreaWithDocument = createWithDocumentMock(mockArea, mockAreaModel);
 
   const mockAreasRepository = {
     create: jest.fn(),
@@ -53,29 +65,61 @@ describe("AreasService", () => {
 
   describe("create", () => {
     it("should create a new area", async () => {
-      const createAreaData: Partial<Area> = {
+      // Create a partial Area model for creation
+      const createAreaData = {
         name: mockArea.name,
         description: mockArea.description,
         position: mockArea.position,
         worldId: "world1",
       };
 
-      mockAreasRepository.create.mockResolvedValue(mockAreaModel);
+      // Repository returns WithDocument, which is already the domain object
+      mockAreasRepository.create.mockResolvedValue(mockAreaWithDocument);
 
       const result = await service.create(createAreaData as any);
 
-      expect(result).toEqual(mockAreaModel);
+      expect(result).toEqual(mockAreaWithDocument);
+      expect(mockAreasRepository.create).toHaveBeenCalledWith(createAreaData);
+    });
+
+    it("should handle bulk creation", async () => {
+      const createAreaData = [
+        {
+          name: "Area 1",
+          worldId: "world1",
+          description: "",
+          landmarks: [],
+          connections: [],
+          tags: [],
+        },
+        {
+          name: "Area 2",
+          worldId: "world1",
+          description: "",
+          landmarks: [],
+          connections: [],
+          tags: [],
+        },
+      ];
+
+      const mockBulkResponse = new BulkItemizedResponse();
+      mockAreasRepository.create.mockResolvedValue(mockBulkResponse);
+
+      const result = await service.create(createAreaData as any);
+
+      expect(result).toBe(mockBulkResponse);
       expect(mockAreasRepository.create).toHaveBeenCalledWith(createAreaData);
     });
   });
 
   describe("findById", () => {
     it("should get an area by id", async () => {
-      mockAreasRepository.findById.mockResolvedValue(mockAreaModel);
+      // Repository returns WithDocument, which is already the domain object
+      mockAreasRepository.findById.mockResolvedValue(mockAreaWithDocument);
 
       const result = await service.findById(mockArea._id);
 
-      expect(result).toEqual(mockAreaModel);
+      expect(result).toEqual(mockAreaWithDocument);
       expect(mockAreasRepository.findById).toHaveBeenCalledWith(
         mockArea._id,
         undefined
@@ -100,14 +144,18 @@ describe("AreasService", () => {
       const filter = { worldId: "world1" };
       const projection = { name: 1, description: 1 };
 
-      mockAreasRepository.find.mockResolvedValue([mockAreaModel]);
+      // Repository returns array of WithDocument, which are already domain objects
+      mockAreasRepository.find.mockResolvedValue([mockAreaWithDocument]);
 
-      const result = await service.find(filter);
+      const result = await service.find(filter, projection);
 
-      expect(result).toEqual([mockAreaModel]);
+      // The result includes the document property, so we need to check specific properties
+      expect(result[0]._id).toEqual(mockArea._id);
+      expect(result[0].name).toEqual(mockArea.name);
+      expect(result[0].worldId).toEqual(mockArea.worldId);
       expect(mockAreasRepository.find).toHaveBeenCalledWith(
         filter,
-        undefined,
+        projection,
         undefined
       );
     });
@@ -121,23 +169,41 @@ describe("AreasService", () => {
         description: "Updated Description",
       };
 
-      mockAreasRepository.update.mockResolvedValue({
+      const updatedArea = {
+        ...mockArea,
+        name: "Updated Area",
+        description: "Updated Description",
+      };
+
+      const updatedAreaWithDocument = createWithDocumentMock(updatedArea, {
         ...mockAreaModel,
         name: "Updated Area",
         description: "Updated Description",
       });
 
-      const result = await service.update({ _id, ...updateData });
+      // Repository returns WithDocument, which is already the domain object
+      mockAreasRepository.update.mockResolvedValue(updatedAreaWithDocument);
 
-      expect(result).toEqual({
-        ...mockAreaModel,
-        name: "Updated Area",
-        description: "Updated Description",
-      });
-      expect(mockAreasRepository.update).toHaveBeenCalledWith({
+      // Create a proper Area instance for the update
+      // Create an Area instance for the update
+      const areaToUpdate = new Area({
         _id,
-        ...updateData,
+        name: "Updated Area",
+        description: "Updated Description",
+        worldId: mockArea.worldId,
+        tags: mockArea.tags,
+        landmarks: [],
+        connections: [],
       });
+
+      const result = await service.update(areaToUpdate);
+
+      // The result includes the document property, so we need to check specific properties
+      expect(result._id).toEqual(updatedArea._id);
+      expect(result.name).toEqual(updatedArea.name);
+      expect(result.description).toEqual(updatedArea.description);
+      // We're passing an Area instance, not a plain object
+      expect(mockAreasRepository.update).toHaveBeenCalledWith(areaToUpdate);
     });
 
     it("should return null if area not found", async () => {
@@ -148,23 +214,64 @@ describe("AreasService", () => {
 
       mockAreasRepository.update.mockResolvedValue(null);
 
-      const result = await service.update({ _id, ...updateData });
+      // Create a proper Area instance for the update
+      // Create an Area instance for the update
+      const areaToUpdate = new Area({
+        _id,
+        name: "Updated Area",
+        worldId: "world1",
+        tags: ["tag1"],
+        description: "",
+        landmarks: [],
+        connections: [],
+      });
+
+      const result = await service.update(areaToUpdate);
 
       expect(result).toBeNull();
-      expect(mockAreasRepository.update).toHaveBeenCalledWith({
-        _id,
-        ...updateData,
-      });
+      // We're passing an Area instance, not a plain object
+      expect(mockAreasRepository.update).toHaveBeenCalledWith(areaToUpdate);
+    });
+
+    it("should handle bulk updates", async () => {
+      const updateData = [
+        new Area({
+          _id: "id1",
+          name: "Updated Area 1",
+          worldId: "world1",
+          tags: ["tag1"],
+          description: "",
+          landmarks: [],
+          connections: [],
+        }),
+        new Area({
+          _id: "id2",
+          name: "Updated Area 2",
+          worldId: "world1",
+          tags: ["tag2"],
+          description: "",
+          landmarks: [],
+          connections: [],
+        }),
+      ];
+
+      const mockBulkResponse = new BulkItemizedResponse();
+      mockAreasRepository.update.mockResolvedValue(mockBulkResponse);
+
+      const result = await service.update(updateData as any);
+
+      expect(result).toBe(mockBulkResponse);
+      expect(mockAreasRepository.update).toHaveBeenCalledWith(updateData);
     });
   });
 
   describe("delete", () => {
     it("should delete an area by id", async () => {
-      mockAreasRepository.delete.mockResolvedValue(mockAreaModel);
+      mockAreasRepository.delete.mockResolvedValue(true);
 
       const result = await service.delete(mockArea._id);
 
-      expect(result).toEqual(mockAreaModel);
+      expect(result).toBe(true);
       expect(mockAreasRepository.delete).toHaveBeenCalledWith(mockArea._id);
     });
 
@@ -180,11 +287,16 @@ describe("AreasService", () => {
 
   describe("findByWorldId", () => {
     it("should get areas by world id", async () => {
-      mockAreasRepository.findByWorldId.mockResolvedValue([mockAreaModel]);
+      // Repository returns array of WithDocument, which are already domain objects
+      mockAreasRepository.findByWorldId.mockResolvedValue([
+        mockAreaWithDocument,
+      ]);
 
       const result = await service.findByWorldId("world1");
 
-      expect(result).toEqual([mockAreaModel]);
+      expect(result[0]._id).toEqual(mockArea._id);
+      expect(result[0].name).toEqual(mockArea.name);
+      expect(result[0].worldId).toEqual(mockArea.worldId);
       expect(mockAreasRepository.findByWorldId).toHaveBeenCalledWith("world1");
     });
   });
@@ -192,11 +304,18 @@ describe("AreasService", () => {
   describe("findByParentId", () => {
     it("should get areas by parent id", async () => {
       const parentId = mockArea.parentId || null;
-      mockAreasRepository.findByParentId.mockResolvedValue([mockAreaModel]);
+
+      // Repository returns array of WithDocument, which are already domain objects
+      mockAreasRepository.findByParentId.mockResolvedValue([
+        mockAreaWithDocument,
+      ]);
 
       const result = await service.findByParentId(parentId);
 
-      expect(result).toEqual([mockAreaModel]);
+      // The result includes the document property, so we need to check specific properties
+      expect(result[0]._id).toEqual(mockArea._id);
+      expect(result[0].name).toEqual(mockArea.name);
+      expect(result[0].worldId).toEqual(mockArea.worldId);
       expect(mockAreasRepository.findByParentId).toHaveBeenCalledWith(
         parentId,
         undefined,
@@ -208,12 +327,21 @@ describe("AreasService", () => {
   describe("findByTags", () => {
     it("should get areas by tags", async () => {
       const tags = ["tag1", "tag2"];
-      mockAreasRepository.findByTags.mockResolvedValue([mockAreaModel]);
+
+      // Repository returns array of WithDocument, which are already domain objects
+      mockAreasRepository.findByTags.mockResolvedValue([mockAreaWithDocument]);
 
       const result = await service.findByTags(tags);
 
-      expect(result).toEqual([mockAreaModel]);
-      expect(mockAreasRepository.findByTags).toHaveBeenCalledWith(tags);
+      // The result includes the document property, so we need to check specific properties
+      expect(result[0]._id).toEqual(mockArea._id);
+      expect(result[0].name).toEqual(mockArea.name);
+      expect(result[0].worldId).toEqual(mockArea.worldId);
+      expect(mockAreasRepository.findByTags).toHaveBeenCalledWith(
+        tags,
+        undefined,
+        undefined
+      );
     });
   });
 });

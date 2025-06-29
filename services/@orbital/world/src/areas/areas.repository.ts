@@ -1,17 +1,20 @@
 import { Inject, Injectable } from "@nestjs/common";
-import { AreaSchema } from "@orbital/core";
-import { CrudRepository } from "@orbital/nest";
-import { Area } from "@orbital/typegoose";
+import { Area, DocumentRepository, WithDocument } from "@orbital/typegoose";
 import type { ReturnModelType } from "@typegoose/typegoose";
 import { getModelToken } from "nestjs-typegoose";
 
 @Injectable()
-export class AreasRepository extends CrudRepository<Area> {
+export class AreasRepository extends DocumentRepository<
+  Area,
+  AreaProps,
+  typeof Area
+> {
   constructor(
     @Inject(getModelToken(Area.name))
     areaModel: ReturnModelType<typeof Area>
   ) {
-    super(areaModel, AreaSchema);
+    // Call super with the required arguments
+    super(areaModel, Area);
   }
 
   /**
@@ -19,7 +22,7 @@ export class AreasRepository extends CrudRepository<Area> {
    * @param worldId The world ID
    * @returns Array of areas in the specified world
    */
-  async findByWorldId(worldId: string): Promise<Area[]> {
+  async findByWorldId(worldId: string): Promise<WithDocument<Area>[]> {
     return this.find({ worldId });
   }
 }

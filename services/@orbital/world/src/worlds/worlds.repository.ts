@@ -1,17 +1,25 @@
 import { Inject, Injectable } from "@nestjs/common";
-import { WorldSchema } from "@orbital/core";
-import { CrudRepository } from "@orbital/nest";
-import { WorldModel as World } from "@orbital/typegoose";
+import {
+  DocumentRepository,
+  WithDocument,
+  WithoutId,
+  WorldModel as World,
+} from "@orbital/typegoose";
 import type { ReturnModelType } from "@typegoose/typegoose";
 import { getModelToken } from "nestjs-typegoose";
 
 @Injectable()
-export class WorldsRepository extends CrudRepository<World> {
+export class WorldsRepository extends DocumentRepository<
+  World,
+  WithoutId<World>,
+  typeof World
+> {
   constructor(
     @Inject(getModelToken("World"))
     worldModel: ReturnModelType<typeof World>
   ) {
-    super(worldModel, WorldSchema);
+    // Call super with the required arguments
+    super(worldModel, World);
   }
 
   /**
@@ -19,7 +27,7 @@ export class WorldsRepository extends CrudRepository<World> {
    * @param shard The shard identifier
    * @returns Array of worlds in the specified shard
    */
-  async findByShard(shard: string): Promise<World[]> {
+  async findByShard(shard: string): Promise<WithDocument<World>[]> {
     return this.find({ shard });
   }
 
@@ -28,7 +36,7 @@ export class WorldsRepository extends CrudRepository<World> {
    * @param techLevel The technology level
    * @returns Array of worlds with the specified technology level
    */
-  async findByTechLevel(techLevel: number): Promise<World[]> {
+  async findByTechLevel(techLevel: number): Promise<WithDocument<World>[]> {
     return this.find({ techLevel });
   }
 }

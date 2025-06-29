@@ -10,7 +10,7 @@ import {
   PassThroughRpcExceptionFilter,
 } from "@orbital/microservices";
 import { CrudController } from "@orbital/nest";
-import { AreaModel as Area, WithId, WithoutId } from "@orbital/typegoose";
+import { AreaModel as Area, WithoutId } from "@orbital/typegoose";
 import { AreasService } from "./areas.service";
 
 @MicroserviceController(OrbitalMicroservices.World)
@@ -62,8 +62,8 @@ export class AreasMicroserviceController extends CrudController<
    */
   @MessagePattern()
   async update(
-    updateDto: WithId<Area> | WithId<Area>[]
-  ): Promise<Area | null | BulkItemizedResponse<WithId<Area>, Area>> {
+    updateDto: Area | Area[]
+  ): Promise<Area | BulkItemizedResponse<any, any, any>> {
     return super.update(updateDto);
   }
 

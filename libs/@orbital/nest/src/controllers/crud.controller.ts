@@ -1,63 +1,57 @@
-import {
-  BulkCountedResponse,
-  BulkItemizedResponse,
-} from "@orbital/bulk-operations";
-import { WithId, WithoutId } from "@orbital/typegoose";
+import { IdentifiableObject, IdentifiableObjectProps } from "@orbital/core";
 import { CrudService } from "../services/crud.service";
 
 /**
  * Generic CRUD microservice controller for entities
- * @template T The entity type (e.g., Area, World)
- * @template S The service type (e.g., AreasService, WorldsService)
+ * @template TObjectType The entity type (e.g., Area, World)
+ * @template TCrudService The service type (e.g., AreasService, WorldsService)
  */
-export abstract class CrudController<T, S extends CrudService<T, any>> {
+export abstract class CrudController<
+  TObjectType extends IdentifiableObject,
+  TObjectTypeProps extends IdentifiableObjectProps,
+  TCrudService extends CrudService<TObjectType, TObjectTypeProps>,
+> {
   /**
    * Constructor for the MicroserviceCrudController
    * @param service The service instance
-   * @param entityName Optional name of the entity (e.g., 'Area', 'World')
    */
-  constructor(
-    protected readonly service: S,
-    protected readonly entityName?: string
-  ) {}
+  constructor(protected readonly service: TCrudService) {}
 
   /**
-   * Create a new entity
-   * @param createDto Partial entity data
-   * @returns The created entity
+   * Create one or more entities
+   * @param dto Single entity or array of entities to create
+   * @returns The created entity or BulkItemizedResponse for multiple entities
    */
-  async create(
-    createDto: WithoutId<T> | WithoutId<T>[]
-  ): Promise<T | BulkItemizedResponse<WithoutId<T>, T>> {
-    return this.service.create(createDto);
+  async create(dto: Parameters<TCrudService["create"]>[0]) {
+    return this.service.create(dto);
   }
 
   /**
-   * Find an entity by ID
-   * @param id The entity ID
-   * @param projection Optional fields to project
-   * @returns The entity or null
-   */
-  async findById(
-    id: string,
-    projection?: Record<string, any>
-  ): Promise<T | null> {
-    return this.service.findById(id, projection);
-  }
-
-  /**
-   * Find entities matching a filter
-   * @param filter Optional filter criteria
+   * Find domain objects by a filter
+   * @param filter Query filter criteria
    * @param projection Optional fields to project
    * @param options Optional query options
-   * @returns Array of entities
+   * @returns Array of entities matching the query
    */
   async find(
     filter: Record<string, any> = {},
     projection?: Record<string, any>,
     options?: Record<string, any>
-  ): Promise<T[]> {
+  ) {
     return this.service.find(filter, projection, options);
+  }
+
+  /**
+   * Find a domain object by ID
+   * @param id The entity ID
+   * @param projection Optional fields to project
+   * @returns The found entity or null
+   */
+  async findById(id: string, projection?: Record<string, any>) {
+    // If projection is undefined, don't pass it to match test expectations
+    return projection
+      ? this.service.findById(id, projection)
+      : this.service.findById(id);
   }
 
   /**
@@ -65,35 +59,46 @@ export abstract class CrudController<T, S extends CrudService<T, any>> {
    * @param parentId The parent ID
    * @param projection Optional fields to project
    * @param options Optional query options
-   * @returns Array of entities
+   * @returns Array of entities with the specified parent ID
    */
   async findByParentId(
     parentId: string,
     projection?: Record<string, any>,
     options?: Record<string, any>
-  ): Promise<T[]> {
+  ) {
     return this.service.findByParentId(parentId, projection, options);
   }
 
   /**
-   * Update one or more entities
-   * @param entity Single or array of entities with _id
-   * @returns Single updated entity, null, or bulk itemized response
+   * Find entities by tags
+   * @param tags Array of tags to search for
+   * @param projection Optional fields to project
+   * @param options Optional query options
+   * @returns Array of entities with any of the specified tags
    */
-  async update(
-    entity: WithId<T> | WithId<T>[]
-  ): Promise<T | null | BulkItemizedResponse<WithId<T>, T>> {
-    return this.service.update(entity);
+  async findByTags(
+    tags: string[],
+    projection?: Record<string, any>,
+    options?: Record<string, any>
+  ) {
+    return this.service.findByTags(tags, projection, options);
   }
 
   /**
-   * Delete an entity
-   * @param id The entity ID
-   * @returns The result of the deletion operation
+   * Update one or more entities
+   * @param entities Single entity or array of entities with required _id property
+   * @returns The updated entity or BulkItemizedResponse for multiple entities
    */
-  async delete(
-    id: string | string[]
-  ): Promise<boolean | null | BulkCountedResponse> {
-    return this.service.delete(id);
+  async update(entities: Parameters<TCrudService["update"]>[0]) {
+    return this.service.update(entities);
+  }
+
+  /**
+   * Delete one or more entities by ID
+   * @param ids Single ID or array of IDs to delete
+   * @returns For singular input, returns true if deleted, null if not found. For array input, returns a BulkCountedResponse.
+   */
+  async delete(ids: string | string[]) {
+    return this.service.delete(ids);
   }
 }

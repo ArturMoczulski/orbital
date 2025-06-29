@@ -17,7 +17,6 @@ export class DocumentRepositoryFactory {
    */
   static create<
     TDomainEntity extends IdentifiableObject,
-    TDocumentSchema extends Document = Document,
     TModelClass extends { new (...args: any[]): any } = {
       new (...args: any[]): any;
     },
@@ -25,15 +24,9 @@ export class DocumentRepositoryFactory {
     model: ReturnModelType<TModelClass>, // Mongoose Model from Typegoose
     DomainClass: new (data: any) => TDomainEntity,
     schema?: ZodObject<any>
-  ): DocumentRepository<
-    TDomainEntity,
-    TDocumentSchema,
-    WithoutId<TDomainEntity>,
-    TModelClass
-  > {
+  ): DocumentRepository<TDomainEntity, WithoutId<TDomainEntity>, TModelClass> {
     return new DocumentRepository<
       TDomainEntity,
-      TDocumentSchema,
       WithoutId<TDomainEntity>,
       TModelClass
     >(model, DomainClass, schema);

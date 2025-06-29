@@ -6,11 +6,17 @@ import { MongooseDocument, WithDocument } from "../types/with-document";
 import { DocumentHelpers } from "../utils/document-helpers";
 import { DocumentRepository } from "./document-repository";
 
+// Define the props interface for TestDomainObject
+interface TestDomainObjectProps {
+  _id: string;
+  name?: string;
+}
+
 // Create a test domain class that extends IdentifiableObject
 class TestDomainObject extends IdentifiableObject {
   public name: string;
 
-  constructor(data: any = {}) {
+  constructor(data: TestDomainObjectProps) {
     super(data);
     this.name = data.name || "";
   }
@@ -43,8 +49,11 @@ const testSchema = z.object({
 describe("DocumentRepository", () => {
   // Mock model implementation
   let mockModel: any;
-  let repository: DocumentRepository<TestDomainObject>;
-  let repositoryWithSchema: DocumentRepository<TestDomainObject>;
+  let repository: DocumentRepository<TestDomainObject, TestDomainObjectProps>;
+  let repositoryWithSchema: DocumentRepository<
+    TestDomainObject,
+    TestDomainObjectProps
+  >;
 
   // Mock document
   const mockDocument = {
@@ -83,17 +92,16 @@ describe("DocumentRepository", () => {
     });
 
     // Create repository with mock model
-    repository = new DocumentRepository<TestDomainObject>(
-      mockModel,
-      TestDomainObject
-    );
+    repository = new DocumentRepository<
+      TestDomainObject,
+      TestDomainObjectProps
+    >(mockModel, TestDomainObject);
 
     // Create repository with mock model and schema
-    repositoryWithSchema = new DocumentRepository<TestDomainObject>(
-      mockModel,
+    repositoryWithSchema = new DocumentRepository<
       TestDomainObject,
-      testSchema
-    );
+      TestDomainObjectProps
+    >(mockModel, TestDomainObject, testSchema);
 
     // Spy on PersistenceMapper and DocumentHelpers
     jest.spyOn(PersistenceMapper, "toPersistence").mockReturnValue({
@@ -111,12 +119,12 @@ describe("DocumentRepository", () => {
     jest
       .spyOn(DocumentHelpers, "attachDocument")
       .mockImplementation(
-        <T extends IdentifiableObject, S extends Document>(
+        <T extends IdentifiableObject>(
           domainObject: T,
-          document: MongooseDocument & S
+          document: MongooseDocument & Document
         ) => {
           (domainObject as any).document = document;
-          return domainObject as WithDocument<T, S>;
+          return domainObject as WithDocument<T>;
         }
       );
   });
@@ -129,6 +137,7 @@ describe("DocumentRepository", () => {
     it("should create a single entity", async () => {
       // Arrange
       const dto = new TestDomainObject({
+        _id: "test-id-123",
         name: "Test Object",
       });
 
@@ -146,8 +155,8 @@ describe("DocumentRepository", () => {
     it("should create multiple entities", async () => {
       // Arrange
       const dtos = [
-        new TestDomainObject({ name: "Test Object 1" }),
-        new TestDomainObject({ name: "Test Object 2" }),
+        new TestDomainObject({ _id: "test-id-1", name: "Test Object 1" }),
+        new TestDomainObject({ _id: "test-id-2", name: "Test Object 2" }),
       ];
 
       // Act
@@ -163,11 +172,13 @@ describe("DocumentRepository", () => {
     it("should validate data against schema when creating an entity", async () => {
       // Arrange
       const validDto = new TestDomainObject({
+        _id: "valid-id",
         name: "Valid Object",
       });
 
       const invalidDto = new TestDomainObject({
-        // Missing required name field (will be set to empty string in constructor)
+        _id: "invalid-id",
+        // Empty name, which violates the min(1) constraint
         name: "",
       });
 
@@ -403,11 +414,10 @@ describe("DocumentRepository", () => {
         // No parentId field
       });
 
-      const repoWithInvalidSchema = new DocumentRepository<TestDomainObject>(
-        mockModel,
+      const repoWithInvalidSchema = new DocumentRepository<
         TestDomainObject,
-        schemaWithoutParentId
-      );
+        TestDomainObjectProps
+      >(mockModel, TestDomainObject, schemaWithoutParentId);
 
       // Act & Assert
       await expect(
@@ -436,11 +446,10 @@ describe("DocumentRepository", () => {
         // No tags field
       });
 
-      const repoWithInvalidSchema = new DocumentRepository<TestDomainObject>(
-        mockModel,
+      const repoWithInvalidSchema = new DocumentRepository<
         TestDomainObject,
-        schemaWithoutTags
-      );
+        TestDomainObjectProps
+      >(mockModel, TestDomainObject, schemaWithoutTags);
 
       // Act & Assert
       await expect(

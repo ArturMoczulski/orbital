@@ -8,7 +8,7 @@ export class PersistenceMapper {
   /**
    * Convert a domain object to a persistence model
    */
-  static toPersistence<TDomainEntity extends IdentifiableObject>(
+  static toPersistence<TDomainEntity extends Partial<IdentifiableObject>>(
     domainObject: TDomainEntity
   ): Record<string, any> {
     const result: Record<string, any> = {};
