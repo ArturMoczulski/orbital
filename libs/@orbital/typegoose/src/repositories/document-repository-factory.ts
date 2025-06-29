@@ -1,4 +1,5 @@
 import { IdentifiableObject } from "@orbital/core";
+import { ZodObject } from "zod";
 import { DocumentRepository } from "./document-repository";
 
 /**
@@ -14,8 +15,9 @@ export class DocumentRepositoryFactory {
   static create<T extends IdentifiableObject, S = any>(
     // TODO: Replace 'any' with proper Mongoose Model type when type issues are resolved
     model: any, // Mongoose Model
-    DomainClass: new (data: any) => T
+    DomainClass: new (data: any) => T,
+    schema?: ZodObject<any>
   ): DocumentRepository<T, S> {
-    return new DocumentRepository<T, S>(model, DomainClass);
+    return new DocumentRepository<T, S>(model, DomainClass, schema);
   }
 }

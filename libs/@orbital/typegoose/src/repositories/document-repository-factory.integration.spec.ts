@@ -2,6 +2,7 @@ import { BulkItemizedResponse } from "@orbital/bulk-operations";
 import { IdentifiableObject } from "@orbital/core";
 import * as mongoose from "mongoose";
 import { Schema } from "mongoose";
+import { z } from "zod";
 import { WithDocument } from "../types/with-document";
 import { DocumentRepositoryFactory } from "./document-repository-factory";
 
@@ -84,6 +85,42 @@ describe("DocumentRepositoryFactory Integration Tests", () => {
       const savedDoc = await TestEntityModel.findById(result._id).lean();
       expect(savedDoc).toBeDefined();
       expect(savedDoc.name).toBe(testData.name);
+    });
+
+    it("should create a repository with schema validation", async () => {
+      // Arrange
+      const testSchema = z.object({
+        _id: z.string().optional(),
+        name: z.string().min(1),
+        description: z.string().optional(),
+        tags: z.array(z.string()),
+      });
+
+      const repository = DocumentRepositoryFactory.create<TestEntity>(
+        TestEntityModel,
+        TestEntity,
+        testSchema
+      );
+
+      const validData = {
+        name: "Valid Entity",
+        tags: ["valid", "schema"],
+      };
+
+      const invalidData = {
+        // Missing required name field
+        tags: ["invalid", "schema"],
+      };
+
+      // Act & Assert - Valid data should work
+      const result = await repository.create(validData);
+      expect(result).toBeDefined();
+      expect((result as WithDocument<TestEntity>).name).toBe(validData.name);
+
+      // Act & Assert - Invalid data should throw validation error
+      await expect(repository.create(invalidData)).rejects.toThrow(
+        "Validation error"
+      );
     });
 
     it("should create a repository that can perform bulk operations", async () => {

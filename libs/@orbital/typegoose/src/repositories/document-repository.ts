@@ -4,6 +4,7 @@ import {
   BulkOperation,
 } from "@orbital/bulk-operations";
 import { IdentifiableObject } from "@orbital/core";
+import { ZodError, ZodObject } from "zod";
 import { PersistenceMapper } from "../mappers/persistence-mapper";
 import { MongooseDocument, WithDocument } from "../types/with-document";
 import { DocumentHelpers } from "../utils/document-helpers";
@@ -24,7 +25,8 @@ export class DocumentRepository<
   constructor(
     // TODO: Replace 'any' with proper Mongoose Model type when type issues are resolved
     protected readonly model: any, // Mongoose Model
-    protected readonly DomainClass: new (data: any) => T
+    protected readonly DomainClass: new (data: any) => T,
+    protected readonly schema?: ZodObject<any>
   ) {}
 
   /**
@@ -45,19 +47,71 @@ export class DocumentRepository<
       TCreateInput,
       WithDocument<T, S>
     >(items, async (dtos, success, fail) => {
-      try {
-        // Process each item
-        for (const item of dtos) {
-          try {
-            // Convert to domain object if it's not already one
-            const domainObject =
-              item instanceof this.DomainClass
-                ? (item as unknown as T)
-                : new this.DomainClass(item as any);
+      // Prepare items for bulk insertion
+      const validItems: any[] = [];
+      const domainObjects: T[] = [];
 
-            // Create document from domain object
-            const data = PersistenceMapper.toPersistence(domainObject);
-            const doc = new this.model(data);
+      // First validate and prepare all items
+      for (let i = 0; i < dtos.length; i++) {
+        const item = dtos[i];
+        try {
+          // Validate with Zod schema if provided
+          if (this.schema) {
+            try {
+              // Skip _id validation since it's not required for creation
+              const plainObject =
+                item &&
+                typeof item === "object" &&
+                "toPlainObject" in item &&
+                typeof item.toPlainObject === "function"
+                  ? item.toPlainObject()
+                  : { ...item }; // Ensure we have a plain object copy
+
+              const { _id, ...rest } = plainObject;
+
+              // Clone the schema and make _id optional for creation
+              const createSchema = this.schema.omit({ _id: true });
+              createSchema.parse(rest);
+            } catch (validationError: any) {
+              throw new Error(`Validation error: ${validationError.message}`);
+            }
+          }
+
+          // Convert to domain object if it's not already one
+          const domainObject =
+            item instanceof this.DomainClass
+              ? (item as unknown as T)
+              : new this.DomainClass(item as any);
+
+          // Create persistence data from domain object
+          const data = PersistenceMapper.toPersistence(domainObject);
+
+          // Store for bulk insertion
+          validItems.push(data);
+          domainObjects.push(domainObject);
+        } catch (error: any) {
+          fail(item, { message: error.message });
+        }
+      }
+
+      // If we have valid items, perform bulk insertion
+      if (validItems.length > 0) {
+        // Use insertMany for bulk insertion
+        const createdDocs = await this.model.insertMany(validItems);
+
+        // Process created documents
+        // In MongoDB, insertMany preserves the order of documents
+        // So we can match them directly with the domainObjects array
+        for (let i = 0; i < createdDocs.length; i++) {
+          const doc = createdDocs[i];
+          const domainObject = domainObjects[i];
+          const originalItem = dtos[i];
+
+          if (domainObject && doc) {
+            // Update the domain object with the generated _id if it doesn't have one
+            if (!domainObject._id && doc._id) {
+              domainObject._id = doc._id;
+            }
 
             // Attach document to domain object
             const withDoc = DocumentHelpers.attachDocument(
@@ -65,19 +119,9 @@ export class DocumentRepository<
               doc as MongooseDocument & S
             );
 
-            // Save the document
-            await doc.save();
-
-            success(item, withDoc);
-          } catch (error: any) {
-            fail(item, { message: error.message });
+            success(originalItem, withDoc);
           }
         }
-      } catch (error: any) {
-        // If there's a global error, mark all items as failed
-        dtos.forEach((item) => {
-          fail(item, { message: error.message });
-        });
       }
     });
 
@@ -163,6 +207,19 @@ export class DocumentRepository<
     projection?: Record<string, any>,
     options?: Record<string, any>
   ): Promise<WithDocument<T, S>[]> {
+    // Check if the schema has a parentId field
+    if (this.schema && !this.schema.shape.parentId) {
+      throw new ZodError([
+        {
+          code: "invalid_type",
+          expected: "object",
+          received: "undefined",
+          path: ["parentId"],
+          message: "Entity schema does not have a parentId field",
+        },
+      ]);
+    }
+
     return this.find({ parentId }, projection, options);
   }
 
@@ -178,6 +235,19 @@ export class DocumentRepository<
     projection?: Record<string, any>,
     options?: Record<string, any>
   ): Promise<WithDocument<T, S>[]> {
+    // Check if the schema has a tags field
+    if (this.schema && !this.schema.shape.tags) {
+      throw new ZodError([
+        {
+          code: "invalid_type",
+          expected: "object",
+          received: "undefined",
+          path: ["tags"],
+          message: "Entity schema does not have a tags field",
+        },
+      ]);
+    }
+
     return this.find({ tags: { $in: tags } }, projection, options);
   }
 
@@ -204,46 +274,140 @@ export class DocumentRepository<
     const response = await BulkOperation.itemized<T, WithDocument<T, S>>(
       items,
       async (updateItems, success, fail) => {
-        try {
-          // Process each item
-          for (const entity of updateItems) {
-            try {
-              if (!entity._id) {
-                throw new Error("Entity must have an _id property for update");
+        // Prepare bulk write operations
+        const bulkOps: any[] = [];
+        const entitiesMap = new Map<string, T>();
+
+        // Process each item
+        for (const entity of updateItems) {
+          try {
+            if (!entity._id) {
+              fail(entity, {
+                message: "Entity must have an _id property for update",
+              });
+              continue;
+            }
+
+            // Validate with Zod schema if provided
+            if (this.schema) {
+              try {
+                // Get the entity as a plain object
+                const plainObject =
+                  entity &&
+                  typeof entity === "object" &&
+                  "toPlainObject" in entity &&
+                  typeof entity.toPlainObject === "function"
+                    ? entity.toPlainObject()
+                    : { ...entity }; // Ensure we have a plain object copy
+
+                // Create a partial schema that only validates the fields being updated
+                const updateFields = Object.keys(plainObject).filter(
+                  (key) => key !== "_id"
+                );
+
+                if (updateFields.length > 0) {
+                  const partialSchema = this.schema.partial().pick(
+                    updateFields.reduce(
+                      (acc, field) => {
+                        acc[field] = true;
+                        return acc;
+                      },
+                      {} as Record<string, true>
+                    )
+                  );
+
+                  // Validate the update data against the partial schema
+                  partialSchema.parse(plainObject);
+                }
+              } catch (validationError: any) {
+                throw new Error(`Validation error: ${validationError.message}`);
               }
+            }
 
-              // Find existing document
-              const existingDoc = await this.model.findById(entity._id).exec();
-              if (!existingDoc) {
-                fail(entity, {
-                  message: `Entity with _id ${entity._id} not found`,
-                });
-                continue;
+            // Create persistence data from domain object
+            const data = PersistenceMapper.toPersistence(entity);
+            const { _id, ...updateData } = data;
+
+            // Store entity for later reference
+            entitiesMap.set(_id, entity);
+
+            // Add to bulk operations
+            bulkOps.push({
+              updateOne: {
+                filter: { _id },
+                update: updateData,
+                upsert: false,
+              },
+            });
+          } catch (error: any) {
+            fail(entity, { message: error.message });
+          }
+        }
+
+        // If we have operations to perform
+        if (bulkOps.length > 0) {
+          // Execute bulk write operation
+          const bulkWriteResult = await this.model.bulkWrite(bulkOps);
+
+          // Check if there were any write errors
+          if (
+            bulkWriteResult.writeErrors &&
+            bulkWriteResult.writeErrors.length > 0
+          ) {
+            // Mark entities with write errors as failed
+            for (const error of bulkWriteResult.writeErrors) {
+              const index = error.index;
+              if (index !== undefined && index < bulkOps.length) {
+                const op = bulkOps[index];
+                const id = op.updateOne?.filter?._id;
+                if (id && entitiesMap.has(id)) {
+                  const entity = entitiesMap.get(id);
+                  if (entity) {
+                    fail(entity, {
+                      message: error.errmsg || "Write error occurred",
+                    });
+                    entitiesMap.delete(id);
+                  }
+                }
               }
-
-              // Update document with current domain data
-              const data = PersistenceMapper.toPersistence(entity);
-              Object.assign(existingDoc, data);
-
-              // Save the document
-              await existingDoc.save();
-
-              // Attach document to domain object
-              const withDoc = DocumentHelpers.attachDocument(
-                entity,
-                existingDoc as MongooseDocument & S
-              );
-
-              success(entity, withDoc);
-            } catch (error: any) {
-              fail(entity, { message: error.message });
             }
           }
-        } catch (error: any) {
-          // If there's a global error, mark all items as failed
-          updateItems.forEach((item) => {
-            fail(item, { message: error.message });
-          });
+
+          // For remaining entities (those without write errors), mark as success
+          // We still need to fetch the documents to attach them to the domain objects
+          if (entitiesMap.size > 0) {
+            const ids = Array.from(entitiesMap.keys());
+
+            // Fetch all updated documents in a single query
+            const updatedDocs = await this.model
+              .find({ _id: { $in: ids } })
+              .exec();
+
+            // Create a map of documents by ID for quick lookup
+            const docsById = new Map();
+            updatedDocs.forEach((doc: any) => {
+              docsById.set(doc._id.toString(), doc);
+            });
+
+            // Process results - match entities with their updated documents
+            for (const [_id, entity] of entitiesMap.entries()) {
+              const updatedDoc = docsById.get(_id);
+
+              if (updatedDoc) {
+                // Attach document to domain object
+                const withDoc = DocumentHelpers.attachDocument(
+                  entity,
+                  updatedDoc as MongooseDocument & S
+                );
+
+                success(entity, withDoc);
+              } else {
+                fail(entity, {
+                  message: `Entity with _id ${_id} not found after update`,
+                });
+              }
+            }
+          }
         }
       }
     );
@@ -282,15 +446,11 @@ export class DocumentRepository<
     const response = await BulkOperation.counted<string>(
       items,
       async (idList) => {
-        try {
-          // Use deleteMany for bulk deletion
-          const result = await this.model
-            .deleteMany({ _id: { $in: idList } })
-            .exec();
-          return result.deletedCount;
-        } catch (error: any) {
-          return 0;
-        }
+        // Use deleteMany for bulk deletion
+        const result = await this.model
+          .deleteMany({ _id: { $in: idList } })
+          .exec();
+        return result.deletedCount;
       }
     );
 

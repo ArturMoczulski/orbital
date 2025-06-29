@@ -1,5 +1,6 @@
 import { BulkItemizedResponse } from "@orbital/bulk-operations";
 import { IdentifiableObject } from "@orbital/core";
+import { z, ZodError } from "zod";
 import { PersistenceMapper } from "../mappers/persistence-mapper";
 import { MongooseDocument, WithDocument } from "../types/with-document";
 import { DocumentHelpers } from "../utils/document-helpers";
@@ -15,10 +16,19 @@ class TestDomainObject extends IdentifiableObject {
   }
 }
 
+// Create a test schema for validation
+const testSchema = z.object({
+  _id: z.string().optional(),
+  name: z.string().min(1),
+  parentId: z.string().optional(),
+  tags: z.array(z.string()).optional(),
+});
+
 describe("DocumentRepository", () => {
   // Mock model implementation
   let mockModel: any;
   let repository: DocumentRepository<TestDomainObject>;
+  let repositoryWithSchema: DocumentRepository<TestDomainObject>;
 
   // Mock document
   const mockDocument = {
@@ -46,13 +56,27 @@ describe("DocumentRepository", () => {
     mockModel.populate = jest.fn().mockReturnThis();
     mockModel.exec = jest.fn().mockResolvedValue([mockDocument]);
 
-    // Mock the create method
-    mockModel.create = jest.fn().mockResolvedValue(mockDocument);
+    // Mock the insertMany method for bulk creation
+    mockModel.insertMany = jest.fn().mockResolvedValue([mockDocument]);
+
+    // Mock the bulkWrite method for bulk updates
+    mockModel.bulkWrite = jest.fn().mockResolvedValue({
+      ok: 1,
+      nModified: 1,
+      n: 1,
+    });
 
     // Create repository with mock model
     repository = new DocumentRepository<TestDomainObject>(
       mockModel,
       TestDomainObject
+    );
+
+    // Create repository with mock model and schema
+    repositoryWithSchema = new DocumentRepository<TestDomainObject>(
+      mockModel,
+      TestDomainObject,
+      testSchema
     );
 
     // Spy on PersistenceMapper and DocumentHelpers
@@ -99,6 +123,7 @@ describe("DocumentRepository", () => {
       expect(result).toBeDefined();
       expect(result).toHaveProperty("document");
       expect(PersistenceMapper.toPersistence).toHaveBeenCalled();
+      expect(mockModel.insertMany).toHaveBeenCalled();
       expect(DocumentHelpers.attachDocument).toHaveBeenCalled();
     });
 
@@ -112,7 +137,30 @@ describe("DocumentRepository", () => {
       // Assert
       expect(result).toBeInstanceOf(BulkItemizedResponse);
       expect(PersistenceMapper.toPersistence).toHaveBeenCalled();
+      expect(mockModel.insertMany).toHaveBeenCalled();
       expect(DocumentHelpers.attachDocument).toHaveBeenCalled();
+    });
+
+    it("should validate data against schema when creating an entity", async () => {
+      // Arrange
+      const validDto = {
+        name: "Valid Object",
+      };
+
+      const invalidDto = {
+        // Missing required name field
+      };
+
+      // Act & Assert - Valid data should work
+      const result = await repositoryWithSchema.create(validDto);
+      expect(result).toBeDefined();
+      expect(result).toHaveProperty("document");
+      expect(mockModel.insertMany).toHaveBeenCalled();
+
+      // Act & Assert - Invalid data should throw validation error
+      await expect(repositoryWithSchema.create(invalidDto)).rejects.toThrow(
+        "Validation error"
+      );
     });
   });
 
@@ -217,6 +265,7 @@ describe("DocumentRepository", () => {
       expect(result).toBeDefined();
       expect(mockModel.findById).toHaveBeenCalledWith("test-id-123");
       expect(PersistenceMapper.toPersistence).toHaveBeenCalledWith(entity);
+      expect(mockModel.bulkWrite).toHaveBeenCalled();
     });
 
     it("should return null if entity is not found", async () => {
@@ -256,6 +305,30 @@ describe("DocumentRepository", () => {
         // Restore the original implementation
         mockBulkOperation.BulkOperation.itemized = originalItemized;
       }
+    });
+
+    it("should validate data against schema when updating an entity", async () => {
+      // Arrange
+      const validEntity = new TestDomainObject({
+        _id: "test-id-123",
+        name: "Valid Updated Object",
+      });
+
+      const invalidEntity = new TestDomainObject({
+        _id: "test-id-123",
+        name: "", // Empty name, which violates the min(1) constraint
+      });
+
+      // Act & Assert - Valid data should work
+      const result = await repositoryWithSchema.update(validEntity);
+      expect(result).toBeDefined();
+      expect(mockModel.findById).toHaveBeenCalledWith("test-id-123");
+      expect(mockModel.bulkWrite).toHaveBeenCalled();
+
+      // Act & Assert - Invalid data should throw validation error
+      await expect(repositoryWithSchema.update(invalidEntity)).rejects.toThrow(
+        "Validation error"
+      );
     });
   });
 
@@ -298,6 +371,72 @@ describe("DocumentRepository", () => {
 
       // Assert
       expect(result).toBeNull();
+    });
+  });
+
+  describe("findByParentId", () => {
+    it("should throw ZodError if schema doesn't have parentId field", async () => {
+      // Arrange
+      const schemaWithoutParentId = z.object({
+        _id: z.string().optional(),
+        name: z.string().min(1),
+        // No parentId field
+      });
+
+      const repoWithInvalidSchema = new DocumentRepository<TestDomainObject>(
+        mockModel,
+        TestDomainObject,
+        schemaWithoutParentId
+      );
+
+      // Act & Assert
+      await expect(
+        repoWithInvalidSchema.findByParentId("parent-123")
+      ).rejects.toThrow(ZodError);
+    });
+
+    it("should find entities by parentId when schema has parentId field", async () => {
+      // Act
+      await repositoryWithSchema.findByParentId("parent-123");
+
+      // Assert
+      expect(mockModel.find).toHaveBeenCalledWith(
+        { parentId: "parent-123" },
+        undefined
+      );
+    });
+  });
+
+  describe("findByTags", () => {
+    it("should throw ZodError if schema doesn't have tags field", async () => {
+      // Arrange
+      const schemaWithoutTags = z.object({
+        _id: z.string().optional(),
+        name: z.string().min(1),
+        // No tags field
+      });
+
+      const repoWithInvalidSchema = new DocumentRepository<TestDomainObject>(
+        mockModel,
+        TestDomainObject,
+        schemaWithoutTags
+      );
+
+      // Act & Assert
+      await expect(
+        repoWithInvalidSchema.findByTags(["tag1", "tag2"])
+      ).rejects.toThrow(ZodError);
+    });
+
+    it("should find entities by tags when schema has tags field", async () => {
+      // Act
+      await repositoryWithSchema.findByTags(["tag1", "tag2"]);
+
+      // Assert
+      expect(mockModel.find).toHaveBeenCalledWith(
+        { tags: { $in: ["tag1", "tag2"] } },
+        undefined
+      );
     });
   });
 

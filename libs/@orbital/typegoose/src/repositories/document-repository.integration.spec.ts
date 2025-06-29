@@ -5,6 +5,7 @@ import {
 import { IdentifiableObject } from "@orbital/core";
 import * as mongoose from "mongoose";
 import { Schema } from "mongoose";
+import * as z from "zod";
 import { WithDocument } from "../types/with-document";
 import { DocumentRepository } from "./document-repository";
 
@@ -35,8 +36,18 @@ const TestEntitySchema = new Schema({
   updatedAt: { type: Date, default: Date.now },
 });
 
+// Define a Zod schema for validation
+const testZodSchema = z.object({
+  _id: z.string().optional(),
+  name: z.string().min(1, "Name is required"),
+  description: z.string().optional(),
+  tags: z.array(z.string()).optional(),
+  parentId: z.string().optional(),
+});
+
 describe("DocumentRepository Integration Tests", () => {
   let repository: DocumentRepository<TestEntity>;
+  let repositoryWithSchema: DocumentRepository<TestEntity>;
   let TestEntityModel: any; // Using any to bypass mongoose type issues
 
   beforeAll(async () => {
@@ -47,6 +58,13 @@ describe("DocumentRepository Integration Tests", () => {
     repository = new DocumentRepository<TestEntity>(
       TestEntityModel,
       TestEntity
+    );
+
+    // Create repository with schema
+    repositoryWithSchema = new DocumentRepository<TestEntity>(
+      TestEntityModel,
+      TestEntity,
+      testZodSchema
     );
   });
 
@@ -129,6 +147,30 @@ describe("DocumentRepository Integration Tests", () => {
       // Verify they were saved to the database
       const count = await TestEntityModel.countDocuments();
       expect(count).toBe(2);
+    });
+
+    it("should validate data against schema when creating an entity", async () => {
+      // Arrange
+      const validData = {
+        name: "Valid Entity",
+        tags: ["test", "valid"],
+      };
+
+      const invalidData = {
+        // Missing required name field
+        tags: ["test", "invalid"],
+      };
+
+      // Act & Assert - Valid data should work
+      const result = (await repositoryWithSchema.create(
+        validData
+      )) as WithDocument<TestEntity>;
+      expect(result).toBeDefined();
+      expect(result._id).toBeDefined();
+      expect(result.name).toBe(validData.name);
+
+      // Act & Assert - Invalid data should throw validation error
+      await expect(repositoryWithSchema.create(invalidData)).rejects.toThrow();
     });
   });
 
@@ -225,6 +267,26 @@ describe("DocumentRepository Integration Tests", () => {
       // Assert
       expect(result).toBeNull();
     });
+
+    it("should throw ZodError if schema doesn't have parentId field", async () => {
+      // Arrange
+      const schemaWithoutParentId = z.object({
+        _id: z.string().optional(),
+        name: z.string().min(1),
+        // No parentId field
+      });
+
+      const repoWithInvalidSchema = new DocumentRepository<TestEntity>(
+        TestEntityModel,
+        TestEntity,
+        schemaWithoutParentId
+      );
+
+      // Act & Assert
+      await expect(
+        repoWithInvalidSchema.findByParentId("parent-123")
+      ).rejects.toThrow();
+    });
   });
 
   describe("findById", () => {
@@ -252,6 +314,26 @@ describe("DocumentRepository Integration Tests", () => {
 
       // Assert
       expect(result).toBeNull();
+    });
+
+    it("should throw error if schema doesn't have tags field", async () => {
+      // Arrange
+      const schemaWithoutTags = z.object({
+        _id: z.string().optional(),
+        name: z.string().min(1),
+        // No tags field
+      });
+
+      const repoWithInvalidSchema = new DocumentRepository<TestEntity>(
+        TestEntityModel,
+        TestEntity,
+        schemaWithoutTags
+      );
+
+      // Act & Assert
+      await expect(
+        repoWithInvalidSchema.findByTags(["tag1", "tag2"])
+      ).rejects.toThrow();
     });
   });
 
@@ -382,6 +464,43 @@ describe("DocumentRepository Integration Tests", () => {
 
       // Assert
       expect(result).toBeNull();
+    });
+
+    it("should validate data against schema when updating an entity", async () => {
+      // Arrange
+      const testEntity = new TestEntity({
+        name: "Original Valid Name",
+        tags: ["test", "valid"],
+      });
+
+      const created = await TestEntityModel.create(testEntity);
+
+      // Valid update
+      const validUpdate = new TestEntity({
+        _id: created._id,
+        name: "Updated Valid Name",
+        tags: ["updated", "valid"],
+      });
+
+      // Invalid update (empty name)
+      const invalidUpdate = new TestEntity({
+        _id: created._id,
+        name: "", // Empty name, which violates the min(1) constraint
+        tags: ["updated", "invalid"],
+      });
+
+      // Act & Assert - Valid update should work
+      const result = (await repositoryWithSchema.update(
+        validUpdate
+      )) as WithDocument<TestEntity>;
+      expect(result).toBeDefined();
+      expect(result._id).toBe(created._id);
+      expect(result.name).toBe("Updated Valid Name");
+
+      // Act & Assert - Invalid update should throw validation error
+      await expect(
+        repositoryWithSchema.update(invalidUpdate)
+      ).rejects.toThrow();
     });
   });
 
