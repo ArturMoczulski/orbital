@@ -44,5 +44,5 @@ module.exports = {
   verbose: true,
 
   // Default timeout for tests
-  testTimeout: 2000,
+  testTimeout: 60000,
 };

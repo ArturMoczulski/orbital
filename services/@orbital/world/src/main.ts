@@ -38,6 +38,44 @@ async function bootstrap() {
 
   console.log(`World service running on: ${await app.getUrl()}`);
   console.log(`World microservice connected to NATS`);
+
+  // Handle process signals for clean shutdown
+  const signals = ["SIGINT", "SIGTERM", "SIGUSR2"];
+  signals.forEach((signal) => {
+    process.on(signal, async () => {
+      console.log(`Received ${signal}, shutting down gracefully...`);
+      try {
+        await app.close();
+        console.log("Application closed successfully");
+        process.exit(0);
+      } catch (err) {
+        console.error("Error during shutdown:", err);
+        process.exit(1);
+      }
+    });
+  });
+
+  // Handle debugger cleanup on exit
+  process.on("exit", () => {
+    console.log("Process exiting, cleaning up debugger connections");
+  });
+
+  // Handle uncaught exceptions
+  process.on("uncaughtException", (err) => {
+    console.error("Uncaught exception:", err);
+    process.exit(1);
+  });
+
+  // Handle unhandled promise rejections
+  process.on("unhandledRejection", (reason) => {
+    console.error("Unhandled rejection:", reason);
+    process.exit(1);
+  });
+
+  // Signal to PM2 that the application is ready
+  if (process.send) {
+    process.send("ready");
+  }
 }
 
 bootstrap();

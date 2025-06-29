@@ -34,7 +34,10 @@ module.exports = {
       args: "start --watch --preserveWatchOutput",
       watch: false,
       ignore_watch: ["node_modules", "logs"],
-      node_args: "--inspect=localhost:9229",
+      node_args: "--inspect=localhost:9230",
+      kill_timeout: 3000,
+      wait_ready: true,
+      listen_timeout: 5000,
       env: {
         NODE_ENV: "development",
         PORT: "4053",
@@ -49,10 +52,18 @@ module.exports = {
     {
       name: "world-debug",
       script: "nest",
-      args: "start --watch --preserveWatchOutput",
+      args: "start --preserveWatchOutput",
       watch: false,
       ignore_watch: ["node_modules", "logs"],
       node_args: "--inspect-brk=localhost:9229",
+      kill_timeout: 3000,
+      wait_ready: true,
+      listen_timeout: 5000,
+      env: {
+        NODE_ENV: "development",
+        PORT: "4053",
+        NODE_OPTIONS: "--max-old-space-size=4096",
+      },
       env: {
         NODE_ENV: "development",
         PORT: "4053",

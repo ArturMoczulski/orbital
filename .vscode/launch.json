@@ -32,7 +32,7 @@
         "../../libs/@orbital/microservices/src/*": "${workspaceFolder}/libs/@orbital/microservices/src/*"
       },
       "stopOnEntry": true,
-      "restart": true
+      "restart": false
     },
     {
       "type": "node",
@@ -68,7 +68,7 @@
         "../../libs/@orbital/microservices/src/*": "${workspaceFolder}/libs/@orbital/microservices/src/*"
       },
       "stopOnEntry": true,
-      "restart": true
+      "restart": false
     }
   ],
   "compounds": [
