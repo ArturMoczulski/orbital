@@ -301,45 +301,6 @@ describe("DocumentRepository", () => {
     });
   });
 
-  describe("save", () => {
-    it("should save an entity with document attached", async () => {
-      // Arrange
-      const domainObject = new TestDomainObject({
-        _id: "test-id-123",
-        name: "Test Object",
-      });
-
-      const withDocument = DocumentHelpers.attachDocument(
-        domainObject,
-        mockDocument as unknown as MongooseDocument
-      );
-
-      // Act
-      const result = await repository.save(withDocument);
-
-      // Assert
-      expect(result).toBe(withDocument);
-      expect(PersistenceMapper.toPersistence).toHaveBeenCalledWith(
-        withDocument
-      );
-    });
-
-    it("should create a new document if none is attached", async () => {
-      // Arrange
-      const domainObject = new TestDomainObject({
-        _id: "test-id-123",
-        name: "Test Object",
-      }) as WithDocument<TestDomainObject>;
-
-      // Act
-      const result = await repository.save(domainObject);
-
-      // Assert
-      expect(result).toBeDefined();
-      expect(result).toHaveProperty("document");
-      expect(PersistenceMapper.toPersistence).toHaveBeenCalledWith(
-        domainObject
-      );
-    });
-  });
+  // The save method has been removed as it was redundant with the update method
+  // and DocumentHelpers.save functionality
 });
