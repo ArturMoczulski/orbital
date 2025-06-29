@@ -8,8 +8,8 @@ export class PersistenceMapper {
   /**
    * Convert a domain object to a persistence model
    */
-  static toPersistence<T extends IdentifiableObject>(
-    domainObject: T
+  static toPersistence<TDomainEntity extends IdentifiableObject>(
+    domainObject: TDomainEntity
   ): Record<string, any> {
     const result: Record<string, any> = {};
 
@@ -47,10 +47,10 @@ export class PersistenceMapper {
   /**
    * Convert a persistence model to a domain object
    */
-  static toDomain<T extends IdentifiableObject>(
-    DomainClass: new (data: any) => T,
+  static toDomain<TDomainEntity extends IdentifiableObject>(
+    DomainClass: new (data: any) => TDomainEntity,
     document: Document & { toObject?: () => any }
-  ): T {
+  ): TDomainEntity {
     // Convert the document to a plain object
     const plainData = document.toObject ? document.toObject() : document;
 

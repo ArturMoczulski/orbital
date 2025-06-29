@@ -23,6 +23,24 @@ class TestEntity extends IdentifiableObject {
     this.tags = data.tags || [];
     this.parentId = data.parentId;
   }
+
+  toPlainObject(): Record<string, any> {
+    return {
+      _id: this._id,
+      name: this.name,
+      description: this.description,
+      tags: this.tags,
+      parentId: this.parentId,
+    };
+  }
+
+  validateSchema(): this {
+    return this;
+  }
+
+  validate(): this {
+    return this;
+  }
 }
 
 // Define a test schema for MongoDB
@@ -88,11 +106,11 @@ describe("DocumentRepository Integration Tests", () => {
   describe("create", () => {
     it("should create a single entity", async () => {
       // Arrange
-      const testData = {
+      const testData = new TestEntity({
         name: "Test Entity",
         description: "Test Description",
         tags: ["test", "entity"],
-      };
+      });
 
       // Act
       const result = (await repository.create(
@@ -116,15 +134,15 @@ describe("DocumentRepository Integration Tests", () => {
     it("should create multiple entities", async () => {
       // Arrange
       const testData = [
-        {
+        new TestEntity({
           name: "Entity 1",
           tags: ["test", "entity1"],
-        },
-        {
+        }),
+        new TestEntity({
           name: "Entity 2",
           description: "Description 2",
           tags: ["test", "entity2"],
-        },
+        }),
       ];
 
       // Act
@@ -151,15 +169,16 @@ describe("DocumentRepository Integration Tests", () => {
 
     it("should validate data against schema when creating an entity", async () => {
       // Arrange
-      const validData = {
+      const validData = new TestEntity({
         name: "Valid Entity",
         tags: ["test", "valid"],
-      };
+      });
 
-      const invalidData = {
-        // Missing required name field
+      const invalidData = new TestEntity({
+        // Missing required name field (will be set to empty string in constructor)
+        name: "",
         tags: ["test", "invalid"],
-      };
+      });
 
       // Act & Assert - Valid data should work
       const result = (await repositoryWithSchema.create(

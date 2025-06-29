@@ -18,6 +18,23 @@ class TestEntity extends IdentifiableObject {
     this.description = data.description;
     this.tags = data.tags || [];
   }
+
+  toPlainObject(): Record<string, any> {
+    return {
+      _id: this._id,
+      name: this.name,
+      description: this.description,
+      tags: this.tags,
+    };
+  }
+
+  validateSchema(): this {
+    return this;
+  }
+
+  validate(): this {
+    return this;
+  }
 }
 
 // Define a test schema for MongoDB
@@ -62,11 +79,11 @@ describe("DocumentRepositoryFactory Integration Tests", () => {
         TestEntity
       );
 
-      const testData = {
+      const testData = new TestEntity({
         name: "Factory Test Entity",
         description: "Created via factory",
         tags: ["factory", "test"],
-      };
+      });
 
       // Act
       const result = (await repository.create(
@@ -102,15 +119,16 @@ describe("DocumentRepositoryFactory Integration Tests", () => {
         testSchema
       );
 
-      const validData = {
+      const validData = new TestEntity({
         name: "Valid Entity",
         tags: ["valid", "schema"],
-      };
+      });
 
-      const invalidData = {
-        // Missing required name field
+      const invalidData = new TestEntity({
+        // Missing required name field (will be set to empty string in constructor)
+        name: "",
         tags: ["invalid", "schema"],
-      };
+      });
 
       // Act & Assert - Valid data should work
       const result = await repository.create(validData);
@@ -131,15 +149,15 @@ describe("DocumentRepositoryFactory Integration Tests", () => {
       );
 
       const testEntities = [
-        {
+        new TestEntity({
           name: "Factory Entity 1",
           tags: ["factory", "bulk"],
-        },
-        {
+        }),
+        new TestEntity({
           name: "Factory Entity 2",
           description: "Bulk created via factory",
           tags: ["factory", "bulk"],
-        },
+        }),
       ];
 
       // Act

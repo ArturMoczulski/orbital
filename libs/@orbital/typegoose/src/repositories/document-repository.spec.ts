@@ -14,6 +14,22 @@ class TestDomainObject extends IdentifiableObject {
     super(data);
     this.name = data.name || "";
   }
+
+  // Add methods required by WithoutId<TDomainEntity>
+  toPlainObject(): Record<string, any> {
+    return {
+      _id: this._id,
+      name: this.name,
+    };
+  }
+
+  validateSchema(): this {
+    return this;
+  }
+
+  validate(): this {
+    return this;
+  }
 }
 
 // Create a test schema for validation
@@ -95,7 +111,7 @@ describe("DocumentRepository", () => {
     jest
       .spyOn(DocumentHelpers, "attachDocument")
       .mockImplementation(
-        <T extends IdentifiableObject, S>(
+        <T extends IdentifiableObject, S extends Document>(
           domainObject: T,
           document: MongooseDocument & S
         ) => {
@@ -112,9 +128,9 @@ describe("DocumentRepository", () => {
   describe("create", () => {
     it("should create a single entity", async () => {
       // Arrange
-      const dto = {
+      const dto = new TestDomainObject({
         name: "Test Object",
-      };
+      });
 
       // Act
       const result = await repository.create(dto);
@@ -129,7 +145,10 @@ describe("DocumentRepository", () => {
 
     it("should create multiple entities", async () => {
       // Arrange
-      const dtos = [{ name: "Test Object 1" }, { name: "Test Object 2" }];
+      const dtos = [
+        new TestDomainObject({ name: "Test Object 1" }),
+        new TestDomainObject({ name: "Test Object 2" }),
+      ];
 
       // Act
       const result = await repository.create(dtos);
@@ -143,13 +162,14 @@ describe("DocumentRepository", () => {
 
     it("should validate data against schema when creating an entity", async () => {
       // Arrange
-      const validDto = {
+      const validDto = new TestDomainObject({
         name: "Valid Object",
-      };
+      });
 
-      const invalidDto = {
-        // Missing required name field
-      };
+      const invalidDto = new TestDomainObject({
+        // Missing required name field (will be set to empty string in constructor)
+        name: "",
+      });
 
       // Act & Assert - Valid data should work
       const result = await repositoryWithSchema.create(validDto);

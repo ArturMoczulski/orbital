@@ -13,12 +13,15 @@ export interface MongooseDocument extends Document {
 /**
  * Extends domain objects with a document property
  *
- * @template T The domain class type (must extend BaseObject)
- * @template S The Mongoose schema type
+ * @template TDomainEntity The domain class type (must extend IdentifiableObject)
+ * @template TDocumentSchema The Mongoose schema type
  */
-export type WithDocument<T extends IdentifiableObject, S = any> = T & {
+export type WithDocument<
+  TDomainEntity extends IdentifiableObject,
+  TDocumentSchema extends Document = Document,
+> = TDomainEntity & {
   /**
    * The Mongoose document associated with this domain object
    */
-  document?: MongooseDocument & S;
+  document?: MongooseDocument & TDocumentSchema;
 };

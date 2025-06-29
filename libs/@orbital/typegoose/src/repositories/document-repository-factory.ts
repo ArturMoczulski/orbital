@@ -1,5 +1,7 @@
 import { IdentifiableObject } from "@orbital/core";
+import { ReturnModelType } from "@typegoose/typegoose";
 import { ZodObject } from "zod";
+import { WithoutId } from "../types/utils";
 import { DocumentRepository } from "./document-repository";
 
 /**
@@ -10,14 +12,30 @@ export class DocumentRepositoryFactory {
    * Create a document repository for a domain class
    * @param model The Mongoose model
    * @param DomainClass The domain class constructor
+   * @param schema Optional Zod schema for validation
    * @returns A new DocumentRepository instance
    */
-  static create<T extends IdentifiableObject, S = any>(
-    // TODO: Replace 'any' with proper Mongoose Model type when type issues are resolved
-    model: any, // Mongoose Model
-    DomainClass: new (data: any) => T,
+  static create<
+    TDomainEntity extends IdentifiableObject,
+    TDocumentSchema extends Document = Document,
+    TModelClass extends { new (...args: any[]): any } = {
+      new (...args: any[]): any;
+    },
+  >(
+    model: ReturnModelType<TModelClass>, // Mongoose Model from Typegoose
+    DomainClass: new (data: any) => TDomainEntity,
     schema?: ZodObject<any>
-  ): DocumentRepository<T, S> {
-    return new DocumentRepository<T, S>(model, DomainClass, schema);
+  ): DocumentRepository<
+    TDomainEntity,
+    TDocumentSchema,
+    WithoutId<TDomainEntity>,
+    TModelClass
+  > {
+    return new DocumentRepository<
+      TDomainEntity,
+      TDocumentSchema,
+      WithoutId<TDomainEntity>,
+      TModelClass
+    >(model, DomainClass, schema);
   }
 }

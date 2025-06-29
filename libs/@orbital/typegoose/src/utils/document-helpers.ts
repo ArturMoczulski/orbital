@@ -9,20 +9,27 @@ export class DocumentHelpers {
   /**
    * Attach a Mongoose document to a domain object
    */
-  static attachDocument<T extends IdentifiableObject, S>(
-    domainObject: T,
-    document: MongooseDocument & S
-  ): WithDocument<T, S> {
-    (domainObject as WithDocument<T, S>).document = document;
-    return domainObject as WithDocument<T, S>;
+  static attachDocument<
+    TDomainEntity extends IdentifiableObject,
+    TDocumentSchema extends Document,
+  >(
+    domainObject: TDomainEntity,
+    document: MongooseDocument & TDocumentSchema
+  ): WithDocument<TDomainEntity, TDocumentSchema> {
+    (domainObject as WithDocument<TDomainEntity, TDocumentSchema>).document =
+      document;
+    return domainObject as WithDocument<TDomainEntity, TDocumentSchema>;
   }
 
   /**
    * Save the document attached to a domain object
    */
-  static async save<T extends IdentifiableObject, S>(
-    obj: WithDocument<T, S>
-  ): Promise<WithDocument<T, S>> {
+  static async save<
+    TDomainEntity extends IdentifiableObject,
+    TDocumentSchema extends Document,
+  >(
+    obj: WithDocument<TDomainEntity, TDocumentSchema>
+  ): Promise<WithDocument<TDomainEntity, TDocumentSchema>> {
     if (!obj.document) {
       throw new Error("No document attached to this domain object");
     }
@@ -38,10 +45,13 @@ export class DocumentHelpers {
   /**
    * Populate a reference field in the document
    */
-  static async populate<T extends IdentifiableObject, S>(
-    obj: WithDocument<T, S>,
+  static async populate<
+    TDomainEntity extends IdentifiableObject,
+    TDocumentSchema extends Document,
+  >(
+    obj: WithDocument<TDomainEntity, TDocumentSchema>,
     path: string
-  ): Promise<WithDocument<T, S>> {
+  ): Promise<WithDocument<TDomainEntity, TDocumentSchema>> {
     if (!obj.document) {
       throw new Error("No document attached to this domain object");
     }
@@ -53,9 +63,10 @@ export class DocumentHelpers {
   /**
    * Remove the document from the database
    */
-  static async remove<T extends IdentifiableObject, S>(
-    obj: WithDocument<T, S>
-  ): Promise<void> {
+  static async remove<
+    TDomainEntity extends IdentifiableObject,
+    TDocumentSchema extends Document,
+  >(obj: WithDocument<TDomainEntity, TDocumentSchema>): Promise<void> {
     if (!obj.document) {
       throw new Error("No document attached to this domain object");
     }
@@ -66,9 +77,10 @@ export class DocumentHelpers {
   /**
    * Check if a domain object has a document attached
    */
-  static hasDocument<T extends IdentifiableObject, S>(
-    obj: WithDocument<T, S>
-  ): boolean {
+  static hasDocument<
+    TDomainEntity extends IdentifiableObject,
+    TDocumentSchema extends Document,
+  >(obj: WithDocument<TDomainEntity, TDocumentSchema>): boolean {
     return !!obj.document;
   }
 
@@ -76,14 +88,14 @@ export class DocumentHelpers {
    * Create a new domain object with document attached
    */
   static createWithDocument<
-    T extends IdentifiableObject,
-    S,
+    TDomainEntity extends IdentifiableObject,
+    TDocumentSchema extends Document,
     Args extends any[],
   >(
-    DomainClass: new (...args: Args) => T,
-    document: MongooseDocument & S,
+    DomainClass: new (...args: Args) => TDomainEntity,
+    document: MongooseDocument & TDocumentSchema,
     constructorArgs: Args
-  ): WithDocument<T, S> {
+  ): WithDocument<TDomainEntity, TDocumentSchema> {
     const domainObject = new DomainClass(...constructorArgs);
     return this.attachDocument(domainObject, document);
   }
