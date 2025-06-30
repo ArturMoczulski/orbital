@@ -79,17 +79,40 @@ export class AreasMicroserviceController extends CrudController<
       ? existingEntity.toPlainObject()
       : { ...existingEntity };
 
-    // Ensure worldId is preserved
+    // Ensure important properties are preserved in the update DTO
+    // Only add them if they're not already in the updateDto
     if (!updateDto.worldId && existingData.worldId) {
       updateDto.worldId = existingData.worldId;
+    }
+
+    if (!updateDto.position && existingData.position) {
+      updateDto.position = existingData.position;
     }
 
     // Update and return the entity
     const result = await super.update({ _id, ...updateDto });
 
-    // If result doesn't have worldId but existingEntity does, add it
-    if (result && !result.worldId && existingData.worldId) {
-      result.worldId = existingData.worldId;
+    // Check if result is a single entity (not a BulkItemizedResponse)
+    // and if it doesn't have worldId but existingEntity does, add it
+    if (
+      result &&
+      !Array.isArray(result) &&
+      typeof result === "object" &&
+      "document" in result && // This indicates it's a WithDocument<Area>
+      !("counts" in result) // This ensures it's not a BulkItemizedResponse
+    ) {
+      // Use type assertion to add missing properties
+      const typedResult = result as any;
+
+      // Add worldId if missing
+      if (!typedResult.worldId && existingData.worldId) {
+        typedResult.worldId = existingData.worldId;
+      }
+
+      // Add position if missing
+      if (!typedResult.position && existingData.position) {
+        typedResult.position = existingData.position;
+      }
     }
 
     return result;
