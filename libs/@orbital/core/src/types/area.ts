@@ -1,5 +1,5 @@
 import { faker } from "@faker-js/faker";
-import { WithId } from "@orbital/typegoose";
+import { WithoutId } from "@orbital/typegoose";
 import { z } from "zod";
 import { ZodSchema } from "../decorators/zod-schema.decorator";
 import { generateFantasyAreaName } from "../utils/data-generators";
@@ -106,7 +106,7 @@ export class Area
     };
 
     // Create the area with the combined data
-    const area = new Area({ ...base, ...overrides, _id: parentBase._id });
+    const area = new Area({ ...base, ...overrides });
 
     // Ensure description is set even if it was overridden with undefined
     if (!area.description) {
@@ -116,7 +116,7 @@ export class Area
     return area;
   }
 
-  constructor(data: WithId<AreaProps>) {
+  constructor(data: WithoutId<AreaProps>) {
     super(data);
 
     // Extract properties from data directly without validation

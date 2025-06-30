@@ -1,4 +1,5 @@
 import { faker } from "@faker-js/faker";
+import { WithoutId } from "@orbital/typegoose";
 import { z } from "zod";
 import { ZodSchema } from "../decorators/zod-schema.decorator";
 import { generateUUID } from "../utils/data-generators";
@@ -41,7 +42,7 @@ export class IdentifiableObject
   /** Timestamp when the object was last updated */
   public updatedAt?: Date;
 
-  constructor(data?: IdentifiableObjectProps) {
+  constructor(data?: WithoutId<IdentifiableObjectProps>) {
     const _id = data?._id ?? generateUUID();
     super({ ...data, _id });
     this._id = _id;
