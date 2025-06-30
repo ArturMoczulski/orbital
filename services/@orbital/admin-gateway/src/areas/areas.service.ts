@@ -8,6 +8,7 @@ export class AreasService {
   constructor(private readonly worldMicroservice: WorldMicroservice) {}
 
   async find(filter: Record<string, any> = {}): Promise<any[]> {
+    // TODO: Update this method to use separate parameters once the RPC client is updated
     const areas = await this.worldMicroservice.areas.find({
       filter,
       projection: {},

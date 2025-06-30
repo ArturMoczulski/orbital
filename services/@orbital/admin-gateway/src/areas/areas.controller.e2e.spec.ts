@@ -9,7 +9,7 @@ describe("Areas API (e2e)", () => {
   // Test data - create manually instead of using Area.mock() to avoid extra fields
   const testArea = {
     name: "E2E Test Area",
-    worldId: "test-world-id",
+    worldId: "123e4567-e89b-12d3-a456-426614174000", // UUID format
     position: { x: 0, y: 0, z: 0 },
     description: "Area created during e2e testing",
     landmarks: [],
@@ -159,7 +159,7 @@ describe("Areas API (e2e)", () => {
         // Include position since it's not set by default
         const minimalArea = {
           name: "Minimal Test Area",
-          worldId: "test-world-id",
+          worldId: "123e4567-e89b-12d3-a456-426614174000", // UUID format
           position: { x: 0, y: 0, z: 0 },
         };
 
@@ -245,8 +245,8 @@ describe("Areas API (e2e)", () => {
   describe("GET /areas with worldId filter", () => {
     it("should create areas with different worldIds and filter by worldId", async () => {
       // Create two areas with different worldIds
-      const worldId1 = "test-world-id-1";
-      const worldId2 = "test-world-id-2";
+      const worldId1 = "123e4567-e89b-12d3-a456-426614174001"; // UUID format
+      const worldId2 = "123e4567-e89b-12d3-a456-426614174002"; // UUID format
 
       const area1 = {
         name: "Area World 1",
@@ -287,7 +287,7 @@ describe("Areas API (e2e)", () => {
         .expect(200);
 
       console.log(
-        "Response from GET /areas?worldId=test-world-id-1:",
+        `Response from GET /areas?worldId=${worldId1}:`,
         JSON.stringify(filteredResponse1.body, null, 2)
       );
 
@@ -306,7 +306,7 @@ describe("Areas API (e2e)", () => {
         .expect(200);
 
       console.log(
-        "Response from GET /areas?worldId=test-world-id-2:",
+        `Response from GET /areas?worldId=${worldId2}:`,
         JSON.stringify(filteredResponse2.body, null, 2)
       );
 

@@ -41,12 +41,12 @@ export class AreasMicroserviceController extends CRUDController<
    * @returns Array of areas matching the query
    */
   @MessagePattern()
-  async find(
-    filter: Record<string, any> = {},
-    projection?: Record<string, any>,
-    options?: Record<string, any>
-  ) {
-    return super.find(filter, projection, options);
+  async find(payload: {
+    filter?: Record<string, any>;
+    projection?: Record<string, any>;
+    options?: Record<string, any>;
+  }) {
+    return super.find(payload);
   }
 
   /**
@@ -56,8 +56,8 @@ export class AreasMicroserviceController extends CRUDController<
    * @returns The found area or null
    */
   @MessagePattern()
-  async findById(id: string, projection?: Record<string, any>) {
-    return super.findById(id, projection);
+  async findById(payload: { id: string; projection?: Record<string, any> }) {
+    return super.findById(payload);
   }
 
   /**
@@ -88,11 +88,12 @@ export class AreasMicroserviceController extends CRUDController<
    * @returns Array of areas belonging to the specified world
    */
   @MessagePattern()
-  async findByWorldId(
-    worldId: string,
-    projection?: Record<string, any>,
-    options?: Record<string, any>
-  ): Promise<AreaModel[]> {
+  async findByWorldId(payload: {
+    worldId: string;
+    projection?: Record<string, any>;
+    options?: Record<string, any>;
+  }): Promise<AreaModel[]> {
+    const { worldId, projection, options } = payload;
     return this.service.findByWorldId(worldId, projection, options);
   }
 
@@ -104,12 +105,12 @@ export class AreasMicroserviceController extends CRUDController<
    * @returns Array of areas that are children of the specified parent area
    */
   @MessagePattern()
-  async findByParentId(
-    parentId: string,
-    projection?: Record<string, any>,
-    options?: Record<string, any>
-  ): Promise<AreaModel[]> {
-    return this.service.findByParentId(parentId, projection, options);
+  async findByParentId(payload: {
+    parentId: string;
+    projection?: Record<string, any>;
+    options?: Record<string, any>;
+  }): Promise<AreaModel[]> {
+    return super.findByParentId(payload);
   }
 
   /**
@@ -120,11 +121,11 @@ export class AreasMicroserviceController extends CRUDController<
    * @returns Array of areas that have any of the specified tags
    */
   @MessagePattern()
-  async findByTags(
-    tags: string[],
-    projection?: Record<string, any>,
-    options?: Record<string, any>
-  ): Promise<AreaModel[]> {
-    return this.service.findByTags(tags, projection, options);
+  async findByTags(payload: {
+    tags: string[];
+    projection?: Record<string, any>;
+    options?: Record<string, any>;
+  }): Promise<AreaModel[]> {
+    return super.findByTags(payload);
   }
 }

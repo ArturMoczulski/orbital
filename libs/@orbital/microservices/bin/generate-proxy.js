@@ -20,6 +20,11 @@ program
     "Source directory to analyze controller files",
     "src"
   )
+  .option(
+    "--bundle-params",
+    "Bundle parameters into a single object for all methods",
+    true
+  )
   .parse(process.argv);
 
 const options = program.opts();
@@ -479,8 +484,23 @@ interface ${
       }
 
       // Generate method signature for interface
-      const methodParams =
+      let methodParams =
         paramType === "void" ? "" : `${paramName}: ${paramType}`;
+
+      // Always use a single parameter object for all methods
+      if (
+        options.bundleParams &&
+        methodInfo &&
+        methodInfo.parameters.length > 1
+      ) {
+        // Create a single parameter object type
+        paramType =
+          "{ " +
+          methodInfo.parameters.map((p) => `${p.name}: ${p.type}`).join("; ") +
+          " }";
+        paramName = "payload";
+        methodParams = `${paramName}: ${paramType}`;
+      }
 
       // For all return types that don't already include null, add null as a possible return type
       // to match what Microservice.request can return
@@ -665,9 +685,27 @@ export class ${capitalizedServiceName}Microservice extends Microservice {`;
       }
 
       // Generate method implementation
-      const methodParams =
+      let methodParams =
         paramType === "void" ? "" : `${paramName}: ${paramType}`;
-      const methodArgs = paramType === "void" ? "" : paramName;
+      let methodArgs = paramType === "void" ? "" : paramName;
+
+      // Always bundle multiple parameters into a single object
+      if (
+        options.bundleParams &&
+        methodInfo &&
+        methodInfo.parameters.length > 1
+      ) {
+        // Create a single parameter object
+        paramType =
+          "{ " +
+          methodInfo.parameters.map((p) => `${p.name}: ${p.type}`).join("; ") +
+          " }";
+        paramName = "payload";
+        methodParams = `${paramName}: ${paramType}`;
+
+        // Create an object with all parameters
+        methodArgs = `{ ${methodInfo.parameters.map((p) => `${p.name}`).join(", ")} }`;
+      }
 
       // For array returns, handle null by returning an empty array
       let implementationCode;

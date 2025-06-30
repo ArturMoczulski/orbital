@@ -33,11 +33,12 @@ export abstract class CRUDController<
    * @param options Optional query options
    * @returns Array of entities matching the query
    */
-  async find(
-    filter: Record<string, any> = {},
-    projection?: Record<string, any>,
-    options?: Record<string, any>
-  ) {
+  async find(payload: {
+    filter?: Record<string, any>;
+    projection?: Record<string, any>;
+    options?: Record<string, any>;
+  }) {
+    const { filter = {}, projection, options } = payload;
     return this.service.find(filter, projection, options);
   }
 
@@ -47,7 +48,8 @@ export abstract class CRUDController<
    * @param projection Optional fields to project
    * @returns The found entity or null
    */
-  async findById(id: string, projection?: Record<string, any>) {
+  async findById(payload: { id: string; projection?: Record<string, any> }) {
+    const { id, projection } = payload;
     // If projection is undefined, don't pass it to match test expectations
     return projection
       ? this.service.findById(id, projection)
@@ -61,11 +63,12 @@ export abstract class CRUDController<
    * @param options Optional query options
    * @returns Array of entities with the specified parent ID
    */
-  async findByParentId(
-    parentId: string,
-    projection?: Record<string, any>,
-    options?: Record<string, any>
-  ) {
+  async findByParentId(payload: {
+    parentId: string;
+    projection?: Record<string, any>;
+    options?: Record<string, any>;
+  }) {
+    const { parentId, projection, options } = payload;
     return this.service.findByParentId(parentId, projection, options);
   }
 
@@ -76,11 +79,12 @@ export abstract class CRUDController<
    * @param options Optional query options
    * @returns Array of entities with any of the specified tags
    */
-  async findByTags(
-    tags: string[],
-    projection?: Record<string, any>,
-    options?: Record<string, any>
-  ) {
+  async findByTags(payload: {
+    tags: string[];
+    projection?: Record<string, any>;
+    options?: Record<string, any>;
+  }) {
+    const { tags, projection, options } = payload;
     return this.service.findByTags(tags, projection, options);
   }
 

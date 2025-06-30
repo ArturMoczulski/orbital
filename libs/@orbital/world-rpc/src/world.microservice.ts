@@ -16,13 +16,29 @@ import { AreaModel, WithId } from '@orbital/typegoose';
 
 interface AreasController {
   create(dto: WithoutId<AreaModel> | WithoutId<AreaModel>[]): Promise<any | null>;
-  find(payload: { filter: Record<string, any>; projection: Record<string, any>; options: Record<string, any> }): Promise<any | null>;
-  findById(payload: { id: string; projection: Record<string, any> }): Promise<any | null>;
+  find(payload: {
+    filter?: Record<string, any>;
+    projection?: Record<string, any>;
+    options?: Record<string, any>;
+  }): Promise<any | null>;
+  findById(payload: { id: string; projection?: Record<string, any> }): Promise<any | null>;
   update(data: WithId<AreaModel> | WithId<AreaModel>[]): Promise<any | null>;
   delete(ids: string | string[]): Promise<any | null>;
-  findByWorldId(payload: { worldId: string; projection: Record<string, any>; options: Record<string, any> }): Promise<AreaModel[] | null>;
-  findByParentId(payload: { parentId: string; projection: Record<string, any>; options: Record<string, any> }): Promise<AreaModel[] | null>;
-  findByTags(payload: { tags: string[]; projection: Record<string, any>; options: Record<string, any> }): Promise<AreaModel[] | null>;
+  findByWorldId(payload: {
+    worldId: string;
+    projection?: Record<string, any>;
+    options?: Record<string, any>;
+  }): Promise<AreaModel[] | null>;
+  findByParentId(payload: {
+    parentId: string;
+    projection?: Record<string, any>;
+    options?: Record<string, any>;
+  }): Promise<AreaModel[] | null>;
+  findByTags(payload: {
+    tags: string[];
+    projection?: Record<string, any>;
+    options?: Record<string, any>;
+  }): Promise<AreaModel[] | null>;
 }
 
 @Injectable()
@@ -40,10 +56,14 @@ export class WorldMicroservice extends Microservice {
       create: async (dto: WithoutId<AreaModel> | WithoutId<AreaModel>[]) => {
         return this.request<any>('world.AreasMicroserviceController.create', dto);
       },
-      find: async (payload: { filter: Record<string, any>; projection: Record<string, any>; options: Record<string, any> }) => {
+      find: async (payload: {
+    filter?: Record<string, any>;
+    projection?: Record<string, any>;
+    options?: Record<string, any>;
+  }) => {
         return this.request<any>('world.AreasMicroserviceController.find', payload);
       },
-      findById: async (payload: { id: string; projection: Record<string, any> }) => {
+      findById: async (payload: { id: string; projection?: Record<string, any> }) => {
         return this.request<any>('world.AreasMicroserviceController.findById', payload);
       },
       update: async (data: WithId<AreaModel> | WithId<AreaModel>[]) => {
@@ -52,15 +72,27 @@ export class WorldMicroservice extends Microservice {
       delete: async (ids: string | string[]) => {
         return this.request<any>('world.AreasMicroserviceController.delete', ids);
       },
-      findByWorldId: async (payload: { worldId: string; projection: Record<string, any>; options: Record<string, any> }) => {
+      findByWorldId: async (payload: {
+    worldId: string;
+    projection?: Record<string, any>;
+    options?: Record<string, any>;
+  }) => {
         const result = await this.request<AreaModel[]>('world.AreasMicroserviceController.findByWorldId', payload);
         return result || [];
       },
-      findByParentId: async (payload: { parentId: string; projection: Record<string, any>; options: Record<string, any> }) => {
+      findByParentId: async (payload: {
+    parentId: string;
+    projection?: Record<string, any>;
+    options?: Record<string, any>;
+  }) => {
         const result = await this.request<AreaModel[]>('world.AreasMicroserviceController.findByParentId', payload);
         return result || [];
       },
-      findByTags: async (payload: { tags: string[]; projection: Record<string, any>; options: Record<string, any> }) => {
+      findByTags: async (payload: {
+    tags: string[];
+    projection?: Record<string, any>;
+    options?: Record<string, any>;
+  }) => {
         const result = await this.request<AreaModel[]>('world.AreasMicroserviceController.findByTags', payload);
         return result || [];
       },
