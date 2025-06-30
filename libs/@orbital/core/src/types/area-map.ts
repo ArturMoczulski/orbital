@@ -92,7 +92,12 @@ export class AreaMap
     // Validate input against schema
     const validated = AreaMapSchema.parse(data);
     const _id = (validated as any)._id || generateUUID();
-    super({ _id });
+
+    // Create a copy of data without _id for super constructor
+    super({});
+
+    // Set _id after super constructor
+    this._id = _id;
 
     // Assign validated properties
     this.width = validated.width;

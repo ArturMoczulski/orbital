@@ -238,7 +238,7 @@ describe("AreasMicroserviceController (e2e)", () => {
     });
 
     it("should update an area", async () => {
-      // Crete update data
+      // Create update data
       const updateDto = {
         _id: testArea._id,
         name: `Updated Area - ${randomUUID()}`,
@@ -251,16 +251,23 @@ describe("AreasMicroserviceController (e2e)", () => {
         client.send("world.AreasMicroserviceController.update", updateDto)
       );
 
-      // Assertions
+      // Assertions - update doesn't return the full object
       expect(result).toBeDefined();
-      expect(result._id).toEqual(testArea._id);
-      expect(result.name).toEqual(updateDto.name);
-      expect(result.description).toEqual(updateDto.description);
-      expect(result.tags).toEqual(updateDto.tags);
+
+      // Verify the update was successful by fetching the updated area
+      const updatedArea = await lastValueFrom(
+        client.send("world.AreasMicroserviceController.findById", testArea._id)
+      );
+
+      expect(updatedArea).toBeDefined();
+      expect(updatedArea._id).toEqual(testArea._id);
+      expect(updatedArea.name).toEqual(updateDto.name);
+      expect(updatedArea.description).toEqual(updateDto.description);
+      expect(updatedArea.tags).toEqual(updateDto.tags);
 
       // Unchanged fields should remain the same
-      expect(result.worldId).toEqual(testArea.worldId);
-      expect(result.position).toEqual(testArea.position);
+      expect(updatedArea.worldId).toEqual(testArea.worldId);
+      expect(updatedArea.position).toEqual(testArea.position);
     });
 
     it("should return null for non-existent ID", async () => {
@@ -308,9 +315,8 @@ describe("AreasMicroserviceController (e2e)", () => {
         client.send("world.AreasMicroserviceController.delete", testArea._id)
       );
 
-      // Assertions
+      // Assertions - delete doesn't return the full object
       expect(result).toBeDefined();
-      expect(result._id).toEqual(testArea._id);
 
       // Verify the area is deleted
       const deletedArea = await lastValueFrom(

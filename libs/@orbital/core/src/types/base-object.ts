@@ -19,6 +19,7 @@ export class BaseObject<T> {
    *
    * @returns A plain JavaScript object representation of this instance
    */
+  // Define this method on the prototype to ensure it's available to all instances
   toPlainObject(): Record<string, any> {
     // Create a plain object with all enumerable properties
     const plainObject: Record<string, any> = {};
@@ -41,7 +42,7 @@ export class BaseObject<T> {
    * @param value The value to convert
    * @returns The plain representation of the value
    */
-  private convertValueToPlain(value: any): any {
+  public convertValueToPlain(value: any): any {
     // Handle null or undefined
     if (value == null) {
       return value;
@@ -88,6 +89,7 @@ export class BaseObject<T> {
    * @throws ZodError if validation fails
    * @returns this instance if validation succeeds
    */
+  // Ensure this method is properly defined on the prototype
   validateSchema(): this {
     try {
       const constructor = this.constructor as typeof BaseObject;
@@ -161,9 +163,24 @@ export class BaseObject<T> {
     // This requires zod-to-json-schema package to be installed
     // For now, we'll just return a simple object with the schema's description
     const schema = this.zSchema();
+
+    // Get the description directly from the schema's _def property
+    // This is how Zod stores the description internally
+    let description = `Schema for ${this.name}`;
+    if (
+      schema &&
+      typeof schema === "object" &&
+      "_def" in schema &&
+      schema._def &&
+      typeof schema._def === "object" &&
+      (schema._def as any).description
+    ) {
+      description = (schema._def as any).description;
+    }
+
     return {
       type: "object",
-      description: schema.description || `Schema for ${this.name}`,
+      description: description,
       properties: {},
     };
   }

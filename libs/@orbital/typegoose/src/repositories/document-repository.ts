@@ -6,12 +6,13 @@ import {
 import {
   IdentifiableObject,
   IdentifiableObjectProps,
+  WithoutId,
   ZodErrorWithStack,
 } from "@orbital/core";
 import { ReturnModelType } from "@typegoose/typegoose";
 import { ZodError, ZodObject } from "zod";
 import { PersistenceMapper } from "../mappers/persistence-mapper";
-import { WithId, WithoutId } from "../types/utils";
+import { WithId } from "../types/utils";
 import { MongooseDocument, WithDocument } from "../types/with-document";
 import { DocumentHelpers } from "../utils/document-helpers";
 

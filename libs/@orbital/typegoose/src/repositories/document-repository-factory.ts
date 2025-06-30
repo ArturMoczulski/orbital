@@ -1,7 +1,6 @@
-import { IdentifiableObject } from "@orbital/core";
+import { IdentifiableObject, WithoutId } from "@orbital/core";
 import { ReturnModelType } from "@typegoose/typegoose";
 import { ZodObject } from "zod";
-import { WithoutId } from "../types/utils";
 import { DocumentRepository } from "./document-repository";
 
 /**

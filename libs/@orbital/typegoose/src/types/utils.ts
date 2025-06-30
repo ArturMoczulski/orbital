@@ -1,11 +1,10 @@
-/**
- * Utility type to remove the _id field from a type
- * @template T The type to remove _id from
- */
-export type WithoutId<T> = Omit<T, "_id">;
+import { WithoutId } from "@orbital/core";
 
 /**
- * Utility type to remove the _id field from a type and make all fields optional
- * @template T The type to remove _id from
+ * Utility type to add the _id field to a type and make all fields optional
+ * @template T The type to add _id to
  */
 export type WithId<T> = Partial<T> & { _id: string };
+
+// Re-export WithoutId from @orbital/core for backward compatibility
+export { WithoutId };

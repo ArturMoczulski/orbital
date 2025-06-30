@@ -1,6 +1,5 @@
 import { Controller, UseFilters } from "@nestjs/common";
 import { OrbitalMicroservices } from "@orbital/contracts";
-import { AreaProps } from "@orbital/core";
 import {
   MessagePattern,
   MicroserviceController,
@@ -9,6 +8,7 @@ import {
 import { CRUDController } from "@orbital/nest";
 import { AreaModel as TypegooseArea } from "@orbital/typegoose";
 import { AreasCRUDService } from "./areas.crud.service";
+import { AreaProps } from "./areas.repository";
 
 @MicroserviceController(OrbitalMicroservices.World)
 @Controller()

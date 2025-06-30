@@ -1,7 +1,7 @@
 import { ArgumentsHost, Catch, ExceptionFilter, Logger } from "@nestjs/common";
 import { RpcException } from "@nestjs/microservices";
 import { OrbitalMicroservices } from "@orbital/contracts";
-import { ZodErrorWithStack } from "@orbital/core/src/errors/zod-error-with-stack";
+import { ZodErrorWithStack } from "@orbital/core/dist/errors/zod-error-with-stack";
 import { Observable, throwError } from "rxjs";
 import { RemoteMicroserviceError } from "../errors";
 

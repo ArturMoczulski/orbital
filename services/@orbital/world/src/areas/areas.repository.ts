@@ -1,8 +1,23 @@
 import { Inject, Injectable } from "@nestjs/common";
-import { AreaProps } from "@orbital/core";
 import { Area, DocumentRepository, WithDocument } from "@orbital/typegoose";
 import type { ReturnModelType } from "@typegoose/typegoose";
 import { getModelToken } from "nestjs-typegoose";
+
+// Define AreaProps locally based on Area properties
+export type AreaProps = {
+  _id: string;
+  name: string;
+  worldId: string;
+  description: string;
+  landmarks: string[];
+  connections: string[];
+  tags: string[];
+  parentId?: string | null;
+  position?: { x: number; y: number; z: number };
+  areaMap?: any;
+  createdAt?: Date;
+  updatedAt?: Date;
+};
 
 @Injectable()
 export class AreasRepository extends DocumentRepository<

@@ -1,8 +1,10 @@
 import { faker } from "@faker-js/faker";
-import { WithoutId } from "@orbital/typegoose";
 import { z } from "zod";
 import { ZodSchema } from "../decorators/zod-schema.decorator";
-import { generateFantasyAreaName } from "../utils/data-generators";
+import {
+  generateFantasyAreaName,
+  generateUUID,
+} from "../utils/data-generators";
 import { AreaMap, AreaMapSchema } from "./area-map";
 import {
   IdentifiableObject,
@@ -25,24 +27,25 @@ export const AreaSchema = IdentifiableObjectSchema.extend({
     .nullable()
     .optional()
     .describe("Identifier of the parent area, if any"),
-  name: z.string().describe("Descriptive name of the area"),
+  name: z.string().default("").describe("Descriptive name of the area"),
   position: PositionSchema.optional().describe(
     "Central position of the area in 3D space"
   ),
   areaMap: AreaMapSchema.optional().describe("Map representation of this area"),
-  worldId: z.string().describe("Identifier of the world this area belongs to"),
+  worldId: z
+    .string()
+    .default("")
+    .describe("Identifier of the world this area belongs to"),
   description: z
     .string()
-    .optional()
+    .default("")
     .describe("Detailed description of the area"),
   landmarks: z
     .array(z.string())
-    .optional()
     .default([])
     .describe("Notable landmarks or features in this area"),
   connections: z
     .array(z.string())
-    .optional()
     .default([])
     .describe("Names of other areas this area connects to"),
   tags: z
@@ -78,13 +81,12 @@ export class Area
   /** Create a fake Area instance with randomized data */
   static mock(overrides: Partial<AreaProps> = {}): Area {
     // Generate a description first to ensure it's available
-    const parentBase = IdentifiableObject.mock();
-
+    const uuid = overrides._id ?? faker.string.uuid();
     const description = faker.lorem.paragraph();
 
     // No need to select a style explicitly as it's random by default
     const base: Partial<AreaProps & { description: string }> = {
-      ...parentBase,
+      _id: uuid, // Explicitly include _id
       parentId: faker.string.uuid(),
       // Generate a rich fantasy name with the enhanced generator
       name: generateFantasyAreaName({
@@ -105,8 +107,12 @@ export class Area
       description: description,
     };
 
-    // Create the area with the combined data
-    const area = new Area({ ...base, ...overrides });
+    // Create the area with the combined data, ensuring _id is preserved
+    const area = new Area({
+      ...base,
+      ...overrides,
+      _id: overrides._id ?? uuid,
+    });
 
     // Ensure description is set even if it was overridden with undefined
     if (!area.description) {
@@ -116,41 +122,46 @@ export class Area
     return area;
   }
 
-  constructor(data: WithoutId<AreaProps>) {
-    super(data);
+  constructor(data: Partial<AreaProps>) {
+    // Extract _id from data if it exists
+    const uuid = data?._id ?? generateUUID();
 
-    // Extract properties from data directly without validation
-    if (typeof data === "object" && data !== null) {
-      const typedData = data as Record<string, any>;
+    // Create a copy of data without _id for super constructor
+    const { _id: _, ...dataWithoutId } = data || {};
 
-      // Handle position if provided
-      let position: Position | undefined = undefined;
-      if (typedData.position) {
-        position =
-          typedData.position instanceof Position
-            ? typedData.position
-            : new Position(typedData.position);
-      }
+    // Call super with data without _id
+    super(dataWithoutId);
 
-      // Handle areaMap if provided
-      let areaMap: AreaMap | undefined = undefined;
-      if (typedData.areaMap) {
-        areaMap =
-          typedData.areaMap instanceof AreaMap
-            ? typedData.areaMap
-            : new AreaMap(typedData.areaMap);
-      }
+    // Set _id directly as a property
+    this._id = uuid;
 
-      // Assign properties directly from data
-      this.name = typedData.name || "";
-      this.parentId = typedData.parentId;
-      this.worldId = typedData.worldId;
-      this.description = typedData.description || "";
-      this.landmarks = typedData.landmarks || [];
-      this.connections = typedData.connections || [];
-      this.tags = typedData.tags || [];
-      this.position = position;
-      this.areaMap = areaMap;
-    }
+    const typedData = data as Record<string, any>;
+
+    // Handle position if provided
+    const position =
+      typedData.position instanceof Position
+        ? typedData.position
+        : typedData.position
+          ? new Position(typedData.position)
+          : undefined;
+
+    // Handle areaMap if provided
+    const areaMap =
+      typedData.areaMap instanceof AreaMap
+        ? typedData.areaMap
+        : typedData.areaMap
+          ? new AreaMap(typedData.areaMap)
+          : undefined;
+
+    // Assign properties directly from data
+    this.name = typedData.name || "";
+    this.parentId = typedData.parentId;
+    this.worldId = typedData.worldId || "";
+    this.description = typedData.description || "";
+    this.landmarks = typedData.landmarks || [];
+    this.connections = typedData.connections || [];
+    this.tags = typedData.tags || [];
+    this.position = position;
+    this.areaMap = areaMap;
   }
 }

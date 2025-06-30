@@ -2,8 +2,12 @@ import {
   BulkCountedResponse,
   BulkItemizedResponse,
 } from "@orbital/bulk-operations";
-import { IdentifiableObject, IdentifiableObjectProps } from "@orbital/core";
-import { DocumentRepository, WithId, WithoutId } from "@orbital/typegoose";
+import {
+  IdentifiableObject,
+  IdentifiableObjectProps,
+  WithoutId,
+} from "@orbital/core";
+import { DocumentRepository, WithId } from "@orbital/typegoose";
 
 /**
  * Interface defining the contract for CRUD operations

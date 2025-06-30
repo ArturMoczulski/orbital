@@ -1,9 +1,14 @@
 import { faker } from "@faker-js/faker";
-import { WithoutId } from "@orbital/typegoose";
 import { z } from "zod";
 import { ZodSchema } from "../decorators/zod-schema.decorator";
 import { generateUUID } from "../utils/data-generators";
 import { BaseObject } from "./base-object";
+
+/**
+ * Utility type to remove the _id field from a type
+ * @template T The type to remove _id from
+ */
+export type WithoutId<T> = Omit<T, "_id">;
 
 /**
  * Interface for objects that have a unique identifier
@@ -42,10 +47,19 @@ export class IdentifiableObject
   /** Timestamp when the object was last updated */
   public updatedAt?: Date;
 
-  constructor(data?: WithoutId<IdentifiableObjectProps>) {
-    const _id = data?._id ?? generateUUID();
-    super({ ...data, _id });
-    this._id = _id;
+  constructor(data?: Partial<IdentifiableObjectProps>) {
+    // Generate a new UUID if none is provided
+    const uuid = data?._id ?? generateUUID();
+
+    // Create a copy of data without _id for super constructor
+    const { _id: _, ...dataWithoutId } = data || {};
+
+    // Call super with data without _id
+    super(dataWithoutId);
+
+    // Set _id directly as a property
+    this._id = uuid;
+
     this.createdAt = data?.createdAt;
     this.updatedAt = data?.updatedAt;
   }
@@ -55,11 +69,16 @@ export class IdentifiableObject
     overrides: Partial<IdentifiableObjectProps> = {}
   ): IdentifiableObject {
     const now = new Date();
-    return new IdentifiableObject({
-      _id: overrides._id ?? faker.string.uuid(),
+    const uuid = overrides._id ?? faker.string.uuid();
+
+    // Create the instance with _id explicitly included
+    const instance = new IdentifiableObject({
+      _id: uuid,
       createdAt: overrides.createdAt ?? now,
       updatedAt: overrides.updatedAt ?? now,
       ...overrides,
     });
+
+    return instance;
   }
 }
