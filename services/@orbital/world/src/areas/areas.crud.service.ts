@@ -1,11 +1,11 @@
 import { Injectable } from "@nestjs/common";
 import { AreaProps } from "@orbital/core";
-import { CrudService } from "@orbital/nest";
+import { CRUDService } from "@orbital/nest";
 import { Area } from "@orbital/typegoose";
 import { AreasRepository } from "./areas.repository";
 
 @Injectable()
-export class AreasCrudService extends CrudService<
+export class AreasCRUDService extends CRUDService<
   Area,
   AreaProps,
   AreasRepository

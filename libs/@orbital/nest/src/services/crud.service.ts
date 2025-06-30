@@ -12,7 +12,7 @@ import { DocumentRepository, WithId, WithoutId } from "@orbital/typegoose";
  * @template TCreateInput The input type for create operations
  * @template TUpdateInput The input type for update operations
  */
-export interface ICrudService<
+export interface ICRUDService<
   T extends IdentifiableObject,
   TEntityProps extends IdentifiableObjectProps,
   TCreateInput = WithoutId<TEntityProps>,
@@ -97,7 +97,7 @@ export interface ICrudService<
  * @template TEntityProps The props type that the entity constructor accepts
  * @template R The repository type (e.g., AreasRepository, WorldsRepository)
  */
-export class CrudService<
+export class CRUDService<
   T extends IdentifiableObject,
   TEntityProps extends IdentifiableObjectProps,
   R extends DocumentRepository<T, TEntityProps> = DocumentRepository<
@@ -105,7 +105,7 @@ export class CrudService<
     TEntityProps
   >,
 > implements
-    ICrudService<
+    ICRUDService<
       T,
       TEntityProps,
       Parameters<R["create"]>[0],
@@ -113,7 +113,7 @@ export class CrudService<
     >
 {
   /**
-   * Constructor for the CrudService
+   * Constructor for the CRUDService
    * @param repository The repository instance
    */
   constructor(protected readonly repository: R) {}

@@ -1,28 +1,28 @@
 import { IdentifiableObject, IdentifiableObjectProps } from "@orbital/core";
-import { CrudService } from "../services/crud.service";
+import { CRUDService } from "../services/crud.service";
 
 /**
  * Generic CRUD microservice controller for entities
  * @template TObjectType The entity type (e.g., Area, World)
- * @template TCrudService The service type (e.g., AreasService, WorldsService)
+ * @template TCRUDService The service type (e.g., AreasService, WorldsService)
  */
-export abstract class CrudController<
+export abstract class CRUDController<
   TObjectType extends IdentifiableObject,
   TObjectTypeProps extends IdentifiableObjectProps,
-  TCrudService extends CrudService<TObjectType, TObjectTypeProps>,
+  TCRUDService extends CRUDService<TObjectType, TObjectTypeProps>,
 > {
   /**
-   * Constructor for the MicroserviceCrudController
+   * Constructor for the MicroserviceCRUDController
    * @param service The service instance
    */
-  constructor(protected readonly service: TCrudService) {}
+  constructor(protected readonly service: TCRUDService) {}
 
   /**
    * Create one or more entities
    * @param dto Single entity or array of entities to create
    * @returns The created entity or BulkItemizedResponse for multiple entities
    */
-  async create(dto: Parameters<TCrudService["create"]>[0]) {
+  async create(dto: Parameters<TCRUDService["create"]>[0]) {
     return this.service.create(dto);
   }
 
@@ -89,7 +89,7 @@ export abstract class CrudController<
    * @param entities Single entity or array of entities with required _id property
    * @returns The updated entity or BulkItemizedResponse for multiple entities
    */
-  async update(entities: Parameters<TCrudService["update"]>[0]) {
+  async update(entities: Parameters<TCRUDService["update"]>[0]) {
     return this.service.update(entities);
   }
 

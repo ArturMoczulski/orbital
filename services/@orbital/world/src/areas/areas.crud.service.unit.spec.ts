@@ -1,11 +1,11 @@
 import { Test, TestingModule } from "@nestjs/testing";
-import { CrudService } from "@orbital/nest";
+import { CRUDService } from "@orbital/nest";
 import { Area } from "@orbital/typegoose";
-import { AreasCrudService } from "./areas.crud.service";
+import { AreasCRUDService } from "./areas.crud.service";
 import { AreasRepository } from "./areas.repository";
 
-describe("AreasService", () => {
-  let service: AreasCrudService;
+describe("AreasCRUDService", () => {
+  let service: AreasCRUDService;
   let repository: AreasRepository;
 
   beforeEach(async () => {
@@ -23,7 +23,7 @@ describe("AreasService", () => {
     // Create a test module with the service and mock repository
     const module: TestingModule = await Test.createTestingModule({
       providers: [
-        AreasCrudService,
+        AreasCRUDService,
         {
           provide: AreasRepository,
           useValue: mockRepository,
@@ -32,7 +32,7 @@ describe("AreasService", () => {
     }).compile();
 
     // Get the service and repository from the test module
-    service = module.get<AreasCrudService>(AreasCrudService);
+    service = module.get<AreasCRUDService>(AreasCRUDService);
     repository = module.get<AreasRepository>(AreasRepository);
   });
 
@@ -44,8 +44,8 @@ describe("AreasService", () => {
     expect(service).toBeDefined();
   });
 
-  it("should be an instance of CrudService", () => {
-    expect(service).toBeInstanceOf(CrudService);
+  it("should be an instance of CRUDService", () => {
+    expect(service).toBeInstanceOf(CRUDService);
   });
 
   describe("findByWorldId", () => {
@@ -105,7 +105,7 @@ describe("AreasService", () => {
     });
   });
 
-  // Since AreasService extends CrudService, we don't need to test
+  // Since AreasService extends CRUDService, we don't need to test
   // all the inherited methods as they are tested in crud.service.spec.ts
   // We just need to ensure our custom methods work correctly
 });

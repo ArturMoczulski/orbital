@@ -3,11 +3,11 @@ import { Area } from "@orbital/typegoose";
 import { MongoMemoryServer } from "mongodb-memory-server";
 import mongoose, { Model } from "mongoose";
 import { getModelToken, TypegooseModule } from "nestjs-typegoose";
-import { AreasCrudService } from "./areas.crud.service";
+import { AreasCRUDService } from "./areas.crud.service";
 import { AreasRepository } from "./areas.repository";
 
-describe("AreasService Integration", () => {
-  let service: AreasCrudService;
+describe("AreasCRUDService Integration", () => {
+  let service: AreasCRUDService;
   let repository: AreasRepository;
   let mongod: MongoMemoryServer;
   let areaModel: Model<Area>;
@@ -31,11 +31,11 @@ describe("AreasService Integration", () => {
           TypegooseModule.forRoot(uri),
           TypegooseModule.forFeature([Area]),
         ],
-        providers: [AreasCrudService, AreasRepository],
+        providers: [AreasCRUDService, AreasRepository],
       }).compile();
 
       // Get the service, repository, and model
-      service = module.get<AreasCrudService>(AreasCrudService);
+      service = module.get<AreasCRUDService>(AreasCRUDService);
       repository = module.get<AreasRepository>(AreasRepository);
       areaModel = module.get<Model<Area>>(getModelToken(Area.name));
     } catch (error) {
@@ -214,7 +214,7 @@ describe("AreasService Integration", () => {
         },
       ]);
 
-      // Act - Use the find method which should be inherited from CrudService
+      // Act - Use the find method which should be inherited from CRUDService
       const result = await service.find({});
 
       // Assert

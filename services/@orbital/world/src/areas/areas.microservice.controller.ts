@@ -6,19 +6,19 @@ import {
   MicroserviceController,
   PassThroughRpcExceptionFilter,
 } from "@orbital/microservices";
-import { CrudController } from "@orbital/nest";
+import { CRUDController } from "@orbital/nest";
 import { AreaModel as TypegooseArea } from "@orbital/typegoose";
-import { AreasCrudService } from "./areas.crud.service";
+import { AreasCRUDService } from "./areas.crud.service";
 
 @MicroserviceController(OrbitalMicroservices.World)
 @Controller()
 @UseFilters(new PassThroughRpcExceptionFilter(OrbitalMicroservices.World))
-export class AreasMicroserviceController extends CrudController<
+export class AreasMicroserviceController extends CRUDController<
   TypegooseArea,
   AreaProps,
-  AreasCrudService
+  AreasCRUDService
 > {
-  constructor(areasService: AreasCrudService) {
+  constructor(areasService: AreasCRUDService) {
     super(areasService);
   }
 
@@ -28,7 +28,7 @@ export class AreasMicroserviceController extends CrudController<
    * @returns The created area or BulkItemizedResponse for multiple areas
    */
   @MessagePattern()
-  async create(dto: Parameters<AreasCrudService["create"]>[0]) {
+  async create(dto: Parameters<AreasCRUDService["create"]>[0]) {
     return super.create(dto);
   }
 
@@ -65,7 +65,7 @@ export class AreasMicroserviceController extends CrudController<
    * @returns The updated area or BulkItemizedResponse for multiple areas
    */
   @MessagePattern()
-  async update(data: Parameters<AreasCrudService["update"]>[0]) {
+  async update(data: Parameters<AreasCRUDService["update"]>[0]) {
     return await super.update(data);
   }
 

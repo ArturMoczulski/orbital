@@ -1,5 +1,5 @@
-import { CrudService } from "../services/crud.service";
-import { CrudController } from "./crud.controller";
+import { CRUDService } from "../services/crud.service";
+import { CRUDController } from "./crud.controller";
 
 // Define a test entity type
 type TestEntity = {
@@ -12,21 +12,21 @@ type TestEntity = {
   updatedAt?: Date;
 };
 
-// Create a concrete implementation of CrudService for testing
-class TestService extends CrudService<TestEntity, any> {
+// Create a concrete implementation of CRUDService for testing
+class TestService extends CRUDService<TestEntity, any> {
   constructor() {
     super(null as any); // We'll mock all methods, so we don't need actual params
   }
 }
 
-// Create a concrete implementation of CrudController for testing
-class TestController extends CrudController<TestEntity, TestService> {
+// Create a concrete implementation of CRUDController for testing
+class TestController extends CRUDController<TestEntity, TestService> {
   constructor(service: TestService) {
     super(service, "TestEntity");
   }
 }
 
-describe("CrudController", () => {
+describe("CRUDController", () => {
   let controller: TestController;
   let serviceMock: jest.Mocked<TestService>;
 

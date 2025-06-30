@@ -1,6 +1,6 @@
 import { IdentifiableObject } from "@orbital/core";
 import { DocumentRepository, WithId } from "@orbital/typegoose";
-import { CrudService, ICrudService } from "./crud.service";
+import { CRUDService, ICRUDService } from "./crud.service";
 
 interface TestEntityProps {
   _id?: string;
@@ -35,23 +35,23 @@ class TestRepository extends DocumentRepository<TestEntity, TestEntityProps> {
   }
 }
 
-// Create a service that uses composition with CrudService and implements ICrudService
-class TestService implements ICrudService<TestEntity, TestEntityProps> {
-  protected crudService: CrudService<
+// Create a service that uses composition with CRUDService and implements ICRUDService
+class TestService implements ICRUDService<TestEntity, TestEntityProps> {
+  protected crudService: CRUDService<
     TestEntity,
     TestEntityProps,
     TestRepository
   >;
 
   constructor(repository: TestRepository) {
-    this.crudService = new CrudService<
+    this.crudService = new CRUDService<
       TestEntity,
       TestEntityProps,
       TestRepository
     >(repository);
   }
 
-  // Proxy methods to the CrudService
+  // Proxy methods to the CRUDService
   async create(dto: Parameters<TestRepository["create"]>[0]) {
     return this.crudService.create(dto);
   }
@@ -93,7 +93,7 @@ class TestService implements ICrudService<TestEntity, TestEntityProps> {
   }
 }
 
-describe("CrudService", () => {
+describe("CRUDService", () => {
   let service: TestService;
   let repositoryMock: jest.Mocked<TestRepository>;
 
