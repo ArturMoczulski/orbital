@@ -240,6 +240,7 @@ describe("AreasMicroserviceController (e2e)", () => {
     it("should update an area", async () => {
       // Crete update data
       const updateDto = {
+        _id: testArea._id,
         name: `Updated Area - ${randomUUID()}`,
         description: "Updated description",
         tags: ["test", "e2e", "updated"],
@@ -247,10 +248,7 @@ describe("AreasMicroserviceController (e2e)", () => {
 
       // Send the RPC message
       const result = await lastValueFrom(
-        client.send("world.AreasMicroserviceController.update", {
-          _id: testArea._id,
-          updateDto,
-        })
+        client.send("world.AreasMicroserviceController.update", updateDto)
       );
 
       // Assertions

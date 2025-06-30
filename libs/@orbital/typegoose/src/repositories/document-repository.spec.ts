@@ -1,6 +1,6 @@
 import { BulkItemizedResponse } from "@orbital/bulk-operations";
-import { IdentifiableObject } from "@orbital/core";
-import { z, ZodError } from "zod";
+import { IdentifiableObject, ZodErrorWithStack } from "@orbital/core";
+import { z } from "zod";
 import { PersistenceMapper } from "../mappers/persistence-mapper";
 import { MongooseDocument, WithDocument } from "../types/with-document";
 import { DocumentHelpers } from "../utils/document-helpers";
@@ -406,7 +406,7 @@ describe("DocumentRepository", () => {
   });
 
   describe("findByParentId", () => {
-    it("should throw ZodError if schema doesn't have parentId field", async () => {
+    it("should throw ZodErrorWithStack if schema doesn't have parentId field", async () => {
       // Arrange
       const schemaWithoutParentId = z.object({
         _id: z.string().optional(),
@@ -422,7 +422,7 @@ describe("DocumentRepository", () => {
       // Act & Assert
       await expect(
         repoWithInvalidSchema.findByParentId("parent-123")
-      ).rejects.toThrow(ZodError);
+      ).rejects.toThrow(ZodErrorWithStack);
     });
 
     it("should find entities by parentId when schema has parentId field", async () => {
@@ -438,7 +438,7 @@ describe("DocumentRepository", () => {
   });
 
   describe("findByTags", () => {
-    it("should throw ZodError if schema doesn't have tags field", async () => {
+    it("should throw ZodErrorWithStack if schema doesn't have tags field", async () => {
       // Arrange
       const schemaWithoutTags = z.object({
         _id: z.string().optional(),
@@ -454,7 +454,7 @@ describe("DocumentRepository", () => {
       // Act & Assert
       await expect(
         repoWithInvalidSchema.findByTags(["tag1", "tag2"])
-      ).rejects.toThrow(ZodError);
+      ).rejects.toThrow(ZodErrorWithStack);
     });
 
     it("should find entities by tags when schema has tags field", async () => {

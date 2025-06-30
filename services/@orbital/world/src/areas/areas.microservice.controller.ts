@@ -65,57 +65,8 @@ export class AreasMicroserviceController extends CrudController<
    * @returns The updated area or BulkItemizedResponse for multiple areas
    */
   @MessagePattern()
-  async update(payload: { _id: string; updateDto: Partial<AreaProps> }) {
-    const { _id, updateDto } = payload;
-
-    // First, find the existing entity
-    const existingEntity = await this.service.findById(_id);
-    if (!existingEntity) {
-      return null;
-    }
-
-    // Extract the plain object from the entity to avoid document properties
-    const existingData = existingEntity.toPlainObject
-      ? existingEntity.toPlainObject()
-      : { ...existingEntity };
-
-    // Ensure important properties are preserved in the update DTO
-    // Only add them if they're not already in the updateDto
-    if (!updateDto.worldId && existingData.worldId) {
-      updateDto.worldId = existingData.worldId;
-    }
-
-    if (!updateDto.position && existingData.position) {
-      updateDto.position = existingData.position;
-    }
-
-    // Update and return the entity
-    const result = await super.update({ _id, ...updateDto });
-
-    // Check if result is a single entity (not a BulkItemizedResponse)
-    // and if it doesn't have worldId but existingEntity does, add it
-    if (
-      result &&
-      !Array.isArray(result) &&
-      typeof result === "object" &&
-      "document" in result && // This indicates it's a WithDocument<Area>
-      !("counts" in result) // This ensures it's not a BulkItemizedResponse
-    ) {
-      // Use type assertion to add missing properties
-      const typedResult = result as any;
-
-      // Add worldId if missing
-      if (!typedResult.worldId && existingData.worldId) {
-        typedResult.worldId = existingData.worldId;
-      }
-
-      // Add position if missing
-      if (!typedResult.position && existingData.position) {
-        typedResult.position = existingData.position;
-      }
-    }
-
-    return result;
+  async update(data: Parameters<AreasService["update"]>[0]) {
+    return await super.update(data);
   }
 
   /**
@@ -125,31 +76,6 @@ export class AreasMicroserviceController extends CrudController<
    */
   @MessagePattern()
   async delete(ids: string | string[]) {
-    // For single ID, fetch the entity before deleting
-    if (!Array.isArray(ids)) {
-      const entityToDelete = await this.service.findById(ids);
-      if (!entityToDelete) {
-        return null;
-      }
-
-      // Store the entity data before deletion
-      const entityData = entityToDelete.toPlainObject
-        ? entityToDelete.toPlainObject()
-        : { ...entityToDelete };
-
-      const deleteResult = await super.delete(ids);
-      if (deleteResult === true) {
-        // Return the entity data with _id explicitly set
-        // Use type assertion to bypass TypeScript's type checking
-        return {
-          _id: ids,
-          ...entityData,
-        } as any; // Type assertion to match the expected return type
-      }
-      return null;
-    }
-
-    // For multiple IDs, use the standard behavior
     return super.delete(ids);
   }
 

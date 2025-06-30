@@ -286,11 +286,11 @@ export class DocumentRepository<
    */
   /**
    * Update one or more entities
-   * @param entities Single entity or array of entities with required _id property
+   * @param data Single entity or array of entities with required _id property
    * @returns WithDocument<T> for single entity or BulkItemizedResponse for multiple entities
    */
   async update(
-    entities: WithId<TDomainEntityProps> | WithId<TDomainEntityProps>[]
+    data: WithId<TDomainEntityProps> | WithId<TDomainEntityProps>[]
   ): Promise<
     | WithDocument<TDomainEntity>
     | null
@@ -299,8 +299,8 @@ export class DocumentRepository<
         WithDocument<TDomainEntity>
       >
   > {
-    const isSingular = !Array.isArray(entities);
-    const items = isSingular ? [entities] : entities;
+    const isSingular = !Array.isArray(data);
+    const items = isSingular ? [data] : data;
 
     // Use BulkOperation.itemized for bulk updates
     // For singular input, check if entity exists first
