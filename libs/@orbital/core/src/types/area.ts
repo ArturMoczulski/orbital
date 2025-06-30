@@ -1,4 +1,5 @@
 import { faker } from "@faker-js/faker";
+import { WithId } from "@orbital/typegoose";
 import { z } from "zod";
 import { ZodSchema } from "../decorators/zod-schema.decorator";
 import { generateFantasyAreaName } from "../utils/data-generators";
@@ -76,15 +77,14 @@ export class Area
 
   /** Create a fake Area instance with randomized data */
   static mock(overrides: Partial<AreaProps> = {}): Area {
-    // Ensure _id is always set in the mock data
-    const _id = overrides._id || faker.string.uuid();
-
     // Generate a description first to ensure it's available
+    const parentBase = IdentifiableObject.mock();
+
     const description = faker.lorem.paragraph();
 
     // No need to select a style explicitly as it's random by default
     const base: Partial<AreaProps & { description: string }> = {
-      _id,
+      ...parentBase,
       parentId: faker.string.uuid(),
       // Generate a rich fantasy name with the enhanced generator
       name: generateFantasyAreaName({
@@ -106,7 +106,7 @@ export class Area
     };
 
     // Create the area with the combined data
-    const area = new Area({ ...base, ...overrides });
+    const area = new Area({ ...base, ...overrides, _id: parentBase._id });
 
     // Ensure description is set even if it was overridden with undefined
     if (!area.description) {
@@ -116,11 +116,8 @@ export class Area
     return area;
   }
 
-  constructor(data: Partial<AreaProps>) {
-    // Pass to parent constructor which handles _id generation
-    const dataObj =
-      typeof data === "object" && data !== null ? { ...(data as object) } : {};
-    super(dataObj);
+  constructor(data: WithId<AreaProps>) {
+    super(data);
 
     // Extract properties from data directly without validation
     if (typeof data === "object" && data !== null) {
