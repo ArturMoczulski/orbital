@@ -2,7 +2,9 @@ import { beforeEach, describe, expect, it, jest } from "@jest/globals";
 import { ArgumentsHost } from "@nestjs/common";
 import { RpcException } from "@nestjs/microservices";
 import { OrbitalMicroservices } from "@orbital/contracts";
+import { ZodErrorWithStack } from "@orbital/core/src/errors/zod-error-with-stack";
 import { lastValueFrom } from "rxjs";
+import { ZodError, z } from "zod";
 import { RemoteMicroserviceError } from "../errors";
 import { PassThroughRpcExceptionFilter } from "./pass-through-rpc-exception.filter";
 
@@ -192,6 +194,65 @@ describe("PassThroughRpcExceptionFilter", () => {
         expect(errorData.message).toBe("Just a string error");
         expect(errorData.originalError).toBeDefined();
         expect(errorData.timestamp).toBeDefined();
+      }
+    });
+
+    it("should correctly handle ZodErrorWithStack and preserve stack trace", async () => {
+      // Create a schema that will fail validation
+      const schema = z.object({
+        name: z.string(),
+        age: z.number().min(18),
+      });
+
+      // Create invalid data that will trigger a ZodError
+      const invalidData = {
+        name: "Test",
+        age: 16, // This will fail the min(18) validation
+      };
+
+      try {
+        // This will throw a ZodError
+        schema.parse(invalidData);
+        fail("Expected schema validation to fail");
+      } catch (error) {
+        // Convert the ZodError to a ZodErrorWithStack
+        const zodErrorWithStack = new ZodErrorWithStack(error as ZodError);
+
+        // Pass the ZodErrorWithStack to the filter
+        const result = filter.catch(zodErrorWithStack, host);
+
+        try {
+          await lastValueFrom(result as any);
+          fail("Expected Observable to throw");
+        } catch (error) {
+          // Type assertion for the caught error
+          const caughtError = error as RemoteMicroserviceError;
+
+          // Verify the error is a RemoteMicroserviceError
+          expect(caughtError).toBeInstanceOf(RemoteMicroserviceError);
+
+          // Check error properties
+          const errorData = caughtError.getError();
+          expect(errorData.service).toBe("test-service");
+          expect(errorData.message).toContain("age");
+          expect(errorData.message).toContain("18");
+
+          // Verify the stack trace is preserved
+          expect(errorData.stack).toBeDefined();
+          expect(errorData.stack).toContain("ZodErrorWithStack");
+
+          // Verify the original error details were preserved
+          expect(errorData.originalError).toBeDefined();
+          expect(errorData.originalError.name).toBe("ZodErrorWithStack");
+          expect(errorData.originalError.issues).toBeDefined();
+          expect(errorData.originalError.issues.length).toBeGreaterThan(0);
+          expect(errorData.originalError.issues[0].code).toBe("too_small");
+          expect(errorData.originalError.issues[0].path).toContain("age");
+
+          // Verify formatted issues are preserved
+          expect(errorData.originalError.formattedIssues).toBeDefined();
+          expect(errorData.originalError.formattedIssues).toContain("[age]");
+        }
       }
     });
   });

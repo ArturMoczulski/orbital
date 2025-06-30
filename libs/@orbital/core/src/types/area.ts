@@ -30,9 +30,23 @@ export const AreaSchema = IdentifiableObjectSchema.extend({
   ),
   areaMap: AreaMapSchema.optional().describe("Map representation of this area"),
   worldId: z.string().describe("Identifier of the world this area belongs to"),
-  tags: z
+  description: z
+    .string()
+    .optional()
+    .describe("Detailed description of the area"),
+  landmarks: z
     .array(z.string())
     .optional()
+    .default([])
+    .describe("Notable landmarks or features in this area"),
+  connections: z
+    .array(z.string())
+    .optional()
+    .default([])
+    .describe("Names of other areas this area connects to"),
+  tags: z
+    .array(z.string())
+    .default([])
     .describe("Tags for categorizing the area"),
 }).describe("A named area in the game world with a specific position");
 

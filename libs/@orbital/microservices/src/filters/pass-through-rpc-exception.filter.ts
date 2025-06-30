@@ -1,8 +1,7 @@
 import { ArgumentsHost, Catch, ExceptionFilter, Logger } from "@nestjs/common";
 import { RpcException } from "@nestjs/microservices";
 import { OrbitalMicroservices } from "@orbital/contracts";
-import { ExtendedZodError } from "@orbital/core";
-import process from "process";
+import { ZodErrorWithStack } from "@orbital/core/src/errors/zod-error-with-stack";
 import { Observable, throwError } from "rxjs";
 import { RemoteMicroserviceError } from "../errors";
 
@@ -70,7 +69,7 @@ export class PassThroughRpcExceptionFilter implements ExceptionFilter {
     // Create a serializable error object
     const serializableError: Record<string, any> = {};
 
-    if (exception instanceof ExtendedZodError) {
+    if (exception instanceof ZodErrorWithStack) {
       // Special handling for ExtendedZodError to preserve validation details
       serializableError.name = exception.name;
       serializableError.message = exception.message;

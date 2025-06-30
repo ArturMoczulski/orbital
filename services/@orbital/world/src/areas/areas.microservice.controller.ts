@@ -29,25 +29,6 @@ export class AreasMicroserviceController extends CrudController<
    */
   @MessagePattern()
   async create(dto: Parameters<AreasService["create"]>[0]) {
-    // Ensure description is set
-    if (Array.isArray(dto)) {
-      // Handle array of areas
-      dto.forEach((area) => {
-        // Use type assertion to avoid TypeScript errors
-        const areaWithDesc = area as any;
-        if (!areaWithDesc.description) {
-          areaWithDesc.description = "";
-        }
-      });
-    } else if (dto && typeof dto === "object") {
-      // Handle single area
-      // Use type assertion to avoid TypeScript errors
-      const dtoWithDesc = dto as any;
-      if (!dtoWithDesc.description) {
-        dtoWithDesc.description = "";
-      }
-    }
-
     return super.create(dto);
   }
 

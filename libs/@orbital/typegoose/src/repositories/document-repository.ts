@@ -4,9 +4,9 @@ import {
   BulkOperation,
 } from "@orbital/bulk-operations";
 import {
-  ExtendedZodError,
   IdentifiableObject,
   IdentifiableObjectProps,
+  ZodErrorWithStack,
 } from "@orbital/core";
 import { ReturnModelType } from "@typegoose/typegoose";
 import { ZodError, ZodObject } from "zod";
@@ -87,8 +87,8 @@ export class DocumentRepository<
               const createSchema = this.schema.omit({ _id: true });
               createSchema.parse(rest);
             } catch (validationError: any) {
-              // Use ExtendedZodError to preserve validation details with stack trace
-              throw ExtendedZodError.fromError(
+              // Use ZodErrorWithStack to preserve validation details with stack trace
+              throw ZodErrorWithStack.fromError(
                 validationError,
                 `Validation error during create operation`
               );
@@ -108,9 +108,9 @@ export class DocumentRepository<
           validItems.push(data);
           domainObjects.push(domainObject);
         } catch (error: any) {
-          // Ensure we have a proper error message, even for ExtendedZodError
+          // Ensure we have a proper error message, even for ZodErrorWithStack
           const errorMessage =
-            error instanceof ExtendedZodError
+            error instanceof ZodErrorWithStack
               ? `${error.message}\n${error.formatIssues()}`
               : error.message;
 
@@ -244,7 +244,7 @@ export class DocumentRepository<
           message: "Entity schema does not have a parentId field",
         },
       ]);
-      throw new ExtendedZodError(zodError);
+      throw new ZodErrorWithStack(zodError);
     }
 
     return this.find({ parentId }, projection, options);
@@ -273,7 +273,7 @@ export class DocumentRepository<
           message: "Entity schema does not have a tags field",
         },
       ]);
-      throw new ExtendedZodError(zodError);
+      throw new ZodErrorWithStack(zodError);
     }
 
     return this.find({ tags: { $in: tags } }, projection, options);
@@ -359,8 +359,8 @@ export class DocumentRepository<
                 partialSchema.parse(plainObject);
               }
             } catch (validationError: any) {
-              // Use ExtendedZodError to preserve validation details with stack trace
-              throw ExtendedZodError.fromError(
+              // Use ZodErrorWithStack to preserve validation details with stack trace
+              throw ZodErrorWithStack.fromError(
                 validationError,
                 `Validation error during update operation`
               );
@@ -383,9 +383,9 @@ export class DocumentRepository<
             },
           });
         } catch (error: any) {
-          // Ensure we have a proper error message, even for ExtendedZodError
+          // Ensure we have a proper error message, even for ZodErrorWithStack
           const errorMessage =
-            error instanceof ExtendedZodError
+            error instanceof ZodErrorWithStack
               ? `${error.message}\n${error.formatIssues()}`
               : error.message;
 
