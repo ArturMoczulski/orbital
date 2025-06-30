@@ -114,13 +114,6 @@ export class BaseObject<T> {
   }
 
   /**
-   * @deprecated Use validateSchema() instead to avoid conflicts with Mongoose
-   */
-  validate(): this {
-    return this.validateSchema();
-  }
-
-  /**
    * Returns the Zod schema associated with this class.
    * This method looks up the schema in the zodSchemaRegistry.
    *
