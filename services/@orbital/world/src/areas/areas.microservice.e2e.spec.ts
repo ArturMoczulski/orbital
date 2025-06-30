@@ -155,7 +155,9 @@ describe("AreasMicroserviceController (e2e)", () => {
     it("should filter areas by criteria", async () => {
       // Send the RPC message with a filter
       const result = await lastValueFrom(
-        client.send("world.AreasMicroserviceController.find", { worldId })
+        client.send("world.AreasMicroserviceController.find", {
+          filter: { worldId },
+        })
       );
 
       // Assertions
@@ -194,7 +196,9 @@ describe("AreasMicroserviceController (e2e)", () => {
     it("should return an area by ID", async () => {
       // Send the RPC message
       const result = await lastValueFrom(
-        client.send("world.AreasMicroserviceController.findById", testArea._id)
+        client.send("world.AreasMicroserviceController.findById", {
+          id: testArea._id,
+        })
       );
 
       // Assertions
@@ -206,7 +210,9 @@ describe("AreasMicroserviceController (e2e)", () => {
     it("should return null for non-existent ID", async () => {
       // Send the RPC message with a non-existent ID
       const result = await lastValueFrom(
-        client.send("world.AreasMicroserviceController.findById", randomUUID())
+        client.send("world.AreasMicroserviceController.findById", {
+          id: randomUUID(),
+        })
       );
 
       // Assertions
@@ -256,7 +262,9 @@ describe("AreasMicroserviceController (e2e)", () => {
 
       // Verify the update was successful by fetching the updated area
       const updatedArea = await lastValueFrom(
-        client.send("world.AreasMicroserviceController.findById", testArea._id)
+        client.send("world.AreasMicroserviceController.findById", {
+          id: testArea._id,
+        })
       );
 
       expect(updatedArea).toBeDefined();
@@ -320,7 +328,9 @@ describe("AreasMicroserviceController (e2e)", () => {
 
       // Verify the area is deleted
       const deletedArea = await lastValueFrom(
-        client.send("world.AreasMicroserviceController.findById", testArea._id)
+        client.send("world.AreasMicroserviceController.findById", {
+          id: testArea._id,
+        })
       );
       expect(deletedArea).toBeNull();
     });
@@ -366,10 +376,9 @@ describe("AreasMicroserviceController (e2e)", () => {
     it("should return areas by worldId", async () => {
       // Send the RPC message
       const result = await lastValueFrom(
-        client.send(
-          "world.AreasMicroserviceController.findByWorldId",
-          testWorldId
-        )
+        client.send("world.AreasMicroserviceController.findByWorldId", {
+          worldId: testWorldId,
+        })
       );
 
       // Assertions
@@ -384,10 +393,9 @@ describe("AreasMicroserviceController (e2e)", () => {
     it("should return empty array for non-existent worldId", async () => {
       // Send the RPC message with a non-existent worldId
       const result = await lastValueFrom(
-        client.send(
-          "world.AreasMicroserviceController.findByWorldId",
-          randomUUID()
-        )
+        client.send("world.AreasMicroserviceController.findByWorldId", {
+          worldId: randomUUID(),
+        })
       );
 
       // Assertions
@@ -428,10 +436,9 @@ describe("AreasMicroserviceController (e2e)", () => {
     it("should return areas by parentId", async () => {
       // Send the RPC message
       const result = await lastValueFrom(
-        client.send(
-          "world.AreasMicroserviceController.findByParentId",
-          parentId
-        )
+        client.send("world.AreasMicroserviceController.findByParentId", {
+          parentId,
+        })
       );
 
       // Assertions
@@ -446,10 +453,9 @@ describe("AreasMicroserviceController (e2e)", () => {
     it("should return empty array for non-existent parentId", async () => {
       // Send the RPC message with a non-existent parentId
       const result = await lastValueFrom(
-        client.send(
-          "world.AreasMicroserviceController.findByParentId",
-          randomUUID()
-        )
+        client.send("world.AreasMicroserviceController.findByParentId", {
+          parentId: randomUUID(),
+        })
       );
 
       // Assertions
@@ -489,7 +495,9 @@ describe("AreasMicroserviceController (e2e)", () => {
     it("should return areas by tags", async () => {
       // Send the RPC message
       const result = await lastValueFrom(
-        client.send("world.AreasMicroserviceController.findByTags", [uniqueTag])
+        client.send("world.AreasMicroserviceController.findByTags", {
+          tags: [uniqueTag],
+        })
       );
 
       // Assertions
@@ -504,9 +512,9 @@ describe("AreasMicroserviceController (e2e)", () => {
     it("should return empty array for non-existent tag", async () => {
       // Send the RPC message with a non-existent tag
       const result = await lastValueFrom(
-        client.send("world.AreasMicroserviceController.findByTags", [
-          `non-existent-tag-${randomUUID()}`,
-        ])
+        client.send("world.AreasMicroserviceController.findByTags", {
+          tags: [`non-existent-tag-${randomUUID()}`],
+        })
       );
 
       // Assertions

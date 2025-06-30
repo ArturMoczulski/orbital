@@ -1,0 +1,257 @@
+import {
+  DocumentRepository,
+  WithDocument,
+  WorldModel,
+} from "@orbital/typegoose";
+import type { ReturnModelType } from "@typegoose/typegoose";
+import { Document } from "mongoose";
+import { WorldsRepository } from "./worlds.repository";
+
+describe("WorldsRepository", () => {
+  let repository: WorldsRepository;
+  let mockWorldModel: ReturnModelType<typeof WorldModel>;
+  let mockWorld: WorldModel;
+
+  beforeEach(() => {
+    // Create a mock world directly
+    mockWorld = {
+      _id: "world-id-123",
+      name: "Test World",
+      shard: "test-shard",
+      techLevel: 5,
+      locations: ["location1", "location2"],
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    } as WorldModel;
+
+    // Create a mock document with save and toObject methods
+    const mockWorldDocument = {
+      ...mockWorld,
+      save: jest.fn().mockResolvedValue(true),
+      toObject: jest.fn().mockReturnValue(mockWorld),
+    } as unknown as Document & WorldModel;
+
+    // Create a proper mock model object with all required methods
+    const mockModel = {
+      // Constructor function
+      new: jest.fn().mockReturnValue(mockWorldDocument),
+      // Static methods
+      find: jest.fn().mockReturnThis(),
+      findById: jest.fn().mockReturnThis(),
+      findOne: jest.fn().mockReturnThis(),
+      sort: jest.fn().mockReturnThis(),
+      skip: jest.fn().mockReturnThis(),
+      limit: jest.fn().mockReturnThis(),
+      populate: jest.fn().mockReturnThis(),
+      exec: jest.fn().mockResolvedValue([mockWorldDocument]),
+    };
+
+    // Create a function that also has all the properties of mockModel
+    const modelFunction = function () {
+      return mockWorldDocument;
+    } as any;
+
+    // Copy all properties from mockModel to modelFunction
+    Object.assign(modelFunction, mockModel);
+
+    // Cast to the required type
+    mockWorldModel = modelFunction as unknown as ReturnModelType<
+      typeof WorldModel
+    >;
+
+    // Create repository with mock model
+    repository = new WorldsRepository(mockWorldModel);
+  });
+
+  afterEach(() => {
+    jest.clearAllMocks();
+  });
+
+  it("should be defined", () => {
+    expect(repository).toBeDefined();
+  });
+
+  it("should be an instance of DocumentRepository", () => {
+    expect(repository).toBeInstanceOf(DocumentRepository);
+  });
+
+  describe("findByShard", () => {
+    it("should find worlds by shard", async () => {
+      // Arrange
+      const shard = "test-shard";
+
+      // Create mock worlds directly
+      const mockWorlds = [
+        {
+          _id: "world-id-1",
+          name: "Test World 1",
+          shard,
+          techLevel: 3,
+          locations: [],
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        } as unknown as WorldModel,
+        {
+          _id: "world-id-2",
+          name: "Test World 2",
+          shard,
+          techLevel: 5,
+          locations: [],
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        } as unknown as WorldModel,
+      ];
+
+      // Mock the find method to return our mock worlds
+      jest
+        .spyOn(repository, "find")
+        .mockResolvedValue(mockWorlds as WithDocument<WorldModel>[]);
+
+      // Act
+      const result = await repository.findByShard(shard);
+
+      // Assert
+      expect(repository.find).toHaveBeenCalledWith(
+        { shard },
+        undefined,
+        undefined
+      );
+      expect(result).toEqual(mockWorlds);
+      expect(result.length).toBe(2);
+      expect(result[0].shard).toBe(shard);
+      expect(result[1].shard).toBe(shard);
+    });
+
+    it("should pass projection and options to find method", async () => {
+      // Arrange
+      const shard = "test-shard";
+      const projection = { name: 1, techLevel: 1 };
+      const options = { sort: { name: 1 } };
+
+      // Mock the find method
+      jest.spyOn(repository, "find").mockResolvedValue([]);
+
+      // Act
+      await repository.findByShard(shard, projection, options);
+
+      // Assert
+      expect(repository.find).toHaveBeenCalledWith(
+        { shard },
+        projection,
+        options
+      );
+    });
+
+    it("should return empty array when no worlds found", async () => {
+      // Arrange
+      const shard = "nonexistent-shard";
+
+      // Mock the find method to return empty array
+      jest.spyOn(repository, "find").mockResolvedValue([]);
+
+      // Act
+      const result = await repository.findByShard(shard);
+
+      // Assert
+      expect(repository.find).toHaveBeenCalledWith(
+        { shard },
+        undefined,
+        undefined
+      );
+      expect(result).toEqual([]);
+      expect(result.length).toBe(0);
+    });
+  });
+
+  describe("findByTechLevel", () => {
+    it("should find worlds by techLevel", async () => {
+      // Arrange
+      const techLevel = 5;
+
+      // Create mock worlds directly
+      const mockWorlds = [
+        {
+          _id: "world-id-1",
+          name: "Test World 1",
+          shard: "shard-1",
+          techLevel,
+          locations: [],
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        } as unknown as WorldModel,
+        {
+          _id: "world-id-2",
+          name: "Test World 2",
+          shard: "shard-2",
+          techLevel,
+          locations: [],
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        } as unknown as WorldModel,
+      ];
+
+      // Mock the find method to return our mock worlds
+      jest
+        .spyOn(repository, "find")
+        .mockResolvedValue(mockWorlds as WithDocument<WorldModel>[]);
+
+      // Act
+      const result = await repository.findByTechLevel(techLevel);
+
+      // Assert
+      expect(repository.find).toHaveBeenCalledWith(
+        { techLevel },
+        undefined,
+        undefined
+      );
+      expect(result).toEqual(mockWorlds);
+      expect(result.length).toBe(2);
+      expect(result[0].techLevel).toBe(techLevel);
+      expect(result[1].techLevel).toBe(techLevel);
+    });
+
+    it("should pass projection and options to find method", async () => {
+      // Arrange
+      const techLevel = 5;
+      const projection = { name: 1, shard: 1 };
+      const options = { sort: { name: 1 } };
+
+      // Mock the find method
+      jest.spyOn(repository, "find").mockResolvedValue([]);
+
+      // Act
+      await repository.findByTechLevel(techLevel, projection, options);
+
+      // Assert
+      expect(repository.find).toHaveBeenCalledWith(
+        { techLevel },
+        projection,
+        options
+      );
+    });
+
+    it("should return empty array when no worlds found", async () => {
+      // Arrange
+      const techLevel = 999;
+
+      // Mock the find method to return empty array
+      jest.spyOn(repository, "find").mockResolvedValue([]);
+
+      // Act
+      const result = await repository.findByTechLevel(techLevel);
+
+      // Assert
+      expect(repository.find).toHaveBeenCalledWith(
+        { techLevel },
+        undefined,
+        undefined
+      );
+      expect(result).toEqual([]);
+      expect(result.length).toBe(0);
+    });
+  });
+
+  // Since WorldsRepository extends DocumentRepository, we don't need to test
+  // all the inherited methods as they are tested in document-repository.spec.ts
+  // We just need to ensure our custom methods work correctly
+});
