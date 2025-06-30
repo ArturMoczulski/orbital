@@ -1,5 +1,6 @@
 import { Area, AreaMap, Position } from "@orbital/core";
 import { modelOptions, prop } from "@typegoose/typegoose";
+import { Reference } from "../decorators/reference.decorator";
 
 @modelOptions({
   schemaOptions: {
@@ -28,9 +29,11 @@ export class AreaModel extends Area {
   override areaMap?: AreaMap;
 
   @prop()
+  @Reference({ collection: "areas", required: false })
   override parentId?: string | null;
 
   @prop({ required: true })
+  @Reference({ collection: "worlds" })
   override worldId!: string;
 
   @prop({ type: () => [String], default: [] })

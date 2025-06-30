@@ -1,6 +1,9 @@
 // Utility types
 export * from "./types";
 
+// Decorators
+export * from "./decorators";
+
 // Persistence tools
 export * from "./mappers";
 export * from "./repositories";

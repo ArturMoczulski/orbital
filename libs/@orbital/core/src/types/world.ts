@@ -17,7 +17,6 @@ export const WorldSchema = IdentifiableObjectSchema.extend({
   name: z.string().describe("Name of the world"),
   shard: z.string().describe("Shard identifier for the world"),
   techLevel: z.number().describe("Technology level of the world"),
-  locations: z.array(z.string()).optional().describe("Locations in this world"),
 }).describe("A world in the game universe");
 
 /**
@@ -31,7 +30,6 @@ export class World
   name: string = "";
   shard: string = "";
   techLevel: number = 1;
-  locations?: string[] = [];
 
   /** Create a fake World instance with randomized data */
   static mock(overrides: Partial<WorldProps> = {}): World {
@@ -39,9 +37,6 @@ export class World
       name: `World-${faker.location.country()}`,
       shard: faker.string.alphanumeric(8),
       techLevel: faker.number.int({ min: 1, max: 10 }),
-      locations: Array.from({ length: Math.floor(Math.random() * 3) + 1 }, () =>
-        faker.string.uuid()
-      ),
     };
     return new World({ ...base, ...overrides });
   }
@@ -57,6 +52,5 @@ export class World
     this.name = validated.name;
     this.shard = validated.shard;
     this.techLevel = validated.techLevel;
-    this.locations = validated.locations ?? [];
   }
 }

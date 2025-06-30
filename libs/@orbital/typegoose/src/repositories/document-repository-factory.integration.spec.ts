@@ -39,7 +39,7 @@ class TestEntity extends IdentifiableObject {
 
 // Define a test schema for MongoDB
 const TestEntitySchema = new Schema({
-  _id: { type: String, required: true },
+  _id: { type: String, required: false }, // Make _id optional to allow MongoDB to generate it
   name: { type: String, required: true },
   description: { type: String },
   tags: [{ type: String }],
@@ -80,6 +80,7 @@ describe("DocumentRepositoryFactory Integration Tests", () => {
       );
 
       const testData = new TestEntity({
+        _id: "factory-test-entity-id", // Explicitly set an ID for the test
         name: "Factory Test Entity",
         description: "Created via factory",
         tags: ["factory", "test"],
@@ -120,11 +121,13 @@ describe("DocumentRepositoryFactory Integration Tests", () => {
       );
 
       const validData = new TestEntity({
+        _id: "valid-factory-entity-id", // Explicitly set an ID for the test
         name: "Valid Entity",
         tags: ["valid", "schema"],
       });
 
       const invalidData = new TestEntity({
+        _id: "invalid-factory-entity-id", // Explicitly set an ID for the test
         // Missing required name field (will be set to empty string in constructor)
         name: "",
         tags: ["invalid", "schema"],
@@ -150,10 +153,12 @@ describe("DocumentRepositoryFactory Integration Tests", () => {
 
       const testEntities = [
         new TestEntity({
+          _id: "factory-entity-1-id", // Explicitly set an ID for the test
           name: "Factory Entity 1",
           tags: ["factory", "bulk"],
         }),
         new TestEntity({
+          _id: "factory-entity-2-id", // Explicitly set an ID for the test
           name: "Factory Entity 2",
           description: "Bulk created via factory",
           tags: ["factory", "bulk"],

@@ -23,9 +23,6 @@ export class WorldModel extends World {
   @prop({ required: true })
   override techLevel!: number;
 
-  @prop({ type: () => [String], ref: "Location" })
-  override locations?: string[];
-
   // Add database-specific properties
   @prop()
   createdAt!: Date;

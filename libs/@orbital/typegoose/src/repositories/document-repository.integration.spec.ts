@@ -6,6 +6,7 @@ import { IdentifiableObject } from "@orbital/core";
 import * as mongoose from "mongoose";
 import { Schema } from "mongoose";
 import * as z from "zod";
+import { Reference } from "../decorators/reference.decorator";
 import { WithDocument } from "../types/with-document";
 import { DocumentRepository } from "./document-repository";
 
@@ -45,7 +46,7 @@ class TestEntity extends IdentifiableObject {
 
 // Define a test schema for MongoDB
 const TestEntitySchema = new Schema({
-  _id: { type: String, required: true },
+  _id: { type: String, required: false }, // Make _id optional to allow MongoDB to generate it
   name: { type: String, required: true },
   description: { type: String },
   tags: [{ type: String }],
@@ -107,6 +108,7 @@ describe("DocumentRepository Integration Tests", () => {
     it("should create a single entity", async () => {
       // Arrange
       const testData = new TestEntity({
+        _id: "test-entity-id", // Explicitly set an ID for the test
         name: "Test Entity",
         description: "Test Description",
         tags: ["test", "entity"],
@@ -135,10 +137,12 @@ describe("DocumentRepository Integration Tests", () => {
       // Arrange
       const testData = [
         new TestEntity({
+          _id: "entity-1-id", // Explicitly set an ID for the test
           name: "Entity 1",
           tags: ["test", "entity1"],
         }),
         new TestEntity({
+          _id: "entity-2-id", // Explicitly set an ID for the test
           name: "Entity 2",
           description: "Description 2",
           tags: ["test", "entity2"],
@@ -170,11 +174,13 @@ describe("DocumentRepository Integration Tests", () => {
     it("should validate data against schema when creating an entity", async () => {
       // Arrange
       const validData = new TestEntity({
+        _id: "valid-entity-id", // Explicitly set an ID for the test
         name: "Valid Entity",
         tags: ["test", "valid"],
       });
 
       const invalidData = new TestEntity({
+        _id: "invalid-entity-id", // Explicitly set an ID for the test
         // Missing required name field (will be set to empty string in constructor)
         name: "",
         tags: ["test", "invalid"],
@@ -581,4 +587,245 @@ describe("DocumentRepository Integration Tests", () => {
 
   // The save, createQuery, and executeQuery methods have been removed as they were redundant
   // with existing methods like update and find, and with DocumentHelpers.save functionality
+});
+
+/**
+ * Tests specifically for the validateReferences method
+ */
+describe("DocumentRepository Reference Validation Integration Tests", () => {
+  // Define a parent entity class with @Reference decorator
+  class ParentEntity extends IdentifiableObject {
+    name: string;
+
+    constructor(data: any) {
+      super(data);
+      this.name = data.name || "";
+    }
+
+    toPlainObject(): Record<string, any> {
+      return {
+        _id: this._id,
+        name: this.name,
+      };
+    }
+
+    validateSchema(): this {
+      return this;
+    }
+
+    validate(): this {
+      return this;
+    }
+  }
+
+  // Define a child entity class with a reference to the parent
+  class ChildEntity extends IdentifiableObject {
+    name: string;
+
+    @Reference({ collection: "ParentEntity" })
+    parentId!: string;
+
+    @Reference({ collection: "NonExistentEntity", required: false })
+    optionalRefId?: string;
+
+    constructor(data: any) {
+      super(data);
+      this.name = data.name || "";
+      this.parentId = data.parentId;
+      this.optionalRefId = data.optionalRefId;
+    }
+
+    toPlainObject(): Record<string, any> {
+      return {
+        _id: this._id,
+        name: this.name,
+        parentId: this.parentId,
+        optionalRefId: this.optionalRefId,
+      };
+    }
+
+    validateSchema(): this {
+      return this;
+    }
+
+    validate(): this {
+      return this;
+    }
+  }
+
+  // Define MongoDB schemas
+  const ParentEntitySchema = new Schema({
+    _id: { type: String, required: true },
+    name: { type: String, required: true },
+  });
+
+  const ChildEntitySchema = new Schema({
+    _id: { type: String, required: true },
+    name: { type: String, required: true },
+    parentId: { type: String, required: true },
+    optionalRefId: { type: String, required: false },
+  });
+
+  let ParentEntityModel: any;
+  let ChildEntityModel: any;
+  let childRepository: DocumentRepository<ChildEntity>;
+  let parentRepository: DocumentRepository<ParentEntity>;
+
+  beforeAll(async () => {
+    // Create the models
+    ParentEntityModel = mongoose.model("ParentEntity", ParentEntitySchema);
+    ChildEntityModel = mongoose.model("ChildEntity", ChildEntitySchema);
+
+    // Create the repositories
+    childRepository = new DocumentRepository<ChildEntity>(
+      ChildEntityModel,
+      ChildEntity
+    );
+    parentRepository = new DocumentRepository<ParentEntity>(
+      ParentEntityModel,
+      ParentEntity
+    );
+  });
+
+  beforeEach(async () => {
+    // Clear the collections before each test
+    await ParentEntityModel.deleteMany({});
+    await ChildEntityModel.deleteMany({});
+  });
+
+  afterAll(async () => {
+    // Clean up models to prevent OverwriteModelError in subsequent test runs
+    if (
+      mongoose.connection &&
+      mongoose.connection.models &&
+      mongoose.connection.models["ParentEntity"]
+    ) {
+      delete mongoose.connection.models["ParentEntity"];
+    }
+    if (
+      mongoose.connection &&
+      mongoose.connection.models &&
+      mongoose.connection.models["ChildEntity"]
+    ) {
+      delete mongoose.connection.models["ChildEntity"];
+    }
+  });
+
+  describe("validateReferences", () => {
+    it("should successfully validate references when referenced entity exists", async () => {
+      // Arrange
+      const parentEntity = new ParentEntity({
+        _id: "parent-123",
+        name: "Test Parent",
+      });
+
+      // Create the parent entity in the database
+      await parentRepository.create(parentEntity);
+
+      const childEntity = new ChildEntity({
+        _id: "child-123",
+        name: "Test Child",
+        parentId: "parent-123",
+      });
+
+      // Act & Assert
+      // This should not throw an error
+      await expect(childRepository.create(childEntity)).resolves.toBeDefined();
+    });
+
+    it("should throw an error when referenced entity does not exist", async () => {
+      // Arrange
+      const childEntity = new ChildEntity({
+        _id: "child-456",
+        name: "Test Child",
+        parentId: "non-existent-parent", // This parent doesn't exist
+      });
+
+      // Act & Assert
+      await expect(childRepository.create(childEntity)).rejects.toThrow(
+        'Referenced entity not found: ParentEntity._id with value "non-existent-parent"'
+      );
+    });
+
+    it("should skip validation for optional references that are not provided", async () => {
+      // Arrange
+      const parentEntity = new ParentEntity({
+        _id: "parent-789",
+        name: "Test Parent",
+      });
+
+      // Create the parent entity in the database
+      await parentRepository.create(parentEntity);
+
+      const childEntity = new ChildEntity({
+        _id: "child-789",
+        name: "Test Child",
+        parentId: "parent-789",
+        // optionalRefId is not provided
+      });
+
+      // Act & Assert
+      // This should not throw an error despite NonExistentEntity not existing
+      await expect(childRepository.create(childEntity)).resolves.toBeDefined();
+    });
+
+    it("should validate references during update operations", async () => {
+      // Arrange
+      const parentEntity1 = new ParentEntity({
+        _id: "parent-1",
+        name: "Parent 1",
+      });
+
+      const parentEntity2 = new ParentEntity({
+        _id: "parent-2",
+        name: "Parent 2",
+      });
+
+      // Create parent entities
+      await parentRepository.create([parentEntity1, parentEntity2]);
+
+      // Create a child with a valid reference
+      const childEntity = new ChildEntity({
+        _id: "child-update-test",
+        name: "Child for Update",
+        parentId: "parent-1",
+      });
+
+      const createdChild = await childRepository.create(childEntity);
+
+      // Act & Assert - Valid update
+      const validUpdate = new ChildEntity({
+        _id: "child-update-test",
+        name: "Updated Child",
+        parentId: "parent-2", // Change to another valid parent
+      });
+
+      await expect(childRepository.update(validUpdate)).resolves.toBeDefined();
+
+      // Act & Assert - Invalid update
+      const invalidUpdate = new ChildEntity({
+        _id: "child-update-test",
+        name: "Invalid Update",
+        parentId: "non-existent-parent", // This parent doesn't exist
+      });
+
+      await expect(childRepository.update(invalidUpdate)).rejects.toThrow(
+        'Referenced entity not found: ParentEntity._id with value "non-existent-parent"'
+      );
+    });
+
+    it("should throw an error when referenced collection does not exist", async () => {
+      // Arrange
+      const childEntity = new ChildEntity({
+        _id: "child-missing-collection",
+        name: "Child with Missing Collection Reference",
+        optionalRefId: "some-id", // This is optional but we're providing a value
+      });
+
+      // Act & Assert
+      await expect(childRepository.create(childEntity)).rejects.toThrow(
+        /Cannot validate reference to NonExistentEntity._id with value "some-id"/
+      );
+    });
+  });
 });

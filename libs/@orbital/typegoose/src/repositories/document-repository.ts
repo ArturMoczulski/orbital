@@ -11,6 +11,7 @@ import {
 } from "@orbital/core";
 import { ReturnModelType } from "@typegoose/typegoose";
 import { ZodError, ZodObject } from "zod";
+import { getReferences } from "../decorators/reference.decorator";
 import { PersistenceMapper } from "../mappers/persistence-mapper";
 import { WithId } from "../types/utils";
 import { MongooseDocument, WithDocument } from "../types/with-document";
@@ -96,6 +97,9 @@ export class DocumentRepository<
             }
           }
 
+          // Validate references if any are defined
+          await this.validateReferences(item);
+
           // Convert to domain object if it's not already one
           const domainObject =
             item instanceof this.DomainClass
@@ -105,11 +109,17 @@ export class DocumentRepository<
           // Create persistence data from domain object
           const data = PersistenceMapper.toPersistence(domainObject);
 
-          // Remove the temporary ID to let MongoDB generate a new one
-          const { _id, ...dataWithoutId } = data;
+          // If _id is provided, use it; otherwise, let MongoDB generate one
+          if (data._id) {
+            // Store for bulk insertion with the provided _id
+            validItems.push(data);
+          } else {
+            // Remove the temporary ID to let MongoDB generate a new one
+            const { _id, ...dataWithoutId } = data;
 
-          // Store for bulk insertion
-          validItems.push(dataWithoutId);
+            // Store for bulk insertion without _id
+            validItems.push(dataWithoutId);
+          }
           domainObjects.push(domainObject);
         } catch (error: any) {
           // Ensure we have a proper error message, even for ZodErrorWithStack
@@ -371,6 +381,9 @@ export class DocumentRepository<
             }
           }
 
+          // Validate references if any are defined
+          await this.validateReferences(entity);
+
           // Create persistence data from domain object
           const data = PersistenceMapper.toPersistence(entity);
           const { _id, ...updateData } = data;
@@ -509,5 +522,192 @@ export class DocumentRepository<
 
     // If input was singular, return true (success) or null (already handled above)
     return isSingular ? true : response;
+  }
+
+  /**
+   * Validates that all references in an entity exist in their respective collections
+   * @param entity The entity to validate references for
+   * @throws Error if a referenced entity doesn't exist
+   */
+  private async validateReferences(entity: any): Promise<void> {
+    // Skip validation if entity is not an object
+    if (!entity || typeof entity !== "object") {
+      return;
+    }
+
+    // Get the domain class constructor
+    const DomainClass = this.DomainClass;
+
+    // Get reference metadata from the domain class
+    const references = getReferences(DomainClass);
+
+    // If no references are defined, skip validation
+    if (!references || references.length === 0) {
+      return;
+    }
+
+    console.log(
+      `[validateReferences] Validating references for ${DomainClass.name}`
+    );
+    console.log(`[validateReferences] Entity: ${JSON.stringify(entity)}`);
+    console.log(
+      `[validateReferences] References: ${JSON.stringify(references)}`
+    );
+
+    // Validate each reference
+    for (const reference of references) {
+      const { propertyKey, collection, required, foreignField } = reference;
+
+      // Skip if the reference is not required and the value is not provided
+      if (
+        !required &&
+        (entity[propertyKey] === undefined || entity[propertyKey] === null)
+      ) {
+        console.log(
+          `[validateReferences] Skipping optional reference ${propertyKey} (not provided)`
+        );
+        continue;
+      }
+
+      // Skip if the value is not provided (this will be caught by schema validation if required)
+      if (entity[propertyKey] === undefined || entity[propertyKey] === null) {
+        console.log(
+          `[validateReferences] Skipping reference ${propertyKey} (not provided)`
+        );
+        continue;
+      }
+
+      // Get the referenced value
+      const referencedValue = entity[propertyKey];
+
+      // Skip empty values
+      if (referencedValue === "") {
+        console.log(
+          `[validateReferences] Skipping reference ${propertyKey} (empty string)`
+        );
+        continue;
+      }
+
+      console.log(
+        `[validateReferences] Validating reference ${propertyKey} = "${referencedValue}" to collection "${collection}"`
+      );
+
+      // Check if the collection exists in the database
+      const collectionExists =
+        this.model.db.collections && collection in this.model.db.collections;
+
+      console.log(
+        `[validateReferences] Collection "${collection}" exists: ${collectionExists}`
+      );
+      console.log(
+        `[validateReferences] Available collections: ${Object.keys(this.model.db.collections || {}).join(", ")}`
+      );
+
+      try {
+        // Get the model for the referenced collection
+        console.log(
+          `[validateReferences] Attempting to get model for collection "${collection}"`
+        );
+        const referencedModel = this.model.db.model(collection);
+        console.log(
+          `[validateReferences] Successfully got model for collection "${collection}"`
+        );
+
+        // Check if the referenced entity exists
+        const filter: Record<string, any> = {};
+        filter[foreignField] = referencedValue;
+        console.log(
+          `[validateReferences] Checking if entity exists with filter: ${JSON.stringify(filter)}`
+        );
+
+        const exists = await referencedModel.exists(filter);
+        console.log(`[validateReferences] Entity exists: ${!!exists}`);
+
+        if (!exists) {
+          console.log(
+            `[validateReferences] Referenced entity not found in collection "${collection}"`
+          );
+          throw new Error(
+            `Referenced entity not found: ${collection}.${foreignField} with value "${referencedValue}"`
+          );
+        }
+
+        console.log(
+          `[validateReferences] Successfully validated reference to ${collection}.${foreignField}`
+        );
+      } catch (error: any) {
+        console.log(
+          `[validateReferences] Error validating reference: ${error.name} - ${error.message}`
+        );
+
+        // If the model doesn't exist but the collection does exist in the database,
+        // try to query the collection directly using the native MongoDB API
+        if (error.name === "MissingSchemaError" && collectionExists) {
+          console.log(
+            `[validateReferences] Model not registered but collection exists, trying native MongoDB API`
+          );
+          try {
+            // Access the collection directly without a model
+            const nativeCollection = this.model.db.collection(collection);
+            console.log(
+              `[validateReferences] Got native collection for "${collection}"`
+            );
+
+            // Create a filter to check if the referenced entity exists
+            const filter: Record<string, any> = {};
+            filter[foreignField] = referencedValue;
+            console.log(
+              `[validateReferences] Querying native collection with filter: ${JSON.stringify(filter)}`
+            );
+
+            // Query the collection directly
+            const doc = await nativeCollection.findOne(filter);
+            console.log(`[validateReferences] Native query result: ${!!doc}`);
+
+            if (!doc) {
+              console.log(
+                `[validateReferences] Referenced entity not found in native collection`
+              );
+              throw new Error(
+                `Referenced entity not found: ${collection}.${foreignField} with value "${referencedValue}"`
+              );
+            }
+
+            // If we get here, the reference is valid
+            console.log(
+              `[validateReferences] Validated reference to ${collection}.${foreignField} with value "${referencedValue}" using native collection API`
+            );
+            continue;
+          } catch (collectionError: any) {
+            console.log(
+              `[validateReferences] Error querying native collection: ${collectionError.message}`
+            );
+            // If we can't query the collection directly, throw a more informative error
+            throw new Error(
+              `Cannot validate reference to ${collection}.${foreignField} with value "${referencedValue}". ` +
+                `Collection exists but schema is not registered and direct query failed: ${collectionError.message}`
+            );
+          }
+        }
+
+        // If the model doesn't exist and the collection doesn't exist either,
+        // this is a real error that should be reported
+        if (error.name === "MissingSchemaError") {
+          console.log(
+            `[validateReferences] Collection "${collection}" does not exist or is not accessible`
+          );
+          throw new Error(
+            `Cannot validate reference to ${collection}.${foreignField} with value "${referencedValue}". ` +
+              `Collection "${collection}" does not exist or is not accessible.`
+          );
+        }
+
+        // Re-throw other errors
+        console.log(`[validateReferences] Re-throwing error: ${error.message}`);
+        throw error;
+      }
+    }
+
+    console.log(`[validateReferences] All references validated successfully`);
   }
 }

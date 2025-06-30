@@ -6,7 +6,8 @@ import { lastValueFrom } from "rxjs";
 describe("AreasMicroserviceController (e2e)", () => {
   let client: ClientProxy;
   let testAreas: AreaModel[] = [];
-  const worldId = randomUUID();
+  let worldId: string;
+  let testWorld: any;
 
   beforeAll(async () => {
     // Connect directly to the running NATS server
@@ -19,10 +20,36 @@ describe("AreasMicroserviceController (e2e)", () => {
 
     // Wait a moment for the connection to be fully established
     await new Promise((resolve) => setTimeout(resolve, 1000));
+
+    // Create a test world using the WorldsMicroserviceController
+    try {
+      // Create a test world
+      const worldData = {
+        _id: randomUUID(),
+        name: "Test World for Areas E2E",
+        shard: "test-shard",
+        techLevel: 5,
+      };
+
+      console.log("Creating test world:", JSON.stringify(worldData, null, 2));
+
+      // Create the world using the WorldsMicroserviceController
+      testWorld = await lastValueFrom(
+        client.send("world.WorldsMicroserviceController.create", worldData)
+      );
+
+      // Use this world's ID for all area tests
+      worldId = testWorld._id;
+
+      console.log(`Created test world with ID: ${worldId}`);
+    } catch (error) {
+      console.error("Error setting up database for tests:", error);
+      throw error;
+    }
   });
 
   afterAll(async () => {
-    // Clean up
+    // Clean up areas
     try {
       await Promise.all(
         testAreas.map((area) =>
@@ -33,6 +60,21 @@ describe("AreasMicroserviceController (e2e)", () => {
       );
     } catch (error) {
       console.error("Error cleaning up test areas:", error);
+    }
+
+    // Clean up the test world
+    try {
+      if (testWorld && testWorld._id) {
+        await lastValueFrom(
+          client.send(
+            "world.WorldsMicroserviceController.delete",
+            testWorld._id
+          )
+        );
+        console.log(`Deleted test world with ID: ${testWorld._id}`);
+      }
+    } catch (error) {
+      console.error("Error cleaning up test world:", error);
     }
 
     // Close the client connection
@@ -406,9 +448,75 @@ describe("AreasMicroserviceController (e2e)", () => {
   });
 
   describe("findByParentId", () => {
-    const parentId = randomUUID();
+    let parentId: string;
+    let parentArea: AreaModel;
 
     beforeAll(async () => {
+      try {
+        // First create a parent area
+        const parentAreaDto = {
+          _id: randomUUID(),
+          name: "Parent Area for findByParentId",
+          worldId,
+          description: "Parent area for findByParentId e2e testing",
+          position: { x: 0, y: 0, z: 0 },
+          tags: ["test", "e2e", "parent"],
+        };
+
+        // Create the parent area
+        parentArea = await lastValueFrom(
+          client.send("world.AreasMicroserviceController.create", parentAreaDto)
+        );
+
+        // Store for cleanup
+        testAreas.push(parentArea);
+
+        // Use this area's ID as the parentId
+        parentId = parentArea._id;
+
+        console.log(`Created parent area with ID: ${parentId}`);
+      } catch (error) {
+        console.error("Error creating parent area:", error);
+        console.error("Error message:", error.message);
+        console.error("Error stack:", error.stack);
+
+        // Try again with a new parent area
+        try {
+          const parentAreaDto2 = {
+            _id: randomUUID(),
+            name: "Parent Area for findByParentId (retry)",
+            worldId,
+            description: "Parent area for findByParentId e2e testing (retry)",
+            position: { x: 0, y: 0, z: 0 },
+            tags: ["test", "e2e", "parent", "retry"],
+          };
+
+          console.log(
+            "Retrying with new parent area:",
+            JSON.stringify(parentAreaDto2, null, 2)
+          );
+
+          // Create the parent area
+          parentArea = await lastValueFrom(
+            client.send(
+              "world.AreasMicroserviceController.create",
+              parentAreaDto2
+            )
+          );
+
+          // Store for cleanup
+          testAreas.push(parentArea);
+
+          // Use this area's ID as the parentId
+          parentId = parentArea._id;
+
+          console.log(`Created parent area (retry) with ID: ${parentId}`);
+        } catch (dbError) {
+          console.error("Error creating parent area directly in DB:", dbError);
+          throw dbError;
+        }
+      }
+
       // Create some test areas with the same parentId
       const createAreaDtos = Array.from({ length: 3 }, (_, i) => ({
         _id: randomUUID(),
