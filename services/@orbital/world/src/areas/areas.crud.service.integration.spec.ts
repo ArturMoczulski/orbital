@@ -3,11 +3,11 @@ import { Area } from "@orbital/typegoose";
 import { MongoMemoryServer } from "mongodb-memory-server";
 import mongoose, { Model } from "mongoose";
 import { getModelToken, TypegooseModule } from "nestjs-typegoose";
+import { AreasCrudService } from "./areas.crud.service";
 import { AreasRepository } from "./areas.repository";
-import { AreasService } from "./areas.service";
 
 describe("AreasService Integration", () => {
-  let service: AreasService;
+  let service: AreasCrudService;
   let repository: AreasRepository;
   let mongod: MongoMemoryServer;
   let areaModel: Model<Area>;
@@ -31,11 +31,11 @@ describe("AreasService Integration", () => {
           TypegooseModule.forRoot(uri),
           TypegooseModule.forFeature([Area]),
         ],
-        providers: [AreasService, AreasRepository],
+        providers: [AreasCrudService, AreasRepository],
       }).compile();
 
       // Get the service, repository, and model
-      service = module.get<AreasService>(AreasService);
+      service = module.get<AreasCrudService>(AreasCrudService);
       repository = module.get<AreasRepository>(AreasRepository);
       areaModel = module.get<Model<Area>>(getModelToken(Area.name));
     } catch (error) {

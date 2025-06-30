@@ -5,7 +5,7 @@ import { Area } from "@orbital/typegoose";
 import { AreasRepository } from "./areas.repository";
 
 @Injectable()
-export class AreasService extends CrudService<
+export class AreasCrudService extends CrudService<
   Area,
   AreaProps,
   AreasRepository

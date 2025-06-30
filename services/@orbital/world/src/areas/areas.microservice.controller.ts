@@ -8,7 +8,7 @@ import {
 } from "@orbital/microservices";
 import { CrudController } from "@orbital/nest";
 import { AreaModel as TypegooseArea } from "@orbital/typegoose";
-import { AreasService } from "./areas.service";
+import { AreasCrudService } from "./areas.crud.service";
 
 @MicroserviceController(OrbitalMicroservices.World)
 @Controller()
@@ -16,9 +16,9 @@ import { AreasService } from "./areas.service";
 export class AreasMicroserviceController extends CrudController<
   TypegooseArea,
   AreaProps,
-  AreasService
+  AreasCrudService
 > {
-  constructor(areasService: AreasService) {
+  constructor(areasService: AreasCrudService) {
     super(areasService);
   }
 
@@ -28,7 +28,7 @@ export class AreasMicroserviceController extends CrudController<
    * @returns The created area or BulkItemizedResponse for multiple areas
    */
   @MessagePattern()
-  async create(dto: Parameters<AreasService["create"]>[0]) {
+  async create(dto: Parameters<AreasCrudService["create"]>[0]) {
     return super.create(dto);
   }
 
@@ -65,7 +65,7 @@ export class AreasMicroserviceController extends CrudController<
    * @returns The updated area or BulkItemizedResponse for multiple areas
    */
   @MessagePattern()
-  async update(data: Parameters<AreasService["update"]>[0]) {
+  async update(data: Parameters<AreasCrudService["update"]>[0]) {
     return await super.update(data);
   }
 

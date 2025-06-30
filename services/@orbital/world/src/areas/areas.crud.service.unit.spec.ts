@@ -1,11 +1,11 @@
 import { Test, TestingModule } from "@nestjs/testing";
 import { CrudService } from "@orbital/nest";
 import { Area } from "@orbital/typegoose";
+import { AreasCrudService } from "./areas.crud.service";
 import { AreasRepository } from "./areas.repository";
-import { AreasService } from "./areas.service";
 
 describe("AreasService", () => {
-  let service: AreasService;
+  let service: AreasCrudService;
   let repository: AreasRepository;
 
   beforeEach(async () => {
@@ -23,7 +23,7 @@ describe("AreasService", () => {
     // Create a test module with the service and mock repository
     const module: TestingModule = await Test.createTestingModule({
       providers: [
-        AreasService,
+        AreasCrudService,
         {
           provide: AreasRepository,
           useValue: mockRepository,
@@ -32,7 +32,7 @@ describe("AreasService", () => {
     }).compile();
 
     // Get the service and repository from the test module
-    service = module.get<AreasService>(AreasService);
+    service = module.get<AreasCrudService>(AreasCrudService);
     repository = module.get<AreasRepository>(AreasRepository);
   });
 
