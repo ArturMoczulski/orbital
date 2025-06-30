@@ -10,5 +10,4 @@ module.exports = {
     "<rootDir>/../jest.setup.e2e.js",
   ],
   testMatch: ["**/*.e2e.spec.ts"],
-  forceExit: true,
 };

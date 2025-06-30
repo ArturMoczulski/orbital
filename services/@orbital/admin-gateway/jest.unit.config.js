@@ -9,10 +9,9 @@ module.exports = {
     ...(base.setupFilesAfterEnv || []),
     "<rootDir>/../jest.setup.unit.js",
   ],
+  testMatch: ["**/*.spec.ts"],
   testPathIgnorePatterns: [
     ...(base.testPathIgnorePatterns || []),
-    "/node_modules/",
-    "/dist/",
     ".*integration\\.spec\\.ts$",
     ".*e2e\\.spec\\.ts$",
   ],

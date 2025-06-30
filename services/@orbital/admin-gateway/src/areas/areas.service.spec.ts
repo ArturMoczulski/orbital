@@ -6,11 +6,11 @@ import { AreasService } from "./areas.service";
 // Create a mock for the WorldMicroservice
 const mockWorldMicroservice = {
   areas: {
-    getAllAreas: jest.fn(),
-    getArea: jest.fn(),
-    createArea: jest.fn(),
-    updateArea: jest.fn(),
-    deleteArea: jest.fn(),
+    find: jest.fn(),
+    findById: jest.fn(),
+    create: jest.fn(),
+    update: jest.fn(),
+    delete: jest.fn(),
   },
 };
 
@@ -57,37 +57,42 @@ describe("AreasService", () => {
       ];
 
       // Setup mock implementation
-      mockWorldMicroservice.areas.getAllAreas.mockResolvedValue(mockAreas);
+      mockWorldMicroservice.areas.find.mockResolvedValue(mockAreas);
 
       // Call the service method
       const result = await service.getAll();
 
       // Verify the result
       expect(result).toEqual(mockAreas);
-      expect(mockWorldMicroservice.areas.getAllAreas).toHaveBeenCalledTimes(1);
+      expect(mockWorldMicroservice.areas.find).toHaveBeenCalledTimes(1);
+      expect(mockWorldMicroservice.areas.find).toHaveBeenCalledWith({
+        filter: {},
+        projection: {},
+        options: {},
+      });
     });
 
     it("should return an empty array if the microservice returns null or undefined", async () => {
       // Setup mock implementation
-      mockWorldMicroservice.areas.getAllAreas.mockResolvedValue(null);
+      mockWorldMicroservice.areas.find.mockResolvedValue(null);
 
       // Call the service method
       const result = await service.getAll();
 
       // Verify the result
       expect(result).toEqual([]);
-      expect(mockWorldMicroservice.areas.getAllAreas).toHaveBeenCalledTimes(1);
+      expect(mockWorldMicroservice.areas.find).toHaveBeenCalledTimes(1);
     });
 
     it("should handle errors from the microservice", async () => {
       // Setup mock implementation
-      mockWorldMicroservice.areas.getAllAreas.mockRejectedValue(
+      mockWorldMicroservice.areas.find.mockRejectedValue(
         new Error("Microservice error")
       );
 
       // Call the service method and expect it to throw
       await expect(service.getAll()).rejects.toThrow("Microservice error");
-      expect(mockWorldMicroservice.areas.getAllAreas).toHaveBeenCalledTimes(1);
+      expect(mockWorldMicroservice.areas.find).toHaveBeenCalledTimes(1);
     });
   });
 
@@ -102,34 +107,38 @@ describe("AreasService", () => {
       });
 
       // Setup mock implementation
-      mockWorldMicroservice.areas.getArea.mockResolvedValue(mockArea);
+      mockWorldMicroservice.areas.findById.mockResolvedValue(mockArea);
 
       // Call the service method
       const result = await service.getById("area1");
 
       // Verify the result
       expect(result).toEqual(mockArea);
-      expect(mockWorldMicroservice.areas.getArea).toHaveBeenCalledTimes(1);
-      expect(mockWorldMicroservice.areas.getArea).toHaveBeenCalledWith("area1");
+      expect(mockWorldMicroservice.areas.findById).toHaveBeenCalledTimes(1);
+      expect(mockWorldMicroservice.areas.findById).toHaveBeenCalledWith({
+        id: "area1",
+        projection: {},
+      });
     });
 
     it("should throw an error if the area is not found", async () => {
       // Setup mock implementation
-      mockWorldMicroservice.areas.getArea.mockResolvedValue(null);
+      mockWorldMicroservice.areas.findById.mockResolvedValue(null);
 
       // Call the service method and expect it to throw
       await expect(service.getById("nonexistent")).rejects.toThrow(
         "Area not found"
       );
-      expect(mockWorldMicroservice.areas.getArea).toHaveBeenCalledTimes(1);
-      expect(mockWorldMicroservice.areas.getArea).toHaveBeenCalledWith(
-        "nonexistent"
-      );
+      expect(mockWorldMicroservice.areas.findById).toHaveBeenCalledTimes(1);
+      expect(mockWorldMicroservice.areas.findById).toHaveBeenCalledWith({
+        id: "nonexistent",
+        projection: {},
+      });
     });
 
     it("should handle errors from the microservice", async () => {
       // Setup mock implementation
-      mockWorldMicroservice.areas.getArea.mockRejectedValue(
+      mockWorldMicroservice.areas.findById.mockRejectedValue(
         new Error("Microservice error")
       );
 
@@ -137,7 +146,7 @@ describe("AreasService", () => {
       await expect(service.getById("area1")).rejects.toThrow(
         "Microservice error"
       );
-      expect(mockWorldMicroservice.areas.getArea).toHaveBeenCalledTimes(1);
+      expect(mockWorldMicroservice.areas.findById).toHaveBeenCalledTimes(1);
     });
   });
 
@@ -160,15 +169,15 @@ describe("AreasService", () => {
       createdArea.description = createAreaDto.description;
 
       // Setup mock implementation
-      mockWorldMicroservice.areas.createArea.mockResolvedValue(createdArea);
+      mockWorldMicroservice.areas.create.mockResolvedValue(createdArea);
 
       // Call the service method
       const result = await service.create(createAreaDto);
 
       // Verify the result
       expect(result).toEqual(createdArea);
-      expect(mockWorldMicroservice.areas.createArea).toHaveBeenCalledTimes(1);
-      expect(mockWorldMicroservice.areas.createArea).toHaveBeenCalledWith(
+      expect(mockWorldMicroservice.areas.create).toHaveBeenCalledTimes(1);
+      expect(mockWorldMicroservice.areas.create).toHaveBeenCalledWith(
         createAreaDto
       );
     });
@@ -182,7 +191,7 @@ describe("AreasService", () => {
       };
 
       // Setup mock implementation
-      mockWorldMicroservice.areas.createArea.mockRejectedValue(
+      mockWorldMicroservice.areas.create.mockRejectedValue(
         new Error("Microservice error")
       );
 
@@ -190,7 +199,7 @@ describe("AreasService", () => {
       await expect(service.create(createAreaDto)).rejects.toThrow(
         "Microservice error"
       );
-      expect(mockWorldMicroservice.areas.createArea).toHaveBeenCalledTimes(1);
+      expect(mockWorldMicroservice.areas.create).toHaveBeenCalledTimes(1);
     });
   });
 
@@ -212,15 +221,15 @@ describe("AreasService", () => {
       updatedArea.description = "Updated description";
 
       // Setup mock implementation
-      mockWorldMicroservice.areas.updateArea.mockResolvedValue(updatedArea);
+      mockWorldMicroservice.areas.update.mockResolvedValue(updatedArea);
 
       // Call the service method
       const result = await service.update(areaId, updateAreaDto);
 
       // Verify the result
       expect(result).toEqual(updatedArea);
-      expect(mockWorldMicroservice.areas.updateArea).toHaveBeenCalledTimes(1);
-      expect(mockWorldMicroservice.areas.updateArea).toHaveBeenCalledWith({
+      expect(mockWorldMicroservice.areas.update).toHaveBeenCalledTimes(1);
+      expect(mockWorldMicroservice.areas.update).toHaveBeenCalledWith({
         _id: areaId,
         ...updateAreaDto,
       });
@@ -234,7 +243,7 @@ describe("AreasService", () => {
       };
 
       // Setup mock implementation
-      mockWorldMicroservice.areas.updateArea.mockRejectedValue(
+      mockWorldMicroservice.areas.update.mockRejectedValue(
         new Error("Microservice error")
       );
 
@@ -242,7 +251,7 @@ describe("AreasService", () => {
       await expect(service.update(areaId, updateAreaDto)).rejects.toThrow(
         "Microservice error"
       );
-      expect(mockWorldMicroservice.areas.updateArea).toHaveBeenCalledTimes(1);
+      expect(mockWorldMicroservice.areas.update).toHaveBeenCalledTimes(1);
     });
   });
 
@@ -258,17 +267,15 @@ describe("AreasService", () => {
       });
 
       // Setup mock implementation
-      mockWorldMicroservice.areas.deleteArea.mockResolvedValue(deletedArea);
+      mockWorldMicroservice.areas.delete.mockResolvedValue(deletedArea);
 
       // Call the service method
       const result = await service.delete(areaId);
 
       // Verify the result
       expect(result).toEqual(deletedArea);
-      expect(mockWorldMicroservice.areas.deleteArea).toHaveBeenCalledTimes(1);
-      expect(mockWorldMicroservice.areas.deleteArea).toHaveBeenCalledWith(
-        areaId
-      );
+      expect(mockWorldMicroservice.areas.delete).toHaveBeenCalledTimes(1);
+      expect(mockWorldMicroservice.areas.delete).toHaveBeenCalledWith(areaId);
     });
 
     it("should handle errors from the microservice", async () => {
@@ -276,7 +283,7 @@ describe("AreasService", () => {
       const areaId = "area1";
 
       // Setup mock implementation
-      mockWorldMicroservice.areas.deleteArea.mockRejectedValue(
+      mockWorldMicroservice.areas.delete.mockRejectedValue(
         new Error("Microservice error")
       );
 
@@ -284,7 +291,7 @@ describe("AreasService", () => {
       await expect(service.delete(areaId)).rejects.toThrow(
         "Microservice error"
       );
-      expect(mockWorldMicroservice.areas.deleteArea).toHaveBeenCalledTimes(1);
+      expect(mockWorldMicroservice.areas.delete).toHaveBeenCalledTimes(1);
     });
   });
 

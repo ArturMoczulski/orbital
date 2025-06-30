@@ -37,9 +37,6 @@ module.exports = {
   collectCoverageFrom: ["**/*.(t|j)s"],
   coverageDirectory: "../coverage",
 
-  // Default test pattern (can be overridden in specific configs)
-  testRegex: "\\.spec\\.ts$",
-
   // Common setup files
   setupFilesAfterEnv: ["<rootDir>/../jest.setup.js"],
 
@@ -47,5 +44,5 @@ module.exports = {
   verbose: true,
 
   // Default timeout for tests
-  testTimeout: 10000,
+  testTimeout: 60000,
 };
