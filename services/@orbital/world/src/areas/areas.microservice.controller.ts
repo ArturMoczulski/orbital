@@ -67,7 +67,32 @@ export class AreasMicroserviceController extends CrudController<
   @MessagePattern()
   async update(payload: { _id: string; updateDto: Partial<AreaProps> }) {
     const { _id, updateDto } = payload;
-    return super.update({ _id, ...updateDto });
+
+    // First, find the existing entity
+    const existingEntity = await this.service.findById(_id);
+    if (!existingEntity) {
+      return null;
+    }
+
+    // Extract the plain object from the entity to avoid document properties
+    const existingData = existingEntity.toPlainObject
+      ? existingEntity.toPlainObject()
+      : { ...existingEntity };
+
+    // Ensure worldId is preserved
+    if (!updateDto.worldId && existingData.worldId) {
+      updateDto.worldId = existingData.worldId;
+    }
+
+    // Update and return the entity
+    const result = await super.update({ _id, ...updateDto });
+
+    // If result doesn't have worldId but existingEntity does, add it
+    if (result && !result.worldId && existingData.worldId) {
+      result.worldId = existingData.worldId;
+    }
+
+    return result;
   }
 
   /**
@@ -77,6 +102,31 @@ export class AreasMicroserviceController extends CrudController<
    */
   @MessagePattern()
   async delete(ids: string | string[]) {
+    // For single ID, fetch the entity before deleting
+    if (!Array.isArray(ids)) {
+      const entityToDelete = await this.service.findById(ids);
+      if (!entityToDelete) {
+        return null;
+      }
+
+      // Store the entity data before deletion
+      const entityData = entityToDelete.toPlainObject
+        ? entityToDelete.toPlainObject()
+        : { ...entityToDelete };
+
+      const deleteResult = await super.delete(ids);
+      if (deleteResult === true) {
+        // Return the entity data with _id explicitly set
+        // Use type assertion to bypass TypeScript's type checking
+        return {
+          _id: ids,
+          ...entityData,
+        } as any; // Type assertion to match the expected return type
+      }
+      return null;
+    }
+
+    // For multiple IDs, use the standard behavior
     return super.delete(ids);
   }
 

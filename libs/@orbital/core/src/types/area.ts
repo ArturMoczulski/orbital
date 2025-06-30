@@ -77,7 +77,7 @@ export class Area
   /** Create a fake Area instance with randomized data */
   static mock(overrides: Partial<AreaProps> = {}): Area {
     // Ensure _id is always set in the mock data
-    const _id = overrides._id ?? faker.string.uuid();
+    const _id = overrides._id || faker.string.uuid();
 
     // Generate a description first to ensure it's available
     const description = faker.lorem.paragraph();
@@ -116,12 +116,10 @@ export class Area
     return area;
   }
 
-  constructor(data: unknown) {
-    // Convert data to object if possible
+  constructor(data: Partial<AreaProps>) {
+    // Pass to parent constructor which handles _id generation
     const dataObj =
       typeof data === "object" && data !== null ? { ...(data as object) } : {};
-
-    // Pass to parent constructor which handles _id generation
     super(dataObj);
 
     // Extract properties from data directly without validation
