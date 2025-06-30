@@ -14,6 +14,7 @@ export class Area extends CoreArea {
   @prop({ required: true })
   override name!: string;
 
+  // Make description explicitly required with a default value
   @prop({ required: true, default: "" })
   override description!: string;
 

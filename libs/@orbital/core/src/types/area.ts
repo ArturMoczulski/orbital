@@ -62,8 +62,15 @@ export class Area
 
   /** Create a fake Area instance with randomized data */
   static mock(overrides: Partial<AreaProps> = {}): Area {
+    // Ensure _id is always set in the mock data
+    const _id = overrides._id ?? faker.string.uuid();
+
+    // Generate a description first to ensure it's available
+    const description = faker.lorem.paragraph();
+
     // No need to select a style explicitly as it's random by default
-    const base: Partial<AreaProps> = {
+    const base: Partial<AreaProps & { description: string }> = {
+      _id,
       parentId: faker.string.uuid(),
       // Generate a rich fantasy name with the enhanced generator
       name: generateFantasyAreaName({
@@ -80,47 +87,61 @@ export class Area
       tags: Array.from({ length: Math.floor(Math.random() * 3) + 1 }, () =>
         faker.lorem.word()
       ),
+      // Always include a description
+      description: description,
     };
+
+    // Create the area with the combined data
     const area = new Area({ ...base, ...overrides });
-    area.description = faker.lorem.paragraph();
+
+    // Ensure description is set even if it was overridden with undefined
+    if (!area.description) {
+      area.description = description;
+    }
+
     return area;
   }
 
   constructor(data: unknown) {
-    // Validate the data
-    const validated = AreaSchema.parse(data);
+    // Convert data to object if possible
+    const dataObj =
+      typeof data === "object" && data !== null ? { ...(data as object) } : {};
 
-    // Pass to parent constructor which handles _id
-    super(validated);
+    // Pass to parent constructor which handles _id generation
+    super(dataObj);
 
-    // Handle position if provided
-    let position: Position | undefined = undefined;
-    if (validated.position) {
-      const positionData = validated.position;
-      position =
-        positionData instanceof Position
-          ? positionData
-          : new Position(positionData);
+    // Extract properties from data directly without validation
+    if (typeof data === "object" && data !== null) {
+      const typedData = data as Record<string, any>;
+
+      // Handle position if provided
+      let position: Position | undefined = undefined;
+      if (typedData.position) {
+        position =
+          typedData.position instanceof Position
+            ? typedData.position
+            : new Position(typedData.position);
+      }
+
+      // Handle areaMap if provided
+      let areaMap: AreaMap | undefined = undefined;
+      if (typedData.areaMap) {
+        areaMap =
+          typedData.areaMap instanceof AreaMap
+            ? typedData.areaMap
+            : new AreaMap(typedData.areaMap);
+      }
+
+      // Assign properties directly from data
+      this.name = typedData.name || "";
+      this.parentId = typedData.parentId;
+      this.worldId = typedData.worldId;
+      this.description = typedData.description || "";
+      this.landmarks = typedData.landmarks || [];
+      this.connections = typedData.connections || [];
+      this.tags = typedData.tags || [];
+      this.position = position;
+      this.areaMap = areaMap;
     }
-
-    // Handle areaMap if provided
-    let areaMap: AreaMap | undefined = undefined;
-    if ((validated as any).areaMap) {
-      const areaMapData = (validated as any).areaMap;
-      areaMap =
-        areaMapData instanceof AreaMap ? areaMapData : new AreaMap(areaMapData);
-    }
-
-    // Assign properties directly
-    this.name = validated.name;
-    this.parentId = validated.parentId;
-    this.worldId = (validated as any).worldId;
-    // Assign new generated properties
-    this.description = (validated as any).description ?? "";
-    this.landmarks = (validated as any).landmarks ?? [];
-    this.connections = (validated as any).connections ?? [];
-    this.tags = (validated as any).tags ?? [];
-    this.position = position;
-    this.areaMap = areaMap;
   }
 }

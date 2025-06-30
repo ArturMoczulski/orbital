@@ -3,7 +3,11 @@ import {
   BulkItemizedResponse,
   BulkOperation,
 } from "@orbital/bulk-operations";
-import { IdentifiableObject, IdentifiableObjectProps } from "@orbital/core";
+import {
+  ExtendedZodError,
+  IdentifiableObject,
+  IdentifiableObjectProps,
+} from "@orbital/core";
 import { ReturnModelType } from "@typegoose/typegoose";
 import { ZodError, ZodObject } from "zod";
 import { PersistenceMapper } from "../mappers/persistence-mapper";
@@ -83,7 +87,11 @@ export class DocumentRepository<
               const createSchema = this.schema.omit({ _id: true });
               createSchema.parse(rest);
             } catch (validationError: any) {
-              throw new Error(`Validation error: ${validationError.message}`);
+              // Use ExtendedZodError to preserve validation details with stack trace
+              throw ExtendedZodError.fromError(
+                validationError,
+                `Validation error during create operation`
+              );
             }
           }
 
@@ -100,7 +108,13 @@ export class DocumentRepository<
           validItems.push(data);
           domainObjects.push(domainObject);
         } catch (error: any) {
-          fail(item, { message: error.message });
+          // Ensure we have a proper error message, even for ExtendedZodError
+          const errorMessage =
+            error instanceof ExtendedZodError
+              ? `${error.message}\n${error.formatIssues()}`
+              : error.message;
+
+          fail(item, { message: errorMessage });
         }
       }
 
@@ -221,7 +235,7 @@ export class DocumentRepository<
   ): Promise<WithDocument<TDomainEntity>[]> {
     // Check if the schema has a parentId field
     if (this.schema && !this.schema.shape.parentId) {
-      throw new ZodError([
+      const zodError = new ZodError([
         {
           code: "invalid_type",
           expected: "object",
@@ -230,6 +244,7 @@ export class DocumentRepository<
           message: "Entity schema does not have a parentId field",
         },
       ]);
+      throw new ExtendedZodError(zodError);
     }
 
     return this.find({ parentId }, projection, options);
@@ -249,7 +264,7 @@ export class DocumentRepository<
   ): Promise<WithDocument<TDomainEntity>[]> {
     // Check if the schema has a tags field
     if (this.schema && !this.schema.shape.tags) {
-      throw new ZodError([
+      const zodError = new ZodError([
         {
           code: "invalid_type",
           expected: "object",
@@ -258,6 +273,7 @@ export class DocumentRepository<
           message: "Entity schema does not have a tags field",
         },
       ]);
+      throw new ExtendedZodError(zodError);
     }
 
     return this.find({ tags: { $in: tags } }, projection, options);
@@ -343,7 +359,11 @@ export class DocumentRepository<
                 partialSchema.parse(plainObject);
               }
             } catch (validationError: any) {
-              throw new Error(`Validation error: ${validationError.message}`);
+              // Use ExtendedZodError to preserve validation details with stack trace
+              throw ExtendedZodError.fromError(
+                validationError,
+                `Validation error during update operation`
+              );
             }
           }
 
@@ -363,7 +383,13 @@ export class DocumentRepository<
             },
           });
         } catch (error: any) {
-          fail(entity, { message: error.message });
+          // Ensure we have a proper error message, even for ExtendedZodError
+          const errorMessage =
+            error instanceof ExtendedZodError
+              ? `${error.message}\n${error.formatIssues()}`
+              : error.message;
+
+          fail(entity, { message: errorMessage });
         }
       }
 
