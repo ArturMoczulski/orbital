@@ -32,8 +32,12 @@ export class AreaService {
    * @param options Optional query options
    * @returns Array of areas matching the query
    */
-  async find(...args: Parameters<AreasCRUDService["find"]>) {
-    return this.areasCrudService.find(...args);
+  async find(
+    filter: Record<string, any> = {},
+    projection?: Record<string, any>,
+    options?: Record<string, any>
+  ) {
+    return this.areasCrudService.find(filter, projection, options);
   }
 
   /**
@@ -42,8 +46,8 @@ export class AreaService {
    * @param projection Optional fields to project
    * @returns The found area or null
    */
-  async findById(...args: Parameters<AreasCRUDService["findById"]>) {
-    return this.areasCrudService.findById(...args);
+  async findById(id: string, projection?: Record<string, any>) {
+    return this.areasCrudService.findById(id, projection);
   }
 
   /**
@@ -54,9 +58,11 @@ export class AreaService {
    * @returns Array of areas in the specified world
    */
   async findByWorldId(
-    ...args: Parameters<AreasCRUDService["findByWorldId"]>
+    worldId: string,
+    projection?: Record<string, any>,
+    options?: Record<string, any>
   ): Promise<Area[]> {
-    return this.areasCrudService.findByWorldId(...args);
+    return this.areasCrudService.findByWorldId(worldId, projection, options);
   }
 
   /**
@@ -67,9 +73,11 @@ export class AreaService {
    * @returns Array of areas that are children of the specified parent area
    */
   async findByParentId(
-    ...args: Parameters<AreasCRUDService["findByParentId"]>
+    parentId: string,
+    projection?: Record<string, any>,
+    options?: Record<string, any>
   ): Promise<Area[]> {
-    return this.areasCrudService.findByParentId(...args);
+    return this.areasCrudService.findByParentId(parentId, projection, options);
   }
 
   /**
@@ -80,9 +88,11 @@ export class AreaService {
    * @returns Array of areas that have any of the specified tags
    */
   async findByTags(
-    ...args: Parameters<AreasCRUDService["findByTags"]>
+    tags: string[],
+    projection?: Record<string, any>,
+    options?: Record<string, any>
   ): Promise<Area[]> {
-    return this.areasCrudService.findByTags(...args);
+    return this.areasCrudService.findByTags(tags, projection, options);
   }
 
   /**
@@ -100,7 +110,7 @@ export class AreaService {
    * @returns For singular input, returns true if deleted, null if not found. For array input, returns a BulkCountedResponse.
    */
   async delete(
-    ids: Parameters<AreasCRUDService["delete"]>[0]
+    ids: string | string[]
   ): Promise<boolean | null | BulkCountedResponse> {
     return this.areasCrudService.delete(ids);
   }

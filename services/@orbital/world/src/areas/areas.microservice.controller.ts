@@ -1,12 +1,13 @@
 import { Controller, UseFilters } from "@nestjs/common";
 import { OrbitalMicroservices } from "@orbital/contracts";
+import { WithoutId } from "@orbital/core";
 import {
   MessagePattern,
   MicroserviceController,
   PassThroughRpcExceptionFilter,
 } from "@orbital/microservices";
 import { CRUDController } from "@orbital/nest";
-import { AreaModel as TypegooseArea } from "@orbital/typegoose";
+import { AreaModel as TypegooseArea, WithId } from "@orbital/typegoose";
 import { AreasCRUDService } from "./areas.crud.service";
 import { AreaProps } from "./areas.repository";
 
@@ -28,7 +29,7 @@ export class AreasMicroserviceController extends CRUDController<
    * @returns The created area or BulkItemizedResponse for multiple areas
    */
   @MessagePattern()
-  async create(dto: Parameters<AreasCRUDService["create"]>[0]) {
+  async create(dto: WithoutId<TypegooseArea> | WithoutId<TypegooseArea>[]) {
     return super.create(dto);
   }
 
@@ -65,7 +66,7 @@ export class AreasMicroserviceController extends CRUDController<
    * @returns The updated area or BulkItemizedResponse for multiple areas
    */
   @MessagePattern()
-  async update(data: Parameters<AreasCRUDService["update"]>[0]) {
+  async update(data: WithId<TypegooseArea> | WithId<TypegooseArea>[]) {
     return await super.update(data);
   }
 
