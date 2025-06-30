@@ -21,6 +21,12 @@ export class PersistenceMapper {
         continue;
       }
 
+      // Special handling for _id to ensure it's always a string
+      if (key === "_id" && value !== null) {
+        result[key] = String(value);
+        continue;
+      }
+
       // Handle nested domain objects
       if (value instanceof IdentifiableObject) {
         result[key] = this.toPersistence(value);
@@ -34,6 +40,10 @@ export class PersistenceMapper {
         result[key] = value.map((item) =>
           item instanceof IdentifiableObject ? this.toPersistence(item) : item
         );
+      }
+      // Handle arrays of IDs (strings)
+      else if (Array.isArray(value) && key.endsWith("Ids")) {
+        result[key] = value.map((item) => String(item));
       }
       // Handle primitive values
       else {
@@ -53,6 +63,11 @@ export class PersistenceMapper {
   ): TDomainEntity {
     // Convert the document to a plain object
     const plainData = document.toObject ? document.toObject() : document;
+
+    // Ensure _id is a string
+    if (plainData._id) {
+      plainData._id = String(plainData._id);
+    }
 
     // Create a new instance of the domain class with the document data
     const domainObject = new DomainClass(plainData);

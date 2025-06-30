@@ -1,13 +1,16 @@
 import { Area, AreaMap, Position } from "@orbital/core";
 import { modelOptions, prop } from "@typegoose/typegoose";
-import { randomUUID } from "crypto";
 
 @modelOptions({
-  schemaOptions: { collection: "areas", timestamps: true },
+  schemaOptions: {
+    collection: "areas",
+    timestamps: true,
+    _id: true, // Allow MongoDB to override the _id
+  },
 })
 export class AreaModel extends Area {
-  // Override _id to add Typegoose decorator
-  @prop({ required: true, auto: true, default: () => randomUUID() })
+  // Let MongoDB generate the ID
+  @prop({ required: true })
   override _id!: string;
 
   // Add Typegoose decorators to inherited properties

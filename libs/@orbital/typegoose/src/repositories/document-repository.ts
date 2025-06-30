@@ -105,8 +105,11 @@ export class DocumentRepository<
           // Create persistence data from domain object
           const data = PersistenceMapper.toPersistence(domainObject);
 
+          // Remove the temporary ID to let MongoDB generate a new one
+          const { _id, ...dataWithoutId } = data;
+
           // Store for bulk insertion
-          validItems.push(data);
+          validItems.push(dataWithoutId);
           domainObjects.push(domainObject);
         } catch (error: any) {
           // Ensure we have a proper error message, even for ZodErrorWithStack
