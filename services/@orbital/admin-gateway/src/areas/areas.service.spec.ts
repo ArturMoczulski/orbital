@@ -11,6 +11,7 @@ const mockWorldMicroservice = {
     create: jest.fn(),
     update: jest.fn(),
     delete: jest.fn(),
+    findByWorldId: jest.fn(),
   },
 };
 
@@ -38,7 +39,7 @@ describe("AreasService", () => {
     expect(service).toBeDefined();
   });
 
-  describe("getAll", () => {
+  describe("find", () => {
     it("should return an array of areas", async () => {
       // Mock data using Area.mock()
       const mockAreas = [
@@ -60,7 +61,7 @@ describe("AreasService", () => {
       mockWorldMicroservice.areas.find.mockResolvedValue(mockAreas);
 
       // Call the service method
-      const result = await service.getAll();
+      const result = await service.find();
 
       // Verify the result
       expect(result).toEqual(mockAreas);
@@ -77,7 +78,7 @@ describe("AreasService", () => {
       mockWorldMicroservice.areas.find.mockResolvedValue(null);
 
       // Call the service method
-      const result = await service.getAll();
+      const result = await service.find();
 
       // Verify the result
       expect(result).toEqual([]);
@@ -91,12 +92,12 @@ describe("AreasService", () => {
       );
 
       // Call the service method and expect it to throw
-      await expect(service.getAll()).rejects.toThrow("Microservice error");
+      await expect(service.find()).rejects.toThrow("Microservice error");
       expect(mockWorldMicroservice.areas.find).toHaveBeenCalledTimes(1);
     });
   });
 
-  describe("getById", () => {
+  describe("findById", () => {
     it("should return a single area by id", async () => {
       // Mock data using Area.mock()
       const mockArea = Area.mock({
@@ -110,7 +111,7 @@ describe("AreasService", () => {
       mockWorldMicroservice.areas.findById.mockResolvedValue(mockArea);
 
       // Call the service method
-      const result = await service.getById("area1");
+      const result = await service.findById("area1");
 
       // Verify the result
       expect(result).toEqual(mockArea);
@@ -126,7 +127,7 @@ describe("AreasService", () => {
       mockWorldMicroservice.areas.findById.mockResolvedValue(null);
 
       // Call the service method and expect it to throw
-      await expect(service.getById("nonexistent")).rejects.toThrow(
+      await expect(service.findById("nonexistent")).rejects.toThrow(
         "Area not found"
       );
       expect(mockWorldMicroservice.areas.findById).toHaveBeenCalledTimes(1);
@@ -143,10 +144,79 @@ describe("AreasService", () => {
       );
 
       // Call the service method and expect it to throw
-      await expect(service.getById("area1")).rejects.toThrow(
+      await expect(service.findById("area1")).rejects.toThrow(
         "Microservice error"
       );
       expect(mockWorldMicroservice.areas.findById).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe("findByWorldId", () => {
+    it("should return areas filtered by worldId", async () => {
+      const worldId = "world1";
+      // Mock data using Area.mock()
+      const mockAreas = [
+        Area.mock({
+          _id: "area1",
+          name: "Test Area 1",
+          worldId,
+          position: new Position({ x: 0, y: 0, z: 0 }),
+        }),
+        Area.mock({
+          _id: "area2",
+          name: "Test Area 2",
+          worldId,
+          position: new Position({ x: 10, y: 10, z: 0 }),
+        }),
+      ];
+
+      // Setup mock implementation
+      mockWorldMicroservice.areas.findByWorldId.mockResolvedValue(mockAreas);
+
+      // Call the service method
+      const result = await service.findByWorldId(worldId);
+
+      // Verify the result
+      expect(result).toEqual(mockAreas);
+      expect(mockWorldMicroservice.areas.findByWorldId).toHaveBeenCalledTimes(
+        1
+      );
+      expect(mockWorldMicroservice.areas.findByWorldId).toHaveBeenCalledWith({
+        worldId,
+        projection: {},
+        options: {},
+      });
+    });
+
+    it("should return an empty array if no areas are found for the worldId", async () => {
+      const worldId = "nonexistent-world";
+      // Setup mock implementation
+      mockWorldMicroservice.areas.findByWorldId.mockResolvedValue(null);
+
+      // Call the service method
+      const result = await service.findByWorldId(worldId);
+
+      // Verify the result
+      expect(result).toEqual([]);
+      expect(mockWorldMicroservice.areas.findByWorldId).toHaveBeenCalledTimes(
+        1
+      );
+    });
+
+    it("should handle errors from the microservice", async () => {
+      const worldId = "world1";
+      // Setup mock implementation
+      mockWorldMicroservice.areas.findByWorldId.mockRejectedValue(
+        new Error("Microservice error")
+      );
+
+      // Call the service method and expect it to throw
+      await expect(service.findByWorldId(worldId)).rejects.toThrow(
+        "Microservice error"
+      );
+      expect(mockWorldMicroservice.areas.findByWorldId).toHaveBeenCalledTimes(
+        1
+      );
     });
   });
 

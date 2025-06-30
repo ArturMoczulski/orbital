@@ -7,16 +7,26 @@ export class AreasService {
 
   constructor(private readonly worldMicroservice: WorldMicroservice) {}
 
-  async getAll(): Promise<any[]> {
+  async find(filter: Record<string, any> = {}): Promise<any[]> {
     const areas = await this.worldMicroservice.areas.find({
-      filter: {},
+      filter,
       projection: {},
       options: {},
     });
     return Array.isArray(areas) ? areas : [];
   }
 
-  async getById(_id: string): Promise<any> {
+  async findByWorldId(worldId: string): Promise<any[]> {
+    this.logger.log(`Finding areas by worldId: ${worldId}`);
+    const areas = await this.worldMicroservice.areas.findByWorldId({
+      worldId,
+      projection: {},
+      options: {},
+    });
+    return Array.isArray(areas) ? areas : [];
+  }
+
+  async findById(_id: string): Promise<any> {
     const area = await this.worldMicroservice.areas.findById({
       id: _id,
       projection: {},

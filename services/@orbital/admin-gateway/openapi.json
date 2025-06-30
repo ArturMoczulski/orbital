@@ -82,8 +82,18 @@
     },
     "/areas": {
       "get": {
-        "operationId": "AreasController_getAll",
-        "parameters": [],
+        "operationId": "AreasController_find",
+        "parameters": [
+          {
+            "name": "worldId",
+            "required": false,
+            "in": "query",
+            "description": "Filter areas by world ID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "Returns all areas"
@@ -120,7 +130,7 @@
     },
     "/areas/{_id}": {
       "get": {
-        "operationId": "AreasController_getById",
+        "operationId": "AreasController_findById",
         "parameters": [
           {
             "name": "_id",

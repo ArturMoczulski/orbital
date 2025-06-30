@@ -7,8 +7,15 @@ import {
   Param,
   Post,
   Put,
+  Query,
 } from "@nestjs/common";
-import { ApiOperation, ApiParam, ApiResponse, ApiTags } from "@nestjs/swagger";
+import {
+  ApiOperation,
+  ApiParam,
+  ApiQuery,
+  ApiResponse,
+  ApiTags,
+} from "@nestjs/swagger";
 import { AreasService } from "./areas.service";
 import { CreateAreaDto, UpdateAreaDto } from "./dto/area.dto";
 
@@ -20,8 +27,15 @@ export class AreasController {
   @Get()
   @ApiOperation({ summary: "Get all areas" })
   @ApiResponse({ status: 200, description: "Returns all areas" })
-  getAll() {
-    return this.areasService.getAll();
+  @ApiQuery({
+    name: "worldId",
+    required: false,
+    description: "Filter areas by world ID",
+  })
+  find(@Query("worldId") worldId?: string) {
+    return worldId
+      ? this.areasService.findByWorldId(worldId)
+      : this.areasService.find();
   }
 
   @Get("/:_id")
@@ -32,9 +46,9 @@ export class AreasController {
   })
   @ApiResponse({ status: 404, description: "Area not found" })
   @ApiParam({ name: "_id", description: "The ID of the area to retrieve" })
-  async getById(@Param("_id") _id: string) {
+  async findById(@Param("_id") _id: string) {
     try {
-      return await this.areasService.getById(_id);
+      return await this.areasService.findById(_id);
     } catch (error) {
       throw new NotFoundException(`Area with id ${_id} not found`);
     }

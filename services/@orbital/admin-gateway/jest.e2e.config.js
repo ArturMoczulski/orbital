@@ -5,9 +5,10 @@ const { name: pkg } = require("./package.json");
 module.exports = {
   ...base,
   displayName: `${pkg}:e2e`,
+  rootDir: ".",
   setupFilesAfterEnv: [
-    ...(base.setupFilesAfterEnv || []),
-    "<rootDir>/../jest.setup.e2e.js",
+    "<rootDir>/jest.setup.js",
+    "<rootDir>/jest.setup.e2e.js",
   ],
-  testMatch: ["**/*.e2e.spec.ts"],
+  testMatch: ["**/src/**/*.e2e.spec.ts"],
 };

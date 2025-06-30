@@ -281,6 +281,44 @@ describe("Areas API (e2e)", () => {
 
       expect(Array.isArray(allAreasResponse.body)).toBe(true);
 
+      // Filter areas by worldId1
+      const filteredResponse1 = await request(BASE_URL)
+        .get(`/areas?worldId=${worldId1}`)
+        .expect(200);
+
+      console.log(
+        "Response from GET /areas?worldId=test-world-id-1:",
+        JSON.stringify(filteredResponse1.body, null, 2)
+      );
+
+      expect(Array.isArray(filteredResponse1.body)).toBe(true);
+      expect(filteredResponse1.body.length).toBeGreaterThanOrEqual(1);
+      expect(
+        filteredResponse1.body.some((area: any) => area._id === area1Id)
+      ).toBe(true);
+      expect(
+        filteredResponse1.body.every((area: any) => area.worldId === worldId1)
+      ).toBe(true);
+
+      // Filter areas by worldId2
+      const filteredResponse2 = await request(BASE_URL)
+        .get(`/areas?worldId=${worldId2}`)
+        .expect(200);
+
+      console.log(
+        "Response from GET /areas?worldId=test-world-id-2:",
+        JSON.stringify(filteredResponse2.body, null, 2)
+      );
+
+      expect(Array.isArray(filteredResponse2.body)).toBe(true);
+      expect(filteredResponse2.body.length).toBeGreaterThanOrEqual(1);
+      expect(
+        filteredResponse2.body.some((area: any) => area._id === area2Id)
+      ).toBe(true);
+      expect(
+        filteredResponse2.body.every((area: any) => area.worldId === worldId2)
+      ).toBe(true);
+
       // Clean up
       if (area1Id) {
         await request(BASE_URL).delete(`/areas/${area1Id}`).expect(200);

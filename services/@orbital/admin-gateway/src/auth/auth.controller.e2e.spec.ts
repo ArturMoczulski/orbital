@@ -3,11 +3,11 @@ import { MongooseModule, getConnectionToken } from "@nestjs/mongoose";
 import { Test, TestingModule } from "@nestjs/testing";
 import { MongoMemoryServer } from "mongodb-memory-server";
 import { Connection } from "mongoose";
-import { AuthModule } from "../../src/auth/auth.module";
-import { AuthService } from "../../src/auth/auth.service";
-import { User, UserSchema } from "../../src/users/schemas/user.schema";
-import { UsersModule } from "../../src/users/users.module";
-import { UsersService } from "../../src/users/users.service";
+import { User, UserSchema } from "../users/schemas/user.schema";
+import { UsersModule } from "../users/users.module";
+import { UsersService } from "../users/users.service";
+import { AuthModule } from "./auth.module";
+import { AuthService } from "./auth.service";
 const request = require("supertest");
 
 describe("Auth E2E", () => {
