@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@nestjs/common": "^10.0.0",
+    "@orbital/core": "workspaces:*",
     "@typegoose/typegoose": "^11.0.0",
     "mongoose": "^6.9.3",
     "nestjs-typegoose": "^7.1.38",

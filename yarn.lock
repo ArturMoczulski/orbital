@@ -6349,7 +6349,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@orbital/core@npm:1.0.0, @orbital/core@npm:^1.0.0, @orbital/core@workspace:^1.0.0, @orbital/core@workspace:libs/@orbital/core":
+"@orbital/core@npm:1.0.0, @orbital/core@npm:^1.0.0, @orbital/core@workspace:^1.0.0, @orbital/core@workspace:libs/@orbital/core, @orbital/core@workspaces:*":
   version: 0.0.0-use.local
   resolution: "@orbital/core@workspace:libs/@orbital/core"
   dependencies:
@@ -6491,6 +6491,7 @@ __metadata:
     "@nestjs/core": "npm:^10.0.0"
     "@nestjs/event-emitter": "npm:^2.0.4"
     "@nestjs/testing": "npm:^10.0.0"
+    "@orbital/core": "workspaces:*"
     "@typegoose/typegoose": "npm:^11.0.0"
     "@types/jest": "npm:^30.0.0"
     "@types/node": "npm:^24.0.4"
