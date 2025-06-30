@@ -8,12 +8,19 @@ export class AreasService {
   constructor(private readonly worldMicroservice: WorldMicroservice) {}
 
   async getAll(): Promise<any[]> {
-    const areas = await this.worldMicroservice.areas.find();
+    const areas = await this.worldMicroservice.areas.find({
+      filter: {},
+      projection: {},
+      options: {},
+    });
     return Array.isArray(areas) ? areas : [];
   }
 
   async getById(_id: string): Promise<any> {
-    const area = await this.worldMicroservice.areas.findById(_id);
+    const area = await this.worldMicroservice.areas.findById({
+      id: _id,
+      projection: {},
+    });
     if (!area) {
       throw new Error("Area not found");
     }

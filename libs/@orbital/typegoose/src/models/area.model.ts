@@ -1,11 +1,11 @@
-import { AreaMap, Area as CoreArea, Position } from "@orbital/core";
+import { Area, AreaMap, Position } from "@orbital/core";
 import { modelOptions, prop } from "@typegoose/typegoose";
 import { randomUUID } from "crypto";
 
 @modelOptions({
   schemaOptions: { collection: "areas", timestamps: true },
 })
-export class Area extends CoreArea {
+export class AreaModel extends Area {
   // Override _id to add Typegoose decorator
   @prop({ required: true, auto: true, default: () => randomUUID() })
   override _id!: string;
@@ -50,6 +50,3 @@ export class Area extends CoreArea {
     super(data || {});
   }
 }
-
-// Export the Area class as AreaModel for backward compatibility
-export { Area as AreaModel };

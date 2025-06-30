@@ -1,11 +1,11 @@
-import { World as CoreWorld } from "@orbital/core";
+import { World } from "@orbital/core";
 import { modelOptions, prop } from "@typegoose/typegoose";
 import { randomUUID } from "crypto";
 
 @modelOptions({
   schemaOptions: { collection: "worlds", timestamps: true },
 })
-export class World extends CoreWorld {
+export class WorldModel extends World {
   // Override _id to add Typegoose decorator
   @prop({ required: true, auto: true, default: () => randomUUID() })
   override _id!: string;
@@ -34,6 +34,3 @@ export class World extends CoreWorld {
     super(data || {});
   }
 }
-
-// Export the World class as WorldModel for backward compatibility
-export { World as WorldModel };

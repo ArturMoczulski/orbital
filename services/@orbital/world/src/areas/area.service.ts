@@ -1,6 +1,6 @@
 import { Injectable } from "@nestjs/common";
 import { BulkCountedResponse } from "@orbital/bulk-operations";
-import { Area } from "@orbital/typegoose";
+import { AreaModel } from "@orbital/typegoose";
 import { AreasCRUDService } from "./areas.crud.service";
 
 /**
@@ -61,7 +61,7 @@ export class AreaService {
     worldId: string,
     projection?: Record<string, any>,
     options?: Record<string, any>
-  ): Promise<Area[]> {
+  ): Promise<AreaModel[]> {
     return this.areasCrudService.findByWorldId(worldId, projection, options);
   }
 
@@ -76,7 +76,7 @@ export class AreaService {
     parentId: string,
     projection?: Record<string, any>,
     options?: Record<string, any>
-  ): Promise<Area[]> {
+  ): Promise<AreaModel[]> {
     return this.areasCrudService.findByParentId(parentId, projection, options);
   }
 
@@ -91,7 +91,7 @@ export class AreaService {
     tags: string[],
     projection?: Record<string, any>,
     options?: Record<string, any>
-  ): Promise<Area[]> {
+  ): Promise<AreaModel[]> {
     return this.areasCrudService.findByTags(tags, projection, options);
   }
 

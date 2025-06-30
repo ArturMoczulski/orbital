@@ -1,9 +1,13 @@
 import { Inject, Injectable } from "@nestjs/common";
-import { Area, DocumentRepository, WithDocument } from "@orbital/typegoose";
+import {
+  AreaModel,
+  DocumentRepository,
+  WithDocument,
+} from "@orbital/typegoose";
 import type { ReturnModelType } from "@typegoose/typegoose";
 import { getModelToken } from "nestjs-typegoose";
 
-// Define AreaProps locally based on Area properties
+// Define AreaProps locally based on AreaModel properties
 export type AreaProps = {
   _id: string;
   name: string;
@@ -21,16 +25,16 @@ export type AreaProps = {
 
 @Injectable()
 export class AreasRepository extends DocumentRepository<
-  Area,
+  AreaModel,
   AreaProps,
-  typeof Area
+  typeof AreaModel
 > {
   constructor(
-    @Inject(getModelToken(Area.name))
-    areaModel: ReturnModelType<typeof Area>
+    @Inject(getModelToken(AreaModel.name))
+    areaModel: ReturnModelType<typeof AreaModel>
   ) {
     // Call super with the required arguments
-    super(areaModel, Area);
+    super(areaModel, AreaModel);
   }
 
   /**
@@ -44,7 +48,7 @@ export class AreasRepository extends DocumentRepository<
     worldId: string,
     projection?: Record<string, any>,
     options?: Record<string, any>
-  ): Promise<WithDocument<Area>[]> {
+  ): Promise<WithDocument<AreaModel>[]> {
     return this.find({ worldId }, projection, options);
   }
 
@@ -59,7 +63,7 @@ export class AreasRepository extends DocumentRepository<
     parentId: string,
     projection?: Record<string, any>,
     options?: Record<string, any>
-  ): Promise<WithDocument<Area>[]> {
+  ): Promise<WithDocument<AreaModel>[]> {
     return this.find({ parentId }, projection, options);
   }
 
@@ -74,7 +78,7 @@ export class AreasRepository extends DocumentRepository<
     tags: string[],
     projection?: Record<string, any>,
     options?: Record<string, any>
-  ): Promise<WithDocument<Area>[]> {
+  ): Promise<WithDocument<AreaModel>[]> {
     return this.find({ tags: { $in: tags } }, projection, options);
   }
 }

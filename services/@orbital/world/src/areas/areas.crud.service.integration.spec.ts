@@ -1,5 +1,5 @@
 import { Test, TestingModule } from "@nestjs/testing";
-import { Area } from "@orbital/typegoose";
+import { AreaModel } from "@orbital/typegoose";
 import { MongoMemoryServer } from "mongodb-memory-server";
 import mongoose, { Model } from "mongoose";
 import { getModelToken, TypegooseModule } from "nestjs-typegoose";
@@ -10,7 +10,7 @@ describe("AreasCRUDService Integration", () => {
   let service: AreasCRUDService;
   let repository: AreasRepository;
   let mongod: MongoMemoryServer;
-  let areaModel: Model<Area>;
+  let areaModel: Model<AreaModel>;
   let module: TestingModule;
 
   // Use a longer timeout for MongoDB setup
@@ -29,7 +29,7 @@ describe("AreasCRUDService Integration", () => {
       module = await Test.createTestingModule({
         imports: [
           TypegooseModule.forRoot(uri),
-          TypegooseModule.forFeature([Area]),
+          TypegooseModule.forFeature([AreaModel]),
         ],
         providers: [AreasCRUDService, AreasRepository],
       }).compile();
@@ -37,7 +37,7 @@ describe("AreasCRUDService Integration", () => {
       // Get the service, repository, and model
       service = module.get<AreasCRUDService>(AreasCRUDService);
       repository = module.get<AreasRepository>(AreasRepository);
-      areaModel = module.get<Model<Area>>(getModelToken(Area.name));
+      areaModel = module.get<Model<AreaModel>>(getModelToken(AreaModel.name));
     } catch (error) {
       console.error("Error in beforeAll:", error);
       throw error;

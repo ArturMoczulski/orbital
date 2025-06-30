@@ -1,6 +1,6 @@
 import { Test, TestingModule } from "@nestjs/testing";
 import { CRUDService } from "@orbital/nest";
-import { Area } from "@orbital/typegoose";
+import { AreaModel } from "@orbital/typegoose";
 import { AreasCRUDService } from "./areas.crud.service";
 import { AreasRepository } from "./areas.repository";
 
@@ -54,19 +54,19 @@ describe("AreasCRUDService", () => {
       const worldId = "world-id-123";
       const projection = { name: 1, description: 1 };
       const options = { sort: { name: 1 } };
-      const expectedResult: Area[] = [
+      const expectedResult: AreaModel[] = [
         {
           _id: "area-id-1",
           worldId,
           name: "Test Area 1",
           description: "Description 1",
-        } as Area,
+        } as AreaModel,
         {
           _id: "area-id-2",
           worldId,
           name: "Test Area 2",
           description: "Description 2",
-        } as Area,
+        } as AreaModel,
       ];
 
       // Mock the repository method
@@ -87,7 +87,7 @@ describe("AreasCRUDService", () => {
     it("should call repository.findByWorldId with default parameters when not provided", async () => {
       // Arrange
       const worldId = "world-id-123";
-      const expectedResult: Area[] = [];
+      const expectedResult: AreaModel[] = [];
 
       // Mock the repository method
       jest.spyOn(repository, "findByWorldId").mockResolvedValue(expectedResult);

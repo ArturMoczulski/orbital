@@ -1,6 +1,6 @@
 import { Test, TestingModule } from "@nestjs/testing";
 import { WithoutId } from "@orbital/core";
-import { Area } from "@orbital/typegoose";
+import { AreaModel } from "@orbital/typegoose";
 import { AreaService } from "./area.service";
 import { AreasCRUDService } from "./areas.crud.service";
 import { AreaProps } from "./areas.repository";
@@ -49,7 +49,7 @@ describe("AreaService", () => {
         connections: [],
         tags: ["test"],
       };
-      const expectedResult = { ...dto, _id: "test-id" } as Area;
+      const expectedResult = { ...dto, _id: "test-id" } as AreaModel;
 
       (mockAreasCrudService.create as jest.Mock).mockResolvedValue(
         expectedResult
@@ -67,7 +67,9 @@ describe("AreaService", () => {
       const filter = { worldId: "test-world-id" };
       const projection = { name: 1 };
       const options = { limit: 10 };
-      const expectedResult = [{ _id: "test-id", name: "Test Area" }] as Area[];
+      const expectedResult = [
+        { _id: "test-id", name: "Test Area" },
+      ] as AreaModel[];
 
       (mockAreasCrudService.find as jest.Mock).mockResolvedValue(
         expectedResult
@@ -88,7 +90,7 @@ describe("AreaService", () => {
     it("should call areasCrudService.findById with the provided id", async () => {
       const id = "test-id";
       const projection = { name: 1 };
-      const expectedResult = { _id: id, name: "Test Area" } as Area;
+      const expectedResult = { _id: id, name: "Test Area" } as AreaModel;
 
       (mockAreasCrudService.findById as jest.Mock).mockResolvedValue(
         expectedResult
@@ -109,7 +111,9 @@ describe("AreaService", () => {
       const worldId = "test-world-id";
       const projection = { name: 1 };
       const options = { limit: 10 };
-      const expectedResult = [{ _id: "test-id", name: "Test Area" }] as Area[];
+      const expectedResult = [
+        { _id: "test-id", name: "Test Area" },
+      ] as AreaModel[];
 
       (mockAreasCrudService.findByWorldId as jest.Mock).mockResolvedValue(
         expectedResult
@@ -129,7 +133,7 @@ describe("AreaService", () => {
   describe("update", () => {
     it("should call areasCrudService.update with the provided entities", async () => {
       const entity = { _id: "test-id", name: "Updated Area" };
-      const expectedResult = { ...entity } as Area;
+      const expectedResult = { ...entity } as AreaModel;
 
       (mockAreasCrudService.update as jest.Mock).mockResolvedValue(
         expectedResult

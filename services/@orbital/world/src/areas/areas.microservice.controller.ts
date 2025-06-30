@@ -7,7 +7,7 @@ import {
   PassThroughRpcExceptionFilter,
 } from "@orbital/microservices";
 import { CRUDController } from "@orbital/nest";
-import { AreaModel as TypegooseArea, WithId } from "@orbital/typegoose";
+import { AreaModel, WithId } from "@orbital/typegoose";
 import { AreasCRUDService } from "./areas.crud.service";
 import { AreaProps } from "./areas.repository";
 
@@ -15,7 +15,7 @@ import { AreaProps } from "./areas.repository";
 @Controller()
 @UseFilters(new PassThroughRpcExceptionFilter(OrbitalMicroservices.World))
 export class AreasMicroserviceController extends CRUDController<
-  TypegooseArea,
+  AreaModel,
   AreaProps,
   AreasCRUDService
 > {
@@ -29,7 +29,7 @@ export class AreasMicroserviceController extends CRUDController<
    * @returns The created area or BulkItemizedResponse for multiple areas
    */
   @MessagePattern()
-  async create(dto: WithoutId<TypegooseArea> | WithoutId<TypegooseArea>[]) {
+  async create(dto: WithoutId<AreaModel> | WithoutId<AreaModel>[]) {
     return super.create(dto);
   }
 
@@ -66,7 +66,7 @@ export class AreasMicroserviceController extends CRUDController<
    * @returns The updated area or BulkItemizedResponse for multiple areas
    */
   @MessagePattern()
-  async update(data: WithId<TypegooseArea> | WithId<TypegooseArea>[]) {
+  async update(data: WithId<AreaModel> | WithId<AreaModel>[]) {
     return await super.update(data);
   }
 
@@ -92,7 +92,7 @@ export class AreasMicroserviceController extends CRUDController<
     worldId: string,
     projection?: Record<string, any>,
     options?: Record<string, any>
-  ): Promise<TypegooseArea[]> {
+  ): Promise<AreaModel[]> {
     return this.service.findByWorldId(worldId, projection, options);
   }
 
@@ -108,7 +108,7 @@ export class AreasMicroserviceController extends CRUDController<
     parentId: string,
     projection?: Record<string, any>,
     options?: Record<string, any>
-  ): Promise<TypegooseArea[]> {
+  ): Promise<AreaModel[]> {
     return this.service.findByParentId(parentId, projection, options);
   }
 
@@ -124,7 +124,7 @@ export class AreasMicroserviceController extends CRUDController<
     tags: string[],
     projection?: Record<string, any>,
     options?: Record<string, any>
-  ): Promise<TypegooseArea[]> {
+  ): Promise<AreaModel[]> {
     return this.service.findByTags(tags, projection, options);
   }
 }

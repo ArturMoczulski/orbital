@@ -1,12 +1,16 @@
-import { Area, DocumentRepository, WithDocument } from "@orbital/typegoose";
+import {
+  AreaModel,
+  DocumentRepository,
+  WithDocument,
+} from "@orbital/typegoose";
 import type { ReturnModelType } from "@typegoose/typegoose";
 import { Document } from "mongoose";
 import { AreasRepository } from "./areas.repository";
 
 describe("AreasRepository", () => {
   let repository: AreasRepository;
-  let mockAreaModel: ReturnModelType<typeof Area>;
-  let mockArea: Area;
+  let mockAreaModel: ReturnModelType<typeof AreaModel>;
+  let mockArea: AreaModel;
 
   beforeEach(() => {
     // Create a mock area directly
@@ -20,14 +24,14 @@ describe("AreasRepository", () => {
       tags: ["test", "area"],
       createdAt: new Date(),
       updatedAt: new Date(),
-    } as Area;
+    } as AreaModel;
 
     // Create a mock document with save and toObject methods
     const mockAreaDocument = {
       ...mockArea,
       save: jest.fn().mockResolvedValue(true),
       toObject: jest.fn().mockReturnValue(mockArea),
-    } as unknown as Document & Area;
+    } as unknown as Document & AreaModel;
 
     // Create a proper mock model object with all required methods
     const mockModel = {
@@ -53,7 +57,9 @@ describe("AreasRepository", () => {
     Object.assign(modelFunction, mockModel);
 
     // Cast to the required type
-    mockAreaModel = modelFunction as unknown as ReturnModelType<typeof Area>;
+    mockAreaModel = modelFunction as unknown as ReturnModelType<
+      typeof AreaModel
+    >;
 
     // Create repository with mock model
     repository = new AreasRepository(mockAreaModel);
@@ -88,7 +94,7 @@ describe("AreasRepository", () => {
           updatedAt: new Date(),
           landmarks: [],
           connections: [],
-        } as unknown as Area,
+        } as unknown as AreaModel,
         {
           _id: "area-id-2",
           name: "Test Area 2",
@@ -99,13 +105,13 @@ describe("AreasRepository", () => {
           updatedAt: new Date(),
           landmarks: [],
           connections: [],
-        } as unknown as Area,
+        } as unknown as AreaModel,
       ];
 
       // Mock the find method to return our mock areas
       jest
         .spyOn(repository, "find")
-        .mockResolvedValue(mockAreas as WithDocument<Area>[]);
+        .mockResolvedValue(mockAreas as WithDocument<AreaModel>[]);
 
       // Act
       const result = await repository.findByWorldId(worldId);

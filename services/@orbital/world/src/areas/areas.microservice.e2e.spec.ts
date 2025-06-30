@@ -1,11 +1,11 @@
 import { ClientNats, ClientProxy } from "@nestjs/microservices";
-import { AreaModel as TypegooseArea } from "@orbital/typegoose";
+import { AreaModel } from "@orbital/typegoose";
 import { randomUUID } from "crypto";
 import { lastValueFrom } from "rxjs";
 
 describe("AreasMicroserviceController (e2e)", () => {
   let client: ClientProxy;
-  let testAreas: TypegooseArea[] = [];
+  let testAreas: AreaModel[] = [];
   const worldId = randomUUID();
 
   beforeAll(async () => {
@@ -162,14 +162,14 @@ describe("AreasMicroserviceController (e2e)", () => {
       expect(result).toBeDefined();
       expect(Array.isArray(result)).toBe(true);
       expect(result.length).toBeGreaterThanOrEqual(3);
-      expect(
-        result.every((area: TypegooseArea) => area.worldId === worldId)
-      ).toBe(true);
+      expect(result.every((area: AreaModel) => area.worldId === worldId)).toBe(
+        true
+      );
     });
   });
 
   describe("findById", () => {
-    let testArea: TypegooseArea;
+    let testArea: AreaModel;
 
     beforeAll(async () => {
       // Create a test area
@@ -215,7 +215,7 @@ describe("AreasMicroserviceController (e2e)", () => {
   });
 
   describe("update", () => {
-    let testArea: TypegooseArea;
+    let testArea: AreaModel;
 
     beforeAll(async () => {
       // Create a test area
@@ -290,7 +290,7 @@ describe("AreasMicroserviceController (e2e)", () => {
   });
 
   describe("delete", () => {
-    let testArea: TypegooseArea;
+    let testArea: AreaModel;
 
     beforeEach(async () => {
       // Create a test area
@@ -377,7 +377,7 @@ describe("AreasMicroserviceController (e2e)", () => {
       expect(Array.isArray(result)).toBe(true);
       expect(result.length).toBeGreaterThanOrEqual(3);
       expect(
-        result.every((area: TypegooseArea) => area.worldId === testWorldId)
+        result.every((area: AreaModel) => area.worldId === testWorldId)
       ).toBe(true);
     });
 
@@ -439,7 +439,7 @@ describe("AreasMicroserviceController (e2e)", () => {
       expect(Array.isArray(result)).toBe(true);
       expect(result.length).toBeGreaterThanOrEqual(3);
       expect(
-        result.every((area: TypegooseArea) => area.parentId === parentId)
+        result.every((area: AreaModel) => area.parentId === parentId)
       ).toBe(true);
     });
 
@@ -497,7 +497,7 @@ describe("AreasMicroserviceController (e2e)", () => {
       expect(Array.isArray(result)).toBe(true);
       expect(result.length).toBeGreaterThanOrEqual(3);
       expect(
-        result.every((area: TypegooseArea) => area.tags?.includes(uniqueTag))
+        result.every((area: AreaModel) => area.tags?.includes(uniqueTag))
       ).toBe(true);
     });
 

@@ -286,14 +286,7 @@ Object.keys(serviceControllers).forEach((serviceName) => {
   // Dynamically import only used types from external modules
   externalImports.forEach((types, modulePath) => {
     if (skipModules.has(modulePath)) return;
-    const typeList = Array.from(types)
-      .filter(Boolean)
-      .map((t) =>
-        modulePath === "@orbital/typegoose" && t.endsWith("Model")
-          ? `${t} as ${t.replace(/Model$/, "")}`
-          : t
-      )
-      .join(", ");
+    const typeList = Array.from(types).filter(Boolean).join(", ");
     if (typeList) {
       imports.add(`import { ${typeList} } from '${modulePath}';`);
     }
@@ -525,8 +518,8 @@ export class ${capitalizedServiceName}Microservice extends Microservice {`;
    * ${controllerBaseName} controller proxy
    */
   public readonly ${controllerBaseName}: ${
-      controllerBaseName.charAt(0).toUpperCase() + controllerBaseName.slice(1)
-    }Controller;`;
+    controllerBaseName.charAt(0).toUpperCase() + controllerBaseName.slice(1)
+  }Controller;`;
   });
 
   // Add constructor
@@ -681,8 +674,8 @@ export class ${capitalizedServiceName}Microservice extends Microservice {`;
       if (returnType.includes("[]") && !returnType.includes("null")) {
         implementationCode = `
       ${method.name}: ${
-          methodParams ? `async (${methodParams})` : "async ()"
-        } => {
+        methodParams ? `async (${methodParams})` : "async ()"
+      } => {
         const result = await this.request<${returnType}>('${
           method.channelName
         }'${methodArgs ? `, ${methodArgs}` : ""});
@@ -692,8 +685,8 @@ export class ${capitalizedServiceName}Microservice extends Microservice {`;
         // For other types, just return the result directly
         implementationCode = `
       ${method.name}: ${
-          methodParams ? `async (${methodParams})` : "async ()"
-        } => {
+        methodParams ? `async (${methodParams})` : "async ()"
+      } => {
         return this.request<${returnType}>('${method.channelName}'${
           methodArgs ? `, ${methodArgs}` : ""
         });
