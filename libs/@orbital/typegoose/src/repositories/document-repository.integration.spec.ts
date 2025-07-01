@@ -643,149 +643,146 @@ describe("DocumentRepository Integration Tests", () => {
 
   // The save, createQuery, and executeQuery methods have been removed as they were redundant
   // with existing methods like update and find, and with DocumentHelpers.save functionality
-});
-
-/**
- * Tests specifically for the validateReferences method
- */
-describe("DocumentRepository Reference Validation Integration Tests", () => {
-  // Define types for ParentEntity and ChildEntity props
-  type ParentEntityProps = {
-    _id?: string;
-    name: string;
-    createdAt?: Date;
-    updatedAt?: Date;
-  };
-
-  type ChildEntityProps = {
-    _id?: string;
-    name: string;
-    parentId: string;
-    optionalRefId?: string;
-    createdAt?: Date;
-    updatedAt?: Date;
-  };
-
-  // Define a parent entity class with @Reference decorator
-  class ParentEntity extends IdentifiableObject {
-    name: string;
-
-    constructor(data: any) {
-      super(data);
-      this.name = data.name || "";
-    }
-
-    toPlainObject(): Record<string, any> {
-      return {
-        _id: this._id,
-        name: this.name,
-      };
-    }
-
-    validateSchema(): this {
-      return this;
-    }
-
-    validate(): this {
-      return this;
-    }
-  }
-
-  // Define a child entity class with a reference to the parent
-  class ChildEntity extends IdentifiableObject {
-    name: string;
-
-    @Reference({ collection: "ParentEntity" })
-    parentId!: string;
-
-    @Reference({ collection: "NonExistentEntity", required: false })
-    optionalRefId?: string;
-
-    constructor(data: any) {
-      super(data);
-      this.name = data.name || "";
-      this.parentId = data.parentId;
-      this.optionalRefId = data.optionalRefId;
-    }
-
-    toPlainObject(): Record<string, any> {
-      return {
-        _id: this._id,
-        name: this.name,
-        parentId: this.parentId,
-        optionalRefId: this.optionalRefId,
-      };
-    }
-
-    validateSchema(): this {
-      return this;
-    }
-
-    validate(): this {
-      return this;
-    }
-  }
-
-  // Define MongoDB schemas
-  const ParentEntitySchema = new Schema({
-    _id: { type: String, required: false },
-    name: { type: String, required: true },
-  });
-
-  const ChildEntitySchema = new Schema({
-    _id: { type: String, required: false },
-    name: { type: String, required: true },
-    parentId: { type: String, required: true },
-    optionalRefId: { type: String, required: false },
-  });
-
-  let ParentEntityModel: any;
-  let ChildEntityModel: any;
-  let childRepository: DocumentRepository<ChildEntity, ChildEntityProps>;
-  let parentRepository: DocumentRepository<ParentEntity, ParentEntityProps>;
-
-  beforeAll(async () => {
-    // Create the models
-    ParentEntityModel = mongoose.model("ParentEntity", ParentEntitySchema);
-    ChildEntityModel = mongoose.model("ChildEntity", ChildEntitySchema);
-
-    // Create the repositories
-    childRepository = new DocumentRepository<ChildEntity, ChildEntityProps>(
-      ChildEntityModel,
-      ChildEntity,
-      { parentEntity: ParentEntityModel, nonExistentEntity: undefined }
-    );
-    parentRepository = new DocumentRepository<ParentEntity, ParentEntityProps>(
-      ParentEntityModel,
-      ParentEntity
-    );
-  });
-
-  beforeEach(async () => {
-    // Clear the collections before each test
-    await ParentEntityModel.deleteMany({});
-    await ChildEntityModel.deleteMany({});
-  });
-
-  afterAll(async () => {
-    // Clean up models to prevent OverwriteModelError in subsequent test runs
-    if (
-      mongoose.connection &&
-      mongoose.connection.models &&
-      mongoose.connection.models["ParentEntity"]
-    ) {
-      delete mongoose.connection.models["ParentEntity"];
-    }
-    if (
-      mongoose.connection &&
-      mongoose.connection.models &&
-      mongoose.connection.models["ChildEntity"]
-    ) {
-      delete mongoose.connection.models["ChildEntity"];
-    }
-  });
-
+  /**
+   * Tests specifically for the validateReferences method
+   */
   describe("validateReferences", () => {
+    // Define types for ParentEntity and ChildEntity props
+    type ParentEntityProps = {
+      _id?: string;
+      name: string;
+      createdAt?: Date;
+      updatedAt?: Date;
+    };
+
+    type ChildEntityProps = {
+      _id?: string;
+      name: string;
+      parentId: string;
+      optionalRefId?: string;
+      createdAt?: Date;
+      updatedAt?: Date;
+    };
+
+    // Define a parent entity class with @Reference decorator
+    class ParentEntity extends IdentifiableObject {
+      name: string;
+
+      constructor(data: any) {
+        super(data);
+        this.name = data.name || "";
+      }
+
+      toPlainObject(): Record<string, any> {
+        return {
+          _id: this._id,
+          name: this.name,
+        };
+      }
+
+      validateSchema(): this {
+        return this;
+      }
+
+      validate(): this {
+        return this;
+      }
+    }
+
+    // Define a child entity class with a reference to the parent
+    class ChildEntity extends IdentifiableObject {
+      name: string;
+
+      @Reference({ collection: "ParentEntity" })
+      parentId!: string;
+
+      @Reference({ collection: "NonExistentEntity", required: false })
+      optionalRefId?: string;
+
+      constructor(data: any) {
+        super(data);
+        this.name = data.name || "";
+        this.parentId = data.parentId;
+        this.optionalRefId = data.optionalRefId;
+      }
+
+      toPlainObject(): Record<string, any> {
+        return {
+          _id: this._id,
+          name: this.name,
+          parentId: this.parentId,
+          optionalRefId: this.optionalRefId,
+        };
+      }
+
+      validateSchema(): this {
+        return this;
+      }
+
+      validate(): this {
+        return this;
+      }
+    }
+
+    // Define MongoDB schemas
+    const ParentEntitySchema = new Schema({
+      _id: { type: String, required: false },
+      name: { type: String, required: true },
+    });
+
+    const ChildEntitySchema = new Schema({
+      _id: { type: String, required: false },
+      name: { type: String, required: true },
+      parentId: { type: String, required: true },
+      optionalRefId: { type: String, required: false },
+    });
+
+    let ParentEntityModel: any;
+    let ChildEntityModel: any;
+    let childRepository: DocumentRepository<ChildEntity, ChildEntityProps>;
+    let parentRepository: DocumentRepository<ParentEntity, ParentEntityProps>;
+
+    beforeAll(async () => {
+      // Create the models
+      ParentEntityModel = mongoose.model("ParentEntity", ParentEntitySchema);
+      ChildEntityModel = mongoose.model("ChildEntity", ChildEntitySchema);
+
+      // Create the repositories
+      childRepository = new DocumentRepository<ChildEntity, ChildEntityProps>(
+        ChildEntityModel,
+        ChildEntity,
+        { parentEntity: ParentEntityModel, nonExistentEntity: undefined }
+      );
+      parentRepository = new DocumentRepository<
+        ParentEntity,
+        ParentEntityProps
+      >(ParentEntityModel, ParentEntity);
+    });
+
+    beforeEach(async () => {
+      // Clear the collections before each test
+      await ParentEntityModel.deleteMany({});
+      await ChildEntityModel.deleteMany({});
+    });
+
+    afterAll(async () => {
+      // Clean up models to prevent OverwriteModelError in subsequent test runs
+      if (
+        mongoose.connection &&
+        mongoose.connection.models &&
+        mongoose.connection.models["ParentEntity"]
+      ) {
+        delete mongoose.connection.models["ParentEntity"];
+      }
+      if (
+        mongoose.connection &&
+        mongoose.connection.models &&
+        mongoose.connection.models["ChildEntity"]
+      ) {
+        delete mongoose.connection.models["ChildEntity"];
+      }
+    });
+
     it("should successfully validate references when referenced entity exists", async () => {
       // Arrange
       // Create the parent entity without specifying an ID
