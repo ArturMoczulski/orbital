@@ -6,5 +6,5 @@ module.exports = {
   ...base,
   displayName: `${pkg}:integration`,
   setupFilesAfterEnv: ["<rootDir>/jest.setup.js"],
-  testMatch: ["**/*.integration.spec.ts"],
+  testRegex: ".*\\.integration\\.spec\\.ts$",
 };

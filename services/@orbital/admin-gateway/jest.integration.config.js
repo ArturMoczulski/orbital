@@ -9,5 +9,5 @@ module.exports = {
     ...(base.setupFilesAfterEnv || []),
     "<rootDir>/../jest.setup.integration.js",
   ],
-  testMatch: ["**/*.integration.spec.ts"],
+  testRegex: ".*\\.integration\\.spec\\.ts$",
 };

@@ -287,12 +287,9 @@ const jestOrta = new Command("jest-orta")
         ? filename
         : filename.replace(".spec.ts", ".integration.spec.ts");
 
-      // Use testRegex to override the existing testRegex in the config
-      // Escape special characters in the filename to create a valid regex
-      const escapedFilename = baseFilename.replace(/\./g, "\\.");
-
       // For VS Code Jest Orta plugin, we need to be even more explicit about the test pattern
-      command = `cd "${packageDir}" && npx jest --config jest.${testType}.config.js --testRegex="${escapedFilename}$" --no-coverage --colors --verbose`;
+      // Use testPathPattern instead of testRegex to avoid conflict with testMatch
+      command = `cd "${packageDir}" && npx jest --config jest.${testType}.config.js "${filename}" --no-coverage --colors --verbose`;
     } else {
       command = `cd "${packageDir}" && npx jest --config jest.${testType}.config.js "${filename}" --no-coverage --colors`;
     }

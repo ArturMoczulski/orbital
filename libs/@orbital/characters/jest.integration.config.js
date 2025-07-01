@@ -9,5 +9,5 @@ module.exports = {
     "<rootDir>/jest.setup.js",
     "<rootDir>/jest.setup.integration.js",
   ],
-  testMatch: ["**/integration/**/*.spec.ts"],
+  testRegex: ".*\\.integration\\.spec\\.ts$",
 };
