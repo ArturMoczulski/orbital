@@ -2,6 +2,7 @@ import create from "./create/index.js";
 import debug from "./debug/index.js";
 import dev from "./dev/index.js";
 import down from "./down/index.js";
+import jestOrta from "./jest-orta/index.js";
 import logs from "./logs/index.js";
 import manage from "./manage/index.js";
 import monorepo from "./monorepo/index.js";
@@ -14,6 +15,7 @@ export {
   debug,
   dev,
   down,
+  jestOrta,
   logs,
   manage,
   monorepo,

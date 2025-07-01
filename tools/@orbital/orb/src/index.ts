@@ -10,8 +10,10 @@ const figlet = require("figlet");
 const scriptPath = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(scriptPath);
 
-// Display ASCII banner
-console.log(figlet.textSync("orb"));
+// Display ASCII banner only if not suppressed
+if (process.env.ORB_NO_BANNER !== "true") {
+  console.log(figlet.textSync("orb"));
+}
 
 // Default to interactive 'manage' when no command is provided
 if (process.argv.length <= 2) {
@@ -28,6 +30,7 @@ import {
   debug,
   dev,
   down,
+  jestOrta,
   logs,
   manage,
   monorepo,
@@ -46,5 +49,6 @@ program.addCommand(logs);
 program.addCommand(restart);
 program.addCommand(down);
 program.addCommand(dev);
+program.addCommand(jestOrta);
 
 program.parse(process.argv);
