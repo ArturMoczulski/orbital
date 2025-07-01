@@ -1,4 +1,8 @@
 import {
+  BulkCountedResponse,
+  BulkItemizedResponse,
+} from "@orbital/bulk-operations";
+import {
   AreaModel,
   DocumentRepository,
   WithDocument,
@@ -74,6 +78,11 @@ describe("AreasRepository", () => {
         toObject: jest.fn(),
       };
     } as any;
+
+    // Add the exists method to the mock model
+    mockWorldModelFunction.exists = jest
+      .fn()
+      .mockResolvedValue({ _id: "world-id-456" });
 
     // Copy all properties from mockModel to modelFunction (reuse the same structure)
     Object.assign(mockWorldModelFunction, mockModel);
@@ -191,7 +200,413 @@ describe("AreasRepository", () => {
     });
   });
 
-  // Since AreasRepository extends DocumentRepository, we don't need to test
-  // all the inherited methods as they are tested in document-repository.spec.ts
-  // We just need to ensure our custom methods work correctly
+  // Adding tests for the methods inherited from DocumentRepository
+  describe("create", () => {
+    it("should create a new area", async () => {
+      // Arrange
+      const newAreaData = {
+        worldId: "world-id-456",
+        name: "New Test Area",
+        description: "A new test area",
+        landmarks: ["landmark1"],
+        connections: ["connection1"],
+        tags: ["test", "new"],
+      };
+
+      // Mock the model's insertMany method
+      const mockInsertMany = jest.fn().mockResolvedValue([
+        {
+          ...newAreaData,
+          _id: "new-area-id",
+          createdAt: new Date(),
+          updatedAt: new Date(),
+          save: jest.fn().mockResolvedValue(true),
+          toObject: jest.fn().mockReturnValue(newAreaData),
+        },
+      ]);
+      mockAreaModel.insertMany = mockInsertMany;
+
+      // Act
+      const result = await repository.create(newAreaData);
+
+      // Assert
+      expect(mockInsertMany).toHaveBeenCalled();
+      expect(result).toBeDefined();
+      // Type assertion since we know it's a single entity result
+      const areaResult = result as WithDocument<AreaModel>;
+      expect(areaResult._id).toBeDefined();
+      expect(areaResult.worldId).toBe(newAreaData.worldId);
+      expect(areaResult.name).toBe(newAreaData.name);
+    });
+
+    it("should create multiple areas", async () => {
+      // Arrange
+      const newAreasData = [
+        {
+          worldId: "world-id-456",
+          name: "New Test Area 1",
+          description: "A new test area 1",
+          landmarks: ["landmark1"],
+          connections: ["connection1"],
+          tags: ["test", "new"],
+        },
+        {
+          worldId: "world-id-456",
+          name: "New Test Area 2",
+          description: "A new test area 2",
+          landmarks: ["landmark2"],
+          connections: ["connection2"],
+          tags: ["test", "new"],
+        },
+      ];
+
+      // Mock the model's insertMany method
+      const mockInsertMany = jest.fn().mockResolvedValue(
+        newAreasData.map((data, index) => ({
+          ...data,
+          _id: `new-area-id-${index + 1}`,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+          save: jest.fn().mockResolvedValue(true),
+          toObject: jest.fn().mockReturnValue(data),
+        }))
+      );
+      mockAreaModel.insertMany = mockInsertMany;
+
+      // Act
+      let result;
+      try {
+        result = await repository.create(newAreasData);
+      } catch (error) {
+        console.error("Error in create multiple areas test:", error);
+        throw error; // Re-throw to fail the test with the original error
+      }
+
+      // Assert
+      expect(mockInsertMany).toHaveBeenCalled();
+      expect(result).toBeDefined();
+      // Type assertion since we know it's a bulk response
+      const bulkResult = result as BulkItemizedResponse<any, any>;
+      expect(bulkResult.counts.success).toBe(2);
+      expect(bulkResult.counts.fail).toBe(0);
+      expect(
+        bulkResult.items.success.length + bulkResult.items.fail.length
+      ).toBe(2);
+    });
+  });
+
+  describe("find", () => {
+    it("should find areas by filter", async () => {
+      // Arrange
+      const filter = { tags: "test" };
+      const mockAreas = [
+        {
+          _id: "area-id-1",
+          worldId: "world-id-456",
+          name: "Test Area 1",
+          description: "Test area description 1",
+          tags: ["test"],
+          landmarks: [],
+          connections: [],
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+        {
+          _id: "area-id-2",
+          worldId: "world-id-456",
+          name: "Test Area 2",
+          description: "Test area description 2",
+          tags: ["test"],
+          landmarks: [],
+          connections: [],
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+      ];
+
+      // Mock the model's find method
+      const mockFind = jest.fn().mockReturnThis();
+      const mockExec = jest.fn().mockResolvedValue(
+        mockAreas.map((area) => ({
+          ...area,
+          save: jest.fn().mockResolvedValue(true),
+          toObject: jest.fn().mockReturnValue(area),
+        }))
+      );
+
+      mockAreaModel.find = mockFind;
+      mockAreaModel.exec = mockExec;
+
+      // Act
+      const result = await repository.find(filter);
+
+      // Assert
+      expect(mockFind).toHaveBeenCalledWith(filter);
+      expect(result).toHaveLength(2);
+      expect(result[0].name).toBe("Test Area 1");
+      expect(result[1].name).toBe("Test Area 2");
+    });
+
+    it("should apply projection and options", async () => {
+      // Arrange
+      const filter = { tags: "test" };
+      const projection = { name: 1, description: 1 };
+      const options = { sort: { name: 1 }, limit: 10 };
+
+      // Mock the model's methods
+      const mockFind = jest.fn().mockReturnThis();
+      const mockSort = jest.fn().mockReturnThis();
+      const mockLimit = jest.fn().mockReturnThis();
+      const mockExec = jest.fn().mockResolvedValue([]);
+
+      mockAreaModel.find = mockFind;
+      mockAreaModel.sort = mockSort;
+      mockAreaModel.limit = mockLimit;
+      mockAreaModel.exec = mockExec;
+
+      // Act
+      await repository.find(filter, projection, options);
+
+      // Assert
+      expect(mockFind).toHaveBeenCalledWith(filter, projection);
+      expect(mockSort).toHaveBeenCalledWith(options.sort);
+      expect(mockLimit).toHaveBeenCalledWith(options.limit);
+    });
+  });
+
+  describe("findOne", () => {
+    it("should find a single area by filter", async () => {
+      // Arrange
+      const filter = { name: "Test Area" };
+      const mockArea = {
+        _id: "area-id-1",
+        worldId: "world-id-456",
+        name: "Test Area",
+        description: "Test area description",
+        tags: ["test"],
+        landmarks: [],
+        connections: [],
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        save: jest.fn().mockResolvedValue(true),
+        toObject: jest.fn(),
+      };
+
+      // Mock the find method to return our mock area
+      jest.spyOn(repository, "find").mockResolvedValue([mockArea as any]);
+
+      // Act
+      const result = await repository.findOne(filter);
+
+      // Assert
+      expect(repository.find).toHaveBeenCalledWith(filter, undefined, {
+        limit: 1,
+      });
+      expect(result).toEqual(mockArea);
+    });
+
+    it("should return null when no area is found", async () => {
+      // Arrange
+      const filter = { name: "Nonexistent Area" };
+
+      // Mock the find method to return empty array
+      jest.spyOn(repository, "find").mockResolvedValue([]);
+
+      // Act
+      const result = await repository.findOne(filter);
+
+      // Assert
+      expect(repository.find).toHaveBeenCalledWith(filter, undefined, {
+        limit: 1,
+      });
+      expect(result).toBeNull();
+    });
+  });
+
+  describe("findById", () => {
+    it("should find an area by ID", async () => {
+      // Arrange
+      const areaId = "area-id-123";
+      const mockArea = {
+        _id: areaId,
+        worldId: "world-id-456",
+        name: "Test Area",
+        description: "Test area description",
+        tags: ["test"],
+        landmarks: [],
+        connections: [],
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+
+      // Mock the findOne method to return our mock area
+      jest.spyOn(repository, "findOne").mockResolvedValue(mockArea as any);
+
+      // Act
+      const result = await repository.findById(areaId);
+
+      // Assert
+      expect(repository.findOne).toHaveBeenCalledWith(
+        { _id: areaId },
+        undefined
+      );
+      expect(result).toEqual(mockArea);
+    });
+
+    it("should return null when area with ID is not found", async () => {
+      // Arrange
+      const areaId = "nonexistent-id";
+
+      // Mock the findOne method to return null
+      jest.spyOn(repository, "findOne").mockResolvedValue(null);
+
+      // Act
+      const result = await repository.findById(areaId);
+
+      // Assert
+      expect(repository.findOne).toHaveBeenCalledWith(
+        { _id: areaId },
+        undefined
+      );
+      expect(result).toBeNull();
+    });
+  });
+
+  describe("update", () => {
+    it("should update an area", async () => {
+      // Arrange
+      const areaToUpdate = {
+        _id: "area-id-123",
+        worldId: "world-id-456",
+        name: "Updated Area Name",
+        description: "Updated description",
+        landmarks: ["landmark1", "landmark2", "landmark3"],
+        connections: ["connection1", "connection2"],
+        tags: ["test", "updated"],
+      };
+
+      // Mock the model's findById and bulkWrite methods
+      const mockFindById = jest.fn().mockReturnThis();
+      const mockExec = jest.fn().mockResolvedValue({
+        ...areaToUpdate,
+        save: jest.fn().mockResolvedValue(true),
+        toObject: jest.fn().mockReturnValue(areaToUpdate),
+      });
+      const mockBulkWrite = jest.fn().mockResolvedValue({ ok: 1 });
+
+      mockAreaModel.findById = mockFindById;
+      mockAreaModel.exec = mockExec;
+      mockAreaModel.bulkWrite = mockBulkWrite;
+      mockAreaModel.find = jest.fn().mockReturnThis();
+
+      // Act
+      const result = await repository.update(areaToUpdate);
+
+      // Assert
+      expect(mockFindById).toHaveBeenCalledWith(areaToUpdate._id);
+      expect(mockBulkWrite).toHaveBeenCalled();
+      expect(result).toBeDefined();
+      // Type assertion since we know it's a single entity result
+      const areaResult = result as WithDocument<AreaModel>;
+      expect(areaResult._id).toBe(areaToUpdate._id);
+      expect(areaResult.name).toBe(areaToUpdate.name);
+    });
+
+    it("should return null when area to update is not found", async () => {
+      // Arrange
+      const areaToUpdate = {
+        _id: "nonexistent-id",
+        worldId: "world-id-456",
+        name: "Updated Area Name",
+        description: "Updated description",
+        landmarks: [],
+        connections: [],
+        tags: ["test", "updated"],
+      };
+
+      // Mock the model's findById method to return null
+      const mockFindById = jest.fn().mockReturnThis();
+      const mockExec = jest.fn().mockResolvedValue(null);
+
+      mockAreaModel.findById = mockFindById;
+      mockAreaModel.exec = mockExec;
+
+      // Act
+      const result = await repository.update(areaToUpdate);
+
+      // Assert
+      expect(mockFindById).toHaveBeenCalledWith(areaToUpdate._id);
+      expect(result).toBeNull();
+    });
+  });
+
+  describe("delete", () => {
+    it("should delete an area by ID", async () => {
+      // Arrange
+      const areaId = "area-id-123";
+
+      // Mock the model's findById and deleteMany methods
+      const mockFindById = jest.fn().mockReturnThis();
+      const mockExec = jest.fn().mockResolvedValue({
+        _id: areaId,
+        name: "Test Area",
+      });
+      const mockDeleteMany = jest.fn().mockReturnThis();
+      const mockDeleteExec = jest.fn().mockResolvedValue({ deletedCount: 1 });
+
+      mockAreaModel.findById = mockFindById;
+      mockAreaModel.exec = mockExec;
+      mockAreaModel.deleteMany = mockDeleteMany;
+      mockAreaModel.exec = mockDeleteExec;
+
+      // Act
+      const result = await repository.delete(areaId);
+
+      // Assert
+      expect(mockFindById).toHaveBeenCalledWith(areaId);
+      expect(mockDeleteMany).toHaveBeenCalledWith({ _id: { $in: [areaId] } });
+      expect(result).toBe(true);
+    });
+
+    it("should return null when area to delete is not found", async () => {
+      // Arrange
+      const areaId = "nonexistent-id";
+
+      // Mock the model's findById method to return null
+      const mockFindById = jest.fn().mockReturnThis();
+      const mockExec = jest.fn().mockResolvedValue(null);
+
+      mockAreaModel.findById = mockFindById;
+      mockAreaModel.exec = mockExec;
+
+      // Act
+      const result = await repository.delete(areaId);
+
+      // Assert
+      expect(mockFindById).toHaveBeenCalledWith(areaId);
+      expect(result).toBeNull();
+    });
+
+    it("should delete multiple areas by IDs", async () => {
+      // Arrange
+      const areaIds = ["area-id-1", "area-id-2"];
+
+      // Mock the model's deleteMany method
+      const mockDeleteMany = jest.fn().mockReturnThis();
+      const mockExec = jest.fn().mockResolvedValue({ deletedCount: 2 });
+
+      mockAreaModel.deleteMany = mockDeleteMany;
+      mockAreaModel.exec = mockExec;
+
+      // Act
+      const result = await repository.delete(areaIds);
+
+      // Assert
+      expect(mockDeleteMany).toHaveBeenCalledWith({ _id: { $in: areaIds } });
+      expect(result).toBeDefined();
+      // Type assertion since we know it's a bulk response
+      const bulkResult = result as BulkCountedResponse;
+      expect(bulkResult.counts.success).toBe(2);
+    });
+  });
 });

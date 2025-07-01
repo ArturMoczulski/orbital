@@ -83,7 +83,7 @@ export class BulkOperation<DataItemType = any> {
     G extends BulkGroupedOperation<
       DataItemType,
       BulkCountedOperation<DataItemType>
-    > = {}
+    > = {},
   >(
     items: DataItemType[],
     operation: BulkCountedOperation<DataItemType> | G,
@@ -107,7 +107,7 @@ export class BulkOperation<DataItemType = any> {
     G extends BulkGroupedOperation<
       DataItemType,
       BulkItemizedOperation<DataItemType, ResultItemDataType>
-    > = {}
+    > = {},
   >(
     items: DataItemType[],
     operation: BulkItemizedOperation<DataItemType, ResultItemDataType> | G,
@@ -150,7 +150,7 @@ export class BulkOperation<DataItemType = any> {
     G extends BulkGroupedOperation<
       DataItemType,
       BulkCountedOperation<DataItemType>
-    > = {}
+    > = {},
   >(
     items: DataItemType[],
     operation: BulkCountedOperation<DataItemType> | G,
@@ -172,7 +172,7 @@ export class BulkOperation<DataItemType = any> {
     G extends BulkGroupedOperation<
       DataItemType,
       BulkItemizedOperation<DataItemType, ResultItemDataType>
-    > = {}
+    > = {},
   >(
     items: DataItemType[],
     operation: BulkItemizedOperation<DataItemType, ResultItemDataType> | G,
@@ -250,7 +250,7 @@ export class BulkOperation<DataItemType = any> {
   ) {
     return Object.entries(operation) as [
       string,
-      { groupBy: (item: DataItemType) => boolean; operation: any }
+      { groupBy: (item: DataItemType) => boolean; operation: any },
     ][];
   }
 
@@ -600,10 +600,16 @@ export class BulkOperation<DataItemType = any> {
     if (unprocessedItems.length > 0) {
       const firstErroredItem = unprocessedItems[0];
       processed.add(firstErroredItem);
+
+      // Store the original error for potential extraction later
+      const errorObj = {
+        message: error.message,
+        stack: error.stack,
+        originalError: error, // Store the original error
+      };
+
       response.addFail(
-        new BulkOperationFailItem(firstErroredItem, undefined, {
-          message: error.message,
-        })
+        new BulkOperationFailItem(firstErroredItem, undefined, errorObj as any)
       );
     }
 
@@ -633,6 +639,7 @@ export class BulkOperation<DataItemType = any> {
 
   wrapError(err: Error, response: BulkResponse) {
     const bulkError = new BulkOperationError(err, response);
+
     throw bulkError;
   }
 }
@@ -649,7 +656,7 @@ export type BulkCountedOperation<DataItemType = any> = (
 
 export type BulkItemizedOperation<
   DataItemType = any,
-  ResultItemDataType = any
+  ResultItemDataType = any,
 > = (
   items: DataItemType[],
   success: BulkOpItemSuccess<DataItemType, ResultItemDataType>,
@@ -679,7 +686,7 @@ export function counted<
   G extends BulkGroupedOperation<
     DataItemType,
     BulkCountedOperation<DataItemType>
-  > = {}
+  > = {},
 >(
   items: DataItemType | DataItemType[],
   operation: G
@@ -717,7 +724,7 @@ export function itemized<
   G extends BulkGroupedOperation<
     DataItemType,
     BulkItemizedOperation<DataItemType, ResultItemDataType>
-  > = {}
+  > = {},
 >(
   items: DataItemType | DataItemType[],
   operation: G
@@ -725,7 +732,28 @@ export function itemized<
 
 // Implementation (matches either overload)
 export function itemized(items: any | any[], operation: any): Promise<any> {
-  const itemsArray = Array.isArray(items) ? items : [items];
+  const isSingular = !Array.isArray(items);
+  const itemsArray = isSingular ? [items] : items;
+
+  // For singular items, we want to handle errors differently
+  if (isSingular) {
+    try {
+      return BulkOperation.itemized(
+        itemsArray,
+        async (items, success, fail) => {
+          await operation(items, success, fail);
+        }
+      );
+    } catch (error) {
+      // If the error is already a BulkOperationError, extract the original error
+      if (error instanceof BulkOperationError && error.originalError) {
+        throw error.originalError;
+      }
+      throw error;
+    }
+  }
+
+  // For arrays, use the standard behavior
   return BulkOperation.itemized(itemsArray, operation as any);
 }
 

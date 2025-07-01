@@ -212,15 +212,26 @@ export class BulkItemizedResponse<
   }
 
   asSingle() {
+    console.log(
+      `[BulkItemizedResponse.asSingle] Called with status: ${this.status}`
+    );
+    console.log(
+      `[BulkItemizedResponse.asSingle] Success items: ${this.items.success.length}, Fail items: ${this.items.fail.length}`
+    );
+
     if (this.status != BulkOperationResponseStatus.SUCCESS) {
+      console.log(`[BulkItemizedResponse.asSingle] Status is not SUCCESS`);
+
       if (
         this.items.fail &&
         this.items.fail.length > 0 &&
         this.items.fail[0].error
       ) {
-        const error = new Error(
-          this.items.fail[0].error.message || "Unknown error"
-        );
+        // Create a new Error with the message and stack from the error object
+        const errorMessage =
+          this.items.fail[0].error.message || "Unknown error";
+
+        const error = new Error(errorMessage);
         error.stack = this.items.fail[0].error.stack;
         throw error;
       } else {

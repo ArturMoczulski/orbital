@@ -15,7 +15,6 @@ describe("WorldsRepository", () => {
   beforeEach(() => {
     // Create a mock world directly
     mockWorld = {
-      _id: "world-id-123",
       name: "Test World",
       shard: "test-shard",
       techLevel: 5,
@@ -82,21 +81,19 @@ describe("WorldsRepository", () => {
       // Create mock worlds directly
       const mockWorlds = [
         {
-          _id: "world-id-1",
           name: "Test World 1",
           shard,
           techLevel: 3,
           createdAt: new Date(),
           updatedAt: new Date(),
-        } as unknown as WorldModel,
+        },
         {
-          _id: "world-id-2",
           name: "Test World 2",
           shard,
           techLevel: 5,
           createdAt: new Date(),
           updatedAt: new Date(),
-        } as unknown as WorldModel,
+        },
       ];
 
       // Mock the find method to return our mock worlds
@@ -168,21 +165,19 @@ describe("WorldsRepository", () => {
       // Create mock worlds directly
       const mockWorlds = [
         {
-          _id: "world-id-1",
           name: "Test World 1",
           shard: "shard-1",
           techLevel,
           createdAt: new Date(),
           updatedAt: new Date(),
-        } as unknown as WorldModel,
+        },
         {
-          _id: "world-id-2",
           name: "Test World 2",
           shard: "shard-2",
           techLevel,
           createdAt: new Date(),
           updatedAt: new Date(),
-        } as unknown as WorldModel,
+        },
       ];
 
       // Mock the find method to return our mock worlds

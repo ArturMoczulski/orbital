@@ -31,13 +31,24 @@ export class BulkResponse {
 export class BulkOperationError extends Error {
   public status: BulkOperationResponseStatus = BulkOperationResponseStatus.FAIL;
   public response?: BulkResponse;
+  public originalError?: Error | any;
 
   constructor(error: Error | any, response?: BulkResponse) {
     super(error?.message);
     this.stack = error.stack;
+    this.originalError = error; // Store the original error
+
     if (response) {
       this.response = response;
     }
+  }
+
+  /**
+   * Gets the original error that was wrapped
+   * @returns The original error that was wrapped
+   */
+  getOriginalError(): Error | any {
+    return this.originalError;
   }
 
   static fromJson(json: any): BulkOperationError {

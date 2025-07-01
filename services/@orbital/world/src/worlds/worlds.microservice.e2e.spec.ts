@@ -43,6 +43,7 @@ describe("WorldsMicroserviceController (e2e)", () => {
     it("should create a new world", async () => {
       // Create test data
       const createWorldDto = {
+        // Add explicit ID since the service requires it
         _id: randomUUID(),
         name: "Test World for E2E",
         shard,
@@ -88,7 +89,6 @@ describe("WorldsMicroserviceController (e2e)", () => {
     it("should throw an error when required fields are missing", async () => {
       // Create invalid test data (missing techLevel)
       const invalidWorldDto: any = {
-        _id: randomUUID(),
         name: `Invalid World ${randomUUID()}`,
         shard: "test-shard",
       };

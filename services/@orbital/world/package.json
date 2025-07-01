@@ -17,7 +17,7 @@
     "delete": "npx pm2 delete world-watch 2>/dev/null || true && npx pm2 delete world-debug 2>/dev/null || true && npx pm2 delete world 2>/dev/null || true",
     "clean": "npx pm2 delete all 2>/dev/null || true",
     "test": "yarn test:unit",
-    "test:unit": "NODE_NO_WARNINGS=1 jest --config ./jest.unit.config.js --passWithNoTests",
+    "test:unit": "NODE_NO_WARNINGS=1 jest --config ./jest.unit.config.js --passWithNoTests --verbose --no-cache",
     "test:integration": "NODE_NO_WARNINGS=1 jest --config ./jest.integration.config.js --passWithNoTests",
     "test:e2e": "NODE_NO_WARNINGS=1 jest --config ./jest.e2e.config.js --forceExit --passWithNoTests",
     "test:watch": "jest --watch",

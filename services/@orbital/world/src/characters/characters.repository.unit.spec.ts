@@ -20,15 +20,33 @@ describe("CharactersRepository", () => {
 
   it("should create a new character and save it", async () => {
     const dto = { name: "TestChar", level: 1 };
-    const result = await repository.create(dto);
-    expect(modelMock).toHaveBeenCalledWith(dto);
-    expect(result).toEqual(dto);
+    try {
+      const result = await repository.create(dto);
+      expect(modelMock).toHaveBeenCalledWith(dto);
+      expect(result).toEqual(dto);
+    } catch (error) {
+      // Log the full error with stack trace
+      console.error("Full error details:");
+      console.error(error);
+
+      // Re-throw the error to fail the test and show the error in Jest output
+      throw error;
+    }
   });
 
   it("should find a character by id", async () => {
     const id = "abc123";
-    const found = await repository.findById(id);
-    expect(modelMock.findById).toHaveBeenCalledWith(id);
-    expect(found).toBe("found-character");
+    try {
+      const found = await repository.findById(id);
+      expect(modelMock.findById).toHaveBeenCalledWith(id);
+      expect(found).toBe("found-character");
+    } catch (error) {
+      // Log the full error with stack trace
+      console.error("Full error details:");
+      console.error(error);
+
+      // Re-throw the error to fail the test and show the error in Jest output
+      throw error;
+    }
   });
 });
