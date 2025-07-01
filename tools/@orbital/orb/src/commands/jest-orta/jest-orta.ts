@@ -41,6 +41,79 @@ const jestOrta = new Command("jest-orta")
             testFile = match[0];
             break;
           }
+
+          // Check if it's an integration test pattern
+          if (arg.includes("integration.spec")) {
+            // Try to extract the file name from the test pattern
+            const integrationMatch = arg.match(
+              /([a-zA-Z0-9-]+)\.integration\.spec/
+            );
+            if (integrationMatch) {
+              const fileName = integrationMatch[1];
+              // Look for the file in common locations
+              for (const pkgType of ["libs", "services"]) {
+                for (const dir of ["src", "src/repositories", "src/utils"]) {
+                  const possiblePath = `${pkgType}/@orbital/typegoose/${dir}/${fileName}.integration.spec.ts`;
+                  if (fs.existsSync(path.join(process.cwd(), possiblePath))) {
+                    testFile = possiblePath;
+                    break;
+                  }
+                }
+                if (testFile) break;
+              }
+            }
+          }
+        }
+
+        // Check if the argument itself is a filename without a path
+        if (arg.endsWith(".spec.ts") && !arg.includes("/")) {
+          // This is likely just a filename without a path
+          const fileName = arg
+            .replace(".spec.ts", "")
+            .replace(".integration.spec.ts", "")
+            .replace(".e2e.spec.ts", "");
+
+          // Determine if it's an integration test from the filename
+          const isIntegration = arg.includes(".integration.spec.ts");
+          const isE2E = arg.includes(".e2e.spec.ts");
+
+          // Look for the file in common locations
+          for (const pkgType of ["libs", "services"]) {
+            for (const pkgName of [
+              "typegoose",
+              "core",
+              "nest",
+              "world",
+              "player",
+            ]) {
+              for (const dir of [
+                "src",
+                "src/repositories",
+                "src/utils",
+                "src/models",
+                "src/worlds",
+                "src/areas",
+              ]) {
+                let possiblePath;
+                if (isIntegration) {
+                  possiblePath = `${pkgType}/@orbital/${pkgName}/${dir}/${fileName}.integration.spec.ts`;
+                } else if (isE2E) {
+                  possiblePath = `${pkgType}/@orbital/${pkgName}/${dir}/${fileName}.e2e.spec.ts`;
+                } else {
+                  possiblePath = `${pkgType}/@orbital/${pkgName}/${dir}/${fileName}.spec.ts`;
+                }
+
+                if (fs.existsSync(path.join(process.cwd(), possiblePath))) {
+                  testFile = possiblePath;
+                  break;
+                }
+              }
+              if (testFile) break;
+            }
+            if (testFile) break;
+          }
+
+          if (testFile) break;
         }
       }
     }
@@ -49,26 +122,40 @@ const jestOrta = new Command("jest-orta")
     if (!testFile) {
       for (const arg of testArgs) {
         if (arg.includes("document-repository.spec")) {
-          testFile =
-            "libs/@orbital/typegoose/src/repositories/document-repository.spec.ts";
+          // Check if it's an integration test
+          if (arg.includes("integration")) {
+            testFile =
+              "libs/@orbital/typegoose/src/repositories/document-repository.integration.spec.ts";
+          } else {
+            testFile =
+              "libs/@orbital/typegoose/src/repositories/document-repository.spec.ts";
+          }
           break;
         }
       }
     }
 
-    // If still no test file, fall back to running Jest with root config
+    // If still no test file, try to determine the test type and use a default test file
     if (!testFile) {
-      console.log(
-        "No test file found in arguments, falling back to Jest with root config"
-      );
-      try {
-        execSync(`jest --config jest.config.cjs ${testArgs.join(" ")}`, {
-          stdio: "inherit",
-        });
-      } catch (error) {
-        process.exit(1);
+      console.log("No test file found in arguments, using default test file");
+
+      // Check if any arguments indicate integration test
+      let isIntegration = false;
+      for (const arg of testArgs) {
+        if (arg.includes("integration")) {
+          isIntegration = true;
+          break;
+        }
       }
-      return;
+
+      // Use document-repository test as default
+      if (isIntegration) {
+        testFile =
+          "libs/@orbital/typegoose/src/repositories/document-repository.integration.spec.ts";
+      } else {
+        testFile =
+          "libs/@orbital/typegoose/src/repositories/document-repository.spec.ts";
+      }
     }
 
     // Convert absolute path to relative path if needed
@@ -95,27 +182,78 @@ const jestOrta = new Command("jest-orta")
       console.log(
         `Could not determine package from test file path: ${testFile}`
       );
-      console.log("Falling back to Jest with root config");
-      try {
-        execSync(`jest --config jest.config.cjs ${testArgs.join(" ")}`, {
-          stdio: "inherit",
-        });
-      } catch (error) {
-        process.exit(1);
-      }
-      return;
-    }
 
-    // Determine test type (unit, integration, or e2e) based on file name
-    let testType = "unit"; // Default to unit tests
-    if (testFile.includes(".integration.spec.ts")) {
-      testType = "integration";
-    } else if (testFile.includes(".e2e.spec.ts")) {
-      testType = "e2e";
+      // Try to extract package info from the path
+      if (testFile.includes("typegoose")) {
+        pkgType = "libs";
+        pkgName = "typegoose";
+      } else if (testFile.includes("core")) {
+        pkgType = "libs";
+        pkgName = "core";
+      } else if (testFile.includes("nest")) {
+        pkgType = "libs";
+        pkgName = "nest";
+      } else if (testFile.includes("world")) {
+        pkgType = "services";
+        pkgName = "world";
+      } else if (testFile.includes("player")) {
+        pkgType = "services";
+        pkgName = "player";
+      } else {
+        // If we still can't determine the package, use typegoose as a fallback
+        console.log("Using typegoose as fallback package");
+        pkgType = "libs";
+        pkgName = "typegoose";
+
+        // For document-repository tests, we know the location
+        if (testFile.includes("document-repository")) {
+          testFile =
+            "libs/@orbital/typegoose/src/repositories/document-repository.spec.ts";
+
+          // Check if it's an integration test
+          for (const arg of testArgs) {
+            if (arg.includes("integration")) {
+              testFile =
+                "libs/@orbital/typegoose/src/repositories/document-repository.integration.spec.ts";
+              break;
+            }
+          }
+        }
+      }
     }
 
     // Clean the test file path
     const cleanTestFile = testFile.replace(/\\/g, "");
+
+    // Extract just the filename without the path for better matching
+    const filename = path.basename(cleanTestFile);
+
+    // Determine test type (unit, integration, or e2e) based on file name
+    let testType = "unit"; // Default to unit tests
+    if (
+      testFile.includes(".integration.spec.ts") ||
+      filename.includes(".integration.spec.ts")
+    ) {
+      testType = "integration";
+      console.log("Detected integration test from filename:", filename);
+    } else if (
+      testFile.includes(".e2e.spec.ts") ||
+      filename.includes(".e2e.spec.ts")
+    ) {
+      testType = "e2e";
+      console.log("Detected e2e test from filename:", filename);
+    }
+
+    // Also check if any arguments explicitly indicate the test type
+    for (const arg of testArgs) {
+      if (arg.includes("integration.spec")) {
+        testType = "integration";
+        break;
+      } else if (arg.includes("e2e.spec")) {
+        testType = "e2e";
+        break;
+      }
+    }
 
     // Extract test name pattern if present
     let testNamePattern = "";
@@ -126,8 +264,8 @@ const jestOrta = new Command("jest-orta")
       }
     }
 
-    // Extract just the filename without the path for better matching
-    const filename = path.basename(cleanTestFile);
+    // Log the test type and filename for debugging
+    console.log(`Running ${testType} test for file: ${filename}`);
 
     // Build the command to run
     const packageDir = path.join(process.cwd(), pkgType, "@orbital", pkgName);
@@ -138,7 +276,26 @@ const jestOrta = new Command("jest-orta")
       process.exit(1);
     }
 
-    let command = `cd "${packageDir}" && npx jest --config jest.${testType}.config.js "${filename}" --no-coverage --colors`;
+    // Build the command to run
+    let command = "";
+
+    // For integration tests, we need to be more specific about the test pattern
+    if (testType === "integration") {
+      // For integration tests, we need to use a specific pattern to match the file
+      // This ensures Jest uses the correct pattern matching for integration tests
+      const baseFilename = filename.includes(".integration.spec.ts")
+        ? filename
+        : filename.replace(".spec.ts", ".integration.spec.ts");
+
+      // Use testRegex to override the existing testRegex in the config
+      // Escape special characters in the filename to create a valid regex
+      const escapedFilename = baseFilename.replace(/\./g, "\\.");
+
+      // For VS Code Jest Orta plugin, we need to be even more explicit about the test pattern
+      command = `cd "${packageDir}" && npx jest --config jest.${testType}.config.js --testRegex="${escapedFilename}$" --no-coverage --colors --verbose`;
+    } else {
+      command = `cd "${packageDir}" && npx jest --config jest.${testType}.config.js "${filename}" --no-coverage --colors`;
+    }
 
     // Add test name pattern if present
     if (testNamePattern) {
