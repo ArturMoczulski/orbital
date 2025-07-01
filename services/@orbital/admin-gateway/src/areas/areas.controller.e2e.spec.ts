@@ -1,9 +1,8 @@
-const request = require("supertest");
-
-// Base URL from environment variables
-const BASE_URL = process.env.BASE_URL || "http://localhost:4051";
-
 describe("Areas API (e2e)", () => {
+  const request = require("supertest");
+
+  // Base URL from environment variables
+  const BASE_URL = process.env.BASE_URL || "http://localhost:4051";
   let createdAreaId: string;
 
   // Test data - create manually instead of using Area.mock() to avoid extra fields

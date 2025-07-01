@@ -9,6 +9,7 @@ import { AuthModule } from "./auth/auth.module";
 import { LoggingInterceptor } from "./common/logging.interceptor";
 import { PingController } from "./ping/ping.controller";
 import { UsersModule } from "./users/users.module";
+import { WorldsModule } from "./worlds/worlds.module";
 
 @Module({
   imports: [
@@ -44,6 +45,7 @@ import { UsersModule } from "./users/users.module";
     AuthModule,
     UsersModule,
     AreasModule,
+    WorldsModule,
   ],
   controllers: [PingController],
   providers: [

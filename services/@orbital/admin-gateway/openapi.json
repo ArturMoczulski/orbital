@@ -239,6 +239,150 @@
           "areas"
         ]
       }
+    },
+    "/worlds": {
+      "get": {
+        "operationId": "WorldsController_find",
+        "parameters": [
+          {
+            "name": "shard",
+            "required": false,
+            "in": "query",
+            "description": "Filter worlds by shard",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "techLevel",
+            "required": false,
+            "in": "query",
+            "description": "Filter worlds by tech level",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Returns all worlds"
+          }
+        },
+        "summary": "Get all worlds",
+        "tags": [
+          "worlds"
+        ]
+      },
+      "post": {
+        "operationId": "WorldsController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateWorldDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "The world has been successfully created."
+          }
+        },
+        "summary": "Create a new world",
+        "tags": [
+          "worlds"
+        ]
+      }
+    },
+    "/worlds/{_id}": {
+      "get": {
+        "operationId": "WorldsController_findById",
+        "parameters": [
+          {
+            "name": "_id",
+            "required": true,
+            "in": "path",
+            "description": "The ID of the world to retrieve",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Returns the world with the specified ID"
+          },
+          "404": {
+            "description": "World not found"
+          }
+        },
+        "summary": "Get world by ID",
+        "tags": [
+          "worlds"
+        ]
+      },
+      "put": {
+        "operationId": "WorldsController_update",
+        "parameters": [
+          {
+            "name": "_id",
+            "required": true,
+            "in": "path",
+            "description": "The ID of the world to update",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateWorldDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The world has been successfully updated."
+          }
+        },
+        "summary": "Update an existing world",
+        "tags": [
+          "worlds"
+        ]
+      },
+      "delete": {
+        "operationId": "WorldsController_delete",
+        "parameters": [
+          {
+            "name": "_id",
+            "required": true,
+            "in": "path",
+            "description": "The ID of the world to delete",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The world has been successfully deleted"
+          },
+          "404": {
+            "description": "World not found"
+          }
+        },
+        "summary": "Delete a world",
+        "tags": [
+          "worlds"
+        ]
+      }
     }
   },
   "info": {
@@ -429,6 +573,45 @@
             "items": {
               "type": "string"
             }
+          }
+        }
+      },
+      "CreateWorldDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Descriptive name of the world"
+          },
+          "shard": {
+            "type": "string",
+            "description": "Shard identifier for the world"
+          },
+          "techLevel": {
+            "type": "number",
+            "description": "Technology level of the world"
+          }
+        },
+        "required": [
+          "name",
+          "shard",
+          "techLevel"
+        ]
+      },
+      "UpdateWorldDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Descriptive name of the world"
+          },
+          "shard": {
+            "type": "string",
+            "description": "Shard identifier for the world"
+          },
+          "techLevel": {
+            "type": "number",
+            "description": "Technology level of the world"
           }
         }
       }

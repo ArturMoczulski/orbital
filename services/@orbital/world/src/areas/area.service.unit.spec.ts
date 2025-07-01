@@ -1,9 +1,8 @@
 import { Test, TestingModule } from "@nestjs/testing";
-import { WithoutId } from "@orbital/core";
+import { AreaProps, WithoutId } from "@orbital/core";
 import { AreaModel } from "@orbital/typegoose";
 import { AreaService } from "./area.service";
 import { AreasCRUDService } from "./areas.crud.service";
-import { AreaProps } from "./areas.repository";
 
 describe("AreaService", () => {
   let service: AreaService;
