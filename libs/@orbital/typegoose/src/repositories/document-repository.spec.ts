@@ -8,7 +8,7 @@ import { DocumentRepository } from "./document-repository";
 
 // Define the props interface for TestDomainObject
 interface TestDomainObjectProps {
-  _id: string;
+  _id?: string;
   name?: string;
 }
 
@@ -101,7 +101,7 @@ describe("DocumentRepository", () => {
     repositoryWithSchema = new DocumentRepository<
       TestDomainObject,
       TestDomainObjectProps
-    >(mockModel, TestDomainObject, testSchema);
+    >(mockModel, TestDomainObject, {}, testSchema);
 
     // Spy on PersistenceMapper and DocumentHelpers
     jest.spyOn(PersistenceMapper, "toPersistence").mockReturnValue({
@@ -153,10 +153,7 @@ describe("DocumentRepository", () => {
 
     it("should create multiple entities", async () => {
       // Arrange
-      const dtos = [
-        new TestDomainObject({ _id: "test-id-1", name: "Test Object 1" }),
-        new TestDomainObject({ _id: "test-id-2", name: "Test Object 2" }),
-      ];
+      const dtos = [{ name: "Test Object 1" }, { name: "Test Object 2" }];
 
       // Act
       const result = await repository.create(dtos);
@@ -452,7 +449,7 @@ describe("DocumentRepository", () => {
       const repoWithInvalidSchema = new DocumentRepository<
         TestDomainObject,
         TestDomainObjectProps
-      >(mockModel, TestDomainObject, schemaWithoutParentId);
+      >(mockModel, TestDomainObject, {}, schemaWithoutParentId);
 
       // Create a ZodError first
       const zodError = new z.ZodError([
@@ -506,7 +503,7 @@ describe("DocumentRepository", () => {
       const repoWithInvalidSchema = new DocumentRepository<
         TestDomainObject,
         TestDomainObjectProps
-      >(mockModel, TestDomainObject, schemaWithoutTags);
+      >(mockModel, TestDomainObject, {}, schemaWithoutTags);
 
       // Create a ZodError first
       const zodError = new z.ZodError([

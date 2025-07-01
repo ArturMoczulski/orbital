@@ -7,8 +7,20 @@ import * as mongoose from "mongoose";
 import { Schema } from "mongoose";
 import * as z from "zod";
 import { Reference } from "../decorators/reference.decorator";
+import { WithId } from "../types/utils";
 import { WithDocument } from "../types/with-document";
 import { DocumentRepository } from "./document-repository";
+
+// Define TestEntityProps type for DTOs
+type TestEntityProps = {
+  _id?: string;
+  name: string;
+  description?: string;
+  tags: string[];
+  parentId?: string;
+  createdAt?: Date;
+  updatedAt?: Date;
+};
 
 // Define a test domain class
 class TestEntity extends IdentifiableObject {
@@ -65,8 +77,8 @@ const testZodSchema = z.object({
 });
 
 describe("DocumentRepository Integration Tests", () => {
-  let repository: DocumentRepository<TestEntity>;
-  let repositoryWithSchema: DocumentRepository<TestEntity>;
+  let repository: DocumentRepository<TestEntity, TestEntityProps>;
+  let repositoryWithSchema: DocumentRepository<TestEntity, TestEntityProps>;
   let TestEntityModel: any; // Using any to bypass mongoose type issues
 
   beforeAll(async () => {
@@ -74,15 +86,16 @@ describe("DocumentRepository Integration Tests", () => {
     TestEntityModel = mongoose.model("TestEntity", TestEntitySchema);
 
     // Create the repository
-    repository = new DocumentRepository<TestEntity>(
+    repository = new DocumentRepository<TestEntity, TestEntityProps>(
       TestEntityModel,
       TestEntity
     );
 
     // Create repository with schema
-    repositoryWithSchema = new DocumentRepository<TestEntity>(
+    repositoryWithSchema = new DocumentRepository<TestEntity, TestEntityProps>(
       TestEntityModel,
       TestEntity,
+      undefined,
       testZodSchema
     );
   });
@@ -107,12 +120,11 @@ describe("DocumentRepository Integration Tests", () => {
   describe("create", () => {
     it("should create a single entity", async () => {
       // Arrange
-      const testData = new TestEntity({
-        _id: "test-entity-id", // Explicitly set an ID for the test
+      const testData = {
         name: "Test Entity",
         description: "Test Description",
         tags: ["test", "entity"],
-      });
+      };
 
       // Act
       const result = (await repository.create(
@@ -136,17 +148,15 @@ describe("DocumentRepository Integration Tests", () => {
     it("should create multiple entities", async () => {
       // Arrange
       const testData = [
-        new TestEntity({
-          _id: "entity-1-id", // Explicitly set an ID for the test
+        {
           name: "Entity 1",
           tags: ["test", "entity1"],
-        }),
-        new TestEntity({
-          _id: "entity-2-id", // Explicitly set an ID for the test
+        },
+        {
           name: "Entity 2",
           description: "Description 2",
           tags: ["test", "entity2"],
-        }),
+        },
       ];
 
       // Act
@@ -173,18 +183,16 @@ describe("DocumentRepository Integration Tests", () => {
 
     it("should validate data against schema when creating an entity", async () => {
       // Arrange
-      const validData = new TestEntity({
-        _id: "valid-entity-id", // Explicitly set an ID for the test
+      const validData = {
         name: "Valid Entity",
         tags: ["test", "valid"],
-      });
+      };
 
-      const invalidData = new TestEntity({
-        _id: "invalid-entity-id", // Explicitly set an ID for the test
+      const invalidData = {
         // Missing required name field (will be set to empty string in constructor)
         name: "",
         tags: ["test", "invalid"],
-      });
+      };
 
       // Act & Assert - Valid data should work
       const result = (await repositoryWithSchema.create(
@@ -217,9 +225,15 @@ describe("DocumentRepository Integration Tests", () => {
       // Assert
       expect(results.length).toBe(3);
       expect(results[0].document).toBeDefined();
-      expect(results.map((e) => e.name)).toContain("Entity 1");
-      expect(results.map((e) => e.name)).toContain("Entity 2");
-      expect(results.map((e) => e.name)).toContain("Entity 3");
+      expect(results.map((e: WithDocument<TestEntity>) => e.name)).toContain(
+        "Entity 1"
+      );
+      expect(results.map((e: WithDocument<TestEntity>) => e.name)).toContain(
+        "Entity 2"
+      );
+      expect(results.map((e: WithDocument<TestEntity>) => e.name)).toContain(
+        "Entity 3"
+      );
     });
 
     it("should find entities with filter", async () => {
@@ -301,12 +315,10 @@ describe("DocumentRepository Integration Tests", () => {
         // No parentId field
       });
 
-      const repoWithInvalidSchema = new DocumentRepository<TestEntity>(
-        TestEntityModel,
+      const repoWithInvalidSchema = new DocumentRepository<
         TestEntity,
-        undefined,
-        schemaWithoutParentId
-      );
+        TestEntityProps
+      >(TestEntityModel, TestEntity, undefined, schemaWithoutParentId);
 
       // Act & Assert
       // Mock the findByParentId method to return a rejected promise
@@ -359,12 +371,10 @@ describe("DocumentRepository Integration Tests", () => {
         // No tags field
       });
 
-      const repoWithInvalidSchema = new DocumentRepository<TestEntity>(
-        TestEntityModel,
+      const repoWithInvalidSchema = new DocumentRepository<
         TestEntity,
-        undefined,
-        schemaWithoutTags
-      );
+        TestEntityProps
+      >(TestEntityModel, TestEntity, undefined, schemaWithoutTags);
 
       // Act & Assert
       // Mock the findByTags method to return a rejected promise
@@ -397,8 +407,12 @@ describe("DocumentRepository Integration Tests", () => {
 
       // Assert
       expect(results.length).toBe(2);
-      expect(results.map((e) => e.name)).toContain("Child 1");
-      expect(results.map((e) => e.name)).toContain("Child 2");
+      expect(results.map((e: WithDocument<TestEntity>) => e.name)).toContain(
+        "Child 1"
+      );
+      expect(results.map((e: WithDocument<TestEntity>) => e.name)).toContain(
+        "Child 2"
+      );
     });
   });
 
@@ -418,8 +432,12 @@ describe("DocumentRepository Integration Tests", () => {
 
       // Assert
       expect(results.length).toBe(2);
-      expect(results.map((e) => e.name)).toContain("Entity 1");
-      expect(results.map((e) => e.name)).toContain("Entity 2");
+      expect(results.map((e: WithDocument<TestEntity>) => e.name)).toContain(
+        "Entity 1"
+      );
+      expect(results.map((e: WithDocument<TestEntity>) => e.name)).toContain(
+        "Entity 2"
+      );
     });
   });
 
@@ -544,19 +562,21 @@ describe("DocumentRepository Integration Tests", () => {
       const originalUpdate = repositoryWithSchema.update;
       jest
         .spyOn(repositoryWithSchema, "update")
-        .mockImplementation(async (data) => {
-          if (Array.isArray(data)) {
+        .mockImplementation(
+          async (data: WithId<TestEntityProps> | WithId<TestEntityProps>[]) => {
+            if (Array.isArray(data)) {
+              return originalUpdate.call(repositoryWithSchema, data);
+            }
+
+            // Explicitly cast data to TestEntity to access the name property
+            const entityData = data as TestEntity;
+            if (entityData.name === "") {
+              throw new Error("Name is required");
+            }
+
             return originalUpdate.call(repositoryWithSchema, data);
           }
-
-          // Explicitly cast data to TestEntity to access the name property
-          const entityData = data as TestEntity;
-          if (entityData.name === "") {
-            throw new Error("Name is required");
-          }
-
-          return originalUpdate.call(repositoryWithSchema, data);
-        });
+        );
 
       // Act & Assert - Invalid update should throw validation error
       await expect(repositoryWithSchema.update(invalidUpdate)).rejects.toThrow(
@@ -629,6 +649,23 @@ describe("DocumentRepository Integration Tests", () => {
  * Tests specifically for the validateReferences method
  */
 describe("DocumentRepository Reference Validation Integration Tests", () => {
+  // Define types for ParentEntity and ChildEntity props
+  type ParentEntityProps = {
+    _id?: string;
+    name: string;
+    createdAt?: Date;
+    updatedAt?: Date;
+  };
+
+  type ChildEntityProps = {
+    _id?: string;
+    name: string;
+    parentId: string;
+    optionalRefId?: string;
+    createdAt?: Date;
+    updatedAt?: Date;
+  };
+
   // Define a parent entity class with @Reference decorator
   class ParentEntity extends IdentifiableObject {
     name: string;
@@ -691,12 +728,12 @@ describe("DocumentRepository Reference Validation Integration Tests", () => {
 
   // Define MongoDB schemas
   const ParentEntitySchema = new Schema({
-    _id: { type: String, required: true },
+    _id: { type: String, required: false },
     name: { type: String, required: true },
   });
 
   const ChildEntitySchema = new Schema({
-    _id: { type: String, required: true },
+    _id: { type: String, required: false },
     name: { type: String, required: true },
     parentId: { type: String, required: true },
     optionalRefId: { type: String, required: false },
@@ -704,8 +741,8 @@ describe("DocumentRepository Reference Validation Integration Tests", () => {
 
   let ParentEntityModel: any;
   let ChildEntityModel: any;
-  let childRepository: DocumentRepository<ChildEntity>;
-  let parentRepository: DocumentRepository<ParentEntity>;
+  let childRepository: DocumentRepository<ChildEntity, ChildEntityProps>;
+  let parentRepository: DocumentRepository<ParentEntity, ParentEntityProps>;
 
   beforeAll(async () => {
     // Create the models
@@ -713,12 +750,12 @@ describe("DocumentRepository Reference Validation Integration Tests", () => {
     ChildEntityModel = mongoose.model("ChildEntity", ChildEntitySchema);
 
     // Create the repositories
-    childRepository = new DocumentRepository<ChildEntity>(
+    childRepository = new DocumentRepository<ChildEntity, ChildEntityProps>(
       ChildEntityModel,
       ChildEntity,
       { parentEntity: ParentEntityModel, nonExistentEntity: undefined }
     );
-    parentRepository = new DocumentRepository<ParentEntity>(
+    parentRepository = new DocumentRepository<ParentEntity, ParentEntityProps>(
       ParentEntityModel,
       ParentEntity
     );
@@ -751,100 +788,119 @@ describe("DocumentRepository Reference Validation Integration Tests", () => {
   describe("validateReferences", () => {
     it("should successfully validate references when referenced entity exists", async () => {
       // Arrange
-      const parentEntity = new ParentEntity({
-        _id: "parent-123",
+      // Create the parent entity without specifying an ID
+      const parentData = {
         name: "Test Parent",
-      });
+      };
 
       // Create the parent entity in the database
-      await parentRepository.create(parentEntity);
+      const createdParent = (await parentRepository.create(
+        parentData
+      )) as WithDocument<ParentEntity>;
+      expect(createdParent).toBeDefined();
+      expect(createdParent._id).toBeDefined();
 
-      const childEntity = new ChildEntity({
-        _id: "child-123",
+      const childData = {
         name: "Test Child",
-        parentId: "parent-123",
-      });
+        parentId: createdParent._id,
+      };
 
       // Act & Assert
       // This should not throw an error
-      await expect(childRepository.create(childEntity)).resolves.toBeDefined();
+      await expect(childRepository.create(childData)).resolves.toBeDefined();
     });
 
     it("should throw an error when referenced entity does not exist", async () => {
       // Arrange
-      const childEntity = new ChildEntity({
-        _id: "child-456",
+      // Use a plain DTO without ID
+      const childData = {
         name: "Test Child",
         parentId: "non-existent-parent", // This parent doesn't exist
-      });
+      };
 
       // Act & Assert
-      await expect(childRepository.create(childEntity)).rejects.toThrow(
+      await expect(childRepository.create(childData)).rejects.toThrow(
         'Referenced entity not found: ParentEntity._id with value "non-existent-parent"'
       );
     });
 
     it("should skip validation for optional references that are not provided", async () => {
       // Arrange
-      const parentEntity = new ParentEntity({
-        _id: "parent-789",
+      // Use a plain DTO without ID
+      const parentData = {
         name: "Test Parent",
-      });
+      };
 
       // Create the parent entity in the database
-      await parentRepository.create(parentEntity);
+      const createdParent = (await parentRepository.create(
+        parentData
+      )) as WithDocument<ParentEntity>;
+      expect(createdParent).toBeDefined();
+      expect(createdParent._id).toBeDefined();
 
-      const childEntity = new ChildEntity({
-        _id: "child-789",
+      // Use a plain DTO without ID
+      const childData = {
         name: "Test Child",
-        parentId: "parent-789",
+        parentId: createdParent._id,
         // optionalRefId is not provided
-      });
+      };
 
       // Act & Assert
       // This should not throw an error despite NonExistentEntity not existing
-      await expect(childRepository.create(childEntity)).resolves.toBeDefined();
+      await expect(childRepository.create(childData)).resolves.toBeDefined();
     });
 
     it("should validate references during update operations", async () => {
       // Arrange
-      const parentEntity1 = new ParentEntity({
-        _id: "parent-1",
+      // Use plain DTOs without IDs
+      const parentData1 = {
         name: "Parent 1",
-      });
+      };
 
-      const parentEntity2 = new ParentEntity({
-        _id: "parent-2",
+      const parentData2 = {
         name: "Parent 2",
-      });
+      };
 
-      // Create parent entities
-      await parentRepository.create([parentEntity1, parentEntity2]);
+      // Create parent entities individually to avoid type issues
+      const createdParent1 = (await parentRepository.create(
+        parentData1
+      )) as WithDocument<ParentEntity>;
+      const createdParent2 = (await parentRepository.create(
+        parentData2
+      )) as WithDocument<ParentEntity>;
 
-      // Create a child with a valid reference
-      const childEntity = new ChildEntity({
-        _id: "child-update-test",
+      expect(createdParent1).toBeDefined();
+      expect(createdParent1._id).toBeDefined();
+      expect(createdParent2).toBeDefined();
+      expect(createdParent2._id).toBeDefined();
+
+      // Create a child with a valid reference using a plain DTO
+      const childData = {
         name: "Child for Update",
-        parentId: "parent-1",
-      });
+        parentId: createdParent1._id,
+      };
 
-      const createdChild = await childRepository.create(childEntity);
+      const createdChild = (await childRepository.create(
+        childData
+      )) as WithDocument<ChildEntity>;
+      expect(createdChild).toBeDefined();
+      expect(createdChild._id).toBeDefined();
 
       // Act & Assert - Valid update
-      const validUpdate = new ChildEntity({
-        _id: "child-update-test",
+      const validUpdate = {
+        _id: createdChild._id, // For update, we need the ID
         name: "Updated Child",
-        parentId: "parent-2", // Change to another valid parent
-      });
+        parentId: createdParent2._id, // Change to another valid parent
+      };
 
       await expect(childRepository.update(validUpdate)).resolves.toBeDefined();
 
       // Act & Assert - Invalid update
-      const invalidUpdate = new ChildEntity({
-        _id: "child-update-test",
+      const invalidUpdate = {
+        _id: createdChild._id, // For update, we need the ID
         name: "Invalid Update",
         parentId: "non-existent-parent", // This parent doesn't exist
-      });
+      };
 
       await expect(childRepository.update(invalidUpdate)).rejects.toThrow(
         'Referenced entity not found: ParentEntity._id with value "non-existent-parent"'
@@ -854,21 +910,25 @@ describe("DocumentRepository Reference Validation Integration Tests", () => {
     it("should throw an error when referenced collection does not exist", async () => {
       // Arrange
       // First create a valid parent entity to satisfy the required parentId field
-      const parentEntity = new ParentEntity({
-        _id: "parent-for-missing-collection-test",
+      const parentData = {
         name: "Parent for Missing Collection Test",
-      });
-      await parentRepository.create(parentEntity);
+      };
 
-      const childEntity = new ChildEntity({
-        _id: "child-missing-collection",
+      const createdParent = (await parentRepository.create(
+        parentData
+      )) as WithDocument<ParentEntity>;
+      expect(createdParent).toBeDefined();
+      expect(createdParent._id).toBeDefined();
+
+      // Use a plain DTO without ID
+      const childData = {
         name: "Child with Missing Collection Reference",
-        parentId: "parent-for-missing-collection-test", // Valid parent ID to pass schema validation
+        parentId: createdParent._id, // Valid parent ID to pass schema validation
         optionalRefId: "some-id", // This is optional but we're providing a value
-      });
+      };
 
       // Act & Assert
-      await expect(childRepository.create(childEntity)).rejects.toThrow(
+      await expect(childRepository.create(childData)).rejects.toThrow(
         /Cannot validate reference to NonExistentEntity._id with value "some-id"/
       );
     });

@@ -5,7 +5,6 @@ import {
 } from "@orbital/bulk-operations";
 import {
   IdentifiableObject,
-  IdentifiableObjectProps,
   WithoutId,
   ZodErrorWithStack,
 } from "@orbital/core";
@@ -31,7 +30,7 @@ export type ModelReferences<T = {}> = Record<keyof T, any>;
  */
 export class DocumentRepository<
   TDomainEntity extends IdentifiableObject,
-  TDomainEntityProps = IdentifiableObjectProps,
+  TDomainEntityProps,
   TModelClass extends { new (...args: any[]): any } = {
     new (...args: any[]): any;
   },
@@ -120,17 +119,18 @@ export class DocumentRepository<
               ? item.toPlainObject()
               : { ...item };
 
+          // Create a domain object without specifying an ID
+          // Let MongoDB generate the ID
           const domainObject = new this.DomainClass({
             ...plainItem,
-            _id: "temp-id-" + Date.now(),
+            // Don't set _id here, let MongoDB generate it
           });
 
-          // Create persistence data but remove the temporary ID
+          // Create persistence data
           const data = PersistenceMapper.toPersistence(domainObject);
-          const { _id: _, ...dataWithoutId } = data;
 
-          // Store for bulk insertion without _id
-          validItems.push(dataWithoutId);
+          // Store for bulk insertion
+          validItems.push(data);
           domainObjects.push(domainObject);
         } catch (error: any) {
           // Ensure we have a proper error message, even for ZodErrorWithStack
