@@ -10,7 +10,7 @@ import { modelOptions, prop } from "@typegoose/typegoose";
 })
 export class WorldModel extends World {
   // Let MongoDB generate the ID
-  @prop({ required: true })
+  @prop({ required: false }) // Changed to false to allow MongoDB to generate it
   override _id!: string;
 
   // Add Typegoose decorators to inherited properties
