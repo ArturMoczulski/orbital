@@ -4,7 +4,10 @@ import {
   BulkOperation,
 } from "@orbital/bulk-operations";
 import {
+  ConsoleLogger,
   IdentifiableObject,
+  Logger,
+  VerbosityLevel,
   WithoutId,
   ZodErrorWithStack,
 } from "@orbital/core";
@@ -40,8 +43,12 @@ export class DocumentRepository<
     protected readonly model: ReturnModelType<TModelClass>, // Mongoose Model from Typegoose
     protected readonly DomainClass: new (data: any) => TDomainEntity,
     protected readonly modelReferences?: ModelReferences<TModelReferences>,
-    protected readonly schema?: ZodObject<any>
-  ) {}
+    protected readonly schema?: ZodObject<any>,
+    protected readonly logger?: Logger
+  ) {
+    this.logger =
+      logger || new ConsoleLogger(VerbosityLevel.INFO, this.constructor.name);
+  }
 
   /**
    * Create one or more entities
@@ -635,6 +642,8 @@ export class DocumentRepository<
           const updatedDocs = await this.model
             .find({ _id: { $in: ids } })
             .exec();
+
+          this.logger?.log(`updated docs: `, updatedDocs);
 
           // Create a map of documents by ID for quick lookup
           const docsById = new Map();

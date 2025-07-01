@@ -55,7 +55,7 @@ describe("DocumentRepository", () => {
     TestDomainObjectProps
   >;
 
-  // Mock document
+  // Mock documents
   const mockDocument = {
     _id: "test-id-123",
     name: "Test Object",
@@ -65,6 +65,18 @@ describe("DocumentRepository", () => {
       name: "Test Object",
     }),
   };
+
+  const mockDocument2 = {
+    _id: "test-id-456",
+    name: "Test Object 2",
+    save: async () => true,
+    toObject: () => ({
+      _id: "test-id-456",
+      name: "Test Object 2",
+    }),
+  };
+
+  const mockDocuments = [mockDocument, mockDocument2];
 
   beforeEach(() => {
     // Create a mock model constructor function
@@ -79,10 +91,10 @@ describe("DocumentRepository", () => {
     mockModel.skip = jest.fn().mockReturnThis();
     mockModel.limit = jest.fn().mockReturnThis();
     mockModel.populate = jest.fn().mockReturnThis();
-    mockModel.exec = jest.fn().mockResolvedValue([mockDocument]);
+    mockModel.exec = jest.fn().mockResolvedValue(mockDocuments);
 
     // Mock the insertMany method for bulk creation
-    mockModel.insertMany = jest.fn().mockResolvedValue([mockDocument]);
+    mockModel.insertMany = jest.fn().mockResolvedValue(mockDocuments);
 
     // Mock the bulkWrite method for bulk updates
     mockModel.bulkWrite = jest.fn().mockResolvedValue({
@@ -218,7 +230,7 @@ describe("DocumentRepository", () => {
 
       // Assert
       expect(results).toBeInstanceOf(Array);
-      expect(results.length).toBeGreaterThan(0);
+      expect(results.length).toBe(2); // Now expecting exactly 2 documents
       expect(mockModel.find).toHaveBeenCalledWith(filter, undefined);
       expect(PersistenceMapper.toDomain).toHaveBeenCalled();
       expect(DocumentHelpers.attachDocument).toHaveBeenCalled();
@@ -262,7 +274,7 @@ describe("DocumentRepository", () => {
 
     it("should return null if no entity is found", async () => {
       // Arrange
-      mockModel.exec.mockResolvedValueOnce([]);
+      mockModel.exec.mockResolvedValueOnce([]); // Empty array for "no entity found" case
       const filter = { name: "Nonexistent Object" };
 
       // Act
@@ -290,6 +302,7 @@ describe("DocumentRepository", () => {
   describe("update", () => {
     beforeEach(() => {
       // Reset the mock implementation for each test
+      // findById should still return a single document
       mockModel.findById = jest.fn().mockReturnValue({
         exec: jest.fn().mockResolvedValue(mockDocument),
       });
@@ -398,6 +411,7 @@ describe("DocumentRepository", () => {
   describe("delete", () => {
     beforeEach(() => {
       // Mock findById to return a document
+      // findById should still return a single document
       mockModel.findById.mockImplementation(() => ({
         exec: jest.fn().mockResolvedValue(mockDocument),
       }));
