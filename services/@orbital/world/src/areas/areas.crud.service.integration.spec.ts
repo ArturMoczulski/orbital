@@ -1,5 +1,5 @@
 import { Test, TestingModule } from "@nestjs/testing";
-import { AreaModel } from "@orbital/typegoose";
+import { AreaModel, WorldModel } from "@orbital/typegoose";
 import { MongoMemoryServer } from "mongodb-memory-server";
 import mongoose, { Model } from "mongoose";
 import { getModelToken, TypegooseModule } from "nestjs-typegoose";
@@ -29,7 +29,7 @@ describe("AreasCRUDService Integration", () => {
       module = await Test.createTestingModule({
         imports: [
           TypegooseModule.forRoot(uri),
-          TypegooseModule.forFeature([AreaModel]),
+          TypegooseModule.forFeature([AreaModel, WorldModel]),
         ],
         providers: [AreasCRUDService, AreasRepository],
       }).compile();

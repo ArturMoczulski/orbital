@@ -286,10 +286,7 @@ describe("AreasRepository Integration", () => {
       }
     });
 
-    // Note: This test has been updated to match the actual behavior of the system.
-    // The reference validation is currently logging warnings instead of throwing errors
-    // when a referenced collection is not found.
-    it("should create an area even with an invalid world reference (current behavior)", async () => {
+    it("should fail to create an area with an invalid world reference", async () => {
       // Arrange - Create an area with a reference to a non-existent world
       const areaData = {
         _id: "area-with-invalid-world",
@@ -301,19 +298,10 @@ describe("AreasRepository Integration", () => {
         connections: [],
       };
 
-      // Act
-      const result = await repository.create(areaData);
-
-      // Assert - Currently the system allows creation with invalid references
-      expect(result).toBeDefined();
-
-      // Check if result is a WithDocument<AreaModel> and not a BulkItemizedResponse
-      if ("_id" in result) {
-        expect(result._id).toBe("area-with-invalid-world");
-        expect(result.worldId).toBe("non-existent-world");
-      } else {
-        fail("Expected result to be a WithDocument<AreaModel>");
-      }
+      // Act & Assert
+      await expect(repository.create(areaData)).rejects.toThrow(
+        'Referenced entity not found: worlds._id with value "non-existent-world"'
+      );
     });
 
     it("should update an area with a valid world reference", async () => {
@@ -371,10 +359,7 @@ describe("AreasRepository Integration", () => {
       }
     });
 
-    // Note: This test has been updated to match the actual behavior of the system.
-    // The reference validation is currently logging warnings instead of throwing errors
-    // when a referenced collection is not found.
-    it("should update an area even with an invalid world reference (current behavior)", async () => {
+    it("should fail to update an area with an invalid world reference", async () => {
       // Arrange - Create a test world and area first
       const worldId = "fail-update-world-ref";
 
@@ -397,28 +382,20 @@ describe("AreasRepository Integration", () => {
         connections: [],
       });
 
-      // Act - Try to update with a non-existent world
-      const updateResult = await repository.update({
-        _id: "area-to-fail-update",
-        worldId: "non-existent-world",
-        landmarks: [],
-        connections: [],
-        tags: ["test"],
-        name: "Area with Invalid World",
-        description: "This update should fail",
-      });
-
-      // Assert - Currently the system allows updates with invalid references
-      expect(updateResult).toBeDefined();
-
-      // Check if updateResult is a WithDocument<AreaModel> and not a BulkItemizedResponse
-      if ("_id" in updateResult) {
-        expect(updateResult._id).toBe("area-to-fail-update");
-        expect(updateResult.worldId).toBe("non-existent-world");
-        expect(updateResult.name).toBe("Area with Invalid World");
-      } else {
-        fail("Expected updateResult to be a WithDocument<AreaModel>");
-      }
+      // Act & Assert - Try to update with a non-existent world
+      await expect(
+        repository.update({
+          _id: "area-to-fail-update",
+          worldId: "non-existent-world",
+          landmarks: [],
+          connections: [],
+          tags: ["test"],
+          name: "Area with Invalid World",
+          description: "This update should fail",
+        })
+      ).rejects.toThrow(
+        'Referenced entity not found: worlds._id with value "non-existent-world"'
+      );
     });
   });
 });

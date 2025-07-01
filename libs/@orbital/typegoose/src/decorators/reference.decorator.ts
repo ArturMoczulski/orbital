@@ -25,6 +25,12 @@ export interface ReferenceOptions {
    * Default: "_id"
    */
   foreignField?: string;
+
+  /**
+   * Custom name for the reference
+   * Default: camelCase singular of collection name
+   */
+  name?: string;
 }
 
 /**
@@ -45,6 +51,24 @@ export interface ReferenceMetadata extends ReferenceOptions {
    * Field in the referenced collection to match against
    */
   foreignField: string;
+
+  /**
+   * Name for the reference, used for model references
+   */
+  name: string;
+}
+
+/**
+ * Convert a string to camelCase singular form
+ * @param str The string to convert
+ * @returns The camelCase singular form
+ */
+function toCamelCaseSingular(str: string): string {
+  // Remove trailing 's' if it exists (simple pluralization)
+  const singular = str.endsWith("s") ? str.slice(0, -1) : str;
+
+  // Convert to camelCase
+  return singular.charAt(0).toLowerCase() + singular.slice(1);
 }
 
 /**
@@ -81,6 +105,7 @@ export function Reference(options: ReferenceOptions): PropertyDecorator {
       collection: options.collection,
       required: options.required !== false, // Default to true if not specified
       foreignField: options.foreignField || "_id", // Default to _id if not specified
+      name: options.name || toCamelCaseSingular(options.collection), // Default to camelCase singular of collection
     };
 
     // Get existing references or initialize empty array

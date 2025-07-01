@@ -2,7 +2,9 @@ import { Inject, Injectable } from "@nestjs/common";
 import {
   AreaModel,
   DocumentRepository,
+  ModelReferences,
   WithDocument,
+  WorldModel,
 } from "@orbital/typegoose";
 import type { ReturnModelType } from "@typegoose/typegoose";
 import { getModelToken } from "nestjs-typegoose";
@@ -31,10 +33,18 @@ export class AreasRepository extends DocumentRepository<
 > {
   constructor(
     @Inject(getModelToken(AreaModel.name))
-    areaModel: ReturnModelType<typeof AreaModel>
+    areaModel: ReturnModelType<typeof AreaModel>,
+    @Inject(getModelToken(WorldModel.name))
+    worldModel: ReturnModelType<typeof WorldModel>
   ) {
+    // Create model references object
+    const modelReferences: ModelReferences = {
+      world: worldModel,
+      area: areaModel,
+    };
+
     // Call super with the required arguments
-    super(areaModel, AreaModel);
+    super(areaModel, AreaModel, modelReferences);
   }
 
   /**

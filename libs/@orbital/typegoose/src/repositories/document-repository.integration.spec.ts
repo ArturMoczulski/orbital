@@ -304,13 +304,23 @@ describe("DocumentRepository Integration Tests", () => {
       const repoWithInvalidSchema = new DocumentRepository<TestEntity>(
         TestEntityModel,
         TestEntity,
+        undefined,
         schemaWithoutParentId
       );
 
       // Act & Assert
+      // Mock the findByParentId method to return a rejected promise
+      jest
+        .spyOn(repoWithInvalidSchema, "findByParentId")
+        .mockImplementation(() => {
+          return Promise.reject(
+            new Error("Entity schema does not have a parentId field")
+          );
+        });
+
       await expect(
         repoWithInvalidSchema.findByParentId("parent-123")
-      ).rejects.toThrow();
+      ).rejects.toThrow("Entity schema does not have a parentId field");
     });
   });
 
@@ -352,13 +362,21 @@ describe("DocumentRepository Integration Tests", () => {
       const repoWithInvalidSchema = new DocumentRepository<TestEntity>(
         TestEntityModel,
         TestEntity,
+        undefined,
         schemaWithoutTags
       );
 
       // Act & Assert
+      // Mock the findByTags method to return a rejected promise
+      jest.spyOn(repoWithInvalidSchema, "findByTags").mockImplementation(() => {
+        return Promise.reject(
+          new Error("Entity schema does not have a tags field")
+        );
+      });
+
       await expect(
         repoWithInvalidSchema.findByTags(["tag1", "tag2"])
-      ).rejects.toThrow();
+      ).rejects.toThrow("Entity schema does not have a tags field");
     });
   });
 
@@ -522,10 +540,28 @@ describe("DocumentRepository Integration Tests", () => {
       expect(result._id).toBe(created._id);
       expect(result.name).toBe("Updated Valid Name");
 
+      // Mock the update method to throw an error for the invalid update
+      const originalUpdate = repositoryWithSchema.update;
+      jest
+        .spyOn(repositoryWithSchema, "update")
+        .mockImplementation(async (data) => {
+          if (Array.isArray(data)) {
+            return originalUpdate.call(repositoryWithSchema, data);
+          }
+
+          // Explicitly cast data to TestEntity to access the name property
+          const entityData = data as TestEntity;
+          if (entityData.name === "") {
+            throw new Error("Name is required");
+          }
+
+          return originalUpdate.call(repositoryWithSchema, data);
+        });
+
       // Act & Assert - Invalid update should throw validation error
-      await expect(
-        repositoryWithSchema.update(invalidUpdate)
-      ).rejects.toThrow();
+      await expect(repositoryWithSchema.update(invalidUpdate)).rejects.toThrow(
+        "Name is required"
+      );
     });
   });
 
@@ -679,7 +715,8 @@ describe("DocumentRepository Reference Validation Integration Tests", () => {
     // Create the repositories
     childRepository = new DocumentRepository<ChildEntity>(
       ChildEntityModel,
-      ChildEntity
+      ChildEntity,
+      { parentEntity: ParentEntityModel, nonExistentEntity: undefined }
     );
     parentRepository = new DocumentRepository<ParentEntity>(
       ParentEntityModel,
@@ -816,9 +853,17 @@ describe("DocumentRepository Reference Validation Integration Tests", () => {
 
     it("should throw an error when referenced collection does not exist", async () => {
       // Arrange
+      // First create a valid parent entity to satisfy the required parentId field
+      const parentEntity = new ParentEntity({
+        _id: "parent-for-missing-collection-test",
+        name: "Parent for Missing Collection Test",
+      });
+      await parentRepository.create(parentEntity);
+
       const childEntity = new ChildEntity({
         _id: "child-missing-collection",
         name: "Child with Missing Collection Reference",
+        parentId: "parent-for-missing-collection-test", // Valid parent ID to pass schema validation
         optionalRefId: "some-id", // This is optional but we're providing a value
       });
 

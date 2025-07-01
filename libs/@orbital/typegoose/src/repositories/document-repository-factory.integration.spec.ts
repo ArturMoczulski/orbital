@@ -140,7 +140,7 @@ describe("DocumentRepositoryFactory Integration Tests", () => {
 
       // Act & Assert - Invalid data should throw validation error
       await expect(repository.create(invalidData)).rejects.toThrow(
-        "Validation error"
+        /validation failed.*name.*required/
       );
     });
 

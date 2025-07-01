@@ -2,6 +2,7 @@ import {
   AreaModel,
   DocumentRepository,
   WithDocument,
+  WorldModel,
 } from "@orbital/typegoose";
 import type { ReturnModelType } from "@typegoose/typegoose";
 import { Document } from "mongoose";
@@ -10,6 +11,7 @@ import { AreasRepository } from "./areas.repository";
 describe("AreasRepository", () => {
   let repository: AreasRepository;
   let mockAreaModel: ReturnModelType<typeof AreaModel>;
+  let mockWorldModel: ReturnModelType<typeof WorldModel>;
   let mockArea: AreaModel;
 
   beforeEach(() => {
@@ -61,8 +63,28 @@ describe("AreasRepository", () => {
       typeof AreaModel
     >;
 
-    // Create repository with mock model
-    repository = new AreasRepository(mockAreaModel);
+    // Create a mock world model with similar structure
+    const mockWorldModelFunction = function () {
+      return {
+        _id: "world-id-456",
+        name: "Test World",
+        shard: "test-shard",
+        techLevel: 1,
+        save: jest.fn().mockResolvedValue(true),
+        toObject: jest.fn(),
+      };
+    } as any;
+
+    // Copy all properties from mockModel to modelFunction (reuse the same structure)
+    Object.assign(mockWorldModelFunction, mockModel);
+
+    // Cast to the required type
+    mockWorldModel = mockWorldModelFunction as unknown as ReturnModelType<
+      typeof WorldModel
+    >;
+
+    // Create repository with mock models
+    repository = new AreasRepository(mockAreaModel, mockWorldModel);
   });
 
   afterEach(() => {
