@@ -136,10 +136,9 @@ describe("DocumentRepository", () => {
   describe("create", () => {
     it("should create a single entity", async () => {
       // Arrange
-      const dto = new TestDomainObject({
-        _id: "test-id-123",
+      const dto = {
         name: "Test Object",
-      });
+      };
 
       // Act
       const result = await repository.create(dto);
@@ -171,16 +170,14 @@ describe("DocumentRepository", () => {
 
     it("should validate data against schema when creating an entity", async () => {
       // Arrange
-      const validDto = new TestDomainObject({
-        _id: "valid-id",
+      const validDto = {
         name: "Valid Object",
-      });
+      };
 
-      const invalidDto = new TestDomainObject({
-        _id: "invalid-id",
+      const invalidDto = {
         // Empty name, which violates the min(1) constraint
         name: "",
-      });
+      };
 
       // Mock the create method to reject for invalid data
       const originalCreate = repositoryWithSchema.create;

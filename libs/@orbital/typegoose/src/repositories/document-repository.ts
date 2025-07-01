@@ -110,26 +110,27 @@ export class DocumentRepository<
             await this.validateReferences(item);
           }
 
-          // Convert to domain object if it's not already one
-          const domainObject =
-            item instanceof this.DomainClass
-              ? (item as unknown as TDomainEntity)
-              : new this.DomainClass(item as any);
+          // If no _id is provided, we need to create a domain object without an ID
+          // First, ensure we have a plain object copy without _id
+          const plainItem =
+            item &&
+            typeof item === "object" &&
+            "toPlainObject" in item &&
+            typeof item.toPlainObject === "function"
+              ? item.toPlainObject()
+              : { ...item };
 
-          // Create persistence data from domain object
+          const domainObject = new this.DomainClass({
+            ...plainItem,
+            _id: "temp-id-" + Date.now(),
+          });
+
+          // Create persistence data but remove the temporary ID
           const data = PersistenceMapper.toPersistence(domainObject);
+          const { _id: _, ...dataWithoutId } = data;
 
-          // If _id is provided, use it; otherwise, let MongoDB generate one
-          if (data._id) {
-            // Store for bulk insertion with the provided _id
-            validItems.push(data);
-          } else {
-            // Remove the temporary ID to let MongoDB generate a new one
-            const { _id, ...dataWithoutId } = data;
-
-            // Store for bulk insertion without _id
-            validItems.push(dataWithoutId);
-          }
+          // Store for bulk insertion without _id
+          validItems.push(dataWithoutId);
           domainObjects.push(domainObject);
         } catch (error: any) {
           // Ensure we have a proper error message, even for ZodErrorWithStack
