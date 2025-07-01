@@ -1,7 +1,8 @@
 import { Injectable } from "@nestjs/common";
+import { AreaProps } from "@orbital/core";
 import { CRUDService } from "@orbital/nest";
 import { AreaModel } from "@orbital/typegoose";
-import { AreaProps, AreasRepository } from "./areas.repository";
+import { AreasRepository } from "./areas.repository";
 
 @Injectable()
 export class AreasCRUDService extends CRUDService<
