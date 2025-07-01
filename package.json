@@ -20,6 +20,8 @@
     "test:unit": "jest --config jest.config.cjs \"unit.spec\"",
     "test:monorepo": "jest --config jest.config.monorepo.cjs",
     "test:plop-modify-json": "yarn workspace @orbital/plop-modify-json test",
+    "test:jest-orta": "yarn orb jest-orta",
+    "jest-orta": "ORB_NO_BANNER=true yarn orb jest-orta",
     "lint": "turbo run lint",
     "orb": "yarn workspace @orbital/orb run build && node --no-inspect tools/@orbital/orb/dist/src/index.js",
     "// PM2 Management Commands": "",

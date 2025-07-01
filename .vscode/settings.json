@@ -1,5 +1,5 @@
 {
-  "jest.jestCommandLine": "yarn test --colors --",
+  "jest.jestCommandLine": "yarn jest-orta",
   "typescript.tsdk": "node_modules/typescript/lib",
   "debug.javascript.autoAttachFilter": "disabled",
   "debug.javascript.usePreview": true,
