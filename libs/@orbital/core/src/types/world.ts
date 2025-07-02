@@ -32,25 +32,20 @@ export class World
   techLevel: number = 1;
 
   /** Create a fake World instance with randomized data */
-  static mock(overrides: Partial<WorldProps> = {}): World {
-    const base: Partial<WorldProps> = {
-      name: `World-${faker.location.country()}`,
+  static mockDefaults(): Partial<WorldProps> {
+    return {
       shard: faker.string.alphanumeric(8),
       techLevel: faker.number.int({ min: 1, max: 10 }),
-    };
-    return new World({ ...base, ...overrides });
+    } as Partial<WorldProps>;
   }
 
-  constructor(data: unknown) {
-    // Validate the data
-    const validated = WorldSchema.parse(data);
-
+  constructor(data: WorldProps) {
     // Pass to parent constructor which handles _id
-    super(validated);
+    super(data);
 
     // Assign properties directly
-    this.name = validated.name;
-    this.shard = validated.shard;
-    this.techLevel = validated.techLevel;
+    this.name = data.name;
+    this.shard = data.shard;
+    this.techLevel = data.techLevel;
   }
 }

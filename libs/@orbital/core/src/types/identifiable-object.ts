@@ -1,15 +1,7 @@
-import { faker } from "@faker-js/faker";
 import { z } from "zod";
 import { ZodSchema } from "../decorators/zod-schema.decorator";
 import { generateUUID } from "../utils/data-generators";
-import { BaseObject } from "./base-object";
-
-/**
- * Utility type to remove the _id field from a type
- * @template T The type to remove _id from
- */
-export type WithoutId<T> = Omit<T, "_id">;
-
+import { BaseObject, OptionalId } from "./base-object";
 /**
  * Interface for objects that have a unique identifier
  */
@@ -47,7 +39,7 @@ export class IdentifiableObject
   /** Timestamp when the object was last updated */
   public updatedAt?: Date;
 
-  constructor(data?: Partial<IdentifiableObjectProps>) {
+  constructor(data?: OptionalId<IdentifiableObjectProps>) {
     // Generate a new UUID if none is provided
     const uuid = data?._id ?? generateUUID();
 
@@ -64,21 +56,14 @@ export class IdentifiableObject
     this.updatedAt = data?.updatedAt;
   }
 
-  /** Create a mock IdentifiableObject with a random UUID and timestamps */
-  static mock(
-    overrides: Partial<IdentifiableObjectProps> = {}
-  ): IdentifiableObject {
+  /** Provide default values for mocking an IdentifiableObject */
+  static mockDefaults(): Partial<IdentifiableObjectProps> {
     const now = new Date();
-    const uuid = overrides._id ?? faker.string.uuid();
 
-    // Create the instance with _id explicitly included
-    const instance = new IdentifiableObject({
-      _id: uuid,
-      createdAt: overrides.createdAt ?? now,
-      updatedAt: overrides.updatedAt ?? now,
-      ...overrides,
-    });
-
-    return instance;
+    return {
+      _id: generateUUID(),
+      createdAt: now,
+      updatedAt: now,
+    };
   }
 }

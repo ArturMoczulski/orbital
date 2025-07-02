@@ -1,11 +1,21 @@
+import { faker } from "@faker-js/faker";
+import { defaultsDeep } from "lodash";
 import { z } from "zod";
 import { zodSchemaRegistry } from "../decorators/zod-schema.decorator";
 
 /**
+ * Utility type to remove the _id field from a type
+ * @template T The type to remove _id from
+ */
+export type WithoutId<T> = Omit<T, "_id">;
+export type OptionalId<T> = Omit<T, "_id"> & { _id?: string };
+export type WithId<T> = Partial<T> & { _id: string };
+
+/**
  * BaseObject provides automatic assignment of partial data into instance properties.
  */
-export class BaseObject<T> {
-  constructor(data?: Partial<T>) {
+export class BaseObject<TProps> {
+  constructor(data?: OptionalId<TProps>) {
     if (data) {
       Object.assign(this, data);
     }
@@ -183,5 +193,34 @@ export class BaseObject<T> {
       description: description,
       properties: {},
     };
+  }
+
+  static mock<TObjectTypeProps>(overrides: Partial<TObjectTypeProps> = {}) {
+    // Start with basic defaults
+    const defaults = {
+      name: `${faker.word.adverb()} ${faker.word.adjective()} ${this.name}`,
+    };
+
+    // Walk up the prototype chain collecting mockDefaults
+    let currentConstructor: any = this;
+    const defaultsStack: Array<Record<string, any>> = [];
+
+    while (currentConstructor && currentConstructor !== Object) {
+      if (
+        "mockDefaults" in currentConstructor &&
+        typeof currentConstructor.mockDefaults === "function"
+      ) {
+        defaultsStack.push(currentConstructor.mockDefaults());
+      }
+      currentConstructor = Object.getPrototypeOf(currentConstructor);
+    }
+
+    // Apply defaults in reverse order (parent to child)
+    // so child defaults override parent defaults
+    for (let i = defaultsStack.length - 1; i >= 0; i--) {
+      Object.assign(defaults, defaultsStack[i]);
+    }
+
+    return new this(defaultsDeep({}, defaults, overrides)) as any;
   }
 }

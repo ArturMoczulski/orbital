@@ -23,8 +23,9 @@ describe("AreasMicroserviceController (e2e)", () => {
 
     // Create a test world using the WorldsMicroserviceController
     try {
-      // Create a test world
+      // Create a test world with explicit _id
       const worldData = {
+        // _id: randomUUID(), // Add explicit _id
         name: "Test World for Areas E2E",
         shard: "test-shard",
         techLevel: 5,

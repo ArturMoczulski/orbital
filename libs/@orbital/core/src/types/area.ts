@@ -1,10 +1,7 @@
 import { faker } from "@faker-js/faker";
 import { z } from "zod";
 import { ZodSchema } from "../decorators/zod-schema.decorator";
-import {
-  generateFantasyAreaName,
-  generateUUID,
-} from "../utils/data-generators";
+import { generateFantasyAreaName } from "../utils/data-generators";
 import { AreaMap, AreaMapSchema } from "./area-map";
 import {
   IdentifiableObject,
@@ -78,16 +75,12 @@ export class Area
   /** Tags for categorizing the area */
   tags: string[] = [];
 
-  /** Create a fake Area instance with randomized data */
-  static mock(overrides: Partial<AreaProps> = {}): Area {
-    // Generate a description first to ensure it's available
-    const uuid = overrides._id ?? faker.string.uuid();
+  /** Provide default values for mocking an Area */
+  static mockDefaults(): Partial<AreaProps> {
+    // Generate a description
     const description = faker.lorem.paragraph();
 
-    // No need to select a style explicitly as it's random by default
-    const base: Partial<AreaProps & { description: string }> = {
-      _id: uuid, // Explicitly include _id
-      parentId: faker.string.uuid(),
+    return {
       // Generate a rich fantasy name with the enhanced generator
       name: generateFantasyAreaName({
         // Style is random by default
@@ -95,45 +88,25 @@ export class Area
         includeLocationType: Math.random() > 0.1, // 90% chance to include a location type
         allowCompoundNames: Math.random() > 0.7, // 30% chance for compound names
       }),
-      // Position is optional, but include it in mock by default unless explicitly set to undefined
-      position: "position" in overrides ? overrides.position : Position.mock(),
-      areaMap:
-        overrides.areaMap || (Math.random() > 0.5 ? AreaMap.mock() : undefined),
+      // Position is optional, but include it in mock by default
+      position: Position.mock(),
+      areaMap: Math.random() > 0.5 ? AreaMap.mock() : undefined,
       worldId: faker.string.uuid(),
+      description,
+      landmarks: Array.from({ length: Math.floor(Math.random() * 3) }, () =>
+        faker.lorem.word()
+      ),
+      connections: Array.from({ length: Math.floor(Math.random() * 3) }, () =>
+        faker.lorem.word()
+      ),
       tags: Array.from({ length: Math.floor(Math.random() * 3) + 1 }, () =>
         faker.lorem.word()
       ),
-      // Always include a description
-      description: description,
     };
-
-    // Create the area with the combined data, ensuring _id is preserved
-    const area = new Area({
-      ...base,
-      ...overrides,
-      _id: overrides._id ?? uuid,
-    });
-
-    // Ensure description is set even if it was overridden with undefined
-    if (!area.description) {
-      area.description = description;
-    }
-
-    return area;
   }
 
   constructor(data: Partial<AreaProps>) {
-    // Extract _id from data if it exists
-    const uuid = data?._id ?? generateUUID();
-
-    // Create a copy of data without _id for super constructor
-    const { _id: _, ...dataWithoutId } = data || {};
-
-    // Call super with data without _id
-    super(dataWithoutId);
-
-    // Set _id directly as a property
-    this._id = uuid;
+    super(data);
 
     const typedData = data as Record<string, any>;
 
