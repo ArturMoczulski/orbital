@@ -1,10 +1,9 @@
 import { Inject, Injectable } from "@nestjs/common";
-import { AreaProps } from "@orbital/core";
+import { Area, AreaProps } from "@orbital/core";
 import {
   AreaModel,
   DocumentRepository,
   ModelReferences,
-  WithDocument,
   WorldModel,
 } from "@orbital/typegoose";
 import type { ReturnModelType } from "@typegoose/typegoose";
@@ -12,7 +11,7 @@ import { getModelToken } from "nestjs-typegoose";
 
 @Injectable()
 export class AreasRepository extends DocumentRepository<
-  AreaModel,
+  Area,
   AreaProps,
   typeof AreaModel
 > {
@@ -43,7 +42,7 @@ export class AreasRepository extends DocumentRepository<
     worldId: string,
     projection?: Record<string, any>,
     options?: Record<string, any>
-  ): Promise<WithDocument<AreaModel>[]> {
+  ): Promise<Area[]> {
     return this.find({ worldId }, projection, options);
   }
 
@@ -58,7 +57,7 @@ export class AreasRepository extends DocumentRepository<
     parentId: string,
     projection?: Record<string, any>,
     options?: Record<string, any>
-  ): Promise<WithDocument<AreaModel>[]> {
+  ): Promise<Area[]> {
     return this.find({ parentId }, projection, options);
   }
 
@@ -73,7 +72,7 @@ export class AreasRepository extends DocumentRepository<
     tags: string[],
     projection?: Record<string, any>,
     options?: Record<string, any>
-  ): Promise<WithDocument<AreaModel>[]> {
+  ): Promise<Area[]> {
     return this.find({ tags: { $in: tags } }, projection, options);
   }
 }

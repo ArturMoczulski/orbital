@@ -1,20 +1,19 @@
 import { Controller, UseFilters } from "@nestjs/common";
 import { OrbitalMicroservices } from "@orbital/contracts";
-import { AreaProps, WithId, WithoutId } from "@orbital/core";
+import { Area, AreaProps, WithId, WithoutId } from "@orbital/core";
 import {
   MessagePattern,
   MicroserviceController,
   PassThroughRpcExceptionFilter,
 } from "@orbital/microservices";
 import { CRUDController } from "@orbital/nest";
-import { AreaModel } from "@orbital/typegoose";
 import { AreasCRUDService } from "./areas.crud.service";
 
 @MicroserviceController(OrbitalMicroservices.World)
 @Controller()
 @UseFilters(new PassThroughRpcExceptionFilter(OrbitalMicroservices.World))
 export class AreasMicroserviceController extends CRUDController<
-  AreaModel,
+  Area,
   AreaProps,
   AreasCRUDService
 > {
@@ -28,7 +27,7 @@ export class AreasMicroserviceController extends CRUDController<
    * @returns The created area or BulkItemizedResponse for multiple areas
    */
   @MessagePattern()
-  async create(dto: WithoutId<AreaModel> | WithoutId<AreaModel>[]) {
+  async create(dto: WithoutId<Area> | WithoutId<Area>[]) {
     return super.create(dto);
   }
 
@@ -65,7 +64,7 @@ export class AreasMicroserviceController extends CRUDController<
    * @returns The updated area or BulkItemizedResponse for multiple areas
    */
   @MessagePattern()
-  async update(data: WithId<AreaModel> | WithId<AreaModel>[]) {
+  async update(data: WithId<Area> | WithId<Area>[]) {
     return await super.update(data);
   }
 
@@ -91,7 +90,7 @@ export class AreasMicroserviceController extends CRUDController<
     worldId: string;
     projection?: Record<string, any>;
     options?: Record<string, any>;
-  }): Promise<AreaModel[]> {
+  }): Promise<Area[]> {
     const { worldId, projection, options } = payload;
     return this.service.findByWorldId(worldId, projection, options);
   }
@@ -108,7 +107,7 @@ export class AreasMicroserviceController extends CRUDController<
     parentId: string;
     projection?: Record<string, any>;
     options?: Record<string, any>;
-  }): Promise<AreaModel[]> {
+  }): Promise<Area[]> {
     return super.findByParentId(payload);
   }
 
@@ -124,7 +123,7 @@ export class AreasMicroserviceController extends CRUDController<
     tags: string[];
     projection?: Record<string, any>;
     options?: Record<string, any>;
-  }): Promise<AreaModel[]> {
+  }): Promise<Area[]> {
     return super.findByTags(payload);
   }
 }

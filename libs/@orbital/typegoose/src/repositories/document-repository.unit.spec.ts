@@ -2,14 +2,14 @@ import { BulkItemizedResponse } from "@orbital/bulk-operations";
 import { IdentifiableObject, ZodErrorWithStack } from "@orbital/core";
 import { z } from "zod";
 import { PersistenceMapper } from "../mappers/persistence-mapper";
-import { MongooseDocument, WithDocument } from "../types/with-document";
-import { DocumentHelpers } from "../utils/document-helpers";
 import { DocumentRepository } from "./document-repository";
 
 // Define the props interface for TestDomainObject
 interface TestDomainObjectProps {
   _id?: string;
   name?: string;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 // Create a test domain class that extends IdentifiableObject
@@ -26,6 +26,8 @@ class TestDomainObject extends IdentifiableObject {
     return {
       _id: this._id,
       name: this.name,
+      createdAt: this.createdAt,
+      updatedAt: this.updatedAt,
     };
   }
 
@@ -59,20 +61,28 @@ describe("DocumentRepository", () => {
   const mockDocument = {
     _id: "test-id-123",
     name: "Test Object",
+    createdAt: new Date(),
+    updatedAt: new Date(),
     save: async () => true,
     toObject: () => ({
       _id: "test-id-123",
       name: "Test Object",
+      createdAt: new Date(),
+      updatedAt: new Date(),
     }),
   };
 
   const mockDocument2 = {
     _id: "test-id-456",
     name: "Test Object 2",
+    createdAt: new Date(),
+    updatedAt: new Date(),
     save: async () => true,
     toObject: () => ({
       _id: "test-id-456",
       name: "Test Object 2",
+      createdAt: new Date(),
+      updatedAt: new Date(),
     }),
   };
 
@@ -115,30 +125,22 @@ describe("DocumentRepository", () => {
       TestDomainObjectProps
     >(mockModel, TestDomainObject, {}, testSchema);
 
-    // Spy on PersistenceMapper and DocumentHelpers
+    // Spy on PersistenceMapper
     jest.spyOn(PersistenceMapper, "toPersistence").mockReturnValue({
       _id: "test-id-123",
       name: "Test Object",
+      createdAt: new Date(),
+      updatedAt: new Date(),
     });
 
     jest.spyOn(PersistenceMapper, "toDomain").mockReturnValue(
       new TestDomainObject({
         _id: "test-id-123",
         name: "Test Object",
+        createdAt: new Date(),
+        updatedAt: new Date(),
       })
     );
-
-    jest
-      .spyOn(DocumentHelpers, "attachDocument")
-      .mockImplementation(
-        <T extends IdentifiableObject>(
-          domainObject: T,
-          document: MongooseDocument & Document
-        ) => {
-          (domainObject as any).document = document;
-          return domainObject as WithDocument<T>;
-        }
-      );
   });
 
   afterEach(() => {
@@ -150,6 +152,8 @@ describe("DocumentRepository", () => {
       // Arrange
       const dto = {
         name: "Test Object",
+        createdAt: new Date(),
+        updatedAt: new Date(),
       };
 
       // Act
@@ -157,10 +161,8 @@ describe("DocumentRepository", () => {
 
       // Assert
       expect(result).toBeDefined();
-      expect(result).toHaveProperty("document");
       expect(PersistenceMapper.toPersistence).toHaveBeenCalled();
       expect(mockModel.insertMany).toHaveBeenCalled();
-      expect(DocumentHelpers.attachDocument).toHaveBeenCalled();
     });
 
     it("should throw error when required reference ID is not provided", async () => {
@@ -232,7 +234,10 @@ describe("DocumentRepository", () => {
 
     it("should create multiple entities", async () => {
       // Arrange
-      const dtos = [{ name: "Test Object 1" }, { name: "Test Object 2" }];
+      const dtos = [
+        { name: "Test Object 1", createdAt: new Date(), updatedAt: new Date() },
+        { name: "Test Object 2", createdAt: new Date(), updatedAt: new Date() },
+      ];
 
       // Act
       const result = await repository.create(dtos);
@@ -241,18 +246,21 @@ describe("DocumentRepository", () => {
       expect(result).toBeInstanceOf(BulkItemizedResponse);
       expect(PersistenceMapper.toPersistence).toHaveBeenCalled();
       expect(mockModel.insertMany).toHaveBeenCalled();
-      expect(DocumentHelpers.attachDocument).toHaveBeenCalled();
     });
 
     it("should validate data against schema when creating an entity", async () => {
       // Arrange
       const validDto = {
         name: "Valid Object",
+        createdAt: new Date(),
+        updatedAt: new Date(),
       };
 
       const invalidDto = {
         // Empty name, which violates the min(1) constraint
         name: "",
+        createdAt: new Date(),
+        updatedAt: new Date(),
       };
 
       // Mock the create method to reject for invalid data
@@ -273,7 +281,6 @@ describe("DocumentRepository", () => {
         // Act & Assert - Valid data should work
         const result = await repositoryWithSchema.create(validDto);
         expect(result).toBeDefined();
-        expect(result).toHaveProperty("document");
         expect(mockModel.insertMany).toHaveBeenCalled();
 
         // Act & Assert - Invalid data should throw validation error
@@ -300,7 +307,6 @@ describe("DocumentRepository", () => {
       expect(results.length).toBe(2); // Now expecting exactly 2 documents
       expect(mockModel.find).toHaveBeenCalledWith(filter, undefined);
       expect(PersistenceMapper.toDomain).toHaveBeenCalled();
-      expect(DocumentHelpers.attachDocument).toHaveBeenCalled();
     });
 
     it("should apply options to the query", async () => {
@@ -380,6 +386,8 @@ describe("DocumentRepository", () => {
       const entity = new TestDomainObject({
         _id: "test-id-123",
         name: "Updated Test Object",
+        createdAt: new Date(),
+        updatedAt: new Date(),
       });
 
       // Act
@@ -417,6 +425,8 @@ describe("DocumentRepository", () => {
       const entity = new TestDomainObject({
         _id: "nonexistent-id",
         name: "Nonexistent Object",
+        createdAt: new Date(),
+        updatedAt: new Date(),
       });
 
       try {
@@ -436,11 +446,15 @@ describe("DocumentRepository", () => {
       const validEntity = new TestDomainObject({
         _id: "test-id-123",
         name: "Valid Updated Object",
+        createdAt: new Date(),
+        updatedAt: new Date(),
       });
 
       const invalidEntity = new TestDomainObject({
         _id: "test-id-123",
         name: "", // Empty name, which violates the min(1) constraint
+        createdAt: new Date(),
+        updatedAt: new Date(),
       });
 
       // Mock the update method to reject for invalid data
@@ -624,7 +638,6 @@ describe("DocumentRepository", () => {
   });
 
   // The save method has been removed as it was redundant with the update method
-  // and DocumentHelpers.save functionality
 
   describe("validateReferences", () => {
     // Create a test class with references
@@ -709,6 +722,8 @@ describe("DocumentRepository", () => {
         name: "Test With References",
         worldId: "world-123",
         parentId: "parent-456",
+        createdAt: new Date(),
+        updatedAt: new Date(),
       };
 
       // Act
@@ -725,6 +740,8 @@ describe("DocumentRepository", () => {
         name: "Test With References",
         worldId: "world-123",
         parentId: null, // Optional reference with null value
+        createdAt: new Date(),
+        updatedAt: new Date(),
       };
 
       // Act
@@ -741,6 +758,8 @@ describe("DocumentRepository", () => {
         name: "Test With References",
         worldId: "nonexistent-world",
         parentId: "parent-456",
+        createdAt: new Date(),
+        updatedAt: new Date(),
       };
 
       // Mock worldModel.exists to return false (not found)
@@ -758,6 +777,8 @@ describe("DocumentRepository", () => {
         name: "Test With References",
         worldId: "world-123",
         parentId: "parent-456",
+        createdAt: new Date(),
+        updatedAt: new Date(),
       };
 
       // Create repository without model references
@@ -780,6 +801,8 @@ describe("DocumentRepository", () => {
         name: "Test With References",
         worldId: "world-123",
         parentId: "parent-456",
+        createdAt: new Date(),
+        updatedAt: new Date(),
       };
 
       // Create repository with incomplete model references (missing parent)
@@ -804,6 +827,8 @@ describe("DocumentRepository", () => {
         name: "Updated Test With References",
         worldId: "world-789",
         parentId: "parent-012",
+        createdAt: new Date(),
+        updatedAt: new Date(),
       });
 
       // Act
@@ -876,6 +901,8 @@ describe("DocumentRepository", () => {
         _id: "test-id-123",
         name: "Entity Missing Required Reference",
         // worldId is missing
+        createdAt: new Date(),
+        updatedAt: new Date(),
       });
 
       // Act & Assert - Should throw error because required reference is missing

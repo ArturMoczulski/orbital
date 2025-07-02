@@ -7,7 +7,6 @@ export * from "./decorators";
 // Persistence tools
 export * from "./mappers";
 export * from "./repositories";
-export * from "./utils";
 
 // Character models
 export * from "./models/attributes.model";

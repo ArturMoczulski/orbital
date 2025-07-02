@@ -1,6 +1,6 @@
 import { Injectable } from "@nestjs/common";
 import { BulkCountedResponse } from "@orbital/bulk-operations";
-import { WorldModel } from "@orbital/typegoose";
+import { World } from "@orbital/core";
 import { WorldsCRUDService } from "./worlds.crud.service";
 
 /**
@@ -61,7 +61,7 @@ export class WorldService {
     shard: string,
     projection?: Record<string, any>,
     options?: Record<string, any>
-  ): Promise<WorldModel[]> {
+  ): Promise<World[]> {
     return this.worldsCrudService.findByShard(shard, projection, options);
   }
 
@@ -76,7 +76,7 @@ export class WorldService {
     techLevel: number,
     projection?: Record<string, any>,
     options?: Record<string, any>
-  ): Promise<WorldModel[]> {
+  ): Promise<World[]> {
     return this.worldsCrudService.findByTechLevel(
       techLevel,
       projection,

@@ -202,6 +202,174 @@
           }
         }
       }
+    },
+    "world.WorldsMicroserviceController.create": {
+      "subscribe": {
+        "operationId": "create",
+        "message": {
+          "name": "create",
+          "title": "create message",
+          "contentType": "application/json",
+          "payload": {
+            "type": "object"
+          }
+        }
+      },
+      "publish": {
+        "operationId": "createResponse",
+        "message": {
+          "name": "createResponse",
+          "title": "create response message",
+          "contentType": "application/json",
+          "payload": {
+            "type": "object"
+          }
+        }
+      }
+    },
+    "world.WorldsMicroserviceController.find": {
+      "subscribe": {
+        "operationId": "find",
+        "message": {
+          "name": "find",
+          "title": "find message",
+          "contentType": "application/json",
+          "payload": {
+            "type": "object"
+          }
+        }
+      },
+      "publish": {
+        "operationId": "findResponse",
+        "message": {
+          "name": "findResponse",
+          "title": "find response message",
+          "contentType": "application/json",
+          "payload": {
+            "type": "object"
+          }
+        }
+      }
+    },
+    "world.WorldsMicroserviceController.findById": {
+      "subscribe": {
+        "operationId": "findById",
+        "message": {
+          "name": "findById",
+          "title": "findById message",
+          "contentType": "application/json",
+          "payload": {
+            "type": "object"
+          }
+        }
+      },
+      "publish": {
+        "operationId": "findByIdResponse",
+        "message": {
+          "name": "findByIdResponse",
+          "title": "findById response message",
+          "contentType": "application/json",
+          "payload": {
+            "type": "object"
+          }
+        }
+      }
+    },
+    "world.WorldsMicroserviceController.update": {
+      "subscribe": {
+        "operationId": "update",
+        "message": {
+          "name": "update",
+          "title": "update message",
+          "contentType": "application/json",
+          "payload": {
+            "type": "object"
+          }
+        }
+      },
+      "publish": {
+        "operationId": "updateResponse",
+        "message": {
+          "name": "updateResponse",
+          "title": "update response message",
+          "contentType": "application/json",
+          "payload": {
+            "type": "object"
+          }
+        }
+      }
+    },
+    "world.WorldsMicroserviceController.delete": {
+      "subscribe": {
+        "operationId": "delete",
+        "message": {
+          "name": "delete",
+          "title": "delete message",
+          "contentType": "application/json",
+          "payload": {
+            "type": "object"
+          }
+        }
+      },
+      "publish": {
+        "operationId": "deleteResponse",
+        "message": {
+          "name": "deleteResponse",
+          "title": "delete response message",
+          "contentType": "application/json",
+          "payload": {
+            "type": "object"
+          }
+        }
+      }
+    },
+    "world.WorldsMicroserviceController.findByShard": {
+      "subscribe": {
+        "operationId": "findByShard",
+        "message": {
+          "name": "findByShard",
+          "title": "findByShard message",
+          "contentType": "application/json",
+          "payload": {
+            "type": "object"
+          }
+        }
+      },
+      "publish": {
+        "operationId": "findByShardResponse",
+        "message": {
+          "name": "findByShardResponse",
+          "title": "findByShard response message",
+          "contentType": "application/json",
+          "payload": {
+            "type": "object"
+          }
+        }
+      }
+    },
+    "world.WorldsMicroserviceController.findByTechLevel": {
+      "subscribe": {
+        "operationId": "findByTechLevel",
+        "message": {
+          "name": "findByTechLevel",
+          "title": "findByTechLevel message",
+          "contentType": "application/json",
+          "payload": {
+            "type": "object"
+          }
+        }
+      },
+      "publish": {
+        "operationId": "findByTechLevelResponse",
+        "message": {
+          "name": "findByTechLevelResponse",
+          "title": "findByTechLevel response message",
+          "contentType": "application/json",
+          "payload": {
+            "type": "object"
+          }
+        }
+      }
     }
   }
 }

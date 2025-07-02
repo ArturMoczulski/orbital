@@ -1,13 +1,12 @@
 import { Controller, UseFilters } from "@nestjs/common";
 import { OrbitalMicroservices } from "@orbital/contracts";
-import { WithId, WithoutId } from "@orbital/core";
+import { WithId, WithoutId, World } from "@orbital/core";
 import {
   MessagePattern,
   MicroserviceController,
   PassThroughRpcExceptionFilter,
 } from "@orbital/microservices";
 import { CRUDController } from "@orbital/nest";
-import { WorldModel } from "@orbital/typegoose";
 import { WorldsCRUDService } from "./worlds.crud.service";
 import { WorldProps } from "./worlds.repository";
 
@@ -15,7 +14,7 @@ import { WorldProps } from "./worlds.repository";
 @Controller()
 @UseFilters(new PassThroughRpcExceptionFilter(OrbitalMicroservices.World))
 export class WorldsMicroserviceController extends CRUDController<
-  WorldModel,
+  World,
   WorldProps,
   WorldsCRUDService
 > {
@@ -29,7 +28,7 @@ export class WorldsMicroserviceController extends CRUDController<
    * @returns The created world or BulkItemizedResponse for multiple worlds
    */
   @MessagePattern()
-  async create(dto: WithoutId<WorldModel> | WithoutId<WorldModel>[]) {
+  async create(dto: WithoutId<World> | WithoutId<World>[]) {
     return super.create(dto);
   }
 
@@ -63,7 +62,7 @@ export class WorldsMicroserviceController extends CRUDController<
    * @returns The updated world or BulkItemizedResponse for multiple worlds
    */
   @MessagePattern()
-  async update(data: WithId<WorldModel> | WithId<WorldModel>[]) {
+  async update(data: WithId<World> | WithId<World>[]) {
     return await super.update(data);
   }
 
@@ -87,7 +86,7 @@ export class WorldsMicroserviceController extends CRUDController<
     shard: string;
     projection?: Record<string, any>;
     options?: Record<string, any>;
-  }): Promise<WorldModel[]> {
+  }): Promise<World[]> {
     const { shard, projection, options } = payload;
     return this.service.findByShard(shard, projection, options);
   }
@@ -102,7 +101,7 @@ export class WorldsMicroserviceController extends CRUDController<
     techLevel: number;
     projection?: Record<string, any>;
     options?: Record<string, any>;
-  }): Promise<WorldModel[]> {
+  }): Promise<World[]> {
     const { techLevel, projection, options } = payload;
     return this.service.findByTechLevel(techLevel, projection, options);
   }

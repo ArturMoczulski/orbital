@@ -29,3 +29,4 @@ export class WorldModel extends World {
 
   @prop()
   updatedAt!: Date;
+}

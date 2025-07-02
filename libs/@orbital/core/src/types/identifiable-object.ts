@@ -34,10 +34,10 @@ export class IdentifiableObject
   public _id!: string;
 
   /** Timestamp when the object was created */
-  public createdAt?: Date;
+  public createdAt!: Date;
 
   /** Timestamp when the object was last updated */
-  public updatedAt?: Date;
+  public updatedAt!: Date;
 
   constructor(data?: OptionalId<IdentifiableObjectProps>) {
     // Generate a new UUID if none is provided
@@ -52,8 +52,9 @@ export class IdentifiableObject
     // Set _id directly as a property
     this._id = uuid;
 
-    this.createdAt = data?.createdAt;
-    this.updatedAt = data?.updatedAt;
+    // Set timestamps with defaults if not provided
+    this.createdAt = data?.createdAt || new Date();
+    this.updatedAt = data?.updatedAt || new Date();
   }
 
   /** Provide default values for mocking an IdentifiableObject */

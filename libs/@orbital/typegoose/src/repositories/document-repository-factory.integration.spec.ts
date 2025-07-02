@@ -3,7 +3,6 @@ import { IdentifiableObject } from "@orbital/core";
 import * as mongoose from "mongoose";
 import { Schema } from "mongoose";
 import { z } from "zod";
-import { WithDocument } from "../types/with-document";
 import { DocumentRepositoryFactory } from "./document-repository-factory";
 
 // Define a test domain class
@@ -87,9 +86,7 @@ describe("DocumentRepositoryFactory Integration Tests", () => {
       });
 
       // Act
-      const result = (await repository.create(
-        testData
-      )) as WithDocument<TestEntity>;
+      const result = (await repository.create(testData)) as TestEntity;
 
       // Assert
       expect(result).toBeDefined();
@@ -97,7 +94,6 @@ describe("DocumentRepositoryFactory Integration Tests", () => {
       expect(result.name).toBe(testData.name);
       expect(result.description).toBe(testData.description);
       expect(result.tags).toEqual(testData.tags);
-      expect(result.document).toBeDefined();
 
       // Verify it was saved to the database
       const savedDoc = await TestEntityModel.findById(result._id).lean();
@@ -134,9 +130,9 @@ describe("DocumentRepositoryFactory Integration Tests", () => {
       });
 
       // Act & Assert - Valid data should work
-      const result = await repository.create(validData);
+      const result = (await repository.create(validData)) as TestEntity;
       expect(result).toBeDefined();
-      expect((result as WithDocument<TestEntity>).name).toBe(validData.name);
+      expect(result.name).toBe(validData.name);
 
       // Act & Assert - Invalid data should throw validation error
       await expect(repository.create(invalidData)).rejects.toThrow(
@@ -168,7 +164,7 @@ describe("DocumentRepositoryFactory Integration Tests", () => {
       // Act
       const result = (await repository.create(
         testEntities
-      )) as BulkItemizedResponse<Partial<TestEntity>, WithDocument<TestEntity>>;
+      )) as BulkItemizedResponse<Partial<TestEntity>, TestEntity>;
 
       // Assert
       expect(result.counts!.success).toBe(2);
@@ -176,9 +172,7 @@ describe("DocumentRepositoryFactory Integration Tests", () => {
       expect(result.items.success.length).toBe(2);
 
       // Check each result
-      const entities = result.items.success.map(
-        (r) => r.data as WithDocument<TestEntity>
-      );
+      const entities = result.items.success.map((r) => r.data as TestEntity);
       expect(entities[0]?.name).toBe(testEntities[0].name);
       expect(entities[1]?.name).toBe(testEntities[1].name);
 

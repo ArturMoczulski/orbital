@@ -1,11 +1,11 @@
 import { Injectable } from "@nestjs/common";
+import { World } from "@orbital/core";
 import { CRUDService } from "@orbital/nest";
-import { WorldModel } from "@orbital/typegoose";
 import { WorldProps, WorldsRepository } from "./worlds.repository";
 
 @Injectable()
 export class WorldsCRUDService extends CRUDService<
-  WorldModel,
+  World,
   WorldProps,
   WorldsRepository
 > {
@@ -24,7 +24,7 @@ export class WorldsCRUDService extends CRUDService<
     shard: string,
     projection?: Record<string, any>,
     options?: Record<string, any>
-  ): Promise<WorldModel[]> {
+  ): Promise<World[]> {
     return this.repository.findByShard(shard, projection, options);
   }
 
@@ -39,7 +39,7 @@ export class WorldsCRUDService extends CRUDService<
     techLevel: number,
     projection?: Record<string, any>,
     options?: Record<string, any>
-  ): Promise<WorldModel[]> {
+  ): Promise<World[]> {
     return this.repository.findByTechLevel(techLevel, projection, options);
   }
 }

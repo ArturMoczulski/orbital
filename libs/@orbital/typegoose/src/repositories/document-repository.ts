@@ -16,8 +16,6 @@ import { ReturnModelType } from "@typegoose/typegoose";
 import { ZodObject } from "zod";
 import { getReferences } from "../decorators/reference.decorator";
 import { PersistenceMapper } from "../mappers/persistence-mapper";
-import { MongooseDocument, WithDocument } from "../types/with-document";
-import { DocumentHelpers } from "../utils/document-helpers";
 
 /**
  * Interface for model references
@@ -53,21 +51,13 @@ export class DocumentRepository<
   /**
    * Create one or more entities
    * @param dto Single entity or array of entities to create
-   * @returns WithDocument<T> for single entity or BulkItemizedResponse for multiple entities
-   */
-  /**
-   * Create one or more entities
-   * @param dto Single entity or array of entities to create
-   * @returns WithDocument<T> for single entity or BulkItemizedResponse for multiple entities
+   * @returns TDomainEntity for single entity or BulkItemizedResponse for multiple entities
    */
   async create(
     dto: WithoutId<TDomainEntityProps> | WithoutId<TDomainEntityProps>[]
   ): Promise<
-    | WithDocument<TDomainEntity>
-    | BulkItemizedResponse<
-        WithoutId<TDomainEntityProps>,
-        WithDocument<TDomainEntity>
-      >
+    | TDomainEntity
+    | BulkItemizedResponse<WithoutId<TDomainEntityProps>, TDomainEntity>
   > {
     const isSingular = !Array.isArray(dto);
     const items = isSingular ? [dto] : dto;
@@ -75,7 +65,7 @@ export class DocumentRepository<
     // Use BulkOperation.itemized for bulk creation
     const response = await BulkOperation.itemized<
       WithoutId<TDomainEntityProps>,
-      WithDocument<TDomainEntity>
+      TDomainEntity
     >(items, async (dtos, success, fail) => {
       // Prepare items for bulk insertion
       const validItems: any[] = [];
@@ -170,14 +160,18 @@ export class DocumentRepository<
                 domainObject._id = doc._id;
               }
 
-              // Attach document to domain object
-              const withDoc = DocumentHelpers.attachDocument(
-                domainObject,
-                doc as MongooseDocument & Document
+              // Update the domain object with the generated _id if it doesn't have one
+              if (!domainObject._id && doc._id) {
+                domainObject._id = doc._id.toString();
+              }
+
+              // Create a new domain object with the document data
+              const updatedDomainObject = PersistenceMapper.toDomain(
+                this.DomainClass,
+                doc
               );
 
-              success(originalItem, withDoc);
-            } else {
+              success(originalItem, updatedDomainObject);
             }
           }
         } catch (insertError: unknown) {
@@ -202,7 +196,7 @@ export class DocumentRepository<
     // If input was singular, return the single result
     if (isSingular) {
       try {
-        const singleResult = response.asSingle() as WithDocument<TDomainEntity>;
+        const singleResult = response.asSingle() as TDomainEntity;
         return singleResult;
       } catch (error) {
         throw error; // Re-throw to ensure the error is propagated
@@ -213,18 +207,18 @@ export class DocumentRepository<
   }
 
   /**
-   * Find domain objects by a filter with documents attached
+   * Find domain objects by a filter
    * @param filter Query filter criteria
    * @param projection Optional fields to project
    * @param options Optional query options
-   * @returns Array of entities matching the query with documents attached
+   * @returns Array of entities matching the query
    */
   async find(
     // TODO: Replace 'Record<string, any>' with proper FilterQuery type when type issues are resolved
     filter: Record<string, any> = {},
     projection?: Record<string, any>,
     options?: Record<string, any>
-  ): Promise<WithDocument<TDomainEntity>[]> {
+  ): Promise<TDomainEntity[]> {
     let query = this.model.find(filter, projection);
 
     if (options) {
@@ -237,11 +231,7 @@ export class DocumentRepository<
     const docs = await query.exec();
 
     return docs.map((doc: any) => {
-      const domainObject = PersistenceMapper.toDomain(this.DomainClass, doc);
-      return DocumentHelpers.attachDocument(
-        domainObject,
-        doc as MongooseDocument & Document
-      );
+      return PersistenceMapper.toDomain(this.DomainClass, doc);
     });
   }
 
@@ -250,14 +240,14 @@ export class DocumentRepository<
    * @param filter Query filter criteria
    * @param projection Optional fields to project
    * @param options Optional query options (except limit, which is set to 1)
-   * @returns The found entity with document attached or null if not found
+   * @returns The found entity or null if not found
    */
   async findOne(
     // TODO: Replace 'Record<string, any>' with proper FilterQuery type when type issues are resolved
     filter: Record<string, any> = {},
     projection?: Record<string, any>,
     options?: Record<string, any>
-  ): Promise<WithDocument<TDomainEntity> | null> {
+  ): Promise<TDomainEntity | null> {
     // Create a new options object with limit set to 1
     const findOneOptions = { ...(options || {}), limit: 1 };
 
@@ -266,15 +256,15 @@ export class DocumentRepository<
   }
 
   /**
-   * Find a domain object by ID with document attached
+   * Find a domain object by ID
    * @param id The entity ID
    * @param projection Optional fields to project
-   * @returns The found entity with document attached or null
+   * @returns The found entity or null
    */
   async findById(
     id: string,
     projection?: Record<string, any>
-  ): Promise<WithDocument<TDomainEntity> | null> {
+  ): Promise<TDomainEntity | null> {
     return this.findOne({ _id: id }, projection);
   }
 
@@ -289,7 +279,7 @@ export class DocumentRepository<
     parentId: string,
     projection?: Record<string, any>,
     options?: Record<string, any>
-  ): Promise<WithDocument<TDomainEntity>[]> {
+  ): Promise<TDomainEntity[]> {
     // Check if the schema has a parentId field
     if (this.schema) {
       try {
@@ -322,7 +312,7 @@ export class DocumentRepository<
     tags: string[],
     projection?: Record<string, any>,
     options?: Record<string, any>
-  ): Promise<WithDocument<TDomainEntity>[]> {
+  ): Promise<TDomainEntity[]> {
     // Check if the schema has a tags field
     if (this.schema) {
       try {
@@ -346,23 +336,15 @@ export class DocumentRepository<
 
   /**
    * Update one or more entities
-   * @param entities Single entity or array of entities with required _id property
-   * @returns WithDocument<T> for single entity or BulkItemizedResponse for multiple entities
-   */
-  /**
-   * Update one or more entities
    * @param data Single entity or array of entities with required _id property
-   * @returns WithDocument<T> for single entity or BulkItemizedResponse for multiple entities
+   * @returns TDomainEntity for single entity or BulkItemizedResponse for multiple entities
    */
   async update(
     data: WithId<TDomainEntityProps> | WithId<TDomainEntityProps>[]
   ): Promise<
-    | WithDocument<TDomainEntity>
+    | TDomainEntity
     | null
-    | BulkItemizedResponse<
-        WithId<TDomainEntityProps>,
-        WithDocument<TDomainEntity>
-      >
+    | BulkItemizedResponse<WithId<TDomainEntityProps>, TDomainEntity>
   > {
     const isSingular = !Array.isArray(data);
     const items = isSingular ? [data] : data;
@@ -376,7 +358,7 @@ export class DocumentRepository<
 
     const response = await BulkOperation.itemized<
       WithId<TDomainEntityProps>,
-      WithDocument<TDomainEntity>
+      TDomainEntity
     >(items, async (updateItems, success, fail) => {
       // Prepare bulk write operations
       const bulkOps: any[] = [];
@@ -499,13 +481,13 @@ export class DocumentRepository<
             const updatedDoc = docsById.get(_id);
 
             if (updatedDoc) {
-              // Attach document to domain object
-              const withDoc = DocumentHelpers.attachDocument(
-                entity as unknown as TDomainEntity,
-                updatedDoc as MongooseDocument & Document
+              // Create a new domain object with the updated document data
+              const updatedDomainObject = PersistenceMapper.toDomain(
+                this.DomainClass,
+                updatedDoc
               );
 
-              success(entity, withDoc);
+              success(entity, updatedDomainObject);
             } else {
               fail(entity, {
                 message: `Entity with _id ${_id} not found after update`,
@@ -523,7 +505,7 @@ export class DocumentRepository<
       if (!singleResult || (response.counts && response.counts.fail > 0)) {
         return null;
       }
-      return singleResult as WithDocument<TDomainEntity>;
+      return singleResult as TDomainEntity;
     }
 
     return response;

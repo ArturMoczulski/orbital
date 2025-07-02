@@ -126,18 +126,18 @@ export class CRUDService<
   /**
    * Create one or more entities
    * @param dto Single entity or array of entities to create
-   * @returns WithDocument<T> for single entity or BulkItemizedResponse for multiple entities
+   * @returns T for single entity or BulkItemizedResponse for multiple entities
    */
   async create(dto: Parameters<R["create"]>[0]) {
     return this.repository.create(dto);
   }
 
   /**
-   * Find domain objects by a filter with documents attached
+   * Find domain objects by a filter
    * @param filter Query filter criteria
    * @param projection Optional fields to project
    * @param options Optional query options
-   * @returns Array of entities matching the query with documents attached
+   * @returns Array of entities matching the query
    */
   async find(
     filter: Record<string, any> = {},
@@ -148,10 +148,10 @@ export class CRUDService<
   }
 
   /**
-   * Find a domain object by ID with document attached
+   * Find a domain object by ID
    * @param id The entity ID
    * @param projection Optional fields to project
-   * @returns The found entity with document attached or null
+   * @returns The found entity or null
    */
   async findById(id: string, projection?: Record<string, any>) {
     return this.repository.findById(id, projection);
@@ -190,7 +190,7 @@ export class CRUDService<
   /**
    * Update one or more entities
    * @param entities Single entity or array of entities with required _id property
-   * @returns WithDocument<T> for single entity or BulkItemizedResponse for multiple entities
+   * @returns T for single entity or BulkItemizedResponse for multiple entities
    */
   async update(entities: Parameters<R["update"]>[0]) {
     return this.repository.update(entities);

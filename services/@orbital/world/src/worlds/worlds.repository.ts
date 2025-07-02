@@ -1,9 +1,6 @@
 import { Inject, Injectable } from "@nestjs/common";
-import {
-  DocumentRepository,
-  WithDocument,
-  WorldModel,
-} from "@orbital/typegoose";
+import { World } from "@orbital/core";
+import { DocumentRepository, WorldModel } from "@orbital/typegoose";
 import type { ReturnModelType } from "@typegoose/typegoose";
 import { getModelToken } from "nestjs-typegoose";
 
@@ -43,7 +40,7 @@ export class WorldsRepository extends DocumentRepository<
     shard: string,
     projection?: Record<string, any>,
     options?: Record<string, any>
-  ): Promise<WithDocument<WorldModel>[]> {
+  ): Promise<World[]> {
     return this.find({ shard }, projection, options);
   }
 
@@ -58,7 +55,7 @@ export class WorldsRepository extends DocumentRepository<
     techLevel: number,
     projection?: Record<string, any>,
     options?: Record<string, any>
-  ): Promise<WithDocument<WorldModel>[]> {
+  ): Promise<World[]> {
     return this.find({ techLevel }, projection, options);
   }
 }

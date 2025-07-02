@@ -1,12 +1,11 @@
 import { Injectable } from "@nestjs/common";
-import { AreaProps } from "@orbital/core";
+import { Area, AreaProps } from "@orbital/core";
 import { CRUDService } from "@orbital/nest";
-import { AreaModel } from "@orbital/typegoose";
 import { AreasRepository } from "./areas.repository";
 
 @Injectable()
 export class AreasCRUDService extends CRUDService<
-  AreaModel,
+  Area,
   AreaProps,
   AreasRepository
 > {
@@ -25,7 +24,7 @@ export class AreasCRUDService extends CRUDService<
     worldId: string,
     projection?: Record<string, any>,
     options?: Record<string, any>
-  ): Promise<AreaModel[]> {
+  ): Promise<Area[]> {
     return this.repository.findByWorldId(worldId, projection, options);
   }
 }

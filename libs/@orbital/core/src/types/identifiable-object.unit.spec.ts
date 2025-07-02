@@ -3,7 +3,12 @@ import { IdentifiableObject } from "./identifiable-object";
 describe("IdentifiableObject", () => {
   describe("constructor", () => {
     it("should use provided _id", () => {
-      const obj = new IdentifiableObject({ _id: "custom-id" });
+      const now = new Date();
+      const obj = new IdentifiableObject({
+        _id: "custom-id",
+        createdAt: now,
+        updatedAt: now,
+      });
       expect(obj._id).toBe("custom-id");
     });
 
@@ -15,7 +20,12 @@ describe("IdentifiableObject", () => {
 
   describe("mock", () => {
     it("should return a IdentifiableObject with an _id string", () => {
-      const mockObj = IdentifiableObject.mock({ _id: "override-id" });
+      const now = new Date();
+      const mockObj = IdentifiableObject.mock({
+        _id: "override-id",
+        createdAt: now,
+        updatedAt: now,
+      });
       expect(mockObj).toBeInstanceOf(IdentifiableObject);
       expect(mockObj._id).toBe("override-id");
     });

@@ -7,7 +7,6 @@ import * as mongoose from "mongoose";
 import { Schema } from "mongoose";
 import * as z from "zod";
 import { Reference } from "../decorators/reference.decorator";
-import { WithDocument } from "../types/with-document";
 import { DocumentRepository } from "./document-repository";
 
 // Define TestEntityProps type for DTOs
@@ -140,9 +139,7 @@ describe("DocumentRepository Integration Tests", () => {
       };
 
       // Act
-      const result = (await repository.create(
-        testData
-      )) as WithDocument<TestEntity>;
+      const result = (await repository.create(testData)) as TestEntity;
 
       // Assert
       expect(result).toBeDefined();
@@ -150,7 +147,6 @@ describe("DocumentRepository Integration Tests", () => {
       expect(result.name).toBe(testData.name);
       expect(result.description).toBe(testData.description);
       expect(result.tags).toEqual(testData.tags);
-      expect(result.document).toBeDefined();
 
       // Verify it was saved to the database
       const savedDoc = await TestEntityModel.findById(result._id).lean();
@@ -175,7 +171,7 @@ describe("DocumentRepository Integration Tests", () => {
       // Act
       const result = (await repository.create(
         testData
-      )) as BulkItemizedResponse<Partial<TestEntity>, WithDocument<TestEntity>>;
+      )) as BulkItemizedResponse<Partial<TestEntity>, TestEntity>;
 
       // Assert
       expect(result.counts!.success).toBe(2);
@@ -183,9 +179,7 @@ describe("DocumentRepository Integration Tests", () => {
       expect(result.items.success.length).toBe(2);
 
       // Check each result
-      const entities = result.items.success.map(
-        (r) => r.data as WithDocument<TestEntity>
-      );
+      const entities = result.items.success.map((r) => r.data);
       expect(entities[0]?.name).toBe(testData[0].name);
       expect(entities[1]?.name).toBe(testData[1].name);
 
@@ -210,7 +204,7 @@ describe("DocumentRepository Integration Tests", () => {
       // Act & Assert - Valid data should work
       const result = (await repositoryWithSchema.create(
         validData
-      )) as WithDocument<TestEntity>;
+      )) as TestEntity;
       expect(result).toBeDefined();
       expect(result._id).toBeDefined();
       expect(result.name).toBe(validData.name);
@@ -237,16 +231,9 @@ describe("DocumentRepository Integration Tests", () => {
 
       // Assert
       expect(results.length).toBe(3);
-      expect(results[0].document).toBeDefined();
-      expect(results.map((e: WithDocument<TestEntity>) => e.name)).toContain(
-        "Entity 1"
-      );
-      expect(results.map((e: WithDocument<TestEntity>) => e.name)).toContain(
-        "Entity 2"
-      );
-      expect(results.map((e: WithDocument<TestEntity>) => e.name)).toContain(
-        "Entity 3"
-      );
+      expect(results.map((e: TestEntity) => e.name)).toContain("Entity 1");
+      expect(results.map((e: TestEntity) => e.name)).toContain("Entity 2");
+      expect(results.map((e: TestEntity) => e.name)).toContain("Entity 3");
     });
 
     it("should find entities with filter", async () => {
@@ -309,7 +296,6 @@ describe("DocumentRepository Integration Tests", () => {
       expect(result).toBeDefined();
       expect(result?.name).toBe("Find One Entity");
       expect(result?.description).toBe("Test Description");
-      expect(result?.document).toBeDefined();
     });
 
     it("should return null if entity is not found", async () => {
@@ -420,12 +406,8 @@ describe("DocumentRepository Integration Tests", () => {
 
       // Assert
       expect(results.length).toBe(2);
-      expect(results.map((e: WithDocument<TestEntity>) => e.name)).toContain(
-        "Child 1"
-      );
-      expect(results.map((e: WithDocument<TestEntity>) => e.name)).toContain(
-        "Child 2"
-      );
+      expect(results.map((e: TestEntity) => e.name)).toContain("Child 1");
+      expect(results.map((e: TestEntity) => e.name)).toContain("Child 2");
     });
   });
 
@@ -445,12 +427,8 @@ describe("DocumentRepository Integration Tests", () => {
 
       // Assert
       expect(results.length).toBe(2);
-      expect(results.map((e: WithDocument<TestEntity>) => e.name)).toContain(
-        "Entity 1"
-      );
-      expect(results.map((e: WithDocument<TestEntity>) => e.name)).toContain(
-        "Entity 2"
-      );
+      expect(results.map((e: TestEntity) => e.name)).toContain("Entity 1");
+      expect(results.map((e: TestEntity) => e.name)).toContain("Entity 2");
     });
   });
 
@@ -472,9 +450,7 @@ describe("DocumentRepository Integration Tests", () => {
       });
 
       // Act
-      const result = (await repository.update(
-        entityToUpdate
-      )) as WithDocument<TestEntity>;
+      const result = (await repository.update(entityToUpdate)) as TestEntity;
 
       // Assert
       expect(result).toBeDefined();
@@ -513,7 +489,7 @@ describe("DocumentRepository Integration Tests", () => {
       // Act
       const result = (await repository.update(
         entitiesToUpdate
-      )) as BulkItemizedResponse<TestEntity, WithDocument<TestEntity>>;
+      )) as BulkItemizedResponse<TestEntity, TestEntity>;
 
       // Assert
       expect(result.counts!.success).toBe(2);
@@ -566,7 +542,7 @@ describe("DocumentRepository Integration Tests", () => {
       // Act & Assert - Valid update should work
       const result = (await repositoryWithSchema.update(
         validUpdate
-      )) as WithDocument<TestEntity>;
+      )) as TestEntity;
       expect(result).toBeDefined();
       expect(result._id).toBe(created._id);
       expect(result.name).toBe("Updated Valid Name");
@@ -655,7 +631,7 @@ describe("DocumentRepository Integration Tests", () => {
   });
 
   // The save, createQuery, and executeQuery methods have been removed as they were redundant
-  // with existing methods like update and find, and with DocumentHelpers.save functionality
+  // with existing methods like update and find
   /**
    * Tests specifically for the validateReferences method
    */
@@ -816,7 +792,7 @@ describe("DocumentRepository Integration Tests", () => {
       // Create the parent entity in the database
       const createdParent = (await parentRepository.create(
         parentData
-      )) as WithDocument<ParentEntity>;
+      )) as ParentEntity;
       expect(createdParent).toBeDefined();
       expect(createdParent._id).toBeDefined();
 
@@ -854,7 +830,7 @@ describe("DocumentRepository Integration Tests", () => {
       // Create the parent entity in the database
       const createdParent = (await parentRepository.create(
         parentData
-      )) as WithDocument<ParentEntity>;
+      )) as ParentEntity;
       expect(createdParent).toBeDefined();
       expect(createdParent._id).toBeDefined();
 
@@ -899,10 +875,10 @@ describe("DocumentRepository Integration Tests", () => {
       // Create parent entities individually to avoid type issues
       const createdParent1 = (await parentRepository.create(
         parentData1
-      )) as WithDocument<ParentEntity>;
+      )) as ParentEntity;
       const createdParent2 = (await parentRepository.create(
         parentData2
-      )) as WithDocument<ParentEntity>;
+      )) as ParentEntity;
 
       expect(createdParent1).toBeDefined();
       expect(createdParent1._id).toBeDefined();
@@ -917,7 +893,7 @@ describe("DocumentRepository Integration Tests", () => {
 
       const createdChild = (await childRepository.create(
         childData
-      )) as WithDocument<ChildEntity>;
+      )) as ChildEntity;
       expect(createdChild).toBeDefined();
       expect(createdChild._id).toBeDefined();
 
@@ -951,7 +927,7 @@ describe("DocumentRepository Integration Tests", () => {
 
       const createdParent = (await parentRepository.create(
         parentData
-      )) as WithDocument<ParentEntity>;
+      )) as ParentEntity;
 
       // Create a child with a valid reference
       const childData = {
@@ -961,14 +937,14 @@ describe("DocumentRepository Integration Tests", () => {
 
       const createdChild = (await childRepository.create(
         childData
-      )) as WithDocument<ChildEntity>;
+      )) as ChildEntity;
 
       // Now update the child, removing the required parentId
       const updateData = {
         _id: createdChild._id,
         name: "Updated Child with Missing Reference",
         // parentId is intentionally missing to test validation
-      } as WithId<ChildEntityProps>;
+      } as Partial<ChildEntityProps> & { _id: string };
 
       // Act & Assert
       await expect(childRepository.update(updateData)).rejects.toThrow(
@@ -985,7 +961,7 @@ describe("DocumentRepository Integration Tests", () => {
 
       const createdParent = (await parentRepository.create(
         parentData
-      )) as WithDocument<ParentEntity>;
+      )) as ParentEntity;
       expect(createdParent).toBeDefined();
       expect(createdParent._id).toBeDefined();
 
