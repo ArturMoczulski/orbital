@@ -56,6 +56,7 @@ module.exports = {
 
   // Projects configuration for monorepo
   projects: [
+    // Services
     {
       displayName: "world",
       testMatch: ["<rootDir>/services/@orbital/world/**/*.spec.ts"],
@@ -67,6 +68,88 @@ module.exports = {
             tsconfig: path.join(
               __dirname,
               "services/@orbital/world/tsconfig.json"
+            ),
+            isolatedModules: true,
+            experimentalDecorators: true,
+            emitDecoratorMetadata: true,
+          },
+        ],
+      },
+    },
+    // Libraries
+    {
+      displayName: "typegoose",
+      testMatch: ["<rootDir>/libs/@orbital/typegoose/**/*.spec.ts"],
+      rootDir: __dirname,
+      transform: {
+        "^.+\\.(ts|tsx)$": [
+          path.resolve(__dirname, "node_modules/ts-jest"),
+          {
+            tsconfig: path.join(
+              __dirname,
+              "libs/@orbital/typegoose/tsconfig.json"
+            ),
+            isolatedModules: true,
+            experimentalDecorators: true,
+            emitDecoratorMetadata: true,
+          },
+        ],
+      },
+      // Add setup for in-memory MongoDB server for integration tests
+      setupFilesAfterEnv: [
+        path.resolve(__dirname, "libs/@orbital/typegoose/jest.setup.js"),
+        path.resolve(
+          __dirname,
+          "libs/@orbital/typegoose/jest.setup.integration.js"
+        ),
+      ],
+    },
+    {
+      displayName: "core",
+      testMatch: ["<rootDir>/libs/@orbital/core/**/*.spec.ts"],
+      rootDir: __dirname,
+      transform: {
+        "^.+\\.(ts|tsx)$": [
+          path.resolve(__dirname, "node_modules/ts-jest"),
+          {
+            tsconfig: path.join(__dirname, "libs/@orbital/core/tsconfig.json"),
+            isolatedModules: true,
+            experimentalDecorators: true,
+            emitDecoratorMetadata: true,
+          },
+        ],
+      },
+    },
+    {
+      displayName: "bulk-operations",
+      testMatch: ["<rootDir>/libs/@orbital/bulk-operations/**/*.spec.ts"],
+      rootDir: __dirname,
+      transform: {
+        "^.+\\.(ts|tsx)$": [
+          path.resolve(__dirname, "node_modules/ts-jest"),
+          {
+            tsconfig: path.join(
+              __dirname,
+              "libs/@orbital/bulk-operations/tsconfig.json"
+            ),
+            isolatedModules: true,
+            experimentalDecorators: true,
+            emitDecoratorMetadata: true,
+          },
+        ],
+      },
+    },
+    {
+      displayName: "microservices",
+      testMatch: ["<rootDir>/libs/@orbital/microservices/**/*.spec.ts"],
+      rootDir: __dirname,
+      transform: {
+        "^.+\\.(ts|tsx)$": [
+          path.resolve(__dirname, "node_modules/ts-jest"),
+          {
+            tsconfig: path.join(
+              __dirname,
+              "libs/@orbital/microservices/tsconfig.json"
             ),
             isolatedModules: true,
             experimentalDecorators: true,
