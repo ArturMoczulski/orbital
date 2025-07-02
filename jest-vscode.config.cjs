@@ -2,6 +2,109 @@
  * Jest configuration specifically for VS Code Jest extension
  */
 const path = require("path");
+const fs = require("fs");
+
+// Helper function to get all package names from a directory
+function getPackageNames(baseDir) {
+  try {
+    // Check if the directory exists
+    const orbitalPath = path.join(__dirname, baseDir, "@orbital");
+    if (!fs.existsSync(orbitalPath)) {
+      return [];
+    }
+
+    // Get all directories inside the @orbital directory
+    return fs
+      .readdirSync(orbitalPath, { withFileTypes: true })
+      .filter((dirent) => dirent.isDirectory())
+      .map((dirent) => dirent.name);
+  } catch (error) {
+    console.error(`Error reading packages from ${baseDir}:`, error);
+    return [];
+  }
+}
+
+// Get all service and library package names
+const servicePackages = getPackageNames("services");
+const libPackages = getPackageNames("libs");
+
+// Generate module name mappers for all packages
+const moduleNameMapper = {};
+libPackages.forEach((pkg) => {
+  moduleNameMapper[`^@orbital/${pkg}$`] = `<rootDir>/libs/@orbital/${pkg}/src`;
+  moduleNameMapper[`^@orbital/${pkg}/(.*)$`] =
+    `<rootDir>/libs/@orbital/${pkg}/src/$1`;
+});
+
+// Generate project configurations for all packages
+const projects = [];
+
+// Add service projects
+servicePackages.forEach((pkg) => {
+  const tsConfigPath = path.join(
+    __dirname,
+    `services/@orbital/${pkg}/tsconfig.json`
+  );
+  // Only add if tsconfig.json exists
+  if (fs.existsSync(tsConfigPath)) {
+    projects.push({
+      displayName: pkg,
+      testMatch: [`<rootDir>/services/@orbital/${pkg}/**/*.spec.ts`],
+      rootDir: __dirname,
+      transform: {
+        "^.+\\.(ts|tsx)$": [
+          path.resolve(__dirname, "node_modules/ts-jest"),
+          {
+            tsconfig: tsConfigPath,
+            isolatedModules: true,
+            experimentalDecorators: true,
+            emitDecoratorMetadata: true,
+          },
+        ],
+      },
+    });
+  }
+});
+
+// Add library projects
+libPackages.forEach((pkg) => {
+  const tsConfigPath = path.join(
+    __dirname,
+    `libs/@orbital/${pkg}/tsconfig.json`
+  );
+  // Only add if tsconfig.json exists
+  if (fs.existsSync(tsConfigPath)) {
+    const project = {
+      displayName: pkg,
+      testMatch: [`<rootDir>/libs/@orbital/${pkg}/**/*.spec.ts`],
+      rootDir: __dirname,
+      transform: {
+        "^.+\\.(ts|tsx)$": [
+          path.resolve(__dirname, "node_modules/ts-jest"),
+          {
+            tsconfig: tsConfigPath,
+            isolatedModules: true,
+            experimentalDecorators: true,
+            emitDecoratorMetadata: true,
+          },
+        ],
+      },
+    };
+
+    // Add special setup for typegoose
+    if (pkg === "typegoose") {
+      project.setupFilesAfterEnv = [
+        path.resolve(__dirname, "libs/@orbital/typegoose/jest.setup.js"),
+        path.resolve(
+          __dirname,
+          "libs/@orbital/typegoose/jest.setup.integration.js"
+        ),
+      ];
+    }
+
+    projects.push(project);
+  }
+});
 
 module.exports = {
   // Common setup
@@ -12,20 +115,7 @@ module.exports = {
   testEnvironment: "node",
 
   // Module name mapper for imports
-  moduleNameMapper: {
-    "^@orbital/core$": "<rootDir>/libs/@orbital/core/src",
-    "^@orbital/core/(.*)$": "<rootDir>/libs/@orbital/core/src/$1",
-    "^@orbital/typegoose$": "<rootDir>/libs/@orbital/typegoose/src",
-    "^@orbital/typegoose/(.*)$": "<rootDir>/libs/@orbital/typegoose/src/$1",
-    "^@orbital/microservices$": "<rootDir>/libs/@orbital/microservices/src",
-    "^@orbital/microservices/(.*)$":
-      "<rootDir>/libs/@orbital/microservices/src/$1",
-    "^@orbital/bulk-operations$": "<rootDir>/libs/@orbital/bulk-operations/src",
-    "^@orbital/bulk-operations/(.*)$":
-      "<rootDir>/libs/@orbital/bulk-operations/src/$1",
-    "^@orbital/contracts$": "<rootDir>/libs/@orbital/contracts/src",
-    "^@orbital/contracts/(.*)$": "<rootDir>/libs/@orbital/contracts/src/$1",
-  },
+  moduleNameMapper,
 
   // Transform configuration
   transform: {
@@ -55,127 +145,5 @@ module.exports = {
   rootDir: __dirname,
 
   // Projects configuration for monorepo
-  projects: [
-    // Services
-    {
-      displayName: "world",
-      testMatch: ["<rootDir>/services/@orbital/world/**/*.spec.ts"],
-      rootDir: __dirname,
-      transform: {
-        "^.+\\.(ts|tsx)$": [
-          path.resolve(__dirname, "node_modules/ts-jest"),
-          {
-            tsconfig: path.join(
-              __dirname,
-              "services/@orbital/world/tsconfig.json"
-            ),
-            isolatedModules: true,
-            experimentalDecorators: true,
-            emitDecoratorMetadata: true,
-          },
-        ],
-      },
-    },
-    // Libraries
-    {
-      displayName: "typegoose",
-      testMatch: ["<rootDir>/libs/@orbital/typegoose/**/*.spec.ts"],
-      rootDir: __dirname,
-      transform: {
-        "^.+\\.(ts|tsx)$": [
-          path.resolve(__dirname, "node_modules/ts-jest"),
-          {
-            tsconfig: path.join(
-              __dirname,
-              "libs/@orbital/typegoose/tsconfig.json"
-            ),
-            isolatedModules: true,
-            experimentalDecorators: true,
-            emitDecoratorMetadata: true,
-          },
-        ],
-      },
-      // Add setup for in-memory MongoDB server for integration tests
-      setupFilesAfterEnv: [
-        path.resolve(__dirname, "libs/@orbital/typegoose/jest.setup.js"),
-        path.resolve(
-          __dirname,
-          "libs/@orbital/typegoose/jest.setup.integration.js"
-        ),
-      ],
-    },
-    {
-      displayName: "core",
-      testMatch: ["<rootDir>/libs/@orbital/core/**/*.spec.ts"],
-      rootDir: __dirname,
-      transform: {
-        "^.+\\.(ts|tsx)$": [
-          path.resolve(__dirname, "node_modules/ts-jest"),
-          {
-            tsconfig: path.join(__dirname, "libs/@orbital/core/tsconfig.json"),
-            isolatedModules: true,
-            experimentalDecorators: true,
-            emitDecoratorMetadata: true,
-          },
-        ],
-      },
-    },
-    {
-      displayName: "bulk-operations",
-      testMatch: ["<rootDir>/libs/@orbital/bulk-operations/**/*.spec.ts"],
-      rootDir: __dirname,
-      transform: {
-        "^.+\\.(ts|tsx)$": [
-          path.resolve(__dirname, "node_modules/ts-jest"),
-          {
-            tsconfig: path.join(
-              __dirname,
-              "libs/@orbital/bulk-operations/tsconfig.json"
-            ),
-            isolatedModules: true,
-            experimentalDecorators: true,
-            emitDecoratorMetadata: true,
-          },
-        ],
-      },
-    },
-    {
-      displayName: "microservices",
-      testMatch: ["<rootDir>/libs/@orbital/microservices/**/*.spec.ts"],
-      rootDir: __dirname,
-      transform: {
-        "^.+\\.(ts|tsx)$": [
-          path.resolve(__dirname, "node_modules/ts-jest"),
-          {
-            tsconfig: path.join(
-              __dirname,
-              "libs/@orbital/microservices/tsconfig.json"
-            ),
-            isolatedModules: true,
-            experimentalDecorators: true,
-            emitDecoratorMetadata: true,
-          },
-        ],
-      },
-    },
-    {
-      displayName: "admin-gateway",
-      testMatch: ["<rootDir>/services/@orbital/admin-gateway/**/*.spec.ts"],
-      rootDir: __dirname,
-      transform: {
-        "^.+\\.(ts|tsx)$": [
-          path.resolve(__dirname, "node_modules/ts-jest"),
-          {
-            tsconfig: path.join(
-              __dirname,
-              "services/@orbital/admin-gateway/tsconfig.json"
-            ),
-            isolatedModules: true,
-            experimentalDecorators: true,
-            emitDecoratorMetadata: true,
-          },
-        ],
-      },
-    },
-  ],
+  projects,
 };

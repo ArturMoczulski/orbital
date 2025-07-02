@@ -3,6 +3,31 @@ import { Command } from "commander";
 import * as fs from "fs";
 import * as path from "path";
 
+// Helper function to get all package names from a directory
+function getPackageNames(baseDir: string): string[] {
+  try {
+    // Check if the directory exists
+    if (!fs.existsSync(path.join(process.cwd(), baseDir, "@orbital"))) {
+      return [];
+    }
+
+    // Get all directories inside the @orbital directory
+    return fs
+      .readdirSync(path.join(process.cwd(), baseDir, "@orbital"), {
+        withFileTypes: true,
+      })
+      .filter((dirent) => dirent.isDirectory())
+      .map((dirent) => dirent.name);
+  } catch (error) {
+    console.error(`Error reading packages from ${baseDir}:`, error);
+    return [];
+  }
+}
+
+// Get all service and library package names
+const servicePackages = getPackageNames("services");
+const libPackages = getPackageNames("libs");
+
 const jestOrta = new Command("jest-orta")
   .description("Run Jest tests with VS Code Jest Orta plugin support")
   .allowUnknownOption() // Allow passing through all Jest options
@@ -79,14 +104,8 @@ const jestOrta = new Command("jest-orta")
 
           // Look for the file in common locations
           for (const pkgType of ["libs", "services"]) {
-            for (const pkgName of [
-              "typegoose",
-              "core",
-              "nest",
-              "world",
-              "player",
-              "admin-gateway",
-            ]) {
+            // First try services, then libs
+            for (const pkgName of [...servicePackages, ...libPackages]) {
               for (const dir of [
                 "src",
                 "src/repositories",
@@ -184,26 +203,33 @@ const jestOrta = new Command("jest-orta")
         `Could not determine package from test file path: ${testFile}`
       );
 
-      // Try to extract package info from the path
-      if (testFile.includes("typegoose")) {
-        pkgType = "libs";
-        pkgName = "typegoose";
-      } else if (testFile.includes("core")) {
-        pkgType = "libs";
-        pkgName = "core";
-      } else if (testFile.includes("nest")) {
-        pkgType = "libs";
-        pkgName = "nest";
-      } else if (testFile.includes("world")) {
-        pkgType = "services";
-        pkgName = "world";
-      } else if (testFile.includes("player")) {
-        pkgType = "services";
-        pkgName = "player";
-      } else if (testFile.includes("admin-gateway")) {
-        pkgType = "services";
-        pkgName = "admin-gateway";
-      } else {
+      // Try to extract package info from the path by checking against all known packages
+      let packageFound = false;
+
+      // Check service packages first
+      for (const pkg of servicePackages) {
+        if (testFile.includes(pkg)) {
+          pkgType = "services";
+          pkgName = pkg;
+          packageFound = true;
+          break;
+        }
+      }
+
+      // If not found in services, check lib packages
+      if (!packageFound) {
+        for (const pkg of libPackages) {
+          if (testFile.includes(pkg)) {
+            pkgType = "libs";
+            pkgName = pkg;
+            packageFound = true;
+            break;
+          }
+        }
+      }
+
+      // If still not found, use fallback
+      if (!packageFound) {
         // If we still can't determine the package, use typegoose as a fallback
         console.log("Using typegoose as fallback package");
         pkgType = "libs";
