@@ -12,7 +12,6 @@ import { ClientsModule, Transport } from "@nestjs/microservices";
 import { OrbitalMicroservices } from "@orbital/contracts";
 import { PassThroughRpcExceptionFilter } from "@orbital/microservices";
 import { AreasModule } from "./areas/areas.module";
-import { CharactersModule } from "./characters/characters.module";
 import { DatabaseModule } from "./database.module";
 import { WorldsModule } from "./worlds/worlds.module";
 
@@ -41,7 +40,6 @@ import { WorldsModule } from "./worlds/worlds.module";
       },
     ]),
     DatabaseModule,
-    CharactersModule,
     WorldsModule,
     AreasModule,
   ],
