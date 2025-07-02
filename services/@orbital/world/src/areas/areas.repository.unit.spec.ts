@@ -361,7 +361,7 @@ describe("AreasRepository", () => {
       const result = await repository.find(filter);
 
       // Assert
-      expect(mockFind).toHaveBeenCalledWith(filter);
+      expect(mockFind).toHaveBeenCalledWith(filter, undefined);
       expect(result).toHaveLength(2);
       expect(result[0].name).toBe("Test Area 1");
       expect(result[1].name).toBe("Test Area 2");
@@ -514,10 +514,38 @@ describe("AreasRepository", () => {
       });
       const mockBulkWrite = jest.fn().mockResolvedValue({ ok: 1 });
 
+      // Mock the find method to return an array with the updated document
+      const mockFind = jest.fn().mockReturnThis();
+      const mockFindExec = jest.fn().mockResolvedValue([
+        {
+          ...areaToUpdate,
+          save: jest.fn().mockResolvedValue(true),
+          toObject: jest.fn().mockReturnValue(areaToUpdate),
+          _id: {
+            toString: () => areaToUpdate._id,
+          },
+        },
+      ]);
+
       mockAreaModel.findById = mockFindById;
       mockAreaModel.exec = mockExec;
       mockAreaModel.bulkWrite = mockBulkWrite;
-      mockAreaModel.find = jest.fn().mockReturnThis();
+      mockAreaModel.find = mockFind;
+
+      // We need to set up the exec method to be called after find
+      // This is a bit tricky with Jest, so we'll use a workaround
+      const originalExec = mockAreaModel.exec;
+      mockAreaModel.exec = jest.fn().mockImplementation(function () {
+        // If called after find, return the find result
+        if (
+          mockFind.mock.calls.length > 0 &&
+          mockFindExec.mock.calls.length === 0
+        ) {
+          return mockFindExec();
+        }
+        // Otherwise use the original mock
+        return originalExec();
+      });
 
       // Act
       const result = await repository.update(areaToUpdate);

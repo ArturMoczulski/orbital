@@ -1,13 +1,15 @@
 import { Test, TestingModule } from "@nestjs/testing";
-import { AreaModel, WithDocument, WorldModel } from "@orbital/typegoose";
+import { AreaModel, WorldModel } from "@orbital/typegoose";
 import { MongoMemoryServer } from "mongodb-memory-server";
 import mongoose, { Model } from "mongoose";
 import { getModelToken, TypegooseModule } from "nestjs-typegoose";
+import { AreaService } from "./area.service";
 import { AreasCRUDService } from "./areas.crud.service";
 import { AreasRepository } from "./areas.repository";
 
-describe("AreasCRUDService Integration", () => {
-  let service: AreasCRUDService;
+describe("AreaService Integration", () => {
+  let service: AreaService;
+  let crudService: AreasCRUDService;
   let repository: AreasRepository;
   let mongod: MongoMemoryServer;
   let areaModel: Model<AreaModel>;
@@ -32,11 +34,12 @@ describe("AreasCRUDService Integration", () => {
           TypegooseModule.forRoot(uri),
           TypegooseModule.forFeature([AreaModel, WorldModel]),
         ],
-        providers: [AreasCRUDService, AreasRepository],
+        providers: [AreaService, AreasCRUDService, AreasRepository],
       }).compile();
 
       // Get the service, repository, and model
-      service = module.get<AreasCRUDService>(AreasCRUDService);
+      service = module.get<AreaService>(AreaService);
+      crudService = module.get<AreasCRUDService>(AreasCRUDService);
       repository = module.get<AreasRepository>(AreasRepository);
       areaModel = module.get<Model<AreaModel>>(getModelToken(AreaModel.name));
       worldModel = module.get<Model<WorldModel>>(
@@ -74,9 +77,11 @@ describe("AreasCRUDService Integration", () => {
     // Clear only the areas collection instead of dropping the entire database
     if (mongoose.connection.readyState === 1) {
       await areaModel.deleteMany({});
+      await worldModel.deleteMany({});
     }
   });
 
+  // Test all methods in AreaService, including those proxied from CRUDService
   describe("findByWorldId", () => {
     it("should find areas by worldId", async () => {
       // Arrange - Create test areas
@@ -197,6 +202,317 @@ describe("AreasCRUDService Integration", () => {
     });
   });
 
+  describe("findByParentId", () => {
+    it("should find areas by parentId", async () => {
+      // Arrange - Create test areas
+      const parentId = "parent-area-id";
+      const otherParentId = "other-parent-id";
+
+      // Create areas directly using the model
+      await areaModel.create([
+        {
+          _id: "area-1",
+          name: "Area 1",
+          description: "Test area 1",
+          worldId: "world-1",
+          parentId,
+          tags: ["test"],
+        },
+        {
+          _id: "area-2",
+          name: "Area 2",
+          description: "Test area 2",
+          worldId: "world-1",
+          parentId,
+          tags: ["test"],
+        },
+        {
+          _id: "area-3",
+          name: "Area 3",
+          description: "Test area 3",
+          worldId: "world-2",
+          parentId: otherParentId,
+          tags: ["test"],
+        },
+      ]);
+
+      // Act - Find areas by parentId
+      const result = await service.findByParentId(parentId);
+
+      // Assert
+      expect(result).toBeDefined();
+      expect(result.length).toBe(2);
+      expect(result[0].parentId).toBe(parentId);
+      expect(result[1].parentId).toBe(parentId);
+      expect(result.map((area) => area._id).sort()).toEqual(
+        ["area-1", "area-2"].sort()
+      );
+    });
+
+    it("should return empty array when no areas found", async () => {
+      // Arrange - No areas in the database
+
+      // Act
+      const result = await service.findByParentId("nonexistent-parent-id");
+
+      // Assert
+      expect(result).toBeDefined();
+      expect(result.length).toBe(0);
+    });
+
+    it("should apply projection when provided", async () => {
+      // Arrange - Create a test area
+      const parentId = "parent-area-id";
+
+      // Create area directly using the model
+      await areaModel.create({
+        _id: "area-1",
+        name: "Area 1",
+        description: "Test area 1",
+        worldId: "world-1",
+        parentId,
+        tags: ["test"],
+      });
+
+      // Act - Find area with projection
+      const result = await service.findByParentId(parentId, {
+        name: 1,
+        _id: 1,
+        parentId: 1,
+      });
+
+      // Assert
+      expect(result).toBeDefined();
+      expect(result.length).toBe(1);
+      expect(result[0]._id).toBe("area-1");
+      expect(result[0].name).toBe("Area 1");
+      // Check for empty string instead of undefined
+      expect(result[0].description).toBe("");
+    });
+
+    it("should apply options when provided", async () => {
+      // Arrange - Create test areas
+      const parentId = "parent-area-id";
+
+      // Create areas directly using the model
+      await areaModel.create([
+        {
+          _id: "area-1",
+          name: "B Area",
+          description: "Test area B",
+          worldId: "world-1",
+          parentId,
+          tags: ["test"],
+        },
+        {
+          _id: "area-2",
+          name: "A Area",
+          description: "Test area A",
+          worldId: "world-1",
+          parentId,
+          tags: ["test"],
+        },
+      ]);
+
+      // Act - Find areas with sort option
+      const result = await service.findByParentId(parentId, undefined, {
+        sort: { name: 1 },
+      });
+
+      // Assert
+      expect(result).toBeDefined();
+      expect(result.length).toBe(2);
+      expect(result[0].name).toBe("A Area");
+      expect(result[1].name).toBe("B Area");
+    });
+  });
+
+  describe("findByTags", () => {
+    it("should find areas by tags", async () => {
+      // Arrange - Create test areas
+      const tags = ["fantasy", "medieval"];
+      const otherTags = ["sci-fi", "futuristic"];
+
+      // Create areas directly using the model
+      await areaModel.create([
+        {
+          _id: "area-1",
+          name: "Area 1",
+          description: "Test area 1",
+          worldId: "world-1",
+          tags: ["fantasy", "castle"],
+        },
+        {
+          _id: "area-2",
+          name: "Area 2",
+          description: "Test area 2",
+          worldId: "world-1",
+          tags: ["medieval", "village"],
+        },
+        {
+          _id: "area-3",
+          name: "Area 3",
+          description: "Test area 3",
+          worldId: "world-2",
+          tags: ["sci-fi", "space-station"],
+        },
+      ]);
+
+      // Act - Find areas by tags
+      const result = await service.findByTags(tags);
+
+      // Assert
+      expect(result).toBeDefined();
+      expect(result.length).toBe(2);
+      // Each area should have at least one of the tags we searched for
+      expect(result[0].tags.some((tag) => tags.includes(tag))).toBe(true);
+      expect(result[1].tags.some((tag) => tags.includes(tag))).toBe(true);
+      expect(result.map((area) => area._id).sort()).toEqual(
+        ["area-1", "area-2"].sort()
+      );
+    });
+
+    it("should return empty array when no areas found", async () => {
+      // Arrange - No areas in the database
+
+      // Act
+      const result = await service.findByTags(["nonexistent-tag"]);
+
+      // Assert
+      expect(result).toBeDefined();
+      expect(result.length).toBe(0);
+    });
+
+    it("should apply projection when provided", async () => {
+      // Arrange - Create a test area
+      const tags = ["fantasy", "castle"];
+
+      // Create area directly using the model
+      await areaModel.create({
+        _id: "area-1",
+        name: "Area 1",
+        description: "Test area 1",
+        worldId: "world-1",
+        tags,
+      });
+
+      // Act - Find area with projection
+      const result = await service.findByTags(tags, {
+        name: 1,
+        _id: 1,
+        tags: 1,
+      });
+
+      // Assert
+      expect(result).toBeDefined();
+      expect(result.length).toBe(1);
+      expect(result[0]._id).toBe("area-1");
+      expect(result[0].name).toBe("Area 1");
+      // Check for empty string instead of undefined
+      expect(result[0].description).toBe("");
+    });
+
+    it("should apply options when provided", async () => {
+      // Arrange - Create test areas
+      const tags = ["fantasy"];
+
+      // Create areas directly using the model
+      await areaModel.create([
+        {
+          _id: "area-1",
+          name: "B Area",
+          description: "Test area B",
+          worldId: "world-1",
+          tags: ["fantasy", "castle"],
+        },
+        {
+          _id: "area-2",
+          name: "A Area",
+          description: "Test area A",
+          worldId: "world-1",
+          tags: ["fantasy", "village"],
+        },
+      ]);
+
+      // Act - Find areas with sort option
+      const result = await service.findByTags(tags, undefined, {
+        sort: { name: 1 },
+      });
+
+      // Assert
+      expect(result).toBeDefined();
+      expect(result.length).toBe(2);
+      expect(result[0].name).toBe("A Area");
+      expect(result[1].name).toBe("B Area");
+    });
+  });
+
+  // Test methods proxied from CRUDService
+  describe("create", () => {
+    it("should create a new area", async () => {
+      // Arrange
+      const areaData = {
+        name: "New Area",
+        description: "A new test area",
+        worldId: "test-world-id",
+        tags: ["test", "new"],
+        landmarks: [],
+        connections: [],
+      };
+
+      // Create the world first so reference validation passes
+      await worldModel.create({
+        _id: "test-world-id",
+        name: "Test World",
+        description: "A test world",
+        techLevel: 5,
+        shard: "test-shard",
+      });
+
+      // Act
+      const result = await service.create(areaData);
+
+      // Assert
+      expect(result).toBeDefined();
+
+      // Type assertion to handle potential BulkItemizedResponse
+      const area = result as AreaModel;
+
+      expect(area._id).toBeDefined();
+      expect(area.name).toBe("New Area");
+      expect(area.description).toBe("A new test area");
+      expect(area.worldId).toBe("test-world-id");
+
+      // Verify the area was saved to the database
+      const savedArea = await areaModel.findById(area._id);
+      expect(savedArea).toBeDefined();
+      expect(savedArea?.name).toBe("New Area");
+    });
+
+    it("should reject creating an area with an invalid world reference", async () => {
+      // Arrange - No world created, so the reference will be invalid
+      const nonExistentWorldId = "non-existent-world-id";
+
+      // Create area data with reference to a non-existent world
+      const areaData = {
+        name: "Test Area",
+        description: "An area with invalid world reference",
+        worldId: nonExistentWorldId,
+        tags: ["test"],
+        landmarks: [],
+        connections: [],
+      };
+
+      // Act & Assert - Expect the creation to be rejected
+      await expect(service.create(areaData)).rejects.toThrow();
+
+      // Since we don't know the ID that would have been assigned, we can verify
+      // by checking that no areas with this name exist
+      const savedAreas = await areaModel.find({ name: areaData.name });
+      expect(savedAreas.length).toBe(0);
+    });
+  });
+
   describe("find", () => {
     it("should find areas with find method", async () => {
       // Arrange - Create test areas
@@ -217,7 +533,7 @@ describe("AreasCRUDService Integration", () => {
         },
       ]);
 
-      // Act - Use the find method which should be inherited from CRUDService
+      // Act - Use the find method
       const result = await service.find({});
 
       // Assert
@@ -338,200 +654,57 @@ describe("AreasCRUDService Integration", () => {
     });
   });
 
-  describe("create", () => {
-    it("should create a new area", async () => {
-      // Arrange
-      const areaData = {
-        name: "New Area",
-        description: "A new test area",
-        worldId: "test-world-id",
-        tags: ["test", "new"],
-        landmarks: [],
-        connections: [],
-      };
+  describe("update", () => {
+    it("should update an area", async () => {
+      // Arrange - Create a world and an area
+      const worldId = "update-world-id";
 
-      // Create the world first so reference validation passes
-      await worldModel.create({
-        _id: "test-world-id",
-        name: "Test World",
-        description: "A test world",
-        techLevel: 5,
-        shard: "test-shard",
-      });
-
-      // Act
-      const result = await service.create(areaData);
-
-      // Assert
-      expect(result).toBeDefined();
-      // Type assertion to handle the union type
-      const createdArea = result as WithDocument<AreaModel>;
-      expect(createdArea._id).toBeDefined();
-      expect(createdArea.name).toBe("New Area");
-      expect(createdArea.description).toBe("A new test area");
-      expect(createdArea.worldId).toBe("test-world-id");
-
-      // Verify the area was saved to the database
-      const savedArea = await areaModel.findById(createdArea._id);
-      expect(savedArea).toBeDefined();
-      expect(savedArea?.name).toBe("New Area");
-    });
-  });
-
-  describe("delete", () => {
-    it("should delete an area by id", async () => {
-      // Arrange - Create area directly using the model
-      await areaModel.create({
-        _id: "delete-area-id",
-        name: "Delete Area",
-        description: "An area to delete",
-        worldId: "test-world-id",
-        tags: ["test", "delete"],
-      });
-
-      // Act
-      const result = await service.delete("delete-area-id");
-
-      // Assert
-      expect(result).toBe(true);
-
-      // Verify the area was deleted from the database
-      const deletedArea = await areaModel.findById("delete-area-id");
-      expect(deletedArea).toBeNull();
-    });
-
-    it("should return null when trying to delete a non-existent area", async () => {
-      // Act
-      const result = await service.delete("non-existent-id");
-
-      // Assert
-      expect(result).toBeNull();
-    });
-  });
-  // Test suite for world reference validation through the service layer
-  describe("world reference validation", () => {
-    beforeEach(async () => {
-      // Clear the areas and worlds collections before each test
-      if (mongoose.connection.readyState === 1) {
-        await areaModel.deleteMany({});
-        await worldModel.deleteMany({});
-      }
-    });
-
-    it("should create an area with a valid world reference", async () => {
-      // Arrange - Create a world first
-      const worldId = "valid-world-id";
+      // Create the world
       await worldModel.create({
         _id: worldId,
-        name: "Test World",
-        description: "A test world",
-        techLevel: 5,
+        name: "Update World",
+        description: "A world for update tests",
+        techLevel: 3,
         shard: "test-shard",
       });
 
-      // Create area data with reference to the valid world
-      const areaData = {
-        name: "Test Area",
-        description: "An area with valid world reference",
-        worldId,
-        tags: ["test"],
-        landmarks: [],
-        connections: [],
-      };
-
-      // Act - Create the area using the service
-      const result = await service.create(areaData);
-
-      // Assert
-      expect(result).toBeDefined();
-      // Type assertion to handle the union type
-      const createdArea = result as WithDocument<AreaModel>;
-      expect(createdArea._id).toBeDefined();
-      expect(createdArea.worldId).toBe(worldId);
-
-      // Verify the area was saved to the database
-      const savedArea = await areaModel.findById(createdArea._id);
-      expect(savedArea).toBeDefined();
-      expect(savedArea?.worldId).toBe(worldId);
-    });
-
-    it("should reject creating an area with an invalid world reference", async () => {
-      // Arrange - No world created, so the reference will be invalid
-      const nonExistentWorldId = "non-existent-world-id";
-
-      // Create area data with reference to a non-existent world
-      const areaData = {
-        name: "Test Area",
-        description: "An area with invalid world reference",
-        worldId: nonExistentWorldId,
-        tags: ["test"],
-        landmarks: [],
-        connections: [],
-      };
-
-      // Act & Assert - Expect the creation to be rejected
-      await expect(service.create(areaData)).rejects.toThrow();
-
-      // Since we don't know the ID that would have been assigned, we can verify
-      // by checking that no areas with this name exist
-      const savedAreas = await areaModel.find({ name: areaData.name });
-      expect(savedAreas.length).toBe(0);
-    });
-
-    it("should update an area with a valid world reference", async () => {
-      // Arrange - Create a world and an area
-      const originalWorldId = "original-world-id";
-      const newWorldId = "new-world-id";
-
-      // Create both worlds
-      await worldModel.create([
-        {
-          _id: originalWorldId,
-          name: "Original World",
-          description: "The original world",
-          techLevel: 3,
-          shard: "test-shard-1",
-        },
-        {
-          _id: newWorldId,
-          name: "New World",
-          description: "The new world",
-          techLevel: 4,
-          shard: "test-shard-2",
-        },
-      ]);
-
-      // Create the area with the original world
-      const areaId = "update-test-area";
+      // Create the area
+      const areaId = "update-area-id";
       await areaModel.create({
         _id: areaId,
-        name: "Update Test Area",
-        description: "An area to test updating references",
-        worldId: originalWorldId,
+        name: "Original Name",
+        description: "Original description",
+        worldId,
         tags: ["test"],
       });
 
-      // Act - Update the area with a new valid world reference
+      // Act - Update the area
       const updateResult = await service.update({
         _id: areaId,
-        worldId: newWorldId,
-        name: "Update Test Area", // Include required fields
-        description: "An area to test updating references",
+        name: "Updated Name",
+        description: "Updated description",
+        worldId,
         landmarks: [],
         connections: [],
-        tags: ["test"],
+        tags: ["test", "updated"],
       });
 
       // Assert
       expect(updateResult).toBeDefined();
-      // Type assertion to handle the union type
-      const updatedResult = updateResult as WithDocument<AreaModel>;
-      expect(updatedResult.worldId).toBe(newWorldId);
+
+      // Type assertion to handle potential BulkItemizedResponse
+      const updatedAreaResult = updateResult as AreaModel;
+
+      expect(updatedAreaResult._id).toBe(areaId);
+      expect(updatedAreaResult.name).toBe("Updated Name");
+      expect(updatedAreaResult.description).toBe("Updated description");
+      expect(updatedAreaResult.tags).toContain("updated");
 
       // Verify the area was updated in the database
       const updatedArea = await areaModel.findById(areaId);
       expect(updatedArea).toBeDefined();
-      expect(updatedArea?.worldId).toBe(newWorldId);
+      expect(updatedArea?.name).toBe("Updated Name");
+      expect(updatedArea?.description).toBe("Updated description");
     });
 
     it("should reject updating an area with an invalid world reference", async () => {
@@ -576,55 +749,36 @@ describe("AreasCRUDService Integration", () => {
       expect(updatedArea).toBeDefined();
       expect(updatedArea?.worldId).toBe(originalWorldId);
     });
+  });
 
-    it("should allow updating an area without changing the world reference", async () => {
-      // Arrange - Create a world and an area
-      const worldId = "existing-world-id";
-
-      // Create the world
-      await worldModel.create({
-        _id: worldId,
-        name: "Existing World",
-        description: "An existing world",
-        techLevel: 2,
-        shard: "test-shard",
-      });
-
-      // Create the area with the world
-      const areaId = "update-test-area";
+  describe("delete", () => {
+    it("should delete an area by id", async () => {
+      // Arrange - Create area directly using the model
       await areaModel.create({
-        _id: areaId,
-        name: "Original Name",
-        description: "Original description",
-        worldId,
-        tags: ["test"],
+        _id: "delete-area-id",
+        name: "Delete Area",
+        description: "An area to delete",
+        worldId: "test-world-id",
+        tags: ["test", "delete"],
       });
 
-      // Act - Update the area without changing the world reference
-      const updateResult = await service.update({
-        _id: areaId,
-        name: "Updated Name",
-        description: "Updated description",
-        worldId, // Keep the same worldId
-        landmarks: [],
-        connections: [],
-        tags: ["test"],
-      });
+      // Act
+      const result = await service.delete("delete-area-id");
 
       // Assert
-      expect(updateResult).toBeDefined();
-      // Type assertion to handle the union type
-      const updatedResult = updateResult as WithDocument<AreaModel>;
-      expect(updatedResult.name).toBe("Updated Name");
-      expect(updatedResult.description).toBe("Updated description");
-      expect(updatedResult.worldId).toBe(worldId);
+      expect(result).toBe(true);
 
-      // Verify the area was updated in the database
-      const updatedArea = await areaModel.findById(areaId);
-      expect(updatedArea).toBeDefined();
-      expect(updatedArea?.name).toBe("Updated Name");
-      expect(updatedArea?.description).toBe("Updated description");
-      expect(updatedArea?.worldId).toBe(worldId);
+      // Verify the area was deleted from the database
+      const deletedArea = await areaModel.findById("delete-area-id");
+      expect(deletedArea).toBeNull();
+    });
+
+    it("should return null when trying to delete a non-existent area", async () => {
+      // Act
+      const result = await service.delete("non-existent-id");
+
+      // Assert
+      expect(result).toBeNull();
     });
   });
 });

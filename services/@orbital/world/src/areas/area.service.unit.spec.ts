@@ -129,6 +129,58 @@ describe("AreaService", () => {
     });
   });
 
+  describe("findByParentId", () => {
+    it("should call areasCrudService.findByParentId with the provided parentId", async () => {
+      const parentId = "test-parent-id";
+      const projection = { name: 1 };
+      const options = { limit: 10 };
+      const expectedResult = [
+        { _id: "test-id", name: "Test Area" },
+      ] as AreaModel[];
+
+      (mockAreasCrudService.findByParentId as jest.Mock).mockResolvedValue(
+        expectedResult
+      );
+
+      const result = await service.findByParentId(
+        parentId,
+        projection,
+        options
+      );
+
+      expect(mockAreasCrudService.findByParentId).toHaveBeenCalledWith(
+        parentId,
+        projection,
+        options
+      );
+      expect(result).toEqual(expectedResult);
+    });
+  });
+
+  describe("findByTags", () => {
+    it("should call areasCrudService.findByTags with the provided tags", async () => {
+      const tags = ["tag1", "tag2"];
+      const projection = { name: 1 };
+      const options = { limit: 10 };
+      const expectedResult = [
+        { _id: "test-id", name: "Test Area" },
+      ] as AreaModel[];
+
+      (mockAreasCrudService.findByTags as jest.Mock).mockResolvedValue(
+        expectedResult
+      );
+
+      const result = await service.findByTags(tags, projection, options);
+
+      expect(mockAreasCrudService.findByTags).toHaveBeenCalledWith(
+        tags,
+        projection,
+        options
+      );
+      expect(result).toEqual(expectedResult);
+    });
+  });
+
   describe("update", () => {
     it("should call areasCrudService.update with the provided entities", async () => {
       const entity = { _id: "test-id", name: "Updated Area" };
