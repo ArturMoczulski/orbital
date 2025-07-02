@@ -75,6 +75,223 @@ describe("WorldsRepository Integration", () => {
     }
   });
 
+  // Test inherited methods from DocumentRepository
+  describe("create", () => {
+    it("should create a new world", async () => {
+      // Arrange
+      const newWorld = {
+        _id: "new-created-world",
+        name: "New Created World",
+        shard: "created-shard",
+        techLevel: 9,
+      };
+
+      // Act
+      const result = (await repository.create(
+        newWorld
+      )) as WithDocument<WorldModel>;
+
+      // Assert
+      expect(result).toBeDefined();
+      expect(result._id).toBeDefined();
+      expect(result.name).toBe(newWorld.name);
+      expect(result.shard).toBe(newWorld.shard);
+      expect(result.techLevel).toBe(newWorld.techLevel);
+
+      // Verify it was actually saved to the database
+      const savedWorld = await worldModel.findById(result._id).exec();
+      expect(savedWorld).toBeDefined();
+      expect(savedWorld?.name).toBe(newWorld.name);
+    });
+  });
+
+  describe("find", () => {
+    it("should find worlds with find method", async () => {
+      // Arrange - Create test worlds
+      const worlds = await worldModel.create([
+        {
+          _id: "world-find-1",
+          name: "World 1",
+          shard: "shard-1",
+          techLevel: 3,
+        },
+        {
+          _id: "world-find-2",
+          name: "World 2",
+          shard: "shard-2",
+          techLevel: 5,
+        },
+      ]);
+
+      // Act - Use the find method which should be inherited from DocumentRepository
+      const result = await repository.find({});
+
+      // Assert
+      expect(result).toBeDefined();
+      expect(result.length).toBe(2);
+    });
+
+    it("should find worlds with specific options", async () => {
+      // Arrange - Create test worlds
+      await worldModel.create([
+        {
+          _id: "world-options-1",
+          name: "Z World",
+          shard: "options-shard",
+          techLevel: 3,
+        },
+        {
+          _id: "world-options-2",
+          name: "A World",
+          shard: "options-shard",
+          techLevel: 5,
+        },
+      ]);
+
+      // Act - Use find with sort option
+      const result = await repository.find(
+        { shard: "options-shard" },
+        undefined,
+        { sort: { name: 1 } }
+      );
+
+      // Assert
+      expect(result).toBeDefined();
+      expect(result.length).toBe(2);
+      expect(result[0].name).toBe("A World");
+      expect(result[1].name).toBe("Z World");
+    });
+  });
+
+  describe("findOne", () => {
+    it("should find one world with findOne method", async () => {
+      // Arrange - Create test worlds
+      await worldModel.create([
+        {
+          _id: "world-findone-1",
+          name: "Find One World 1",
+          shard: "findone-shard",
+          techLevel: 3,
+        },
+        {
+          _id: "world-findone-2",
+          name: "Find One World 2",
+          shard: "findone-shard",
+          techLevel: 5,
+        },
+      ]);
+
+      // Act
+      const result = await repository.findOne({ shard: "findone-shard" });
+
+      // Assert
+      expect(result).toBeDefined();
+      expect(result?.shard).toBe("findone-shard");
+    });
+  });
+
+  describe("findById", () => {
+    it("should find a world by id", async () => {
+      // Arrange - Create world directly using the model
+      const world = await worldModel.create({
+        _id: "world-find-by-id",
+        name: "Find World",
+        shard: "test-shard",
+        techLevel: 7,
+      });
+
+      // Act
+      const result = await repository.findById(world._id);
+
+      // Assert
+      expect(result).toBeDefined();
+      expect(result?.name).toBe("Find World");
+    });
+  });
+
+  describe("update", () => {
+    it("should update an existing world", async () => {
+      // Arrange - Create a world to update
+      const world = await worldModel.create({
+        _id: "world-to-update",
+        name: "Original Name",
+        shard: "original-shard",
+        techLevel: 3,
+      });
+
+      const updatedData = {
+        _id: world._id,
+        name: "Updated Name",
+        shard: "updated-shard",
+        techLevel: 8,
+      };
+
+      // Act
+      const result = (await repository.update(
+        updatedData
+      )) as WithDocument<WorldModel>;
+
+      // Assert
+      expect(result).toBeDefined();
+      expect(result?._id).toBe(updatedData._id);
+      expect(result?.name).toBe(updatedData.name);
+      expect(result?.shard).toBe(updatedData.shard);
+      expect(result?.techLevel).toBe(updatedData.techLevel);
+
+      // Verify it was actually updated in the database
+      const updatedWorld = await worldModel.findById(world._id).exec();
+      expect(updatedWorld?.name).toBe(updatedData.name);
+      expect(updatedWorld?.shard).toBe(updatedData.shard);
+      expect(updatedWorld?.techLevel).toBe(updatedData.techLevel);
+    });
+
+    it("should return null when updating a non-existent world", async () => {
+      // Arrange
+      const nonExistentWorld = {
+        _id: "non-existent-world",
+        name: "This World Doesn't Exist",
+        shard: "fake-shard",
+        techLevel: 1,
+      };
+
+      // Act
+      const result = await repository.update(nonExistentWorld);
+
+      // Assert
+      expect(result).toBeNull();
+    });
+  });
+
+  describe("delete", () => {
+    it("should delete an existing world", async () => {
+      // Arrange - Create a world to delete
+      const world = await worldModel.create({
+        _id: "world-to-delete",
+        name: "Delete Me",
+        shard: "delete-shard",
+        techLevel: 2,
+      });
+
+      // Act
+      const result = await repository.delete(world._id);
+
+      // Assert
+      expect(result).toBe(true);
+
+      // Verify it was actually deleted from the database
+      const deletedWorld = await worldModel.findById(world._id).exec();
+      expect(deletedWorld).toBeNull();
+    });
+
+    it("should return null when deleting a non-existent world", async () => {
+      // Act
+      const result = await repository.delete("non-existent-world");
+
+      // Assert
+      expect(result).toBeNull();
+    });
+  });
+
   describe("findByShard", () => {
     it("should find worlds by shard", async () => {
       // Arrange - Create test worlds
@@ -232,224 +449,6 @@ describe("WorldsRepository Integration", () => {
       // Assert
       expect(result).toBeDefined();
       expect(result.length).toBe(0);
-    });
-  });
-
-  // Test inherited methods from DocumentRepository
-
-  describe("find", () => {
-    it("should find worlds with find method", async () => {
-      // Arrange - Create test worlds
-      const worlds = await worldModel.create([
-        {
-          _id: "world-find-1",
-          name: "World 1",
-          shard: "shard-1",
-          techLevel: 3,
-        },
-        {
-          _id: "world-find-2",
-          name: "World 2",
-          shard: "shard-2",
-          techLevel: 5,
-        },
-      ]);
-
-      // Act - Use the find method which should be inherited from DocumentRepository
-      const result = await repository.find({});
-
-      // Assert
-      expect(result).toBeDefined();
-      expect(result.length).toBe(2);
-    });
-
-    it("should find worlds with specific options", async () => {
-      // Arrange - Create test worlds
-      await worldModel.create([
-        {
-          _id: "world-options-1",
-          name: "Z World",
-          shard: "options-shard",
-          techLevel: 3,
-        },
-        {
-          _id: "world-options-2",
-          name: "A World",
-          shard: "options-shard",
-          techLevel: 5,
-        },
-      ]);
-
-      // Act - Use find with sort option
-      const result = await repository.find(
-        { shard: "options-shard" },
-        undefined,
-        { sort: { name: 1 } }
-      );
-
-      // Assert
-      expect(result).toBeDefined();
-      expect(result.length).toBe(2);
-      expect(result[0].name).toBe("A World");
-      expect(result[1].name).toBe("Z World");
-    });
-  });
-
-  describe("findById", () => {
-    it("should find a world by id", async () => {
-      // Arrange - Create world directly using the model
-      const world = await worldModel.create({
-        _id: "world-find-by-id",
-        name: "Find World",
-        shard: "test-shard",
-        techLevel: 7,
-      });
-
-      // Act
-      const result = await repository.findById(world._id);
-
-      // Assert
-      expect(result).toBeDefined();
-      expect(result?.name).toBe("Find World");
-    });
-  });
-
-  describe("findOne", () => {
-    it("should find one world with findOne method", async () => {
-      // Arrange - Create test worlds
-      await worldModel.create([
-        {
-          _id: "world-findone-1",
-          name: "Find One World 1",
-          shard: "findone-shard",
-          techLevel: 3,
-        },
-        {
-          _id: "world-findone-2",
-          name: "Find One World 2",
-          shard: "findone-shard",
-          techLevel: 5,
-        },
-      ]);
-
-      // Act
-      const result = await repository.findOne({ shard: "findone-shard" });
-
-      // Assert
-      expect(result).toBeDefined();
-      expect(result?.shard).toBe("findone-shard");
-    });
-  });
-
-  describe("create", () => {
-    it("should create a new world", async () => {
-      // Arrange
-      const newWorld = {
-        _id: "new-created-world",
-        name: "New Created World",
-        shard: "created-shard",
-        techLevel: 9,
-      };
-
-      // Act
-      const result = (await repository.create(
-        newWorld
-      )) as WithDocument<WorldModel>;
-
-      // Assert
-      expect(result).toBeDefined();
-      expect(result._id).toBeDefined();
-      expect(result.name).toBe(newWorld.name);
-      expect(result.shard).toBe(newWorld.shard);
-      expect(result.techLevel).toBe(newWorld.techLevel);
-
-      // Verify it was actually saved to the database
-      const savedWorld = await worldModel.findById(result._id).exec();
-      expect(savedWorld).toBeDefined();
-      expect(savedWorld?.name).toBe(newWorld.name);
-    });
-  });
-
-  describe("update", () => {
-    it("should update an existing world", async () => {
-      // Arrange - Create a world to update
-      const world = await worldModel.create({
-        _id: "world-to-update",
-        name: "Original Name",
-        shard: "original-shard",
-        techLevel: 3,
-      });
-
-      const updatedData = {
-        _id: world._id,
-        name: "Updated Name",
-        shard: "updated-shard",
-        techLevel: 8,
-      };
-
-      // Act
-      const result = (await repository.update(
-        updatedData
-      )) as WithDocument<WorldModel>;
-
-      // Assert
-      expect(result).toBeDefined();
-      expect(result?._id).toBe(updatedData._id);
-      expect(result?.name).toBe(updatedData.name);
-      expect(result?.shard).toBe(updatedData.shard);
-      expect(result?.techLevel).toBe(updatedData.techLevel);
-
-      // Verify it was actually updated in the database
-      const updatedWorld = await worldModel.findById(world._id).exec();
-      expect(updatedWorld?.name).toBe(updatedData.name);
-      expect(updatedWorld?.shard).toBe(updatedData.shard);
-      expect(updatedWorld?.techLevel).toBe(updatedData.techLevel);
-    });
-
-    it("should return null when updating a non-existent world", async () => {
-      // Arrange
-      const nonExistentWorld = {
-        _id: "non-existent-world",
-        name: "This World Doesn't Exist",
-        shard: "fake-shard",
-        techLevel: 1,
-      };
-
-      // Act
-      const result = await repository.update(nonExistentWorld);
-
-      // Assert
-      expect(result).toBeNull();
-    });
-  });
-
-  describe("delete", () => {
-    it("should delete an existing world", async () => {
-      // Arrange - Create a world to delete
-      const world = await worldModel.create({
-        _id: "world-to-delete",
-        name: "Delete Me",
-        shard: "delete-shard",
-        techLevel: 2,
-      });
-
-      // Act
-      const result = await repository.delete(world._id);
-
-      // Assert
-      expect(result).toBe(true);
-
-      // Verify it was actually deleted from the database
-      const deletedWorld = await worldModel.findById(world._id).exec();
-      expect(deletedWorld).toBeNull();
-    });
-
-    it("should return null when deleting a non-existent world", async () => {
-      // Act
-      const result = await repository.delete("non-existent-world");
-
-      // Assert
-      expect(result).toBeNull();
     });
   });
 });

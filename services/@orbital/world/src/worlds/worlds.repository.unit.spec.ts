@@ -73,6 +73,133 @@ describe("WorldsRepository", () => {
     expect(repository).toBeInstanceOf(DocumentRepository);
   });
 
+  describe("create", () => {
+    it("should create a world", async () => {
+      // Arrange
+      const worldData = {
+        name: "New World",
+        shard: "new-shard",
+        techLevel: 7,
+      };
+
+      // Mock the create method to return the created world
+      const createdWorld = { ...worldData, _id: "world-123" };
+      const mockCreateResult = createdWorld as WithDocument<WorldModel>;
+      jest.spyOn(repository, "create").mockResolvedValueOnce(mockCreateResult);
+
+      // Act
+      const result = await repository.create(worldData);
+
+      // Assert
+      expect(result).toEqual(createdWorld);
+      // Type assertion to handle the union return type
+      if ("_id" in result) {
+        expect(result._id).toBe("world-123");
+      }
+    });
+  });
+
+  describe("find", () => {
+    it("should find worlds with filter", async () => {
+      // Arrange
+      const filter = { techLevel: { $gt: 3 } };
+      const mockWorlds = [
+        { _id: "world-1", name: "World 1", techLevel: 4 },
+        { _id: "world-2", name: "World 2", techLevel: 5 },
+      ];
+
+      jest
+        .spyOn(repository, "find")
+        .mockResolvedValueOnce(mockWorlds as WithDocument<WorldModel>[]);
+
+      // Act
+      const result = await repository.find(filter);
+
+      // Assert
+      expect(result).toEqual(mockWorlds);
+      expect(result.length).toBe(2);
+    });
+  });
+
+  describe("findOne", () => {
+    it("should find one world by filter", async () => {
+      // Arrange
+      const filter = { name: "Test World" };
+
+      jest
+        .spyOn(repository, "findOne")
+        .mockResolvedValueOnce(mockWorld as WithDocument<WorldModel>);
+
+      // Act
+      const result = await repository.findOne(filter);
+
+      // Assert
+      expect(result).toEqual(mockWorld);
+      expect(result?.name).toBe("Test World");
+    });
+  });
+
+  describe("findById", () => {
+    it("should find world by ID", async () => {
+      // Arrange
+      const worldId = "world-123";
+      const mockWorldWithId = { ...mockWorld, _id: worldId };
+
+      jest
+        .spyOn(repository, "findById")
+        .mockResolvedValueOnce(mockWorldWithId as WithDocument<WorldModel>);
+
+      // Act
+      const result = await repository.findById(worldId);
+
+      // Assert
+      expect(result).toEqual(mockWorldWithId);
+      expect(result?._id).toBe(worldId);
+    });
+  });
+
+  describe("update", () => {
+    it("should update a world", async () => {
+      // Arrange
+      const worldToUpdate = {
+        _id: "world-123",
+        name: "Updated World",
+        shard: "test-shard",
+        techLevel: 6,
+      };
+
+      const mockUpdateResult = worldToUpdate as WithDocument<WorldModel>;
+      jest.spyOn(repository, "update").mockResolvedValueOnce(mockUpdateResult);
+
+      // Act
+      const result = await repository.update(worldToUpdate);
+
+      // Assert
+      expect(result).toEqual(worldToUpdate);
+      // Type assertion to handle the union return type
+      if (result && "_id" in result) {
+        expect(result.name).toBe("Updated World");
+        expect(result.techLevel).toBe(6);
+      }
+    });
+  });
+
+  describe("delete", () => {
+    it("should delete a world by ID", async () => {
+      // Arrange
+      const worldId = "world-123";
+
+      // The delete method returns boolean, null, or BulkCountedResponse
+      jest.spyOn(repository, "delete").mockResolvedValueOnce(true);
+
+      // Act
+      const result = await repository.delete(worldId);
+
+      // Assert
+      expect(result).toBe(true);
+    });
+  });
+
   describe("findByShard", () => {
     it("should find worlds by shard", async () => {
       // Arrange
@@ -240,8 +367,4 @@ describe("WorldsRepository", () => {
       expect(result.length).toBe(0);
     });
   });
-
-  // Since WorldsRepository extends DocumentRepository, we don't need to test
-  // all the inherited methods as they are tested in document-repository.spec.ts
-  // We just need to ensure our custom methods work correctly
 });

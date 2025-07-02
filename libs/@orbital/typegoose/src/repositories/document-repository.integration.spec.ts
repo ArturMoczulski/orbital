@@ -871,6 +871,21 @@ describe("DocumentRepository Integration Tests", () => {
       await expect(childRepository.create(childData)).resolves.toBeDefined();
     });
 
+    it("should throw an error when required reference is missing during create", async () => {
+      // Arrange
+      // We need to use type assertion to bypass TypeScript's type checking
+      // since we're intentionally creating an invalid object to test validation
+      const childData = {
+        name: "Child with Missing Required Reference",
+        // parentId is intentionally missing to test validation
+      } as ChildEntityProps;
+
+      // Act & Assert
+      await expect(childRepository.create(childData)).rejects.toThrow(
+        'Required reference ParentEntity._id is missing for property "parentId"'
+      );
+    });
+
     it("should validate references during update operations", async () => {
       // Arrange
       // Use plain DTOs without IDs
@@ -925,6 +940,40 @@ describe("DocumentRepository Integration Tests", () => {
 
       await expect(childRepository.update(invalidUpdate)).rejects.toThrow(
         'Referenced entity not found: ParentEntity._id with value "non-existent-parent"'
+      );
+    });
+
+    it("should throw an error when required reference is missing during update", async () => {
+      // Arrange
+      // First create a valid parent entity
+      const parentData = {
+        name: "Parent for Missing Reference Test",
+      };
+
+      const createdParent = (await parentRepository.create(
+        parentData
+      )) as WithDocument<ParentEntity>;
+
+      // Create a child with a valid reference
+      const childData = {
+        name: "Child for Missing Reference Test",
+        parentId: createdParent._id,
+      };
+
+      const createdChild = (await childRepository.create(
+        childData
+      )) as WithDocument<ChildEntity>;
+
+      // Now update the child, removing the required parentId
+      const updateData = {
+        _id: createdChild._id,
+        name: "Updated Child with Missing Reference",
+        // parentId is intentionally missing to test validation
+      } as WithId<ChildEntityProps>;
+
+      // Act & Assert
+      await expect(childRepository.update(updateData)).rejects.toThrow(
+        'Required reference ParentEntity._id is missing for property "parentId"'
       );
     });
 

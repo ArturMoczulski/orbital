@@ -761,20 +761,25 @@ export class DocumentRepository<
         `[validateReferences] Validating reference: ${name}, property: ${propertyKey}, collection: ${collection}, foreignField: ${foreignField}, required: ${required}`
       );
 
-      // Skip if the field is not required and the value is null/undefined
+      // Get the reference value
       const value = entity[propertyKey];
       console.log(`[validateReferences] Reference value:`, value);
 
+      // If the reference is required but the value is null/undefined, throw an error
+      if (required && (value === null || value === undefined)) {
+        console.error(
+          `[validateReferences] ERROR: Required reference is missing`
+        );
+        throw new Error(
+          `Required reference ${collection}.${foreignField} is missing for property "${propertyKey}"`
+        );
+      }
+
+      // Skip if the field is not required and the value is null/undefined
       if (!required && (value === null || value === undefined)) {
         console.log(
           `[validateReferences] Reference is not required and value is null/undefined, skipping`
         );
-        continue;
-      }
-
-      // Skip if the value is not present in the entity
-      if (value === undefined) {
-        console.log(`[validateReferences] Value is undefined, skipping`);
         continue;
       }
 

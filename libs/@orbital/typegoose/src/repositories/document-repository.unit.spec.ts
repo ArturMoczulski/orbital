@@ -163,6 +163,73 @@ describe("DocumentRepository", () => {
       expect(DocumentHelpers.attachDocument).toHaveBeenCalled();
     });
 
+    it("should throw error when required reference ID is not provided", async () => {
+      // Create a test class with a required reference
+      class EntityWithRequiredRef extends IdentifiableObject {
+        public name: string;
+        public worldId?: string; // Required reference but not provided
+
+        constructor(data: any) {
+          super(data);
+          this.name = data.name || "";
+          this.worldId = data.worldId;
+        }
+
+        toPlainObject(): Record<string, any> {
+          return {
+            _id: this._id,
+            name: this.name,
+            worldId: this.worldId,
+          };
+        }
+
+        validateSchema(): this {
+          return this;
+        }
+
+        validate(): this {
+          return this;
+        }
+      }
+
+      // Mock worldModel
+      const worldModel = {
+        exists: jest.fn().mockResolvedValue(true),
+      };
+
+      // Mock getReferences to return reference metadata with required=true
+      jest
+        .spyOn(require("../decorators/reference.decorator"), "getReferences")
+        .mockReturnValue([
+          {
+            propertyKey: "worldId",
+            collection: "worlds",
+            required: true, // This reference is required
+            foreignField: "_id",
+            name: "world",
+          },
+        ]);
+
+      // Create repository with model references
+      const repoWithRequiredRef = new DocumentRepository<
+        EntityWithRequiredRef,
+        any
+      >(mockModel, EntityWithRequiredRef, {
+        world: worldModel,
+      });
+
+      // Arrange - Create entity without providing the required worldId
+      const dto = {
+        name: "Entity Missing Required Reference",
+        // worldId is missing
+      };
+
+      // Act & Assert - Should throw error because required reference is missing
+      await expect(repoWithRequiredRef.create(dto)).rejects.toThrow(
+        'Required reference worlds._id is missing for property "worldId"'
+      );
+    });
+
     it("should create multiple entities", async () => {
       // Arrange
       const dtos = [{ name: "Test Object 1" }, { name: "Test Object 2" }];
@@ -558,4 +625,263 @@ describe("DocumentRepository", () => {
 
   // The save method has been removed as it was redundant with the update method
   // and DocumentHelpers.save functionality
+
+  describe("validateReferences", () => {
+    // Create a test class with references
+    class TestWithReferences extends IdentifiableObject {
+      public name: string;
+      public worldId: string;
+      public parentId?: string;
+
+      constructor(data: any) {
+        super(data);
+        this.name = data.name || "";
+        this.worldId = data.worldId;
+        this.parentId = data.parentId;
+      }
+
+      toPlainObject(): Record<string, any> {
+        return {
+          _id: this._id,
+          name: this.name,
+          worldId: this.worldId,
+          parentId: this.parentId,
+        };
+      }
+
+      validateSchema(): this {
+        return this;
+      }
+
+      validate(): this {
+        return this;
+      }
+    }
+
+    // Mock models for references
+    let worldModel: any;
+    let parentModel: any;
+    let repositoryWithReferences: DocumentRepository<TestWithReferences, any>;
+
+    beforeEach(() => {
+      // Create mock models for references
+      worldModel = {
+        exists: jest.fn().mockResolvedValue(true),
+      };
+
+      parentModel = {
+        exists: jest.fn().mockResolvedValue(true),
+      };
+
+      // Mock getReferences to return reference metadata
+      jest
+        .spyOn(require("../decorators/reference.decorator"), "getReferences")
+        .mockReturnValue([
+          {
+            propertyKey: "worldId",
+            collection: "worlds",
+            required: true,
+            foreignField: "_id",
+            name: "world",
+          },
+          {
+            propertyKey: "parentId",
+            collection: "parents",
+            required: false,
+            foreignField: "_id",
+            name: "parent",
+          },
+        ]);
+
+      // Create repository with model references
+      repositoryWithReferences = new DocumentRepository<
+        TestWithReferences,
+        any
+      >(mockModel, TestWithReferences, {
+        world: worldModel,
+        parent: parentModel,
+      });
+    });
+
+    it("should validate references when creating an entity", async () => {
+      // Arrange
+      const dto = {
+        name: "Test With References",
+        worldId: "world-123",
+        parentId: "parent-456",
+      };
+
+      // Act
+      await repositoryWithReferences.create(dto);
+
+      // Assert
+      expect(worldModel.exists).toHaveBeenCalledWith({ _id: "world-123" });
+      expect(parentModel.exists).toHaveBeenCalledWith({ _id: "parent-456" });
+    });
+
+    it("should skip validation for optional references with null values", async () => {
+      // Arrange
+      const dto = {
+        name: "Test With References",
+        worldId: "world-123",
+        parentId: null, // Optional reference with null value
+      };
+
+      // Act
+      await repositoryWithReferences.create(dto);
+
+      // Assert
+      expect(worldModel.exists).toHaveBeenCalledWith({ _id: "world-123" });
+      expect(parentModel.exists).not.toHaveBeenCalled(); // Should not validate null reference
+    });
+
+    it("should throw error when referenced entity is not found", async () => {
+      // Arrange
+      const dto = {
+        name: "Test With References",
+        worldId: "nonexistent-world",
+        parentId: "parent-456",
+      };
+
+      // Mock worldModel.exists to return false (not found)
+      worldModel.exists.mockResolvedValueOnce(false);
+
+      // Act & Assert
+      await expect(repositoryWithReferences.create(dto)).rejects.toThrow(
+        'Referenced entity not found: worlds._id with value "nonexistent-world"'
+      );
+    });
+
+    it("should skip reference validation when no model references are provided", async () => {
+      // Arrange
+      const dto = {
+        name: "Test With References",
+        worldId: "world-123",
+        parentId: "parent-456",
+      };
+
+      // Create repository without model references
+      const repositoryWithoutModelRefs = new DocumentRepository<
+        TestWithReferences,
+        any
+      >(mockModel, TestWithReferences);
+
+      // Act
+      const result = await repositoryWithoutModelRefs.create(dto);
+
+      // Assert
+      expect(result).toBeDefined();
+      // Validation should be skipped, so no errors thrown
+    });
+
+    it("should throw error when specific model reference is missing", async () => {
+      // Arrange
+      const dto = {
+        name: "Test With References",
+        worldId: "world-123",
+        parentId: "parent-456",
+      };
+
+      // Create repository with incomplete model references (missing parent)
+      const repositoryWithIncompleteRefs = new DocumentRepository<
+        TestWithReferences,
+        any
+      >(mockModel, TestWithReferences, {
+        world: worldModel,
+        // parent model is missing
+      });
+
+      // Act & Assert
+      await expect(repositoryWithIncompleteRefs.create(dto)).rejects.toThrow(
+        'Cannot validate reference to parents._id with value "parent-456" because the model is not available'
+      );
+    });
+
+    it("should validate references when updating an entity", async () => {
+      // Arrange
+      const entity = new TestWithReferences({
+        _id: "test-id-123",
+        name: "Updated Test With References",
+        worldId: "world-789",
+        parentId: "parent-012",
+      });
+
+      // Act
+      await repositoryWithReferences.update(entity);
+
+      // Assert
+      expect(worldModel.exists).toHaveBeenCalledWith({ _id: "world-789" });
+      expect(parentModel.exists).toHaveBeenCalledWith({ _id: "parent-012" });
+    });
+
+    it("should throw error when required reference ID is not provided during update", async () => {
+      // Create a test class with a required reference
+      class EntityWithRequiredRef extends IdentifiableObject {
+        public _id: string;
+        public name: string;
+        public worldId?: string; // Required reference but not provided
+
+        constructor(data: any) {
+          super(data);
+          this._id = data._id || "test-id-123";
+          this.name = data.name || "";
+          this.worldId = data.worldId;
+        }
+
+        toPlainObject(): Record<string, any> {
+          return {
+            _id: this._id,
+            name: this.name,
+            worldId: this.worldId,
+          };
+        }
+
+        validateSchema(): this {
+          return this;
+        }
+
+        validate(): this {
+          return this;
+        }
+      }
+
+      // Mock worldModel
+      const worldModel = {
+        exists: jest.fn().mockResolvedValue(true),
+      };
+
+      // Mock getReferences to return reference metadata with required=true
+      jest
+        .spyOn(require("../decorators/reference.decorator"), "getReferences")
+        .mockReturnValue([
+          {
+            propertyKey: "worldId",
+            collection: "worlds",
+            required: true, // This reference is required
+            foreignField: "_id",
+            name: "world",
+          },
+        ]);
+
+      // Create repository with model references
+      const repoWithRequiredRef = new DocumentRepository<
+        EntityWithRequiredRef,
+        any
+      >(mockModel, EntityWithRequiredRef, {
+        world: worldModel,
+      });
+
+      // Arrange - Create entity without providing the required worldId
+      const entity = new EntityWithRequiredRef({
+        _id: "test-id-123",
+        name: "Entity Missing Required Reference",
+        // worldId is missing
+      });
+
+      // Act & Assert - Should throw error because required reference is missing
+      await expect(repoWithRequiredRef.update(entity)).rejects.toThrow(
+        'Required reference worlds._id is missing for property "worldId"'
+      );
+    });
+  });
 });
