@@ -81,23 +81,32 @@ describe("DocumentRepository Integration Tests", () => {
   let repositoryWithSchema: DocumentRepository<TestEntity, TestEntityProps>;
   let TestEntityModel: any; // Using any to bypass mongoose type issues
 
+  // Use a longer timeout for MongoDB setup
+  jest.setTimeout(30000);
+
   beforeAll(async () => {
-    // Create the model
-    TestEntityModel = mongoose.model("TestEntity", TestEntitySchema);
+    try {
+      // The in-memory MongoDB server is already set up in jest.setup.integration.js
+      // We just need to create the model and repositories
 
-    // Create the repository
-    repository = new DocumentRepository<TestEntity, TestEntityProps>(
-      TestEntityModel,
-      TestEntity
-    );
+      // Create the model
+      TestEntityModel = mongoose.model("TestEntity", TestEntitySchema);
 
-    // Create repository with schema
-    repositoryWithSchema = new DocumentRepository<TestEntity, TestEntityProps>(
-      TestEntityModel,
-      TestEntity,
-      undefined,
-      testZodSchema
-    );
+      // Create the repository
+      repository = new DocumentRepository<TestEntity, TestEntityProps>(
+        TestEntityModel,
+        TestEntity
+      );
+
+      // Create repository with schema
+      repositoryWithSchema = new DocumentRepository<
+        TestEntity,
+        TestEntityProps
+      >(TestEntityModel, TestEntity, undefined, testZodSchema);
+    } catch (error) {
+      console.error("Error in beforeAll:", error);
+      throw error;
+    }
   });
 
   beforeEach(async () => {
@@ -106,14 +115,19 @@ describe("DocumentRepository Integration Tests", () => {
   });
 
   afterAll(async () => {
-    // Clean up model to prevent OverwriteModelError in subsequent test runs
-    // mongoose.deleteModel doesn't exist in this version, use mongoose.connection.deleteModel instead
-    if (
-      mongoose.connection &&
-      mongoose.connection.models &&
-      mongoose.connection.models["TestEntity"]
-    ) {
-      delete mongoose.connection.models["TestEntity"];
+    try {
+      // Clean up model to prevent OverwriteModelError in subsequent test runs
+      // mongoose.deleteModel doesn't exist in this version, use mongoose.connection.deleteModel instead
+      if (
+        mongoose.connection &&
+        mongoose.connection.models &&
+        mongoose.connection.models["TestEntity"]
+      ) {
+        delete mongoose.connection.models["TestEntity"];
+      }
+    } catch (error) {
+      console.error("Error in afterAll:", error);
+      throw error;
     }
   });
 
@@ -743,20 +757,25 @@ describe("DocumentRepository Integration Tests", () => {
     let parentRepository: DocumentRepository<ParentEntity, ParentEntityProps>;
 
     beforeAll(async () => {
-      // Create the models
-      ParentEntityModel = mongoose.model("ParentEntity", ParentEntitySchema);
-      ChildEntityModel = mongoose.model("ChildEntity", ChildEntitySchema);
+      try {
+        // Create the models
+        ParentEntityModel = mongoose.model("ParentEntity", ParentEntitySchema);
+        ChildEntityModel = mongoose.model("ChildEntity", ChildEntitySchema);
 
-      // Create the repositories
-      childRepository = new DocumentRepository<ChildEntity, ChildEntityProps>(
-        ChildEntityModel,
-        ChildEntity,
-        { parentEntity: ParentEntityModel, nonExistentEntity: undefined }
-      );
-      parentRepository = new DocumentRepository<
-        ParentEntity,
-        ParentEntityProps
-      >(ParentEntityModel, ParentEntity);
+        // Create the repositories
+        childRepository = new DocumentRepository<ChildEntity, ChildEntityProps>(
+          ChildEntityModel,
+          ChildEntity,
+          { parentEntity: ParentEntityModel, nonExistentEntity: undefined }
+        );
+        parentRepository = new DocumentRepository<
+          ParentEntity,
+          ParentEntityProps
+        >(ParentEntityModel, ParentEntity);
+      } catch (error) {
+        console.error("Error in validateReferences beforeAll:", error);
+        throw error;
+      }
     });
 
     beforeEach(async () => {
@@ -766,20 +785,25 @@ describe("DocumentRepository Integration Tests", () => {
     });
 
     afterAll(async () => {
-      // Clean up models to prevent OverwriteModelError in subsequent test runs
-      if (
-        mongoose.connection &&
-        mongoose.connection.models &&
-        mongoose.connection.models["ParentEntity"]
-      ) {
-        delete mongoose.connection.models["ParentEntity"];
-      }
-      if (
-        mongoose.connection &&
-        mongoose.connection.models &&
-        mongoose.connection.models["ChildEntity"]
-      ) {
-        delete mongoose.connection.models["ChildEntity"];
+      try {
+        // Clean up models to prevent OverwriteModelError in subsequent test runs
+        if (
+          mongoose.connection &&
+          mongoose.connection.models &&
+          mongoose.connection.models["ParentEntity"]
+        ) {
+          delete mongoose.connection.models["ParentEntity"];
+        }
+        if (
+          mongoose.connection &&
+          mongoose.connection.models &&
+          mongoose.connection.models["ChildEntity"]
+        ) {
+          delete mongoose.connection.models["ChildEntity"];
+        }
+      } catch (error) {
+        console.error("Error in validateReferences afterAll:", error);
+        throw error;
       }
     });
 
