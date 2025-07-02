@@ -41,19 +41,16 @@ describe("Areas API (e2e)", () => {
   // Create a test world before running area tests
   beforeAll(async () => {
     try {
-      console.log("Creating test world for area tests");
       const response = await request(BASE_URL)
         .post("/worlds")
         .send(testWorld)
         .expect(201);
 
       createdWorldId = response.body._id;
-      console.log(`Created test world with ID: ${createdWorldId}`);
 
       // Set the worldId in the test area
       testArea.worldId = createdWorldId;
     } catch (error) {
-      console.error("Error creating test world:", error);
       throw error;
     }
   });
@@ -62,10 +59,9 @@ describe("Areas API (e2e)", () => {
   afterAll(async () => {
     if (createdWorldId) {
       try {
-        console.log(`Cleaning up test world with ID: ${createdWorldId}`);
         await request(BASE_URL).delete(`/worlds/${createdWorldId}`).expect(200);
       } catch (error) {
-        console.error("Error deleting test world:", error);
+        // Silently continue if cleanup fails
       }
     }
   });
@@ -73,16 +69,9 @@ describe("Areas API (e2e)", () => {
   describe("GET /areas", () => {
     it("should return an array of areas", async () => {
       try {
-        console.log("Sending GET request to /areas");
         const response = await request(BASE_URL).get("/areas").expect(200);
-
-        console.log(
-          "Response from GET /areas:",
-          JSON.stringify(response.body, null, 2)
-        );
         expect(Array.isArray(response.body)).toBe(true);
       } catch (error) {
-        console.error("Error in GET /areas test:", error);
         throw error;
       }
     });
@@ -91,19 +80,10 @@ describe("Areas API (e2e)", () => {
   describe("POST /areas", () => {
     it("should create a new area", async () => {
       try {
-        console.log(
-          "Sending POST request to create area with data:",
-          JSON.stringify(testArea, null, 2)
-        );
         const response = await request(BASE_URL)
           .post("/areas")
           .send(testArea)
           .expect(201);
-
-        console.log(
-          "Response from POST /areas:",
-          JSON.stringify(response.body, null, 2)
-        );
         expect(response.body).toHaveProperty("_id");
         expect(response.body.name).toBe(testArea.name);
         expect(response.body.description).toBe(testArea.description);
@@ -111,7 +91,6 @@ describe("Areas API (e2e)", () => {
         // Save the created area ID for later tests
         createdAreaId = response.body._id;
       } catch (error) {
-        console.error("Error in POST /areas test:", error);
         throw error;
       }
     });
@@ -121,9 +100,6 @@ describe("Areas API (e2e)", () => {
     it("should return a single area by id", async () => {
       // Skip if we don't have a created area ID
       if (!createdAreaId) {
-        console.warn(
-          "Skipping GET /areas/:id test because no area was created"
-        );
         return;
       }
 
@@ -140,9 +116,6 @@ describe("Areas API (e2e)", () => {
     it("should return a map for the area", async () => {
       // Skip if we don't have a created area ID
       if (!createdAreaId) {
-        console.warn(
-          "Skipping GET /areas/:id/map test because no area was created"
-        );
         return;
       }
 
@@ -161,9 +134,6 @@ describe("Areas API (e2e)", () => {
     it("should update an existing area", async () => {
       // Skip if we don't have a created area ID
       if (!createdAreaId) {
-        console.warn(
-          "Skipping PUT /areas/:id test because no area was created"
-        );
         return;
       }
 
@@ -173,20 +143,10 @@ describe("Areas API (e2e)", () => {
         worldId: createdWorldId,
       };
 
-      console.log(
-        "Sending PUT request to update area with data:",
-        JSON.stringify(updateDataWithWorldId, null, 2)
-      );
-
       const response = await request(BASE_URL)
         .put(`/areas/${createdAreaId}`)
         .send(updateDataWithWorldId)
         .expect(200);
-
-      console.log(
-        "Response from PUT /areas/:id:",
-        JSON.stringify(response.body, null, 2)
-      );
 
       expect(response.body).toHaveProperty("_id", createdAreaId);
       expect(response.body).toHaveProperty("name", updateData.name);
@@ -201,9 +161,6 @@ describe("Areas API (e2e)", () => {
     it("should delete an area", async () => {
       // Skip if we don't have a created area ID
       if (!createdAreaId) {
-        console.warn(
-          "Skipping DELETE /areas/:id test because no area was created"
-        );
         return;
       }
 
@@ -227,19 +184,10 @@ describe("Areas API (e2e)", () => {
           position: { x: 0, y: 0, z: 0 },
         };
 
-        console.log(
-          "Sending POST request with minimal data:",
-          JSON.stringify(minimalArea, null, 2)
-        );
         const response = await request(BASE_URL)
           .post("/areas")
           .send(minimalArea)
           .expect(201);
-
-        console.log(
-          "Response from POST /areas with minimal data:",
-          JSON.stringify(response.body, null, 2)
-        );
         expect(response.body).toHaveProperty("_id");
         expect(response.body.name).toBe(minimalArea.name);
         expect(response.body).toHaveProperty("worldId");
@@ -255,7 +203,6 @@ describe("Areas API (e2e)", () => {
             .expect(200);
         }
       } catch (error) {
-        console.error("Error in POST /areas with minimal data test:", error);
         throw error;
       }
     });
@@ -286,24 +233,13 @@ describe("Areas API (e2e)", () => {
         position: { x: 0, y: 0, z: 0 },
       };
 
-      console.log(
-        "Sending POST request with invalid data:",
-        JSON.stringify(invalidArea, null, 2)
-      );
-
       const response = await request(BASE_URL)
         .post("/areas")
         .send(invalidArea)
         .expect(400); // Validation happens in the admin-gateway service
 
-      console.log(
-        "Response from POST /areas with invalid data:",
-        JSON.stringify(response.body, null, 2)
-      );
-
       expect(response.body).toHaveProperty("statusCode", 400);
       expect(response.body).toHaveProperty("message");
-      console.log("Validation error message:", response.body.message);
     });
   });
 
@@ -353,11 +289,6 @@ describe("Areas API (e2e)", () => {
         .get(`/areas?worldId=${worldId1}`)
         .expect(200);
 
-      console.log(
-        `Response from GET /areas?worldId=${worldId1}:`,
-        JSON.stringify(filteredResponse1.body, null, 2)
-      );
-
       expect(Array.isArray(filteredResponse1.body)).toBe(true);
       expect(filteredResponse1.body.length).toBeGreaterThanOrEqual(1);
       expect(
@@ -371,11 +302,6 @@ describe("Areas API (e2e)", () => {
       const filteredResponse2 = await request(BASE_URL)
         .get(`/areas?worldId=${worldId2}`)
         .expect(200);
-
-      console.log(
-        `Response from GET /areas?worldId=${worldId2}:`,
-        JSON.stringify(filteredResponse2.body, null, 2)
-      );
 
       expect(Array.isArray(filteredResponse2.body)).toBe(true);
       expect(filteredResponse2.body.length).toBeGreaterThanOrEqual(1);

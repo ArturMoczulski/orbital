@@ -1,8 +1,4 @@
-import {
-  DocumentRepository,
-  WithDocument,
-  WorldModel,
-} from "@orbital/typegoose";
+import { DocumentRepository, WorldModel } from "@orbital/typegoose";
 import type { ReturnModelType } from "@typegoose/typegoose";
 import { Document } from "mongoose";
 import { WorldsRepository } from "./worlds.repository";
@@ -84,7 +80,7 @@ describe("WorldsRepository", () => {
 
       // Mock the create method to return the created world
       const createdWorld = { ...worldData, _id: "world-123" };
-      const mockCreateResult = createdWorld as WithDocument<WorldModel>;
+      const mockCreateResult = createdWorld as WorldModel;
       jest.spyOn(repository, "create").mockResolvedValueOnce(mockCreateResult);
 
       // Act
@@ -110,7 +106,7 @@ describe("WorldsRepository", () => {
 
       jest
         .spyOn(repository, "find")
-        .mockResolvedValueOnce(mockWorlds as WithDocument<WorldModel>[]);
+        .mockResolvedValueOnce(mockWorlds as WorldModel[]);
 
       // Act
       const result = await repository.find(filter);
@@ -128,7 +124,7 @@ describe("WorldsRepository", () => {
 
       jest
         .spyOn(repository, "findOne")
-        .mockResolvedValueOnce(mockWorld as WithDocument<WorldModel>);
+        .mockResolvedValueOnce(mockWorld as WorldModel);
 
       // Act
       const result = await repository.findOne(filter);
@@ -147,7 +143,7 @@ describe("WorldsRepository", () => {
 
       jest
         .spyOn(repository, "findById")
-        .mockResolvedValueOnce(mockWorldWithId as WithDocument<WorldModel>);
+        .mockResolvedValueOnce(mockWorldWithId as WorldModel);
 
       // Act
       const result = await repository.findById(worldId);
@@ -168,7 +164,7 @@ describe("WorldsRepository", () => {
         techLevel: 6,
       };
 
-      const mockUpdateResult = worldToUpdate as WithDocument<WorldModel>;
+      const mockUpdateResult = worldToUpdate as WorldModel;
       jest.spyOn(repository, "update").mockResolvedValueOnce(mockUpdateResult);
 
       // Act
@@ -226,7 +222,7 @@ describe("WorldsRepository", () => {
       // Mock the find method to return our mock worlds
       jest
         .spyOn(repository, "find")
-        .mockResolvedValue(mockWorlds as WithDocument<WorldModel>[]);
+        .mockResolvedValue(mockWorlds as WorldModel[]);
 
       // Act
       const result = await repository.findByShard(shard);
@@ -310,7 +306,7 @@ describe("WorldsRepository", () => {
       // Mock the find method to return our mock worlds
       jest
         .spyOn(repository, "find")
-        .mockResolvedValue(mockWorlds as WithDocument<WorldModel>[]);
+        .mockResolvedValue(mockWorlds as WorldModel[]);
 
       // Act
       const result = await repository.findByTechLevel(techLevel);

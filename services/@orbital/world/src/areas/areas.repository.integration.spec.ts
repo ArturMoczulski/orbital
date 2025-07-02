@@ -40,7 +40,6 @@ describe("AreasRepository Integration", () => {
         getModelToken(WorldModel.name)
       );
     } catch (error) {
-      console.error("Error in beforeAll:", error);
       throw error;
     }
   });
@@ -62,7 +61,6 @@ describe("AreasRepository Integration", () => {
         await mongod.stop();
       }
     } catch (error) {
-      console.error("Error in afterAll:", error);
       throw error;
     }
   });

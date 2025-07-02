@@ -46,7 +46,6 @@ describe("AreaService Integration", () => {
         getModelToken(WorldModel.name)
       );
     } catch (error) {
-      console.error("Error in beforeAll:", error);
       throw error;
     }
   });
@@ -68,7 +67,6 @@ describe("AreaService Integration", () => {
         await mongod.stop();
       }
     } catch (error) {
-      console.error("Error in afterAll:", error);
       throw error;
     }
   });

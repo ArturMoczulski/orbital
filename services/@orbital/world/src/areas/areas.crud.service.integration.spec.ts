@@ -1,5 +1,5 @@
 import { Test, TestingModule } from "@nestjs/testing";
-import { AreaModel, WithDocument, WorldModel } from "@orbital/typegoose";
+import { AreaModel, WorldModel } from "@orbital/typegoose";
 import { MongoMemoryServer } from "mongodb-memory-server";
 import mongoose, { Model } from "mongoose";
 import { getModelToken, TypegooseModule } from "nestjs-typegoose";
@@ -43,7 +43,6 @@ describe("AreasCRUDService Integration", () => {
         getModelToken(WorldModel.name)
       );
     } catch (error) {
-      console.error("Error in beforeAll:", error);
       throw error;
     }
   });
@@ -65,7 +64,6 @@ describe("AreasCRUDService Integration", () => {
         await mongod.stop();
       }
     } catch (error) {
-      console.error("Error in afterAll:", error);
       throw error;
     }
   });
@@ -364,8 +362,8 @@ describe("AreasCRUDService Integration", () => {
 
       // Assert
       expect(result).toBeDefined();
-      // Type assertion to handle the union type
-      const createdArea = result as WithDocument<AreaModel>;
+      // Type assertion to handle the return type
+      const createdArea = result as AreaModel;
       expect(createdArea._id).toBeDefined();
       expect(createdArea.name).toBe("New Area");
       expect(createdArea.description).toBe("A new test area");
@@ -444,8 +442,8 @@ describe("AreasCRUDService Integration", () => {
 
       // Assert
       expect(result).toBeDefined();
-      // Type assertion to handle the union type
-      const createdArea = result as WithDocument<AreaModel>;
+      // Type assertion to handle the return type
+      const createdArea = result as AreaModel;
       expect(createdArea._id).toBeDefined();
       expect(createdArea.worldId).toBe(worldId);
 
@@ -524,8 +522,8 @@ describe("AreasCRUDService Integration", () => {
 
       // Assert
       expect(updateResult).toBeDefined();
-      // Type assertion to handle the union type
-      const updatedResult = updateResult as WithDocument<AreaModel>;
+      // Type assertion to handle the return type
+      const updatedResult = updateResult as AreaModel;
       expect(updatedResult.worldId).toBe(newWorldId);
 
       // Verify the area was updated in the database
@@ -613,8 +611,8 @@ describe("AreasCRUDService Integration", () => {
 
       // Assert
       expect(updateResult).toBeDefined();
-      // Type assertion to handle the union type
-      const updatedResult = updateResult as WithDocument<AreaModel>;
+      // Type assertion to handle the return type
+      const updatedResult = updateResult as AreaModel;
       expect(updatedResult.name).toBe("Updated Name");
       expect(updatedResult.description).toBe("Updated description");
       expect(updatedResult.worldId).toBe(worldId);

@@ -1,5 +1,5 @@
 import { Test, TestingModule } from "@nestjs/testing";
-import { WithDocument, WorldModel } from "@orbital/typegoose";
+import { WorldModel } from "@orbital/typegoose";
 import { ReturnModelType } from "@typegoose/typegoose";
 import { MongoMemoryServer } from "mongodb-memory-server";
 import mongoose from "mongoose";
@@ -39,9 +39,7 @@ describe("WorldsRepository Integration", () => {
       // Get the repository and model
       repository = module.get<WorldsRepository>(WorldsRepository);
       worldModel = module.get<WorldModelType>(getModelToken(WorldModel.name));
-      console.log(worldModel);
     } catch (error) {
-      console.error("Error in beforeAll:", error);
       throw error;
     }
   });
@@ -63,7 +61,6 @@ describe("WorldsRepository Integration", () => {
         await mongod.stop();
       }
     } catch (error) {
-      console.error("Error in afterAll:", error);
       throw error;
     }
   });
@@ -87,9 +84,7 @@ describe("WorldsRepository Integration", () => {
       };
 
       // Act
-      const result = (await repository.create(
-        newWorld
-      )) as WithDocument<WorldModel>;
+      const result = (await repository.create(newWorld)) as WorldModel;
 
       // Assert
       expect(result).toBeDefined();
@@ -227,9 +222,7 @@ describe("WorldsRepository Integration", () => {
       };
 
       // Act
-      const result = (await repository.update(
-        updatedData
-      )) as WithDocument<WorldModel>;
+      const result = (await repository.update(updatedData)) as WorldModel;
 
       // Assert
       expect(result).toBeDefined();

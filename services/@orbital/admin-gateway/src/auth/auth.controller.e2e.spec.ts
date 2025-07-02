@@ -44,11 +44,9 @@ describe("Auth E2E", () => {
 
     // Use authService.signup instead of usersService.create to ensure password is hashed
     const signupResult = await authService.signup("testuser", "testpassword");
-    console.log("User signup result:", JSON.stringify(signupResult, null, 2));
 
     // Verify the user was created correctly
     const findResult = await usersService.findByUsername(["testuser"]);
-    console.log("User find result:", JSON.stringify(findResult, null, 2));
   });
 
   it("/api/auth/signup (POST)", async () => {
@@ -61,14 +59,10 @@ describe("Auth E2E", () => {
 
   it("/api/auth/login (POST)", async () => {
     // User is already created in beforeEach
-    console.log("Attempting to login with testuser/testpassword");
-
     const response = await request(app.getHttpServer())
       .post("/api/auth/login")
       .send({ username: "testuser", password: "testpassword" })
       .expect(200); // Assuming 200 OK for successful login
-
-    console.log("Login response:", response.body);
   });
 
   afterEach(async () => {

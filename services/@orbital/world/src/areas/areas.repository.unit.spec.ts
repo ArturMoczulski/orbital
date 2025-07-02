@@ -2,12 +2,7 @@ import {
   BulkCountedResponse,
   BulkItemizedResponse,
 } from "@orbital/bulk-operations";
-import {
-  AreaModel,
-  DocumentRepository,
-  WithDocument,
-  WorldModel,
-} from "@orbital/typegoose";
+import { AreaModel, DocumentRepository, WorldModel } from "@orbital/typegoose";
 import type { ReturnModelType } from "@typegoose/typegoose";
 import { Document } from "mongoose";
 import { AreasRepository } from "./areas.repository";
@@ -142,7 +137,7 @@ describe("AreasRepository", () => {
       // Mock the find method to return our mock areas
       jest
         .spyOn(repository, "find")
-        .mockResolvedValue(mockAreas as WithDocument<AreaModel>[]);
+        .mockResolvedValue(mockAreas as AreaModel[]);
 
       // Act
       const result = await repository.findByWorldId(worldId);
@@ -233,7 +228,7 @@ describe("AreasRepository", () => {
       expect(mockInsertMany).toHaveBeenCalled();
       expect(result).toBeDefined();
       // Type assertion since we know it's a single entity result
-      const areaResult = result as WithDocument<AreaModel>;
+      const areaResult = result as AreaModel;
       expect(areaResult._id).toBeDefined();
       expect(areaResult.worldId).toBe(newAreaData.worldId);
       expect(areaResult.name).toBe(newAreaData.name);
@@ -298,7 +293,6 @@ describe("AreasRepository", () => {
       try {
         result = await repository.create(newAreasData);
       } catch (error) {
-        console.error("Error in create multiple areas test:", error);
         throw error; // Re-throw to fail the test with the original error
       }
 
@@ -555,7 +549,7 @@ describe("AreasRepository", () => {
       expect(mockBulkWrite).toHaveBeenCalled();
       expect(result).toBeDefined();
       // Type assertion since we know it's a single entity result
-      const areaResult = result as WithDocument<AreaModel>;
+      const areaResult = result as AreaModel;
       expect(areaResult._id).toBe(areaToUpdate._id);
       expect(areaResult.name).toBe(areaToUpdate.name);
     });

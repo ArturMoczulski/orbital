@@ -20,16 +20,9 @@ describe("Worlds API (e2e)", () => {
   describe("GET /worlds", () => {
     it("should return an array of worlds", async () => {
       try {
-        console.log("Sending GET request to /worlds");
         const response = await request(BASE_URL).get("/worlds").expect(200);
-
-        console.log(
-          "Response from GET /worlds:",
-          JSON.stringify(response.body, null, 2)
-        );
         expect(Array.isArray(response.body)).toBe(true);
       } catch (error) {
-        console.error("Error in GET /worlds test:", error);
         throw error;
       }
     });
@@ -38,19 +31,10 @@ describe("Worlds API (e2e)", () => {
   describe("POST /worlds", () => {
     it("should create a new world", async () => {
       try {
-        console.log(
-          "Sending POST request to create world with data:",
-          JSON.stringify(testWorld, null, 2)
-        );
         const response = await request(BASE_URL)
           .post("/worlds")
           .send(testWorld)
           .expect(201);
-
-        console.log(
-          "Response from POST /worlds:",
-          JSON.stringify(response.body, null, 2)
-        );
         expect(response.body).toHaveProperty("_id");
         expect(response.body.name).toBe(testWorld.name);
         expect(response.body.shard).toBe(testWorld.shard);
@@ -59,7 +43,6 @@ describe("Worlds API (e2e)", () => {
         // Save the created world ID for later tests
         createdWorldId = response.body._id;
       } catch (error) {
-        console.error("Error in POST /worlds test:", error);
         throw error;
       }
     });
@@ -69,9 +52,6 @@ describe("Worlds API (e2e)", () => {
     it("should return a single world by id", async () => {
       // Skip if we don't have a created world ID
       if (!createdWorldId) {
-        console.warn(
-          "Skipping GET /worlds/:id test because no world was created"
-        );
         return;
       }
 
@@ -90,9 +70,6 @@ describe("Worlds API (e2e)", () => {
     it("should update an existing world", async () => {
       // Skip if we don't have a created world ID
       if (!createdWorldId) {
-        console.warn(
-          "Skipping PUT /worlds/:id test because no world was created"
-        );
         return;
       }
 
@@ -104,8 +81,8 @@ describe("Worlds API (e2e)", () => {
       expect(response.body).toHaveProperty("_id", createdWorldId);
       expect(response.body).toHaveProperty("name", updateData.name);
       expect(response.body).toHaveProperty("techLevel", updateData.techLevel);
-      // Shard should remain unchanged (it's in the document property)
-      expect(response.body.document).toHaveProperty("shard", testWorld.shard);
+      // Shard should remain unchanged
+      expect(response.body).toHaveProperty("shard", testWorld.shard);
     });
   });
 
@@ -113,9 +90,6 @@ describe("Worlds API (e2e)", () => {
     it("should delete a world", async () => {
       // Skip if we don't have a created world ID
       if (!createdWorldId) {
-        console.warn(
-          "Skipping DELETE /worlds/:id test because no world was created"
-        );
         return;
       }
 
@@ -138,19 +112,10 @@ describe("Worlds API (e2e)", () => {
           techLevel: 1,
         };
 
-        console.log(
-          "Sending POST request with minimal data:",
-          JSON.stringify(minimalWorld, null, 2)
-        );
         const response = await request(BASE_URL)
           .post("/worlds")
           .send(minimalWorld)
           .expect(201);
-
-        console.log(
-          "Response from POST /worlds with minimal data:",
-          JSON.stringify(response.body, null, 2)
-        );
         expect(response.body).toHaveProperty("_id");
         expect(response.body.name).toBe(minimalWorld.name);
         expect(response.body.shard).toBe(minimalWorld.shard);
@@ -163,7 +128,6 @@ describe("Worlds API (e2e)", () => {
             .expect(200);
         }
       } catch (error) {
-        console.error("Error in POST /worlds with minimal data test:", error);
         throw error;
       }
     });
@@ -191,24 +155,13 @@ describe("Worlds API (e2e)", () => {
       // Missing name, shard, and techLevel
       const invalidWorld = {};
 
-      console.log(
-        "Sending POST request with invalid data:",
-        JSON.stringify(invalidWorld, null, 2)
-      );
-
       const response = await request(BASE_URL)
         .post("/worlds")
         .send(invalidWorld)
         .expect(400); // Validation happens in the admin-gateway service
 
-      console.log(
-        "Response from POST /worlds with invalid data:",
-        JSON.stringify(response.body, null, 2)
-      );
-
       expect(response.body).toHaveProperty("statusCode", 400);
       expect(response.body).toHaveProperty("message");
-      console.log("Validation error message:", response.body.message);
     });
   });
 
@@ -257,11 +210,6 @@ describe("Worlds API (e2e)", () => {
         .get(`/worlds?shard=${shard1}`)
         .expect(200);
 
-      console.log(
-        `Response from GET /worlds?shard=${shard1}:`,
-        JSON.stringify(filteredResponse1.body, null, 2)
-      );
-
       expect(Array.isArray(filteredResponse1.body)).toBe(true);
       expect(filteredResponse1.body.length).toBeGreaterThanOrEqual(1);
       expect(
@@ -275,11 +223,6 @@ describe("Worlds API (e2e)", () => {
       const filteredResponse2 = await request(BASE_URL)
         .get(`/worlds?shard=${shard2}`)
         .expect(200);
-
-      console.log(
-        `Response from GET /worlds?shard=${shard2}:`,
-        JSON.stringify(filteredResponse2.body, null, 2)
-      );
 
       expect(Array.isArray(filteredResponse2.body)).toBe(true);
       expect(filteredResponse2.body.length).toBeGreaterThanOrEqual(1);
@@ -339,11 +282,6 @@ describe("Worlds API (e2e)", () => {
         .get(`/worlds?techLevel=${techLevel1}`)
         .expect(200);
 
-      console.log(
-        `Response from GET /worlds?techLevel=${techLevel1}:`,
-        JSON.stringify(filteredResponse1.body, null, 2)
-      );
-
       expect(Array.isArray(filteredResponse1.body)).toBe(true);
       expect(filteredResponse1.body.length).toBeGreaterThanOrEqual(1);
       expect(
@@ -359,11 +297,6 @@ describe("Worlds API (e2e)", () => {
       const filteredResponse2 = await request(BASE_URL)
         .get(`/worlds?techLevel=${techLevel2}`)
         .expect(200);
-
-      console.log(
-        `Response from GET /worlds?techLevel=${techLevel2}:`,
-        JSON.stringify(filteredResponse2.body, null, 2)
-      );
 
       expect(Array.isArray(filteredResponse2.body)).toBe(true);
       expect(filteredResponse2.body.length).toBeGreaterThanOrEqual(1);

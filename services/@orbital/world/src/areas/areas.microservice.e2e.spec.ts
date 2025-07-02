@@ -43,7 +43,6 @@ describe("AreasMicroserviceController (e2e)", () => {
 
       // worldId is now available for tests
     } catch (error) {
-      console.error("Error setting up database for tests:", error);
       throw error;
     }
   });
