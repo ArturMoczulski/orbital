@@ -158,5 +158,24 @@ module.exports = {
         ],
       },
     },
+    {
+      displayName: "admin-gateway",
+      testMatch: ["<rootDir>/services/@orbital/admin-gateway/**/*.spec.ts"],
+      rootDir: __dirname,
+      transform: {
+        "^.+\\.(ts|tsx)$": [
+          path.resolve(__dirname, "node_modules/ts-jest"),
+          {
+            tsconfig: path.join(
+              __dirname,
+              "services/@orbital/admin-gateway/tsconfig.json"
+            ),
+            isolatedModules: true,
+            experimentalDecorators: true,
+            emitDecoratorMetadata: true,
+          },
+        ],
+      },
+    },
   ],
 };

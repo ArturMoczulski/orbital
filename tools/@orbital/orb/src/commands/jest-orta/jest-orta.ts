@@ -85,6 +85,7 @@ const jestOrta = new Command("jest-orta")
               "nest",
               "world",
               "player",
+              "admin-gateway",
             ]) {
               for (const dir of [
                 "src",
@@ -199,6 +200,9 @@ const jestOrta = new Command("jest-orta")
       } else if (testFile.includes("player")) {
         pkgType = "services";
         pkgName = "player";
+      } else if (testFile.includes("admin-gateway")) {
+        pkgType = "services";
+        pkgName = "admin-gateway";
       } else {
         // If we still can't determine the package, use typegoose as a fallback
         console.log("Using typegoose as fallback package");
