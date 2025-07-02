@@ -1,7 +1,7 @@
 import { Test, TestingModule } from "@nestjs/testing";
-import { WithoutId } from "@orbital/core";
+import { WithId, WithoutId } from "@orbital/core";
 import { CRUDController } from "@orbital/nest";
-import { WithId, WorldModel } from "@orbital/typegoose";
+import { WorldModel } from "@orbital/typegoose";
 import { WorldsCRUDService } from "./worlds.crud.service";
 import { WorldsMicroserviceController } from "./worlds.microservice.controller";
 

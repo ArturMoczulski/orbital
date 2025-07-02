@@ -212,16 +212,7 @@ export class BulkItemizedResponse<
   }
 
   asSingle() {
-    console.log(
-      `[BulkItemizedResponse.asSingle] Called with status: ${this.status}`
-    );
-    console.log(
-      `[BulkItemizedResponse.asSingle] Success items: ${this.items.success.length}, Fail items: ${this.items.fail.length}`
-    );
-
     if (this.status != BulkOperationResponseStatus.SUCCESS) {
-      console.log(`[BulkItemizedResponse.asSingle] Status is not SUCCESS`);
-
       if (
         this.items.fail &&
         this.items.fail.length > 0 &&

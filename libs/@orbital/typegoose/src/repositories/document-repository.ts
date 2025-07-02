@@ -69,49 +69,24 @@ export class DocumentRepository<
         WithDocument<TDomainEntity>
       >
   > {
-    console.log(`[DocumentRepository.create] Starting create operation`);
-    console.log(
-      `[DocumentRepository.create] Input:`,
-      JSON.stringify(dto, null, 2)
-    );
-
     const isSingular = !Array.isArray(dto);
-    console.log(`[DocumentRepository.create] isSingular: ${isSingular}`);
-
     const items = isSingular ? [dto] : dto;
-    console.log(
-      `[DocumentRepository.create] Number of items to create: ${items.length}`
-    );
 
     // Use BulkOperation.itemized for bulk creation
-    console.log(`[DocumentRepository.create] Starting BulkOperation.itemized`);
     const response = await BulkOperation.itemized<
       WithoutId<TDomainEntityProps>,
       WithDocument<TDomainEntity>
     >(items, async (dtos, success, fail) => {
-      console.log(
-        `[DocumentRepository.create] Inside bulk operation callback with ${dtos.length} items`
-      );
-
       // Prepare items for bulk insertion
       const validItems: any[] = [];
       const domainObjects: TDomainEntity[] = [];
 
-      console.log(
-        `[DocumentRepository.create] Starting validation and preparation of items`
-      );
       // First validate and prepare all items
       for (let i = 0; i < dtos.length; i++) {
-        console.log(
-          `[DocumentRepository.create] Processing item ${i + 1}/${dtos.length}`
-        );
         const item = dtos[i];
         try {
           // Validate with Zod schema if provided
           if (this.schema) {
-            console.log(
-              `[DocumentRepository.create] Schema validation for item ${i + 1}`
-            );
             try {
               // Skip _id validation since it's not required for creation
               const plainObject =
@@ -122,25 +97,12 @@ export class DocumentRepository<
                   ? item.toPlainObject()
                   : { ...item }; // Ensure we have a plain object copy
 
-              console.log(
-                `[DocumentRepository.create] Item ${i + 1} converted to plain object`
-              );
               const { _id, ...rest } = plainObject;
 
               // Clone the schema and make _id optional for creation
               const createSchema = this.schema.omit({ _id: true });
-              console.log(
-                `[DocumentRepository.create] Parsing item ${i + 1} with schema`
-              );
               createSchema.parse(rest);
-              console.log(
-                `[DocumentRepository.create] Item ${i + 1} passed schema validation`
-              );
             } catch (validationError: any) {
-              console.error(
-                `[DocumentRepository.create] Schema validation error for item ${i + 1}:`,
-                validationError
-              );
               // Use ZodErrorWithStack to preserve validation details with stack trace
               throw ZodErrorWithStack.fromError(
                 validationError,
@@ -151,20 +113,11 @@ export class DocumentRepository<
 
           // Validate references if any are defined and modelReferences is provided
           if (this.modelReferences) {
-            console.log(
-              `[DocumentRepository.create] Starting reference validation for item ${i + 1}`
-            );
             await this.validateReferences(item);
-            console.log(
-              `[DocumentRepository.create] Reference validation passed for item ${i + 1}`
-            );
           }
 
           // If no _id is provided, we need to create a domain object without an ID
           // First, ensure we have a plain object copy without _id
-          console.log(
-            `[DocumentRepository.create] Preparing plain item for domain object creation`
-          );
           const plainItem =
             item &&
             typeof item === "object" &&
@@ -175,134 +128,64 @@ export class DocumentRepository<
 
           // Create a domain object without specifying an ID
           // Let MongoDB generate the ID
-          console.log(
-            `[DocumentRepository.create] Creating domain object for item ${i + 1}`
-          );
           const domainObject = new this.DomainClass({
             ...plainItem,
             // Don't set _id here, let MongoDB generate it
           });
-          console.log(
-            `[DocumentRepository.create] Domain object created for item ${i + 1}:`,
-            JSON.stringify(
-              domainObject,
-              (key, value) => (key === "_document" ? undefined : value),
-              2
-            )
-          );
 
           // Create persistence data
-          console.log(
-            `[DocumentRepository.create] Converting domain object to persistence data for item ${i + 1}`
-          );
           const data = PersistenceMapper.toPersistence(domainObject);
-          console.log(
-            `[DocumentRepository.create] Persistence data created for item ${i + 1}:`,
-            JSON.stringify(data, null, 2)
-          );
 
           // Store for bulk insertion
           validItems.push(data);
           domainObjects.push(domainObject);
-          console.log(
-            `[DocumentRepository.create] Item ${i + 1} is valid and ready for insertion`
-          );
         } catch (error: any) {
-          console.error(
-            `[DocumentRepository.create] Error processing item ${i + 1}:`,
-            error
-          );
           // Ensure we have a proper error message, even for ZodErrorWithStack
           const errorMessage =
             error instanceof ZodErrorWithStack
               ? `${error.message}\n${error.formatIssues()}`
               : error.message;
 
-          console.log(
-            `[DocumentRepository.create] Marking item ${i + 1} as failed: ${errorMessage}`
-          );
           fail(item, { message: errorMessage });
         }
       }
 
-      console.log(
-        `[DocumentRepository.create] Validation complete. Valid items: ${validItems.length}, Invalid items: ${dtos.length - validItems.length}`
-      );
-
       // If we have valid items, perform bulk insertion
       if (validItems.length > 0) {
-        console.log(
-          `[DocumentRepository.create] Starting bulk insertion of ${validItems.length} items`
-        );
         try {
           // Use insertMany for bulk insertion
-          console.log(
-            `[DocumentRepository.create] Calling model.insertMany with ${validItems.length} items`
-          );
           const createdDocs = await this.model.insertMany(validItems);
-          console.log(
-            `[DocumentRepository.create] Bulk insertion successful. Created ${createdDocs.length} documents`
-          );
 
           // Process created documents
           // In MongoDB, insertMany preserves the order of documents
           // So we can match them directly with the domainObjects array
-          console.log(
-            `[DocumentRepository.create] Processing created documents`
-          );
           for (let i = 0; i < createdDocs.length; i++) {
             const doc = createdDocs[i];
             const domainObject = domainObjects[i];
             const originalItem = dtos[i];
 
-            console.log(
-              `[DocumentRepository.create] Processing created document ${i + 1}/${createdDocs.length}`
-            );
-            console.log(`[DocumentRepository.create] Document _id: ${doc._id}`);
-
             if (domainObject && doc) {
               // Update the domain object with the generated _id if it doesn't have one
               if (!domainObject._id && doc._id) {
-                console.log(
-                  `[DocumentRepository.create] Updating domain object with generated _id: ${doc._id}`
-                );
                 domainObject._id = doc._id;
               }
 
               // Attach document to domain object
-              console.log(
-                `[DocumentRepository.create] Attaching document to domain object`
-              );
               const withDoc = DocumentHelpers.attachDocument(
                 domainObject,
                 doc as MongooseDocument & Document
               );
 
-              console.log(
-                `[DocumentRepository.create] Marking item ${i + 1} as successful`
-              );
               success(originalItem, withDoc);
             } else {
-              console.warn(
-                `[DocumentRepository.create] Missing domain object or document for item ${i + 1}`
-              );
             }
           }
         } catch (insertError: unknown) {
-          console.error(
-            `[DocumentRepository.create] Error during bulk insertion:`,
-            insertError
-          );
-
           // Extract error message safely from unknown error
           const errorMessage =
             insertError instanceof Error
               ? insertError.message
               : "Unknown error during bulk insertion";
-
-          console.log(
-            `[DocumentRepository.create] Marking all items as failed with error: ${errorMessage}`
-          );
 
           // If insertMany fails, mark all items as failed
           for (let i = 0; i < dtos.length; i++) {
@@ -313,57 +196,18 @@ export class DocumentRepository<
           }
         }
       } else {
-        console.log(`[DocumentRepository.create] No valid items to insert`);
       }
     });
 
-    console.log(`[DocumentRepository.create] BulkOperation complete`);
-    console.log(
-      `[DocumentRepository.create] Response counts:`,
-      response.counts
-    );
-
     // If input was singular, return the single result
     if (isSingular) {
-      console.log(
-        `[DocumentRepository.create] Converting bulk response to single result`
-      );
-      console.log(
-        `[DocumentRepository.create] Response status: ${response.status}, counts:`,
-        response.counts
-      );
-      console.log(
-        `[DocumentRepository.create] Success items: ${response.items.success.length}, Fail items: ${response.items.fail.length}`
-      );
-
-      if (response.items.fail.length > 0) {
-        console.log(
-          `[DocumentRepository.create] Failed items:`,
-          JSON.stringify(response.items.fail, null, 2)
-        );
-      }
-
       try {
-        console.log(`[DocumentRepository.create] Calling response.asSingle()`);
         const singleResult = response.asSingle() as WithDocument<TDomainEntity>;
-        console.log(
-          `[DocumentRepository.create] Single result:`,
-          JSON.stringify(
-            singleResult,
-            (key, value) => (key === "_document" ? undefined : value),
-            2
-          )
-        );
         return singleResult;
       } catch (error) {
-        console.error(
-          `[DocumentRepository.create] Error in asSingle():`,
-          error
-        );
         throw error; // Re-throw to ensure the error is propagated
       }
     } else {
-      console.log(`[DocumentRepository.create] Returning bulk response`);
       return response;
     }
   }
@@ -643,8 +487,6 @@ export class DocumentRepository<
             .find({ _id: { $in: ids } })
             .exec();
 
-          this.logger?.log(`updated docs: `, updatedDocs);
-
           // Create a map of documents by ID for quick lookup
           const docsById = new Map();
           updatedDocs.forEach((doc: any) => {
@@ -726,30 +568,14 @@ export class DocumentRepository<
    * @throws Error if a referenced entity doesn't exist
    */
   protected async validateReferences(entity: any): Promise<void> {
-    console.log(
-      `[validateReferences] Starting reference validation for entity:`,
-      JSON.stringify(entity, null, 2)
-    );
-
     if (!this.modelReferences) {
-      console.log(
-        `[validateReferences] No model references provided, skipping validation`
-      );
       return; // Skip validation if no model references provided
     }
 
     // Get reference metadata for the domain class
-    console.log(
-      `[validateReferences] Getting references for domain class: ${this.DomainClass.name}`
-    );
     const references = getReferences(this.DomainClass);
-    console.log(
-      `[validateReferences] References:`,
-      JSON.stringify(references, null, 2)
-    );
 
     if (!references || references.length === 0) {
-      console.log(`[validateReferences] No references to validate`);
       return; // No references to validate
     }
 
@@ -757,19 +583,12 @@ export class DocumentRepository<
     for (const reference of references) {
       const { propertyKey, collection, required, foreignField, name } =
         reference;
-      console.log(
-        `[validateReferences] Validating reference: ${name}, property: ${propertyKey}, collection: ${collection}, foreignField: ${foreignField}, required: ${required}`
-      );
 
       // Get the reference value
       const value = entity[propertyKey];
-      console.log(`[validateReferences] Reference value:`, value);
 
       // If the reference is required but the value is null/undefined, throw an error
       if (required && (value === null || value === undefined)) {
-        console.error(
-          `[validateReferences] ERROR: Required reference is missing`
-        );
         throw new Error(
           `Required reference ${collection}.${foreignField} is missing for property "${propertyKey}"`
         );
@@ -777,33 +596,17 @@ export class DocumentRepository<
 
       // Skip if the field is not required and the value is null/undefined
       if (!required && (value === null || value === undefined)) {
-        console.log(
-          `[validateReferences] Reference is not required and value is null/undefined, skipping`
-        );
         continue;
       }
 
       // Get the model for this reference
-      console.log(`[validateReferences] Getting reference model for: ${name}`);
-      console.log(
-        `[validateReferences] Available model references:`,
-        Object.keys(this.modelReferences || {})
-      );
-
       const referenceModel = this.modelReferences
         ? (this.modelReferences as any)[name]
         : undefined;
-      console.log(
-        `[validateReferences] Reference model:`,
-        referenceModel ? "Found" : "Not found"
-      );
 
       // If no model is provided for this reference but a value is provided,
       // throw an error because we can't validate against a non-existent collection
       if (!referenceModel && value !== null && value !== undefined) {
-        console.error(
-          `[validateReferences] ERROR: Cannot validate reference because model is not available`
-        );
         throw new Error(
           `Cannot validate reference to ${collection}.${foreignField} with value "${value}" because the model is not available`
         );
@@ -811,61 +614,30 @@ export class DocumentRepository<
 
       // Skip if no model is provided for this reference (and no value is provided)
       if (!referenceModel) {
-        console.log(
-          `[validateReferences] No reference model and no value, skipping`
-        );
         continue;
       }
 
       // Check if the referenced entity exists
       const filter: Record<string, any> = {};
       filter[foreignField] = value;
-      console.log(
-        `[validateReferences] Checking if referenced entity exists with filter:`,
-        filter
-      );
 
       try {
-        console.log(
-          `[validateReferences] Calling referenceModel.exists with filter:`,
-          filter
-        );
-        console.log(
-          `[validateReferences] referenceModel methods:`,
-          Object.keys(referenceModel).join(", ")
-        );
-
         if (typeof referenceModel.exists !== "function") {
-          console.error(
-            `[validateReferences] ERROR: referenceModel.exists is not a function`
-          );
-          console.error(`[validateReferences] referenceModel:`, referenceModel);
           throw new Error(
             `referenceModel.exists is not a function for model: ${name}`
           );
         }
 
         const exists = await referenceModel.exists(filter);
-        console.log(`[validateReferences] Exists result:`, exists);
 
         if (!exists) {
-          console.error(
-            `[validateReferences] ERROR: Referenced entity not found`
-          );
           throw new Error(
             `Referenced entity not found: ${collection}.${foreignField} with value "${value}"`
           );
         }
-
-        console.log(
-          `[validateReferences] Reference validation successful for: ${name}`
-        );
       } catch (error) {
-        console.error(`[validateReferences] ERROR during exists check:`, error);
         throw error; // Re-throw to ensure the error is propagated
       }
     }
-
-    console.log(`[validateReferences] All references validated successfully`);
   }
 }

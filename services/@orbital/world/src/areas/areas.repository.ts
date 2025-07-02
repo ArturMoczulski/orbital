@@ -25,6 +25,7 @@ export class AreasRepository extends DocumentRepository<
     // Create model references object
     const modelReferences: ModelReferences = {
       world: worldModel,
+      area: areaModel, // Add self-reference for parentId validation
     };
 
     // Call super with the required arguments

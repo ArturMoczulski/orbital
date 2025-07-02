@@ -32,7 +32,7 @@ describe("WorldsMicroserviceController (e2e)", () => {
         )
       );
     } catch (error) {
-      console.error("Error cleaning up test worlds:", error);
+      // Error cleanup handled silently
     }
 
     // Close the client connection
@@ -51,11 +51,7 @@ describe("WorldsMicroserviceController (e2e)", () => {
       };
 
       try {
-        // Log the data being sent
-        console.log(
-          "Sending create data:",
-          JSON.stringify(createWorldDto, null, 2)
-        );
+        // Send the RPC message
 
         // Send the RPC message
         const result = await lastValueFrom(
@@ -65,8 +61,7 @@ describe("WorldsMicroserviceController (e2e)", () => {
           )
         );
 
-        // Log the result
-        console.log("Create result:", JSON.stringify(result, null, 2));
+        // Store for cleanup
 
         // Store for cleanup
         testWorlds.push(result);
@@ -78,10 +73,7 @@ describe("WorldsMicroserviceController (e2e)", () => {
         expect(result.shard).toEqual(shard);
         expect(result.techLevel).toEqual(createWorldDto.techLevel);
       } catch (error) {
-        console.error("Error creating world:", error);
-        // Log more details about the error
-        if (error.message) console.error("Error message:", error.message);
-        if (error.stack) console.error("Error stack:", error.stack);
+        // Re-throw the error
         throw error;
       }
     });

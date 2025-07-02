@@ -31,7 +31,7 @@ describe("AreasMicroserviceController (e2e)", () => {
         techLevel: 5,
       };
 
-      console.log("Creating test world:", JSON.stringify(worldData, null, 2));
+      // Create the world using the WorldsMicroserviceController
 
       // Create the world using the WorldsMicroserviceController
       testWorld = await lastValueFrom(
@@ -41,7 +41,7 @@ describe("AreasMicroserviceController (e2e)", () => {
       // Use this world's ID for all area tests
       worldId = testWorld._id;
 
-      console.log(`Created test world with ID: ${worldId}`);
+      // worldId is now available for tests
     } catch (error) {
       console.error("Error setting up database for tests:", error);
       throw error;
@@ -59,7 +59,7 @@ describe("AreasMicroserviceController (e2e)", () => {
         )
       );
     } catch (error) {
-      console.error("Error cleaning up test areas:", error);
+      // Error cleanup handled silently
     }
 
     // Clean up the test world
@@ -71,10 +71,10 @@ describe("AreasMicroserviceController (e2e)", () => {
             testWorld._id
           )
         );
-        console.log(`Deleted test world with ID: ${testWorld._id}`);
+        // Test world deleted
       }
     } catch (error) {
-      console.error("Error cleaning up test world:", error);
+      // Error cleanup handled silently
     }
 
     // Close the client connection
@@ -95,19 +95,14 @@ describe("AreasMicroserviceController (e2e)", () => {
       };
 
       try {
-        // Log the data being sent
-        console.log(
-          "Sending create data:",
-          JSON.stringify(createAreaDto, null, 2)
-        );
+        // Send the RPC message
 
         // Send the RPC message
         const result = await lastValueFrom(
           client.send("world.AreasMicroserviceController.create", createAreaDto)
         );
 
-        // Log the result
-        console.log("Create result:", JSON.stringify(result, null, 2));
+        // Store for cleanup
 
         // Store for cleanup
         testAreas.push(result);
@@ -124,10 +119,7 @@ describe("AreasMicroserviceController (e2e)", () => {
         expect(result.connections).toBeDefined();
         expect(result.tags).toBeDefined();
       } catch (error) {
-        console.error("Error creating area:", error);
-        // Log more details about the error
-        if (error.message) console.error("Error message:", error.message);
-        if (error.stack) console.error("Error stack:", error.stack);
+        // Re-throw the error
         throw error;
       }
     });
@@ -286,12 +278,13 @@ describe("AreasMicroserviceController (e2e)", () => {
     });
 
     it("should update an area", async () => {
-      // Create update data
+      // Create update data - include worldId to satisfy reference validation
       const updateDto = {
         _id: testArea._id,
         name: `Updated Area - ${randomUUID()}`,
         description: "Updated description",
         tags: ["test", "e2e", "updated"],
+        worldId: testArea.worldId, // Include worldId from the test area
       };
 
       // Send the RPC message
@@ -389,14 +382,15 @@ describe("AreasMicroserviceController (e2e)", () => {
   });
 
   describe("findByWorldId", () => {
-    const testWorldId = randomUUID();
+    // Use the worldId from the test world created in beforeAll
+    // instead of generating a new random UUID
 
     beforeAll(async () => {
-      // Create some test areas with the same worldId
+      // Create some test areas with the same worldId (using the worldId from the test setup)
       const createAreaDtos = Array.from({ length: 3 }, (_, i) => ({
         _id: randomUUID(),
         name: `Test Area for worldId ${i}`,
-        worldId: testWorldId,
+        worldId, // Use the worldId from the test world created in the top-level beforeAll
         description: `Test area ${i} for worldId e2e testing`,
         position: { x: i * 100, y: i * 100, z: 0 },
         tags: ["test", "e2e", `world-test-${i}`],
@@ -419,7 +413,7 @@ describe("AreasMicroserviceController (e2e)", () => {
       // Send the RPC message
       const result = await lastValueFrom(
         client.send("world.AreasMicroserviceController.findByWorldId", {
-          worldId: testWorldId,
+          worldId, // Use the worldId from the test world created in the top-level beforeAll
         })
       );
 
@@ -427,16 +421,19 @@ describe("AreasMicroserviceController (e2e)", () => {
       expect(result).toBeDefined();
       expect(Array.isArray(result)).toBe(true);
       expect(result.length).toBeGreaterThanOrEqual(3);
-      expect(
-        result.every((area: AreaModel) => area.worldId === testWorldId)
-      ).toBe(true);
+      expect(result.every((area: AreaModel) => area.worldId === worldId)).toBe(
+        true
+      );
     });
 
     it("should return empty array for non-existent worldId", async () => {
+      // Create a non-existent worldId that won't be validated
+      const nonExistentWorldId = "000000000000000000000000"; // Valid MongoDB ObjectId format that won't exist
+
       // Send the RPC message with a non-existent worldId
       const result = await lastValueFrom(
         client.send("world.AreasMicroserviceController.findByWorldId", {
-          worldId: randomUUID(),
+          worldId: nonExistentWorldId,
         })
       );
 
@@ -474,11 +471,9 @@ describe("AreasMicroserviceController (e2e)", () => {
         // Use this area's ID as the parentId
         parentId = parentArea._id;
 
-        console.log(`Created parent area with ID: ${parentId}`);
+        // parentId is now available for tests
       } catch (error) {
-        console.error("Error creating parent area:", error);
-        console.error("Error message:", error.message);
-        console.error("Error stack:", error.stack);
+        // Try again with a new parent area
 
         // Try again with a new parent area
         try {
@@ -491,10 +486,7 @@ describe("AreasMicroserviceController (e2e)", () => {
             tags: ["test", "e2e", "parent", "retry"],
           };
 
-          console.log(
-            "Retrying with new parent area:",
-            JSON.stringify(parentAreaDto2, null, 2)
-          );
+          // Create the parent area
 
           // Create the parent area
           parentArea = await lastValueFrom(
@@ -510,9 +502,9 @@ describe("AreasMicroserviceController (e2e)", () => {
           // Use this area's ID as the parentId
           parentId = parentArea._id;
 
-          console.log(`Created parent area (retry) with ID: ${parentId}`);
+          // parentId is now available for tests
         } catch (dbError) {
-          console.error("Error creating parent area directly in DB:", dbError);
+          // Re-throw the error
           throw dbError;
         }
       }
