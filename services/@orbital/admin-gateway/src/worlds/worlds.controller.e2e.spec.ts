@@ -104,8 +104,8 @@ describe("Worlds API (e2e)", () => {
       expect(response.body).toHaveProperty("_id", createdWorldId);
       expect(response.body).toHaveProperty("name", updateData.name);
       expect(response.body).toHaveProperty("techLevel", updateData.techLevel);
-      // Shard should remain unchanged
-      expect(response.body).toHaveProperty("shard", testWorld.shard);
+      // Shard should remain unchanged (it's in the document property)
+      expect(response.body.document).toHaveProperty("shard", testWorld.shard);
     });
   });
 
