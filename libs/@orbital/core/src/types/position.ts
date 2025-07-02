@@ -1,7 +1,7 @@
-import { z } from "zod";
-import { BaseObject } from "./base-object";
 import { faker } from "@faker-js/faker";
+import { z } from "zod";
 import { ZodSchema } from "../decorators/zod-schema.decorator";
+import { BaseObject } from "./base-object";
 
 /**
  * Represents a three-dimensional position in the world.
@@ -33,7 +33,7 @@ export class Position
   y: number = 0;
   z: number = 0;
 
-  constructor(data?: Partial<PositionProps>) {
+  constructor(data?: PositionProps) {
     super(data);
 
     // Initialize with default values if not provided

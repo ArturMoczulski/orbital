@@ -29,8 +29,3 @@ export class WorldModel extends World {
 
   @prop()
   updatedAt!: Date;
-
-  constructor(data?: unknown) {
-    super(data || {});
-  }
-}

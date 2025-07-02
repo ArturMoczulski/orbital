@@ -2,12 +2,11 @@ import {
   BulkCountedResponse,
   BulkItemizedResponse,
 } from "@orbital/bulk-operations";
-import { IdentifiableObject } from "@orbital/core";
+import { IdentifiableObject, WithId } from "@orbital/core";
 import * as mongoose from "mongoose";
 import { Schema } from "mongoose";
 import * as z from "zod";
 import { Reference } from "../decorators/reference.decorator";
-import { WithId } from "../types/utils";
 import { WithDocument } from "../types/with-document";
 import { DocumentRepository } from "./document-repository";
 

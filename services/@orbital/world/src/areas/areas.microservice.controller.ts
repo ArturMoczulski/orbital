@@ -1,13 +1,13 @@
 import { Controller, UseFilters } from "@nestjs/common";
 import { OrbitalMicroservices } from "@orbital/contracts";
-import { AreaProps, WithoutId } from "@orbital/core";
+import { AreaProps, WithId, WithoutId } from "@orbital/core";
 import {
   MessagePattern,
   MicroserviceController,
   PassThroughRpcExceptionFilter,
 } from "@orbital/microservices";
 import { CRUDController } from "@orbital/nest";
-import { AreaModel, WithId } from "@orbital/typegoose";
+import { AreaModel } from "@orbital/typegoose";
 import { AreasCRUDService } from "./areas.crud.service";
 
 @MicroserviceController(OrbitalMicroservices.World)

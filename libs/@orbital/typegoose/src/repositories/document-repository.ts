@@ -8,6 +8,7 @@ import {
   IdentifiableObject,
   Logger,
   VerbosityLevel,
+  WithId,
   WithoutId,
   ZodErrorWithStack,
 } from "@orbital/core";
@@ -15,7 +16,6 @@ import { ReturnModelType } from "@typegoose/typegoose";
 import { ZodObject } from "zod";
 import { getReferences } from "../decorators/reference.decorator";
 import { PersistenceMapper } from "../mappers/persistence-mapper";
-import { WithId } from "../types/utils";
 import { MongooseDocument, WithDocument } from "../types/with-document";
 import { DocumentHelpers } from "../utils/document-helpers";
 

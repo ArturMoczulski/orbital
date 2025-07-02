@@ -5,9 +5,10 @@ import {
 import {
   IdentifiableObject,
   IdentifiableObjectProps,
+  WithId,
   WithoutId,
 } from "@orbital/core";
-import { DocumentRepository, WithId } from "@orbital/typegoose";
+import { DocumentRepository } from "@orbital/typegoose";
 
 /**
  * Interface defining the contract for CRUD operations

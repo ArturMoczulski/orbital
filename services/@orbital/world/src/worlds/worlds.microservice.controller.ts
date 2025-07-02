@@ -1,13 +1,13 @@
 import { Controller, UseFilters } from "@nestjs/common";
 import { OrbitalMicroservices } from "@orbital/contracts";
-import { WithoutId } from "@orbital/core";
+import { WithId, WithoutId } from "@orbital/core";
 import {
   MessagePattern,
   MicroserviceController,
   PassThroughRpcExceptionFilter,
 } from "@orbital/microservices";
 import { CRUDController } from "@orbital/nest";
-import { WithId, WorldModel } from "@orbital/typegoose";
+import { WorldModel } from "@orbital/typegoose";
 import { WorldsCRUDService } from "./worlds.crud.service";
 import { WorldProps } from "./worlds.repository";
 

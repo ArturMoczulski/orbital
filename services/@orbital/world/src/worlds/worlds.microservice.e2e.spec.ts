@@ -11,7 +11,7 @@ describe("WorldsMicroserviceController (e2e)", () => {
   beforeAll(async () => {
     // Connect directly to the running NATS server
     client = new ClientNats({
-      servers: ["nats://localhost:4223"],
+      servers: [process.env.NATS_URL],
       queue: "test-client",
     });
 
