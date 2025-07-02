@@ -239,6 +239,26 @@ describe("AreasRepository", () => {
       expect(areaResult.name).toBe(newAreaData.name);
     });
 
+    it("should throw error when trying to create an area with a non-existent world ID", async () => {
+      // Arrange
+      const newAreaData = {
+        worldId: "non-existent-world-id",
+        name: "Area with Invalid World",
+        description: "This area references a world that doesn't exist",
+        landmarks: [],
+        connections: [],
+        tags: ["test"],
+      };
+
+      // Mock the WorldModel.exists method to return null (world not found)
+      mockWorldModel.exists = jest.fn().mockResolvedValue(null);
+
+      // Act & Assert
+      await expect(repository.create(newAreaData)).rejects.toThrow(
+        'Referenced entity not found: worlds._id with value "non-existent-world-id"'
+      );
+    });
+
     it("should create multiple areas", async () => {
       // Arrange
       const newAreasData = [
@@ -510,6 +530,37 @@ describe("AreasRepository", () => {
       const areaResult = result as WithDocument<AreaModel>;
       expect(areaResult._id).toBe(areaToUpdate._id);
       expect(areaResult.name).toBe(areaToUpdate.name);
+    });
+
+    it("should throw error when trying to update an area with a non-existent world ID", async () => {
+      // Arrange
+      const areaToUpdate = {
+        _id: "area-id-123",
+        worldId: "non-existent-world-id",
+        name: "Area with Invalid World",
+        description: "This area references a world that doesn't exist",
+        landmarks: [],
+        connections: [],
+        tags: ["test"],
+      };
+
+      // Mock the model's findById method to return the area
+      const mockFindById = jest.fn().mockReturnThis();
+      const mockExec = jest.fn().mockResolvedValue({
+        ...areaToUpdate,
+        save: jest.fn().mockResolvedValue(true),
+        toObject: jest.fn().mockReturnValue(areaToUpdate),
+      });
+      mockAreaModel.findById = mockFindById;
+      mockAreaModel.exec = mockExec;
+
+      // Mock the WorldModel.exists method to return null (world not found)
+      mockWorldModel.exists = jest.fn().mockResolvedValue(null);
+
+      // Act & Assert
+      await expect(repository.update(areaToUpdate)).rejects.toThrow(
+        'Referenced entity not found: worlds._id with value "non-existent-world-id"'
+      );
     });
 
     it("should return null when area to update is not found", async () => {
