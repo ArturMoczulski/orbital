@@ -1,5 +1,13 @@
 {
-  "jest.jestCommandLine": "yarn jest-orta",
+  "jest.jestCommandLine": "yarn jest --config jest-vscode.config.cjs",
+  "jest.pathToJest": "yarn jest --config jest-vscode.config.cjs",
+  "jest.debugMode": true,
+  "jest.autoRun": "off",
+  "jest.showCoverageOnLoad": false,
+  "jest.monitorLongRun": false,
+  "jest.testExplorer": {
+    "enabled": true
+  },
   "typescript.tsdk": "node_modules/typescript/lib",
   "debug.javascript.autoAttachFilter": "disabled",
   "debug.javascript.usePreview": true,
