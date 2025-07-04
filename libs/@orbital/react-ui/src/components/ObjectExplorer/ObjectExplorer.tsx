@@ -7,7 +7,7 @@ import DialogTitle from "@mui/material/DialogTitle";
 import IconButton from "@mui/material/IconButton";
 import { useTheme } from "@mui/material/styles";
 import Typography from "@mui/material/Typography";
-import { kebabCase, lowerFirst } from "lodash";
+import { lowerFirst } from "lodash";
 import React, { useEffect, useState } from "react";
 import { ZodBridge } from "uniforms-bridge-zod";
 import { AutoForm } from "uniforms-mui";
@@ -15,45 +15,7 @@ import { z } from "zod";
 import { useOrbitalTheme } from "../../theme/ThemeContext";
 import { useNotification } from "../NotificationProvider/NotificationProvider";
 import { ExplorerObject, ObjectExplorerProps, QueryResult } from "../types";
-import { DefaultItemActions } from "./DefaultItemActions";
-
-/**
- * Extracts API hooks based on naming conventions
- */
-function extractApiHooks<T>(api: any, type: string) {
-  // Convert type to proper format for hook names (e.g., "Area" -> "areas")
-  const typeLower = lowerFirst(type);
-  const typePlural = `${typeLower}s`; // Simple pluralization
-  const typeCapitalized =
-    typePlural.charAt(0).toUpperCase() + typePlural.slice(1);
-
-  // Query hook for fetching objects (e.g., useAreasControllerGetAllQuery)
-  // RTK Query adds "Query" suffix to query hooks
-  const queryHookName = `use${typeCapitalized}ControllerGetAllQuery`;
-  // Fallback to FindAll if GetAll doesn't exist
-  const fallbackQueryHookName = `use${typeCapitalized}ControllerFindAllQuery`;
-  const queryHook = api[queryHookName] || api[fallbackQueryHookName];
-
-  // Mutation hooks for create and delete
-  // RTK Query already includes "Mutation" suffix
-  const createHookName = `use${typeCapitalized}ControllerCreateMutation`;
-  const deleteHookName = `use${typeCapitalized}ControllerDeleteMutation`;
-  const createHook = api[createHookName];
-  const deleteHook = api[deleteHookName];
-
-  return {
-    queryHook,
-    queryHookName: queryHook
-      ? api[queryHookName]
-        ? queryHookName
-        : fallbackQueryHookName
-      : null,
-    createHook,
-    createHookName,
-    deleteHook,
-    deleteHookName,
-  };
-}
+import { DefaultTreeNodeActions } from "./DefaultTreeNodeActions";
 
 /**
  * A generic tree-view component for displaying hierarchical objects
@@ -73,20 +35,9 @@ export function ObjectExplorer<T extends ExplorerObject>({
 }: ObjectExplorerProps<T>) {
   // Infer type name and prefix from type
   const typeName = objectTypeName ?? `${type}s`;
-  const typePrefix = kebabCase(lowerFirst(type));
+  // Create PascalCase version for test IDs
+  const typePrefixPascal = type.charAt(0).toUpperCase() + type.slice(1);
   const theme = useOrbitalTheme() || useTheme();
-
-  // Extract API hooks if API is provided
-  const apiHooks = api
-    ? extractApiHooks<T>(api, type)
-    : {
-        queryHook: null,
-        queryHookName: null,
-        createHook: null,
-        createHookName: null,
-        deleteHook: null,
-        deleteHookName: null,
-      };
 
   // Determine which query to use
   let queryResult: QueryResult<T>;
@@ -97,15 +48,13 @@ export function ObjectExplorer<T extends ExplorerObject>({
   } else if (customQuery) {
     // Use the custom query hook
     queryResult = customQuery();
-  } else if (apiHooks.queryHook) {
-    // Use the inferred query hook
-    queryResult = apiHooks.queryHook();
+  } else if (api?.queryHook) {
+    // Use the API's query hook
+    queryResult = api.queryHook();
   } else {
     // No query available, throw an error
     throw new Error(
-      `No query available for type '${type}'. Either provide 'queryResult', 'query', or ensure the API has a '${
-        apiHooks.queryHookName || `use${type}sControllerGetAll/FindAll`
-      }' hook.`
+      `No query available for type '${type}'. Either provide 'queryResult', 'query', or ensure the API has a 'queryHook' property.`
     );
   }
 
@@ -113,8 +62,8 @@ export function ObjectExplorer<T extends ExplorerObject>({
   const objects: T[] = data ?? [];
 
   // Use the mutation hooks if available
-  const [createMutation] = apiHooks.createHook ? apiHooks.createHook() : [null];
-  const [deleteMutation] = apiHooks.deleteHook ? apiHooks.deleteHook() : [null];
+  const [createMutation] = api?.createHook ? api.createHook() : [null];
+  const [deleteMutation] = api?.deleteHook ? api.deleteHook() : [null];
 
   // Create handlers that use the API hooks
   const { notify } = useNotification();
@@ -132,7 +81,7 @@ export function ObjectExplorer<T extends ExplorerObject>({
 
   const handleApiAdd = async (object: Partial<T>) => {
     if (!createMutation) {
-      const errorMessage = `No create endpoint function found for type '${type}'. Expected '${apiHooks.createHookName}' in the provided API.`;
+      const errorMessage = `No create endpoint function found for type '${type}'. The API must provide a 'createHook' property.`;
       notify(errorMessage, "error");
       throw new Error(errorMessage);
     }
@@ -160,7 +109,7 @@ export function ObjectExplorer<T extends ExplorerObject>({
 
   const handleApiDelete = async (objectId: string) => {
     if (!deleteMutation) {
-      const errorMessage = `No delete endpoint function found for type '${type}'. Expected '${apiHooks.deleteHookName}' in the provided API.`;
+      const errorMessage = `No delete endpoint function found for type '${type}'. The API must provide a 'deleteHook' property.`;
       notify(errorMessage, "error");
       throw new Error(errorMessage);
     }
@@ -179,10 +128,9 @@ export function ObjectExplorer<T extends ExplorerObject>({
   };
 
   // Use provided handlers or fall back to API-based handlers
-  const onAdd =
-    providedOnAdd || (apiHooks.createHook ? handleApiAdd : undefined);
+  const onAdd = providedOnAdd || (api?.createHook ? handleApiAdd : undefined);
   const onDelete =
-    providedOnDelete || (apiHooks.deleteHook ? handleApiDelete : undefined);
+    providedOnDelete || (api?.deleteHook ? handleApiDelete : undefined);
 
   const [expandedNodes, setExpandedNodes] = useState<Record<string, boolean>>(
     {}
@@ -247,8 +195,8 @@ export function ObjectExplorer<T extends ExplorerObject>({
             "&:hover": { bgcolor: "secondary.main" },
           }}
           onClick={() => toggleNode(object._id)}
-          data-testid={`${typePrefix}-tree-node-${object._id}`}
-          data-cy={`${typePrefix}-tree-node-${object._id}`}
+          data-testid="TreeNode"
+          data-object-id={object._id}
         >
           {children.length > 0 ? (
             isExpanded ? (
@@ -267,10 +215,9 @@ export function ObjectExplorer<T extends ExplorerObject>({
             {(() => {
               // Create the default actions component
               const defaultActions = (
-                <DefaultItemActions
+                <DefaultTreeNodeActions
                   object={object}
                   type={type}
-                  typePrefix={typePrefix}
                   onDelete={onDelete ? handleDeleteClick : undefined}
                 />
               );
@@ -299,10 +246,7 @@ export function ObjectExplorer<T extends ExplorerObject>({
 
   if (isLoading) {
     return (
-      <Box
-        sx={{ p: 2, color: "text.primary" }}
-        data-testid={`${typePrefix}-loading-state`}
-      >
+      <Box sx={{ p: 2, color: "text.primary" }} data-testid="LoadingState">
         Loading {typeName.toLowerCase()}...
       </Box>
     );
@@ -310,10 +254,7 @@ export function ObjectExplorer<T extends ExplorerObject>({
 
   if (error) {
     return (
-      <Box
-        sx={{ p: 2, color: "error.main" }}
-        data-testid={`${typePrefix}-error-state`}
-      >
+      <Box sx={{ p: 2, color: "error.main" }} data-testid="ErrorState">
         Error loading {typeName.toLowerCase()}
       </Box>
     );
@@ -342,8 +283,7 @@ export function ObjectExplorer<T extends ExplorerObject>({
           display: "flex",
           flexDirection: "column",
         }}
-        data-testid={`${typePrefix}-explorer`}
-        data-cy={`${typePrefix}-explorer`}
+        data-testid={`ObjectExplorer ${typePrefixPascal}Explorer`}
       >
         {/* Header */}
         <Box
@@ -363,8 +303,7 @@ export function ObjectExplorer<T extends ExplorerObject>({
             size="small"
             onClick={openAddModal}
             title="Add object"
-            data-testid={`${typePrefix}-add-button`}
-            data-cy={`${typePrefix}-add-button`}
+            data-testid="AddButton"
             sx={{
               bgcolor: "primary.main",
               color: "primary.contrastText",
@@ -385,7 +324,7 @@ export function ObjectExplorer<T extends ExplorerObject>({
                 alignItems: "center",
                 height: "100%",
               }}
-              data-testid={`${typePrefix}-empty-state`}
+              data-testid="EmptyState"
             >
               <Typography color="text.secondary" sx={{ mb: 1 }}>
                 No {typeName.toLowerCase()} available
@@ -394,8 +333,7 @@ export function ObjectExplorer<T extends ExplorerObject>({
                 size="large"
                 onClick={openAddModal}
                 title="Add new object"
-                data-testid={`${typePrefix}-add-button-empty`}
-                data-cy={`${typePrefix}-add-button-empty`}
+                data-testid="AddButtonEmpty"
                 sx={{
                   bgcolor: "primary.main",
                   color: "primary.contrastText",
@@ -427,7 +365,7 @@ export function ObjectExplorer<T extends ExplorerObject>({
 
       {/* Add Object Modal */}
       <Dialog
-        data-cy={`${typePrefix}-add-dialog`}
+        data-testid="AddDialog"
         open={showAddModal}
         onClose={closeAddModal}
         fullWidth
@@ -442,7 +380,7 @@ export function ObjectExplorer<T extends ExplorerObject>({
         }}
       >
         <DialogTitle>Add New Object</DialogTitle>
-        <Box sx={{ p: 3 }} data-cy={`${typePrefix}-add-form`}>
+        <Box sx={{ p: 3 }} data-testid="AddForm">
           <AutoForm
             schema={formSchema}
             onSubmit={async (data) => {

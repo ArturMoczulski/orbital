@@ -1,7 +1,7 @@
 // Export components
 export { ObjectExplorer } from "./components/ObjectExplorer/ObjectExplorer";
-export { ObjectExplorerItemActionButton } from "./components/ObjectExplorer/ObjectExplorerItemActionButton";
-export type { ObjectExplorerItemActionButtonProps } from "./components/ObjectExplorer/ObjectExplorerItemActionButton";
+export { TreeNodeActionButton as ObjectExplorerItemActionButton } from "./components/ObjectExplorer/TreeNodeActionButton";
+export type { TreeNodeActionButtonProps as ObjectExplorerItemActionButtonProps } from "./components/ObjectExplorer/TreeNodeActionButton";
 export type {
   ExplorerObject,
   ObjectExplorerProps,

@@ -19,6 +19,34 @@ export interface QueryResult<T extends ExplorerObject> {
 }
 
 /**
+ * Interface for RTK Query API hooks used by ObjectExplorer
+ */
+export interface ObjectExplorerAPI<T extends ExplorerObject> {
+  /**
+   * Query hook for fetching all objects
+   * Should return a QueryResult<T>
+   */
+  queryHook: () => QueryResult<T>;
+
+  /**
+   * Mutation hook for creating a new object
+   * Should return a tuple with the mutation function as the first element
+   * The mutation function should return a Promise with an unwrap method (RTK Query standard)
+   */
+  createHook?: () => [(data: any) => { unwrap: () => Promise<any> }, any];
+
+  /**
+   * Mutation hook for deleting an object
+   * Should return a tuple with the mutation function as the first element
+   * The mutation function should return a Promise with an unwrap method (RTK Query standard)
+   */
+  deleteHook?: () => [
+    (data: { _id: string }) => { unwrap: () => Promise<any> },
+    any,
+  ];
+}
+
+/**
  * Props for the ObjectExplorer component
  */
 export interface ObjectExplorerProps<T extends ExplorerObject> {
@@ -85,9 +113,9 @@ export interface ObjectExplorerProps<T extends ExplorerObject> {
 
   /**
    * Optional RTK Query API object
-   * If provided, the component will extract the appropriate hooks based on naming conventions
+   * If provided, the component will use the hooks defined in the API interface
    */
-  api?: any;
+  api?: ObjectExplorerAPI<T>;
 
   /**
    * Optional custom query hook

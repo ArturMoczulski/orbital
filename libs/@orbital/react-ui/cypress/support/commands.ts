@@ -23,3 +23,7 @@
 //
 // -- This will overwrite an existing command --
 // Cypress.Commands.overwrite('visit', (originalFn, url, options) => { ... })
+
+// Import ObjectExplorer fluent API helpers
+// Note: We've moved from custom commands to a class-based fluent API using CypressInteractable
+import "../../src/components/ObjectExplorer/ObjectExplorer.cy.commands";
