@@ -24,6 +24,14 @@ type FormInputField<T> = {
    * Clear the input
    */
   clear: () => Cypress.Chainable<JQuery<HTMLElement>>;
+
+  /**
+   * Assert on the input element
+   */
+  should: (
+    chainer: string,
+    value?: any
+  ) => Cypress.Chainable<JQuery<HTMLElement>>;
 };
 
 /**
@@ -104,6 +112,12 @@ class AutoFormInteractable<
           clear: () => {
             // Get a fresh element each time to avoid context issues
             return this.getElement().find(`[name="${prop}"]`).clear();
+          },
+          should: (chainer: string, value?: any) => {
+            // Get a fresh element each time to avoid context issues
+            return this.getElement()
+              .find(`[name="${prop}"]`)
+              .should(chainer, value);
           },
         } as FormInputField<any>;
       },

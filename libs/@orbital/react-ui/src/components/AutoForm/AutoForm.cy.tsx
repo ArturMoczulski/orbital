@@ -59,13 +59,10 @@ describe("AutoForm Interactable", () => {
       form.inputs.age.type(30);
       form.inputs.email.type("john.scoped@example.com");
 
-      // Verify the values
-      cy.get('input[name="name"]').should("have.value", "John Scoped");
-      cy.get('input[name="age"]').should("have.value", "30");
-      cy.get('input[name="email"]').should(
-        "have.value",
-        "john.scoped@example.com"
-      );
+      // Verify the values using the fluent API
+      form.inputs.name.should("have.value", "John Scoped");
+      form.inputs.age.should("have.value", "30");
+      form.inputs.email.should("have.value", "john.scoped@example.com");
     });
 
     it("should fill and submit the form using scoped interactable", () => {
@@ -138,13 +135,10 @@ describe("AutoForm Interactable", () => {
       form.inputs.age.type(30);
       form.inputs.email.type("john.doe@example.com");
 
-      // Verify the values
-      cy.get('input[name="name"]').should("have.value", "John Doe");
-      cy.get('input[name="age"]').should("have.value", "30");
-      cy.get('input[name="email"]').should(
-        "have.value",
-        "john.doe@example.com"
-      );
+      // Verify the values using the fluent API
+      form.inputs.name.should("have.value", "John Doe");
+      form.inputs.age.should("have.value", "30");
+      form.inputs.email.should("have.value", "john.doe@example.com");
     });
 
     it("should fill the form with data", () => {
@@ -162,13 +156,10 @@ describe("AutoForm Interactable", () => {
         email: "jane.smith@example.com",
       });
 
-      // Verify the values
-      cy.get('input[name="name"]').should("have.value", "Jane Smith");
-      cy.get('input[name="age"]').should("have.value", "25");
-      cy.get('input[name="email"]').should(
-        "have.value",
-        "jane.smith@example.com"
-      );
+      // Verify the values using the fluent API
+      form.inputs.name.should("have.value", "Jane Smith");
+      form.inputs.age.should("have.value", "25");
+      form.inputs.email.should("have.value", "jane.smith@example.com");
     });
 
     it("should submit the form", () => {
