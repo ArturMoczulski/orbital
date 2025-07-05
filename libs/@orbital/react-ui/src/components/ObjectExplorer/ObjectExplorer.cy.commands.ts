@@ -2,19 +2,13 @@
 // This file provides a fluent API for interacting with the ObjectExplorer component in tests
 
 // Import the CypressInteractable base class
-import { CypressInteractable } from "../../../cypress/support/CypressInteractable";
-// Import the AutoForm components
-import {
-  AutoFormInteractable,
-  autoForm,
-} from "../AutoForm/AutoForm.cy.commands";
+import { CypressInteractable } from "../../../cypress/interactables/Cypress.interactable";
+// Import the DialogInteractable classes
+import { ZodObjectSchema } from "../../../cypress/interactables/FormDialog.interactable";
+// Import the ObjectExplorerAddDialog class
+import { ObjectExplorerAddDialog } from "./ObjectExplorer.cy.dialogs";
 // Import Zod for schema handling
 import { z } from "zod";
-
-/**
- * Type alias for any Zod object schema
- */
-type ZodObjectSchema = z.ZodObject<any, any, any, any>;
 
 /**
  * Interface for TreeNode button-related methods
@@ -312,29 +306,10 @@ interface ObjectExplorerDialogs<
   CustomActions extends string = never,
   Schema extends ZodObjectSchema = never,
 > {
-  add: {
-    /**
-     * Get the Add dialog element
-     */
-    getElement: () => Cypress.Chainable;
-
-    /**
-     * Get the Add form as an AutoFormInteractable
-     */
-    form: () => AutoFormInteractable<z.infer<Schema>>;
-
-    /**
-     * Open the Add dialog
-     */
-    open: () => ObjectExplorerInteractable<CustomActions, Schema>;
-
-    /**
-     * Fill and submit the Add form
-     */
-    submit: (
-      data: Partial<z.infer<Schema>>
-    ) => ObjectExplorerInteractable<CustomActions, Schema>;
-  };
+  /**
+   * The Add dialog as an ObjectExplorerAddDialog
+   */
+  add: ObjectExplorerAddDialog<Schema, CustomActions>;
 }
 
 /**
@@ -444,46 +419,12 @@ class ObjectExplorerInteractable<
       addEmpty: () => this.getElement().find('[data-testid="AddButtonEmpty"]'),
     };
 
-    // Initialize the dialogs property with more specific selectors
+    // Initialize the dialogs property with ObjectExplorerAddDialog
     this.dialogs = {
-      add: {
-        getElement: () => {
-          // Use the ObjectExplorer prefixed selector for components outside the main structure
-          return cy
-            .get('[data-testid="ObjectExplorerAddDialog"]')
-            .should("exist");
-        },
-        form: () => {
-          // Get the form within the dialog context using the autoForm helper
-          return autoForm<z.infer<Schema>>({
-            formTestId: "AddForm",
-            parent: () => this.dialogs.add.getElement(),
-          });
-        },
-        open: () => {
-          // Check if we're in empty state and use the appropriate button
-          this.getElement().then(($el) => {
-            if ($el.find('[data-testid="EmptyState"]').length > 0) {
-              this.buttons.addEmpty().click({ force: true });
-            } else {
-              this.buttons.add().click({ force: true });
-            }
-          });
-          return this;
-        },
-        submit: (data) => {
-          // Open the add dialog
-          this.dialogs.add.open();
-
-          // Use the AutoFormInteractable to fill and submit the form
-          this.dialogs.add.form().submit(data);
-
-          // Wait for the dialog to close
-          this.dialogs.add.getElement().should("not.exist");
-
-          return this;
-        },
-      },
+      add: new ObjectExplorerAddDialog<Schema, CustomActions>(
+        this, // Pass the explorer instance
+        schema // Schema for the form
+      ),
     };
 
     // Initialize the states property with more specific selectors
@@ -583,7 +524,9 @@ class ObjectExplorerInteractable<
     name: string;
     parentId?: string;
   }): ObjectExplorerInteractable<CustomActions, Schema> {
-    return this.dialogs.add.submit(data as Partial<z.infer<Schema>>);
+    return this.dialogs.add.submitAndReturnExplorer(
+      data as Partial<z.infer<Schema>>
+    );
   }
 }
 
@@ -612,8 +555,8 @@ function objectExplorer<
 
 // Export the helper function, classes, and types
 export {
+  objectExplorer,
   ObjectExplorerInteractable,
   TreeNodeInteractable,
-  objectExplorer,
   type ZodObjectSchema,
 };

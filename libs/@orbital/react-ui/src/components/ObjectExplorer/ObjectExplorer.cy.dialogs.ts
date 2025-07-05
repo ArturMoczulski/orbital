@@ -1,0 +1,68 @@
+// ObjectExplorer Dialog Cypress Helpers
+// This file provides interactable classes for ObjectExplorer dialogs in Cypress tests
+
+/// <reference types="cypress" />
+
+import { z } from "zod";
+import {
+  FormDialogInteractable,
+  ZodObjectSchema,
+} from "../../../cypress/interactables/FormDialog.interactable";
+import { ObjectExplorerInteractable } from "./ObjectExplorer.cy.commands";
+
+/**
+ * ObjectExplorerAddDialog class represents the Add dialog in the ObjectExplorer
+ * and provides methods for interacting with it
+ */
+export class ObjectExplorerAddDialog<
+  Schema extends ZodObjectSchema = ZodObjectSchema,
+  CustomActions extends string = never,
+> extends FormDialogInteractable<Schema> {
+  private explorer: ObjectExplorerInteractable<CustomActions, Schema>;
+
+  /**
+   * Constructor for ObjectExplorerAddDialog
+   * @param explorer The parent ObjectExplorerInteractable instance
+   * @param schema The Zod schema for the form
+   */
+  constructor(
+    explorer: ObjectExplorerInteractable<CustomActions, Schema>,
+    schema: Schema
+  ) {
+    super(
+      "ObjectExplorerAddDialog", // Dialog test ID
+      "AddForm", // Form test ID
+      schema // Schema for the form
+    );
+    this.explorer = explorer;
+  }
+
+  /**
+   * Override the open method to use the appropriate button based on state
+   */
+  override open(): this {
+    // Check if we're in empty state and use the appropriate button
+    this.explorer.getElement().then(($el) => {
+      if ($el.find('[data-testid="EmptyState"]').length > 0) {
+        this.explorer.buttons.addEmpty().click({ force: true });
+      } else {
+        this.explorer.buttons.add().click({ force: true });
+      }
+    });
+    return this;
+  }
+
+  /**
+   * Submit the form and return the parent explorer for chaining
+   * @param data The data to fill the form with
+   */
+  submitAndReturnExplorer(
+    data: Partial<z.infer<Schema>>
+  ): ObjectExplorerInteractable<CustomActions, Schema> {
+    // Use the parent submit method to fill and submit the form
+    this.submit(data);
+
+    // Return the parent explorer for chaining
+    return this.explorer;
+  }
+}

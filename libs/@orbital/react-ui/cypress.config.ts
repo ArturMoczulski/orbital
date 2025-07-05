@@ -26,11 +26,17 @@ export default defineConfig({
       bundler: "webpack",
       webpackConfig: require("./webpack.config.js"),
     },
-    specPattern: ["src/components/**/*.cy.{ts,tsx}"],
+    specPattern: [
+      "src/components/**/*.cy.{ts,tsx}",
+      "cypress/interactables/**/*.cy.{ts,tsx}",
+    ],
     supportFile: "cypress/support/component.ts",
   },
   e2e: {
-    specPattern: ["src/components/**/*.cy.{ts,tsx}"],
+    specPattern: [
+      "src/components/**/*.cy.{ts,tsx}",
+      "cypress/interactables/**/*.cy.{ts,tsx}",
+    ],
     supportFile: "cypress/support/component.ts",
   },
 });
