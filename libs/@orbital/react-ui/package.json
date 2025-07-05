@@ -38,6 +38,7 @@
     "zod": "^3.25.67"
   },
   "devDependencies": {
+    "@cypress/grep": "^4.1.0",
     "@types/jest": "^29.5.14",
     "@types/lodash": "^4.17.18",
     "@types/node": "^18.16.3",

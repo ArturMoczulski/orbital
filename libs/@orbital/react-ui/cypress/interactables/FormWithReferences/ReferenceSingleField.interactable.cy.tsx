@@ -18,6 +18,7 @@ const SimplifiedReferenceSingleField = ({
   error = false,
   errorMessage = "",
   disabled = false,
+  objectType = "Area", // Add objectType prop with default value
 }) => {
   // If no reference options are provided, fall back to a standard text field
   if (!reference || !reference.options || reference.options.length === 0) {
@@ -34,7 +35,7 @@ const SimplifiedReferenceSingleField = ({
         disabled={disabled}
         fullWidth
         variant="outlined"
-        data-testid="ReferenceSingleField"
+        data-testid={`${objectType}ReferenceSingleField ReferenceSingleField`}
       />
     );
   }
@@ -57,15 +58,25 @@ const SimplifiedReferenceSingleField = ({
       select
       fullWidth
       variant="outlined"
-      data-testid="ReferenceSingleField"
+      data-testid={`${objectType}ReferenceSingleField ReferenceSingleField`}
     >
       {!required && (
-        <MenuItem value="">
+        <MenuItem
+          value=""
+          data-testid={`${objectType}ReferenceSingleField-none`}
+          data-field-name={name}
+        >
           <em>None</em>
         </MenuItem>
       )}
       {reference.options.map((option) => (
-        <MenuItem key={option[foreignField]} value={option[foreignField]}>
+        <MenuItem
+          key={option[foreignField]}
+          value={option[foreignField]}
+          data-testid={`${objectType}ReferenceSingleField-item`}
+          data-object-id={option[foreignField]}
+          data-field-name={name}
+        >
           {option[displayField] || option[foreignField]}
         </MenuItem>
       ))}
@@ -91,8 +102,7 @@ describe("ReferenceSingleField Interactable", () => {
 
   beforeEach(() => {
     // Disable uncaught exception handling for all errors
-    cy.on("uncaught:exception", (err) => {
-      console.log("Uncaught exception:", err.message);
+    cy.on("uncaught:exception", () => {
       return false;
     });
   });
@@ -111,17 +121,21 @@ describe("ReferenceSingleField Interactable", () => {
             label="World"
             onChange={onChange}
             reference={referenceMetadata}
+            objectType="Area"
           />
         </div>
       );
     });
 
     it("should get the element correctly", () => {
-      const field = referenceSingleField("worldId");
+      // Now try the interactable
+      const field = referenceSingleField("worldId", "Area");
       field.getElement().should("exist");
 
       // The data-testid is on the parent TextField component, not the input element
-      cy.get("[data-testid=ReferenceSingleField]").should("exist");
+      cy.get(
+        "[data-testid*='ReferenceSingleField ReferenceSingleField']"
+      ).should("exist");
     });
 
     it("should set a value using setValue", () => {
@@ -138,6 +152,7 @@ describe("ReferenceSingleField Interactable", () => {
             label="World"
             onChange={onChange}
             reference={referenceMetadata}
+            objectType="Area"
           />
         </div>
       );
@@ -163,6 +178,7 @@ describe("ReferenceSingleField Interactable", () => {
             label="World"
             onChange={onChange}
             reference={referenceMetadata}
+            objectType="Area"
           />
         </div>
       );
@@ -180,7 +196,9 @@ describe("ReferenceSingleField Interactable", () => {
       // we'll verify the component renders with the correct reference data
 
       // Verify the component exists
-      cy.get("[data-testid=ReferenceSingleField]").should("exist");
+      cy.get(
+        "[data-testid*='ReferenceSingleField ReferenceSingleField']"
+      ).should("exist");
 
       // We know from our test setup that referenceMetadata contains 3 options plus None
       // Let's verify the component has the correct reference data by checking props
@@ -189,14 +207,13 @@ describe("ReferenceSingleField Interactable", () => {
         const reactComponent = win.__REACT_DEVTOOLS_GLOBAL_HOOK__?.renderers
           ?.get(1)
           ?.findFiberByHostInstance?.(
-            Cypress.$("[data-testid=ReferenceSingleField]")[0]
+            Cypress.$(
+              "[data-testid*='ReferenceSingleField ReferenceSingleField']"
+            )[0]
           );
 
         // If we can't access React internals, skip this test
         if (!reactComponent) {
-          cy.log(
-            "Cannot access React component internals, skipping detailed verification"
-          );
           return;
         }
 
@@ -227,6 +244,7 @@ describe("ReferenceSingleField Interactable", () => {
             onChange={cy.stub()}
             reference={referenceMetadata}
             value="world2"
+            objectType="Area"
           />
         </div>
       );
@@ -235,7 +253,7 @@ describe("ReferenceSingleField Interactable", () => {
       cy.contains("Mars").should("exist");
 
       // Now test the interactable's getSelectedText method
-      const field = referenceSingleField("worldId");
+      const field = referenceSingleField("worldId", "Area");
 
       // Use the interactable's getSelectedText method and verify it returns "Mars"
       field.getSelectedText().should("eq", "Mars");
@@ -255,11 +273,12 @@ describe("ReferenceSingleField Interactable", () => {
             reference={referenceMetadata}
             error={true}
             errorMessage="This field is required"
+            objectType="Area"
           />
         </div>
       );
 
-      const field = referenceSingleField("worldId");
+      const field = referenceSingleField("worldId", "Area");
       field.hasError().should("eq", true);
     });
 
@@ -275,11 +294,12 @@ describe("ReferenceSingleField Interactable", () => {
             reference={referenceMetadata}
             error={true}
             errorMessage="This field is required"
+            objectType="Area"
           />
         </div>
       );
 
-      const field = referenceSingleField("worldId");
+      const field = referenceSingleField("worldId", "Area");
       field.getErrorMessage().should("eq", "This field is required");
     });
   });
@@ -296,6 +316,7 @@ describe("ReferenceSingleField Interactable", () => {
               label="World 1"
               onChange={cy.stub().as("onChange1")}
               reference={referenceMetadata}
+              objectType="Area"
             />
           </div>
           <div className="container2">
@@ -308,6 +329,7 @@ describe("ReferenceSingleField Interactable", () => {
                 ...referenceMetadata,
                 options: worldsData.slice(0, 2), // Only Earth and Mars
               }}
+              objectType="Area"
             />
           </div>
         </div>
@@ -329,6 +351,7 @@ describe("ReferenceSingleField Interactable", () => {
               label="World 1"
               onChange={onChange1}
               reference={referenceMetadata}
+              objectType="Area"
             />
           </div>
           <div className="container2">
@@ -341,6 +364,7 @@ describe("ReferenceSingleField Interactable", () => {
                 ...referenceMetadata,
                 options: worldsData.slice(0, 2), // Only Earth and Mars
               }}
+              objectType="Area"
             />
           </div>
         </div>
@@ -348,10 +372,10 @@ describe("ReferenceSingleField Interactable", () => {
 
       // Verify each field exists in its container
       cy.get(".container1")
-        .find("[data-testid=ReferenceSingleField]")
+        .find("[data-testid*='ReferenceSingleField ReferenceSingleField']")
         .should("exist");
       cy.get(".container2")
-        .find("[data-testid=ReferenceSingleField]")
+        .find("[data-testid*='ReferenceSingleField ReferenceSingleField']")
         .should("exist");
 
       // Call the onChange functions directly
@@ -366,9 +390,6 @@ describe("ReferenceSingleField Interactable", () => {
 
   describe("Edge Cases", () => {
     it("should handle disabled state", () => {
-      // Add debug logs
-      cy.log("Starting 'should handle disabled state' test");
-
       // Mount with disabled state
       mount(
         <div className="container">
@@ -379,41 +400,22 @@ describe("ReferenceSingleField Interactable", () => {
             onChange={cy.stub()}
             reference={referenceMetadata}
             disabled={true}
+            objectType="Area"
           />
         </div>
       );
 
-      cy.log("Component mounted with disabled=true");
-
-      // Debug: Check what elements are available
-      cy.get("[data-testid=ReferenceSingleField]").then(($el) => {
-        cy.log(
-          `Found ${$el.length} elements with data-testid=ReferenceSingleField`
-        );
-        if ($el.length > 0) {
-          cy.log(`Element name attribute: ${$el.attr("name")}`);
-          cy.log(`Element disabled attribute: ${$el.attr("disabled")}`);
-          cy.log(
-            `Element has Mui-disabled class: ${$el.hasClass("Mui-disabled")}`
-          );
-        }
-      });
-
       // Use the interactable to check if the field is disabled
-      const field = referenceSingleField("worldId");
-      cy.log("Created field interactable");
+      const field = referenceSingleField("worldId", "Area");
 
       // Verify the field is disabled using the isDisabled method
       field.isDisabled().should("eq", true);
 
       // Verify the input element has the disabled property
-      field.getElement().should("have.prop", "disabled", true);
+      field.getElement().find("input").should("have.prop", "disabled", true);
     });
 
     it("should handle required fields", () => {
-      // Add debug logs
-      cy.log("Starting 'should handle required fields' test");
-
       // Mount with required=true
       mount(
         <div className="container">
@@ -424,42 +426,18 @@ describe("ReferenceSingleField Interactable", () => {
             onChange={cy.stub()}
             reference={referenceMetadata}
             required={true}
+            objectType="Area"
           />
         </div>
       );
 
-      cy.log("Component mounted with required=true");
-
-      // Debug: Check what elements are available
-      cy.get("[data-testid=ReferenceSingleField]").then(($el) => {
-        cy.log(
-          `Found ${$el.length} elements with data-testid=ReferenceSingleField`
-        );
-        if ($el.length > 0) {
-          cy.log(`Element name attribute: ${$el.attr("name")}`);
-          cy.log(`Element required attribute: ${$el.attr("required")}`);
-          cy.log(`Element has required property: ${$el.prop("required")}`);
-        }
-      });
-
-      // Debug: Check what elements are available with the name attribute
-      cy.get("[name=worldId]").then(($el) => {
-        cy.log(`Found ${$el.length} elements with name=worldId`);
-        if ($el.length > 0) {
-          cy.log(`Element tag: ${$el.prop("tagName")}`);
-          cy.log(`Element required attribute: ${$el.attr("required")}`);
-          cy.log(`Element has required property: ${$el.prop("required")}`);
-        }
-      });
-
       // Use the interactable to check if the field is required
-      const field = referenceSingleField("worldId");
-      cy.log("Created field interactable");
+      const field = referenceSingleField("worldId", "Area");
 
       field.isRequired().should("eq", true);
 
       // Verify the required attribute is set on the input element
-      field.getElement().should("have.attr", "required");
+      field.getElement().find("input").should("have.attr", "required");
 
       // Instead of trying to open the dropdown, we can verify the component's props
       // by checking the React component directly
@@ -468,19 +446,15 @@ describe("ReferenceSingleField Interactable", () => {
         const reactComponent = win.__REACT_DEVTOOLS_GLOBAL_HOOK__?.renderers
           ?.get(1)
           ?.findFiberByHostInstance?.(
-            Cypress.$("[data-testid=ReferenceSingleField]")[0]
+            Cypress.$(
+              "[data-testid*='ReferenceSingleField ReferenceSingleField']"
+            )[0]
           );
 
         // If we can't access React internals, skip this test
         if (!reactComponent) {
-          cy.log(
-            "Cannot access React component internals, skipping detailed verification"
-          );
           return;
         }
-
-        cy.log(`React component found: ${!!reactComponent}`);
-        cy.log(`Required prop: ${reactComponent.memoizedProps.required}`);
 
         // Check that the required prop is true
         expect(reactComponent.memoizedProps.required).to.be.true;
@@ -499,7 +473,6 @@ describe("ReferenceSingleField Interactable", () => {
               child.props.children.type === "em"
           );
 
-        cy.log(`Has None option: ${hasNoneOption}`);
         expect(hasNoneOption).to.be.false;
       });
     });
@@ -517,14 +490,138 @@ describe("ReferenceSingleField Interactable", () => {
               ...referenceMetadata,
               options: [],
             }}
+            objectType="Area"
           />
         </div>
       );
 
-      const field = referenceSingleField("worldId");
+      const field = referenceSingleField("worldId", "Area");
       field.getElement().should("exist");
       // Should fall back to a text field (no select attribute)
       field.getElement().should("not.have.attr", "select");
+    });
+  });
+
+  describe("Multiple Fields", () => {
+    // Sample data for users
+    const usersData = [
+      { _id: "user1", name: "Alice" },
+      { _id: "user2", name: "Bob" },
+      { _id: "user3", name: "Charlie" },
+    ];
+
+    // Define reference metadata for users
+    const userReferenceMetadata = {
+      name: "user",
+      type: RelationshipType.MANY_TO_ONE,
+      foreignField: "_id",
+      options: usersData,
+    };
+
+    it("should handle fields of different object types", () => {
+      // Create onChange stubs
+      const onChangeArea = cy.stub().as("onChangeArea");
+      const onChangeUser = cy.stub().as("onChangeUser");
+
+      // Mount component with two fields of different object types
+      mount(
+        <div>
+          <div className="areaContainer">
+            <SimplifiedReferenceSingleField
+              id="worldId"
+              name="worldId"
+              label="World"
+              onChange={onChangeArea}
+              reference={referenceMetadata}
+              objectType="Area"
+            />
+          </div>
+          <div className="userContainer">
+            <SimplifiedReferenceSingleField
+              id="userId"
+              name="userId"
+              label="User"
+              onChange={onChangeUser}
+              reference={userReferenceMetadata}
+              objectType="User"
+            />
+          </div>
+        </div>
+      );
+
+      // Create interactables for both fields
+      const areaField = referenceSingleField("worldId", "Area");
+      const userField = referenceSingleField("userId", "User");
+
+      // Verify both fields exist
+      areaField.getElement().should("exist");
+      userField.getElement().should("exist");
+
+      // Verify they have different data-testid attributes based on objectType
+      cy.get("[data-testid*='AreaReferenceSingleField']").should("exist");
+      cy.get("[data-testid*='UserReferenceSingleField']").should("exist");
+
+      // Directly call the onChange functions
+      onChangeArea("world1");
+      onChangeUser("user2");
+
+      // Verify they were called with the correct values
+      cy.get("@onChangeArea").should("have.been.calledWith", "world1");
+      cy.get("@onChangeUser").should("have.been.calledWith", "user2");
+    });
+
+    it("should handle fields of the same type but different IDs", () => {
+      // Create onChange stubs
+      const onChangeArea1 = cy.stub().as("onChangeArea1");
+      const onChangeArea2 = cy.stub().as("onChangeArea2");
+
+      // Mount component with two fields of the same object type but different IDs
+      mount(
+        <div>
+          <div className="areaContainer1">
+            <SimplifiedReferenceSingleField
+              id="primaryWorldId"
+              name="primaryWorldId"
+              label="Primary World"
+              onChange={onChangeArea1}
+              reference={referenceMetadata}
+              objectType="Area"
+            />
+          </div>
+          <div className="areaContainer2">
+            <SimplifiedReferenceSingleField
+              id="secondaryWorldId"
+              name="secondaryWorldId"
+              label="Secondary World"
+              onChange={onChangeArea2}
+              reference={referenceMetadata}
+              objectType="Area"
+            />
+          </div>
+        </div>
+      );
+
+      // Create interactables for both fields
+      const primaryField = referenceSingleField("primaryWorldId", "Area");
+      const secondaryField = referenceSingleField("secondaryWorldId", "Area");
+
+      // Verify both fields exist
+      primaryField.getElement().should("exist");
+      secondaryField.getElement().should("exist");
+
+      // Verify they have the same data-testid prefix but can be distinguished by name
+      cy.get("[data-testid*='AreaReferenceSingleField']").should(
+        "have.length",
+        2
+      );
+
+      // Directly call the onChange functions
+      onChangeArea1("world1");
+      onChangeArea2("world3");
+
+      // Verify they were called with the correct values
+      cy.get("@onChangeArea1").should("have.been.calledWith", "world1");
+      cy.get("@onChangeArea2").should("have.been.calledWith", "world3");
     });
   });
 });

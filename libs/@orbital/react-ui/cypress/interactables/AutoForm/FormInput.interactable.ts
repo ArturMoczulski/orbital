@@ -33,7 +33,7 @@ export abstract class FormInputInteractable<
    * Set a value on the input field
    * This method will be implemented by subclasses
    */
-  abstract setValue(value: T): Cypress.Chainable<JQuery<HTMLElement>>;
+  abstract selectById(value: T): Cypress.Chainable<JQuery<HTMLElement>>;
 
   /**
    * Clear the input
@@ -52,7 +52,7 @@ export class TextInputInteractable extends FormInputInteractable<string> {
   /**
    * Set a value on the text input
    */
-  setValue(value: string): Cypress.Chainable<JQuery<HTMLElement>> {
+  selectById(value: string): Cypress.Chainable<JQuery<HTMLElement>> {
     return this.getElement().clear().type(value);
   }
 }
@@ -64,7 +64,7 @@ export class NumberInputInteractable extends FormInputInteractable<number> {
   /**
    * Set a value on the number input
    */
-  setValue(value: number): Cypress.Chainable<JQuery<HTMLElement>> {
+  selectById(value: number): Cypress.Chainable<JQuery<HTMLElement>> {
     return this.getElement().clear().type(String(value));
   }
 }
@@ -76,7 +76,7 @@ export class CheckboxInputInteractable extends FormInputInteractable<boolean> {
   /**
    * Set a value on the checkbox
    */
-  setValue(value: boolean): Cypress.Chainable<JQuery<HTMLElement>> {
+  selectById(value: boolean): Cypress.Chainable<JQuery<HTMLElement>> {
     if (value) {
       return this.check();
     } else {
@@ -106,7 +106,7 @@ export class RadioInputInteractable extends FormInputInteractable<string> {
   /**
    * Set a value on the radio button
    */
-  setValue(value: string): Cypress.Chainable<JQuery<HTMLElement>> {
+  selectById(value: string): Cypress.Chainable<JQuery<HTMLElement>> {
     return this.getElement().check(value);
   }
 }
@@ -118,7 +118,7 @@ export class SelectInputInteractable extends FormInputInteractable<string> {
   /**
    * Set a value on the select dropdown
    */
-  setValue(value: string): Cypress.Chainable<JQuery<HTMLElement>> {
+  selectById(value: string): Cypress.Chainable<JQuery<HTMLElement>> {
     return this.getElement().select(value);
   }
 

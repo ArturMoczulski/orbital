@@ -33,6 +33,10 @@ require("cypress-terminal-report/src/installLogsCollector")({
 
 import { mount } from "cypress/react";
 
+// Register cypress-grep for filtering tests
+import registerCypressGrep from "@cypress/grep/src/support";
+registerCypressGrep();
+
 // Augment the Cypress namespace to include type definitions for
 // your custom command.
 // Alternatively, can be defined in cypress/support/component.d.ts

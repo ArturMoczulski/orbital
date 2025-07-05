@@ -50,9 +50,9 @@ describe("AutoForm Interactable", () => {
       });
 
       // Access individual inputs
-      form.inputs.name.setValue("John Scoped");
-      form.inputs.age.setValue(30);
-      form.inputs.email.setValue("john.scoped@example.com");
+      form.inputs.name.selectById("John Scoped");
+      form.inputs.age.selectById(30);
+      form.inputs.email.selectById("john.scoped@example.com");
 
       // Verify the values using the fluent API
       form.inputs.name.should("have.value", "John Scoped");
@@ -126,9 +126,9 @@ describe("AutoForm Interactable", () => {
       }>("TestForm");
 
       // Access individual inputs
-      form.inputs.name.setValue("John Doe");
-      form.inputs.age.setValue(30);
-      form.inputs.email.setValue("john.doe@example.com");
+      form.inputs.name.selectById("John Doe");
+      form.inputs.age.selectById(30);
+      form.inputs.email.selectById("john.doe@example.com");
 
       // Verify the values using the fluent API
       form.inputs.name.should("have.value", "John Doe");
@@ -231,13 +231,13 @@ describe("AutoForm Interactable", () => {
       }>("TestForm");
 
       // Use setValue for all input types
-      form.inputs.name.setValue("Consistent API");
+      form.inputs.name.selectById("Consistent API");
       form.inputs.name.should("have.value", "Consistent API");
 
-      form.inputs.email.setValue("consistent.api@example.com");
+      form.inputs.email.selectById("consistent.api@example.com");
       form.inputs.email.should("have.value", "consistent.api@example.com");
 
-      form.inputs.age.setValue(50);
+      form.inputs.age.selectById(50);
       form.inputs.age.should("have.value", "50");
 
       // Clear and verify
