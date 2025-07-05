@@ -16,6 +16,7 @@ module.exports = {
     extensions: [".ts", ".tsx", ".js", ".jsx"],
     alias: {
       "@components": path.resolve(__dirname, "src/components"),
+      "@orbital/core": path.resolve(__dirname, "../core"),
     },
   },
   module: {
@@ -55,6 +56,11 @@ module.exports = {
       commonjs: "@mui/icons-material",
       commonjs2: "@mui/icons-material",
       root: "MuiIcons",
+    },
+    "@orbital/core": {
+      commonjs: "@orbital/core",
+      commonjs2: "@orbital/core",
+      root: "OrbitalCore",
     },
   },
 };

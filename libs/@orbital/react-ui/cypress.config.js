@@ -34,6 +34,12 @@ module.exports = defineConfig({
       "src/components/**/*.cy.{ts,tsx}",
       "cypress/interactables/**/*.cy.{ts,tsx}",
     ],
+    // Exclude Jest unit test files from compilation
+    excludeSpecPattern: [
+      "**/*.unit.spec.{ts,tsx}",
+      "**/*.spec.{ts,tsx}",
+      "!**/*.cy.spec.{ts,tsx}",
+    ],
     supportFile: path.join(__dirname, "cypress/support/component.ts"),
   },
 

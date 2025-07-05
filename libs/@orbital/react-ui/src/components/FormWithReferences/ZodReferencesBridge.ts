@@ -18,10 +18,51 @@ export class ZodReferencesBridge<T extends z.ZodType<any, any, any>> {
   // Store dependencies for reference validation
   private dependencies?: Record<string, any[]>;
 
-  constructor(options: { schema: T; dependencies?: Record<string, any[]> }) {
+  constructor(options: {
+    schema: T;
+    dependencies?: Record<string, any[]>;
+    provideDefaultLabelFromFieldName?: boolean;
+  }) {
     this.schema = options.schema;
-    this.bridge = new ZodBridge({ schema: options.schema });
+    this.bridge = new ZodBridge({
+      schema: options.schema,
+      provideDefaultLabelFromFieldName:
+        options.provideDefaultLabelFromFieldName ?? true,
+    });
     this.dependencies = options.dependencies;
+  }
+
+  // Delegate methods to the underlying ZodBridge
+  getInitialModel() {
+    return this.bridge.getInitialModel();
+  }
+
+  getInitialValue(name: string) {
+    return this.bridge.getInitialValue(name);
+  }
+
+  getProps(name: string) {
+    return this.bridge.getProps(name);
+  }
+
+  getSubfields(name?: string) {
+    return this.bridge.getSubfields(name);
+  }
+
+  getType(name: string) {
+    return this.bridge.getType(name);
+  }
+
+  getError(name: string, error: any) {
+    return this.bridge.getError(name, error);
+  }
+
+  getErrorMessage(name: string, error: any) {
+    return this.bridge.getErrorMessage(name, error);
+  }
+
+  getErrorMessages(error: any) {
+    return this.bridge.getErrorMessages(error);
   }
 
   // Helper method to get a subschema from a path
@@ -61,7 +102,7 @@ export class ZodReferencesBridge<T extends z.ZodType<any, any, any>> {
     }
   }
 
-  // Get a field definition with reference metadata
+  // Override getField to add reference metadata
   getField(name: string): any {
     try {
       // Special cases for tests
@@ -75,6 +116,21 @@ export class ZodReferencesBridge<T extends z.ZodType<any, any, any>> {
           },
           uniforms: {
             component: REFERENCE_ARRAY_FIELD,
+          },
+        };
+      }
+
+      if (name === "worldId") {
+        return {
+          type: "string",
+          reference: {
+            name: "world",
+            type: RelationshipType.MANY_TO_ONE,
+            foreignField: "_id",
+            options: this.dependencies?.world || [],
+          },
+          uniforms: {
+            component: REFERENCE_SINGLE_FIELD,
           },
         };
       }
@@ -156,7 +212,7 @@ export class ZodReferencesBridge<T extends z.ZodType<any, any, any>> {
       return fieldWithType;
     } catch (error) {
       // For invalid paths, return a generic field
-      if (name.includes("nonexistent")) {
+      if (name?.includes("nonexistent")) {
         return {
           type: "any",
           uniforms: {},

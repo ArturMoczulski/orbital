@@ -2,8 +2,8 @@ import Box from "@mui/material/Box";
 import Dialog from "@mui/material/Dialog";
 import DialogTitle from "@mui/material/DialogTitle";
 import { ZodBridge } from "uniforms-bridge-zod";
-import { FormWithReferences } from "../../forms";
-import { ZodReferencesBridge } from "../../forms/ZodReferencesBridge";
+import { FormWithReferences } from "../FormWithReferences";
+import { ZodReferencesBridge } from "../FormWithReferences/ZodReferencesBridge";
 import { TreeNodeData } from "../types";
 
 interface AddBranchDialogProps<T extends TreeNodeData> {

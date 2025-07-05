@@ -16,10 +16,10 @@
     "jsx": "react-jsx",
     "declaration": true,
     "outDir": "dist",
-    "rootDir": ".",
     "baseUrl": ".",
     "paths": {
-      "@components/*": ["src/components/*"]
+      "@components/*": ["src/components/*"],
+      "@orbital/core/*": ["../core/*"]
     }
   },
   "include": ["src", "cypress", "src/**/*.tsx", "cypress/**/*.{ts,tsx}"],
