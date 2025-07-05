@@ -44,6 +44,21 @@ interface AutoFormButtons<T extends Record<string, any>> {
 }
 
 /**
+ * Interface for AutoForm options
+ */
+interface AutoFormOptions {
+  /**
+   * The data-testid or class name of the form
+   */
+  formTestId: string;
+
+  /**
+   * Optional parent element to scope the form within
+   */
+  parent?: Cypress.Chainable<JQuery<HTMLElement>>;
+}
+
+/**
  * AutoFormInteractable class represents an AutoForm component
  * and provides methods for interacting with it
  */
@@ -60,8 +75,11 @@ class AutoFormInteractable<
    */
   readonly buttons: AutoFormButtons<T>;
 
-  constructor(formTestId: string) {
-    super(formTestId); // Pass the form test ID to the parent class
+  constructor(
+    formTestId: string,
+    parentElement?: Cypress.Chainable<JQuery<HTMLElement>>
+  ) {
+    super(formTestId, parentElement);
 
     // Initialize the inputs property as a Proxy to dynamically handle field access
     this.inputs = new Proxy({} as AutoFormInputs<T>, {
@@ -73,15 +91,18 @@ class AutoFormInteractable<
 
         return {
           getElement: () => {
+            // Get a fresh element each time to avoid context issues
             return this.getElement().find(`[name="${prop}"]`).should("exist");
           },
           type: (value: any) => {
+            // Get a fresh element each time to avoid context issues
             return this.getElement()
               .find(`[name="${prop}"]`)
               .clear()
               .type(String(value));
           },
           clear: () => {
+            // Get a fresh element each time to avoid context issues
             return this.getElement().find(`[name="${prop}"]`).clear();
           },
         } as FormInputField<any>;
@@ -91,6 +112,7 @@ class AutoFormInteractable<
     // Initialize the buttons property
     this.buttons = {
       submit: () =>
+        // Get a fresh element each time to avoid context issues
         this.getElement().find('button[type="submit"]').should("exist"),
     };
   }
@@ -131,15 +153,27 @@ class AutoFormInteractable<
 
 /**
  * Create an AutoForm helper for interacting with the component
- * @param formTestId The data-testid of the form
+ * @param formTestIdOrOptions The data-testid of the form or options object
  * @returns An AutoFormInteractable instance
  */
 function autoForm<T extends Record<string, any>>(
-  formTestId: string
+  formTestIdOrOptions: string | AutoFormOptions
 ): AutoFormInteractable<T> {
-  return new AutoFormInteractable<T>(formTestId);
+  if (typeof formTestIdOrOptions === "string") {
+    return new AutoFormInteractable<T>(formTestIdOrOptions);
+  } else {
+    return new AutoFormInteractable<T>(
+      formTestIdOrOptions.formTestId,
+      formTestIdOrOptions.parent
+    );
+  }
 }
 
 // Export the helper function and class
 export { autoForm, AutoFormInteractable };
-export type { AutoFormButtons, AutoFormInputs, FormInputField };
+export type {
+  AutoFormButtons,
+  AutoFormInputs,
+  AutoFormOptions,
+  FormInputField,
+};
