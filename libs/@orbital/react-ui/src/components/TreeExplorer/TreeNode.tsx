@@ -18,7 +18,7 @@ interface TreeNodeProps<T extends ExplorerObject> {
 }
 
 /**
- * Default tree node component for the ObjectExplorer
+ * Default tree node component for the TreeExplorer
  */
 export function TreeNode<T extends ExplorerObject>({
   object,

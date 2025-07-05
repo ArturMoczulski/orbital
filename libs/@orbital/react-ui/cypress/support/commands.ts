@@ -26,5 +26,5 @@
 
 // Import fluent API helpers
 // Note: We've moved from custom commands to a class-based fluent API using CypressInteractable
-import "../../src/components/ObjectExplorer/TreeExplorer.interactable";
+import "../../src/components/TreeExplorer/TreeExplorer.interactable";
 import "../interactables/AutoForm/AutoForm.interactable";

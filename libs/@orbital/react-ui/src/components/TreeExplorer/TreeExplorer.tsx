@@ -9,8 +9,8 @@ import { ZodBridge } from "uniforms-bridge-zod";
 import { z } from "zod";
 import { useOrbitalTheme } from "../../theme/ThemeContext";
 import { useNotification } from "../NotificationProvider/NotificationProvider";
-import { ExplorerObject, ObjectExplorerProps, QueryResult } from "../types";
-import { AddBranchDialog } from "./AddItemDialog";
+import { ExplorerObject, QueryResult, TreeExplorerProps } from "../types";
+import { AddBranchDialog } from "./AddBranchDialog";
 import { TreeNode } from "./TreeNode";
 
 /**
@@ -28,7 +28,7 @@ export function TreeExplorer<T extends ExplorerObject>({
   itemActions,
   api,
   query: customQuery,
-}: ObjectExplorerProps<T>) {
+}: TreeExplorerProps<T>) {
   // Infer type name and prefix from type
   const typeName = objectTypeName ?? `${type}s`;
   // Create PascalCase version for test IDs
@@ -172,7 +172,7 @@ export function TreeExplorer<T extends ExplorerObject>({
     return (
       <Box
         sx={{ p: 2, color: "text.primary" }}
-        data-testid="ObjectExplorerLoadingState"
+        data-testid="TreeExplorerLoadingState"
       >
         Loading {typeName.toLowerCase()}...
       </Box>
@@ -183,7 +183,7 @@ export function TreeExplorer<T extends ExplorerObject>({
     return (
       <Box
         sx={{ p: 2, color: "error.main" }}
-        data-testid="ObjectExplorerErrorState"
+        data-testid="TreeExplorerErrorState"
       >
         Error loading {typeName.toLowerCase()}
       </Box>
@@ -213,7 +213,7 @@ export function TreeExplorer<T extends ExplorerObject>({
           display: "flex",
           flexDirection: "column",
         }}
-        data-testid={`ObjectExplorer ${typePrefixPascal}Explorer`}
+        data-testid={`TreeExplorer ${typePrefixPascal}Explorer`}
       >
         {/* Header */}
         <Box
@@ -302,7 +302,6 @@ export function TreeExplorer<T extends ExplorerObject>({
         </Box>
       </Box>
 
-      {/* Use the new AddItemDialog component */}
       <AddBranchDialog<T>
         open={showAddModal}
         onClose={closeAddModal}

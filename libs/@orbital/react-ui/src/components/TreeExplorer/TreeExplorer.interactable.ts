@@ -1,12 +1,12 @@
-// ObjectExplorer Cypress Helpers
-// This file provides a fluent API for interacting with the ObjectExplorer component in tests
+// TreeExplorer Cypress Helpers
+// This file provides a fluent API for interacting with the TreeExplorer component in tests
 
 // Import the CypressInteractable base class
 import { CypressInteractable } from "../../../cypress/interactables/Cypress.interactable";
 // Import the DialogInteractable classes
 import { ZodObjectSchema } from "../../../cypress/interactables/Dialog/FormDialog/FormDialog.interactable";
-// Import the ObjectExplorerAddDialog class
-import { AddItemDialogInteractable } from "./AddItemDialog.interactable";
+// Import the TreeExplorerAddDialog class
+import { AddBranchDialogInteractable } from "./AddBranchDialog.interactable";
 // Import TreeNodeInteractable
 import { TreeNodeInteractable } from "./TreeNode.interactable";
 // Import Zod for schema handling
@@ -20,15 +20,15 @@ interface TreeExplorerDialogs<
   Schema extends ZodObjectSchema = never,
 > {
   /**
-   * The Add dialog as an ObjectExplorerAddDialog
+   * The Add dialog as an TreeExplorerAddDialog
    */
-  add: AddItemDialogInteractable<Schema, CustomActions>;
+  add: AddBranchDialogInteractable<Schema, CustomActions>;
 }
 
 /**
  * Interface for button-related methods
  */
-interface ObjectExplorerButtons<CustomActions extends string = never> {
+interface TreeExplorerButtons<CustomActions extends string = never> {
   /**
    * Get the Add button element
    */
@@ -43,7 +43,7 @@ interface ObjectExplorerButtons<CustomActions extends string = never> {
 /**
  * Interface for state-related methods
  */
-interface ObjectExplorerStates<
+interface TreeExplorerStates<
   CustomActions extends string = never,
   Schema extends ZodObjectSchema = never,
 > {
@@ -90,7 +90,7 @@ interface ObjectExplorerStates<
 }
 
 /**
- * ObjectExplorerInteractable class represents the ObjectExplorer component
+ * TreeExplorerInteractable class represents the TreeExplorer component
  * and provides methods for interacting with it
  */
 class TreeExplorerInteractable<
@@ -109,19 +109,19 @@ class TreeExplorerInteractable<
   /**
    * Button-related methods organized in a nested structure
    */
-  readonly buttons: ObjectExplorerButtons<CustomActions>;
+  readonly buttons: TreeExplorerButtons<CustomActions>;
 
   /**
    * State-related methods organized in a nested structure
    */
-  readonly states: ObjectExplorerStates<CustomActions, Schema>;
+  readonly states: TreeExplorerStates<CustomActions, Schema>;
 
   constructor(
     typePrefixPascal: string,
     schema: Schema,
     customActions?: CustomActions[]
   ) {
-    super(`ObjectExplorer`); // Pass the base component type to the parent class
+    super(`TreeExplorer`); // Pass the base component type to the parent class
     this.typePrefixPascal = typePrefixPascal;
     this.schema = schema;
     this.customActions = customActions;
@@ -132,9 +132,9 @@ class TreeExplorerInteractable<
       addEmpty: () => this.getElement().find('[data-testid="AddButtonEmpty"]'),
     };
 
-    // Initialize the dialogs property with ObjectExplorerAddDialog
+    // Initialize the dialogs property with TreeExplorerAddDialog
     this.dialogs = {
-      add: new AddItemDialogInteractable<Schema, CustomActions>(
+      add: new AddBranchDialogInteractable<Schema, CustomActions>(
         this, // Pass the explorer instance
         schema // Schema for the form
       ),
@@ -144,9 +144,9 @@ class TreeExplorerInteractable<
     this.states = {
       loading: {
         getElement: () => {
-          // Use the ObjectExplorer prefixed selector for components outside the main structure
+          // Use the TreeExplorer prefixed selector for components outside the main structure
           return cy
-            .get('[data-testid="ObjectExplorerLoadingState"]')
+            .get('[data-testid="TreeExplorerLoadingState"]')
             .should("exist");
         },
         shouldExist: () => {
@@ -156,9 +156,9 @@ class TreeExplorerInteractable<
       },
       error: {
         getElement: () => {
-          // Use the ObjectExplorer prefixed selector for components outside the main structure
+          // Use the TreeExplorer prefixed selector for components outside the main structure
           return cy
-            .get('[data-testid="ObjectExplorerErrorState"]')
+            .get('[data-testid="TreeExplorerErrorState"]')
             .should("exist");
         },
         shouldExist: () => {
@@ -181,13 +181,13 @@ class TreeExplorerInteractable<
   }
 
   /**
-   * Override the getElement method to use the specific ObjectExplorer selector
+   * Override the getElement method to use the specific TreeExplorer selector
    */
   override getElement() {
-    // The data-testid format in the component is "ObjectExplorer ${typePrefixPascal}Explorer"
-    // For example: "ObjectExplorer ItemExplorer"
+    // The data-testid format in the component is "TreeExplorer ${typePrefixPascal}Explorer"
+    // For example: "TreeExplorer ItemExplorer"
     // But for more flexibility, we'll use a partial match
-    return cy.get(`[data-testid^="ObjectExplorer"]`).should("exist");
+    return cy.get(`[data-testid^="TreeExplorer"]`).should("exist");
   }
 
   /**
@@ -245,9 +245,9 @@ class TreeExplorerInteractable<
 }
 
 /**
- * Create an ObjectExplorer helper for interacting with the component
+ * Create an TreeExplorer helper for interacting with the component
  * @param typePrefixPascal The PascalCase type prefix (e.g., "Area", "World")
- * @returns An ObjectExplorerInteractable instance
+ * @returns An TreeExplorerInteractable instance
  */
 function treeExplorer<
   T extends string = never,

@@ -1,5 +1,5 @@
-// ObjectExplorer Dialog Cypress Helpers
-// This file provides interactable classes for ObjectExplorer dialogs in Cypress tests
+// TreeExplorer Dialog Cypress Helpers
+// This file provides interactable classes for TreeExplorer dialogs in Cypress tests
 
 /// <reference types="cypress" />
 
@@ -11,18 +11,18 @@ import {
 import { TreeExplorerInteractable } from "./TreeExplorer.interactable";
 
 /**
- * ObjectExplorerAddDialog class represents the Add dialog in the ObjectExplorer
+ * TreeExplorerAddDialog class represents the Add dialog in the TreeExplorer
  * and provides methods for interacting with it
  */
-export class AddItemDialogInteractable<
+export class AddBranchDialogInteractable<
   Schema extends ZodObjectSchema = ZodObjectSchema,
   CustomActions extends string = never,
 > extends FormDialogInteractable<Schema> {
   private explorer: TreeExplorerInteractable<CustomActions, Schema>;
 
   /**
-   * Constructor for ObjectExplorerAddDialog
-   * @param explorer The parent ObjectExplorerInteractable instance
+   * Constructor for TreeExplorerAddDialog
+   * @param explorer The parent TreeExplorerInteractable instance
    * @param schema The Zod schema for the form
    */
   constructor(
@@ -30,7 +30,7 @@ export class AddItemDialogInteractable<
     schema: Schema
   ) {
     super(
-      "ObjectExplorerAddDialog", // Dialog test ID
+      "TreeExplorerAddDialog", // Dialog test ID
       "AddForm", // Form test ID
       schema // Schema for the form
     );

@@ -10,7 +10,7 @@ export interface TreeNodeActionButtonProps {
 }
 
 /**
- * Standardized action button for ObjectExplorer items
+ * Standardized action button for TreeExplorer items
  * Provides consistent styling and behavior for all item actions
  */
 export function TreeNodeActionButton({

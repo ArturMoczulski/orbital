@@ -1,6 +1,6 @@
 import { Area, AreaSchema } from "@orbital/core/src/types/area";
 import { AreaMap } from "@orbital/core/src/types/area-map";
-import { ObjectExplorer, useWorld } from "@orbital/react-ui";
+import { TreeExplorer, useWorld } from "@orbital/react-ui";
 import { useEffect, useState } from "react";
 import {
   useAreasControllerGetAllQuery,
@@ -13,7 +13,7 @@ interface AreaExplorerProps {
 }
 
 /**
- * Area-specific implementation of ObjectExplorer
+ * Area-specific implementation of TreeExplorer
  * Fetches area list and on-demand map data, then notifies parent via onSelect.
  */
 export default function AreaExplorer({ onSelect }: AreaExplorerProps) {
@@ -35,9 +35,9 @@ export default function AreaExplorer({ onSelect }: AreaExplorerProps) {
     }
   }, [selectedMapId, mapData, onSelect]);
 
-  // Use the enhanced ObjectExplorer with API-based functionality
+  // Use the enhanced TreeExplorer with API-based functionality
   return (
-    <ObjectExplorer<Area>
+    <TreeExplorer<Area>
       type="Area"
       schema={AreaSchema}
       itemActions={(area, defaultActions) => (

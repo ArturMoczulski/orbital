@@ -39,7 +39,7 @@ describe("Index page area creation", () => {
 
     cy.intercept("POST", "/api/admin/areas").as("createArea");
 
-    // Use custom commands to interact with the ObjectExplorer
+    // Use custom commands to interact with the TreeExplorer
     // Use 'area' as the type prefix since we're working with the AreaExplorer
     cy.openAddObjectDialog("area");
     cy.getAddObjectInput("area", "name").type(testName);

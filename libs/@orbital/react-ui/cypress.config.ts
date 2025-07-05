@@ -7,16 +7,16 @@ console.log("Components directory:", componentsDir);
 
 // Check if the spec files exist
 const fs = require("fs");
-if (fs.existsSync(path.join(componentsDir, "ObjectExplorer.spec.tsx"))) {
-  console.log("ObjectExplorer.spec.tsx exists");
+if (fs.existsSync(path.join(componentsDir, "TreeExplorer.spec.tsx"))) {
+  console.log("TreeExplorer.spec.tsx exists");
 } else {
-  console.log("ObjectExplorer.spec.tsx does not exist");
+  console.log("TreeExplorer.spec.tsx does not exist");
 }
 
-if (fs.existsSync(path.join(componentsDir, "ObjectExplorer.cy.tsx"))) {
-  console.log("ObjectExplorer.cy.tsx exists");
+if (fs.existsSync(path.join(componentsDir, "TreeExplorer.cy.tsx"))) {
+  console.log("TreeExplorer.cy.tsx exists");
 } else {
-  console.log("ObjectExplorer.cy.tsx does not exist");
+  console.log("TreeExplorer.cy.tsx does not exist");
 }
 
 export default defineConfig({

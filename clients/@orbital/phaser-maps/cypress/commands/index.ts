@@ -1,4 +1,4 @@
-// Custom commands for interacting with the ObjectExplorer component
+// Custom commands for interacting with the TreeExplorer component
 
 /**
  * Opens the "Add Object" dialog by clicking the add button

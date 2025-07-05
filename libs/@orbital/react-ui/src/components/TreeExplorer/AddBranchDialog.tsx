@@ -42,7 +42,7 @@ interface AddBranchDialogProps<T extends ExplorerObject> {
 }
 
 /**
- * Dialog for adding a new item in the ObjectExplorer
+ * Dialog for adding a new item in the TreeExplorer
  */
 export function AddBranchDialog<T extends ExplorerObject>({
   open,
@@ -54,7 +54,7 @@ export function AddBranchDialog<T extends ExplorerObject>({
 }: AddBranchDialogProps<T>) {
   return (
     <Dialog
-      data-testid="ObjectExplorerAddDialog"
+      data-testid="TreeExplorerAddDialog"
       open={open}
       onClose={onClose}
       fullWidth

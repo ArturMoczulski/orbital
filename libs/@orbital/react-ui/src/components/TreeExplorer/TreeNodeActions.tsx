@@ -10,7 +10,7 @@ export interface TreeNodeActionsProps<T extends ExplorerObject> {
 }
 
 /**
- * Default action buttons for ObjectExplorer items
+ * Default action buttons for TreeExplorer items
  * This component renders the standard action buttons (currently just delete)
  * It can be used as-is, extended, or completely replaced by custom itemActions
  */

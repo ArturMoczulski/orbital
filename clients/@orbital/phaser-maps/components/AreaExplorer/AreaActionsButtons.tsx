@@ -17,13 +17,13 @@ interface AreaActionsButtonsProps {
   onLoadMap: (areaId: string) => void;
 
   /**
-   * Default actions from ObjectExplorer
+   * Default actions from TreeExplorer
    */
   defaultActions: React.ReactNode;
 }
 
 /**
- * Component that renders all actions for an area in the ObjectExplorer
+ * Component that renders all actions for an area in the TreeExplorer
  */
 export function AreaActionsButtons({
   area,

@@ -1,5 +1,5 @@
 /**
- * Base interface for objects that can be displayed in the ObjectExplorer
+ * Base interface for objects that can be displayed in the TreeExplorer
  */
 export interface ExplorerObject {
   _id: string;
@@ -19,9 +19,9 @@ export interface QueryResult<T extends ExplorerObject> {
 }
 
 /**
- * Interface for RTK Query API hooks used by ObjectExplorer
+ * Interface for RTK Query API hooks used by TreeExplorer
  */
-export interface ObjectExplorerAPI<T extends ExplorerObject> {
+export interface TreeExplorerAPI<T extends ExplorerObject> {
   /**
    * Query hook for fetching all objects
    * Should return a QueryResult<T>
@@ -47,9 +47,9 @@ export interface ObjectExplorerAPI<T extends ExplorerObject> {
 }
 
 /**
- * Props for the ObjectExplorer component
+ * Props for the TreeExplorer component
  */
-export interface ObjectExplorerProps<T extends ExplorerObject> {
+export interface TreeExplorerProps<T extends ExplorerObject> {
   /**
    * Query result containing the objects to display
    * Optional if api is provided
@@ -115,7 +115,7 @@ export interface ObjectExplorerProps<T extends ExplorerObject> {
    * Optional RTK Query API object
    * If provided, the component will use the hooks defined in the API interface
    */
-  api?: ObjectExplorerAPI<T>;
+  api?: TreeExplorerAPI<T>;
 
   /**
    * Optional custom query hook

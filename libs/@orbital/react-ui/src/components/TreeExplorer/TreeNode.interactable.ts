@@ -25,7 +25,7 @@ export interface TreeNodeButtons<CustomActions extends string = never> {
 }
 
 /**
- * TreeNode class represents a node in the ObjectExplorer tree
+ * TreeNode class represents a node in the TreeExplorer tree
  * and provides methods for interacting with it
  */
 export class TreeNodeInteractable<
@@ -250,7 +250,7 @@ export class TreeNodeInteractable<
    */
   select(): TreeNodeInteractable<CustomActions, Schema> {
     // The select functionality is triggered by clicking on the node text
-    // In the ObjectExplorer component, the text is in a Typography component
+    // In the TreeExplorer component, the text is in a Typography component
 
     // First find the node
     this.findElement().then(($el) => {

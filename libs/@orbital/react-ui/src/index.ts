@@ -1,17 +1,17 @@
 // Export components
-export { TreeExplorer as ObjectExplorer } from "./components/ObjectExplorer/TreeExplorer";
+export { TreeExplorer as TreeExplorer } from "./components/TreeExplorer/TreeExplorer";
 export {
-  TreeNodeActionButton as ObjectExplorerItemActionButton,
+  TreeNodeActionButton as TreeExplorerItemActionButton,
   TreeNodeActionButton,
-} from "./components/ObjectExplorer/TreeNodeActionButton";
+} from "./components/TreeExplorer/TreeNodeActionButton";
 export type {
-  TreeNodeActionButtonProps as ObjectExplorerItemActionButtonProps,
+  TreeNodeActionButtonProps as TreeExplorerItemActionButtonProps,
   TreeNodeActionButtonProps,
-} from "./components/ObjectExplorer/TreeNodeActionButton";
+} from "./components/TreeExplorer/TreeNodeActionButton";
 export type {
   ExplorerObject,
-  ObjectExplorerProps,
   QueryResult,
+  TreeExplorerProps,
 } from "./components/types";
 
 // Export notification components
