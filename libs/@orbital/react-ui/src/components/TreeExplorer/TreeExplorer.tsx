@@ -9,14 +9,14 @@ import { ZodBridge } from "uniforms-bridge-zod";
 import { z } from "zod";
 import { useOrbitalTheme } from "../../theme/ThemeContext";
 import { useNotification } from "../NotificationProvider/NotificationProvider";
-import { ExplorerObject, QueryResult, TreeExplorerProps } from "../types";
+import { QueryResult, TreeExplorerProps, TreeNodeData } from "../types";
 import { AddBranchDialog } from "./AddBranchDialog";
 import { TreeNode } from "./TreeNode";
 
 /**
  * A generic tree-view component for displaying hierarchical objects
  */
-export function TreeExplorer<T extends ExplorerObject>({
+export function TreeExplorer<T extends TreeNodeData>({
   queryResult: providedQueryResult,
   onSelect,
   type,
@@ -103,7 +103,7 @@ export function TreeExplorer<T extends ExplorerObject>({
     }
   };
 
-  const handleApiDelete = async (objectId: string) => {
+  const handleApiDelete = async (object: T) => {
     if (!deleteMutation) {
       const errorMessage = `No delete endpoint function found for type '${type}'. The API must provide a 'deleteHook' property.`;
       notify(errorMessage, "error");
@@ -111,7 +111,7 @@ export function TreeExplorer<T extends ExplorerObject>({
     }
 
     try {
-      return await deleteMutation({ _id: objectId }).unwrap();
+      return await deleteMutation({ _id: object._id }).unwrap();
     } catch (error: any) {
       const errorMessage =
         error?.data?.message ||
@@ -140,13 +140,12 @@ export function TreeExplorer<T extends ExplorerObject>({
     setExpandedNodes((prev) => ({ ...prev, [_id]: !prev[_id] }));
   };
 
-  const handleSelectClick = (_id: string, event: React.MouseEvent) => {
+  const handleSelectClick = (event: React.MouseEvent, object: T) => {
     event.stopPropagation();
-    const selected = objects.find((o) => o._id === _id);
-    if (selected && onSelect) onSelect(selected._id);
+    if (onSelect) onSelect(object);
   };
 
-  const handleDeleteClick = (_id: string, event: React.MouseEvent) => {
+  const handleDeleteClick = (event: React.MouseEvent, object: T) => {
     event.stopPropagation();
     if (onDelete) {
       // Use the notification system to confirm deletion
@@ -156,7 +155,7 @@ export function TreeExplorer<T extends ExplorerObject>({
         )
       ) {
         try {
-          onDelete(_id);
+          onDelete(object);
           notify(`${type} deleted successfully`, "success");
         } catch (error: any) {
           // Error handling is already in handleApiDelete, this is just a fallback
@@ -292,7 +291,7 @@ export function TreeExplorer<T extends ExplorerObject>({
                     renderNode(
                       obj,
                       () => toggleNode(obj._id),
-                      (e) => handleSelectClick(obj._id, e)
+                      (e) => handleSelectClick(e, obj)
                     ) as React.ReactElement
                   }
                 </Box>

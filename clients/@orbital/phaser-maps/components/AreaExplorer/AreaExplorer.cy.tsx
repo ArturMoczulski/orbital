@@ -1,5 +1,6 @@
 // @ts-nocheck
 /// <reference types="cypress" />
+import { Area } from "@orbital/core/src/types/area";
 import { AreaMap } from "@orbital/core/src/types/area-map";
 import { NotificationProvider, WorldProvider } from "@orbital/react-ui";
 import AreaExplorer from "./AreaExplorer";
@@ -121,15 +122,32 @@ describe("AreaExplorer Component", () => {
     it("should load a map when clicking the map button", () => {
       const explorer = areaExplorer();
 
-      // Load the map for Sub Area A
-      explorer.loadMap("Sub Area A");
+      // Get the Sub Area A mock area - convert to Area object for loadMap
+      const subAreaA = Area.mock({
+        _id: "area2",
+        parentId: "area1",
+        name: "Sub Area A",
+        worldId: "world1",
+      });
 
-      // Verify the onSelect callback was called with the correct ID
-      cy.get("@onSelectStub").should(
-        "have.been.calledWith",
-        "area2",
-        Cypress.sinon.match.any
-      );
+      // Load the map for Sub Area A
+      explorer.loadMap(subAreaA);
+
+      // Verify the onSelect callback was called
+      cy.get("@onSelectStub").should("have.been.called");
+
+      // Get the first call arguments using invoke
+      cy.get("@onSelectStub")
+        .invoke("getCall", 0)
+        .then((call) => {
+          const calledArea = call.args[0];
+
+          // Check that the important properties match
+          expect(calledArea._id).to.equal("area2");
+          expect(calledArea.parentId).to.equal("area1");
+          expect(calledArea.name).to.equal("Sub Area A");
+          expect(calledArea.worldId).to.equal("world1");
+        });
     });
   });
 
@@ -265,8 +283,16 @@ describe("AreaExplorer Component", () => {
         </NotificationProvider>
       );
 
+      // Get the Main Area mock area - convert to Area object for loadMap
+      const mainArea = Area.mock({
+        _id: "area1",
+        parentId: null,
+        name: "Main Area",
+        worldId: "world1",
+      });
+
       // Load the map
-      areaExplorer().loadMap("Main Area");
+      areaExplorer().loadMap(mainArea);
 
       // Verify the onSelect callback was not called yet (map is still loading)
       cy.get("@onSelectStub").should("not.have.been.called");
@@ -317,8 +343,16 @@ describe("AreaExplorer Component", () => {
         </NotificationProvider>
       );
 
+      // Get the Main Area mock area - convert to Area object for loadMap
+      const mainArea = Area.mock({
+        _id: "area1",
+        parentId: null,
+        name: "Main Area",
+        worldId: "world1",
+      });
+
       // Load the map
-      areaExplorer().loadMap("Main Area");
+      areaExplorer().loadMap(mainArea);
 
       // Verify the onSelect callback was not called (map loading failed)
       cy.get("@onSelectStub").should("not.have.been.called");

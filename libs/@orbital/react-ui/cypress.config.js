@@ -5,11 +5,22 @@ const fs = require("fs");
 // Log the absolute path to help debug
 const componentsDir = path.resolve(__dirname, "src/components");
 
-// List all files in the components directory
-console.log("Files in components directory:");
-fs.readdirSync(componentsDir).forEach((file) => {
-  console.log(" - " + file);
-});
+// Determine if we're running in component testing mode
+const isComponentTesting = process.argv.includes("--component");
+
+// List all files in the components directory when in component mode
+if (isComponentTesting) {
+  console.log("Components directory:", componentsDir);
+
+  if (fs.existsSync(componentsDir)) {
+    console.log("Files in components directory:");
+    fs.readdirSync(componentsDir).forEach((file) => {
+      console.log(" - " + file);
+    });
+  } else {
+    console.log("Components directory does not exist");
+  }
+}
 
 module.exports = defineConfig({
   component: {
@@ -30,5 +41,10 @@ module.exports = defineConfig({
     setupNodeEvents(on, config) {
       // implement node event listeners here
     },
+    specPattern: [
+      "src/**/*.e2e.cy.{js,jsx,ts,tsx}",
+      "cypress/e2e/**/*.cy.{js,jsx,ts,tsx}",
+    ],
+    supportFile: path.join(__dirname, "cypress/support/e2e.ts"),
   },
 });

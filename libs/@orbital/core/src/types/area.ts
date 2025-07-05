@@ -126,15 +126,17 @@ export class Area
           ? new AreaMap(typedData.areaMap)
           : undefined;
 
-    // Assign properties directly from data
-    this.name = typedData.name || "";
-    this.parentId = typedData.parentId;
-    this.worldId = typedData.worldId || "";
-    this.description = typedData.description || "";
-    this.landmarks = typedData.landmarks || [];
-    this.connections = typedData.connections || [];
-    this.tags = typedData.tags || [];
-    this.position = position;
-    this.areaMap = areaMap;
+    // Assign properties directly from data, ensuring we don't override with empty values
+    if (typedData.name !== undefined) this.name = typedData.name;
+    if (typedData.parentId !== undefined) this.parentId = typedData.parentId;
+    if (typedData.worldId !== undefined) this.worldId = typedData.worldId;
+    if (typedData.description !== undefined)
+      this.description = typedData.description;
+    if (typedData.landmarks !== undefined) this.landmarks = typedData.landmarks;
+    if (typedData.connections !== undefined)
+      this.connections = typedData.connections;
+    if (typedData.tags !== undefined) this.tags = typedData.tags;
+    if (position !== undefined) this.position = position;
+    if (areaMap !== undefined) this.areaMap = areaMap;
   }
 }

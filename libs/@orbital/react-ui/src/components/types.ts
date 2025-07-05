@@ -1,7 +1,7 @@
 /**
  * Base interface for objects that can be displayed in the TreeExplorer
  */
-export interface ExplorerObject {
+export interface TreeNodeData {
   _id: string;
   parentId?: string | null;
   name: string;
@@ -12,7 +12,7 @@ export interface ExplorerObject {
  * Query result type alias for data fetching hooks.
  * This allows passing query hook results directly to components.
  */
-export interface QueryResult<T extends ExplorerObject> {
+export interface QueryResult<T extends TreeNodeData> {
   data?: T[];
   isLoading: boolean;
   error?: any;
@@ -21,7 +21,7 @@ export interface QueryResult<T extends ExplorerObject> {
 /**
  * Interface for RTK Query API hooks used by TreeExplorer
  */
-export interface TreeExplorerAPI<T extends ExplorerObject> {
+export interface TreeExplorerAPI<T extends TreeNodeData> {
   /**
    * Query hook for fetching all objects
    * Should return a QueryResult<T>
@@ -49,7 +49,7 @@ export interface TreeExplorerAPI<T extends ExplorerObject> {
 /**
  * Props for the TreeExplorer component
  */
-export interface TreeExplorerProps<T extends ExplorerObject> {
+export interface TreeExplorerProps<T extends TreeNodeData> {
   /**
    * Query result containing the objects to display
    * Optional if api is provided
@@ -60,7 +60,7 @@ export interface TreeExplorerProps<T extends ExplorerObject> {
    * Callback function when an object is selected
    * Note: This is being deprecated in favor of itemActions
    */
-  onSelect?: (objectId: string) => void;
+  onSelect?: (object: T) => void;
 
   /**
    * Type name for the objects being displayed (e.g., "Area", "Item", etc.)
@@ -98,10 +98,10 @@ export interface TreeExplorerProps<T extends ExplorerObject> {
 
   /**
    * Optional callback function when an object is deleted
-   * This will be called with the object ID when the delete button is clicked
+   * This will be called with the object when the delete button is clicked
    * If not provided and api is provided, a default handler will be created
    */
-  onDelete?: (objectId: string) => void;
+  onDelete?: (object: T) => void;
 
   /**
    * Optional function to render custom action buttons for each item

@@ -240,8 +240,12 @@ describe("TreeExplorer Component", () => {
       // Delete Child A
       explorer.item("Child A").delete();
 
-      // Verify the delete stub was called with the correct ID
-      cy.get("@deleteStub").should("have.been.calledWith", "2");
+      // Verify the delete stub was called with an object containing the correct ID
+      cy.get("@deleteStub").should("have.been.called");
+      cy.get("@deleteStub").then((stub) => {
+        const callArg = stub.firstCall.args[0];
+        expect(callArg).to.have.property("_id", "2");
+      });
     });
 
     it("should delete a root node", () => {
@@ -253,8 +257,12 @@ describe("TreeExplorer Component", () => {
       // Delete Root Item
       explorer.item("Root Item").delete();
 
-      // Verify the delete stub was called with the correct ID
-      cy.get("@deleteStub").should("have.been.calledWith", "1");
+      // Verify the delete stub was called with an object containing the correct ID
+      cy.get("@deleteStub").should("have.been.called");
+      cy.get("@deleteStub").then((stub) => {
+        const callArg = stub.firstCall.args[0];
+        expect(callArg).to.have.property("_id", "1");
+      });
     });
 
     it("should confirm before deleting", () => {
@@ -299,7 +307,7 @@ describe("TreeExplorer Component", () => {
               size="small"
               onClick={(e) => {
                 e.stopPropagation();
-                customActionStub(object._id);
+                customActionStub(object);
               }}
               title="Custom Action"
               data-testid="CustomAction"
@@ -343,8 +351,12 @@ describe("TreeExplorer Component", () => {
         .buttons.custom.CustomAction()
         .click({ force: true });
 
-      // Verify the custom action stub was called with the correct ID
-      cy.get("@customActionStub").should("have.been.calledWith", "1");
+      // Verify the custom action stub was called with an object containing the correct ID
+      cy.get("@customActionStub").should("have.been.called");
+      cy.get("@customActionStub").then((stub) => {
+        const callArg = stub.firstCall.args[0];
+        expect(callArg).to.have.property("_id", "1");
+      });
     });
   });
 
@@ -626,8 +638,12 @@ describe("TreeExplorer Component", () => {
       // Select Child A
       explorer.item("Child A").select();
 
-      // Verify the select stub was called with the correct ID
-      cy.get("@selectStub").should("have.been.calledWith", "2");
+      // Verify the select stub was called with an object containing the correct ID
+      cy.get("@selectStub").should("have.been.called");
+      cy.get("@selectStub").then((stub) => {
+        const callArg = stub.firstCall.args[0];
+        expect(callArg).to.have.property("_id", "2");
+      });
     });
   });
 });

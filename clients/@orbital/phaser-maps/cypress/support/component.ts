@@ -5,11 +5,7 @@
 // https://on.cypress.io/configuration
 // ***********************************************************
 
-// Import commands.js using ES2015 syntax:
-import "./commands";
-
-// Import global styles
-import "../../styles/globals.css";
+// No need to import commands or global styles for now
 
 // Import Cypress mount command
 import { mount } from "cypress/react";

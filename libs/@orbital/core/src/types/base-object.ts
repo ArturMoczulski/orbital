@@ -197,7 +197,7 @@ export class BaseObject<TProps> {
 
   static mock<TObjectTypeProps>(overrides: Partial<TObjectTypeProps> = {}) {
     // Start with basic defaults
-    const defaults = {
+    let defaults = {
       name: `${faker.word.adverb()} ${faker.word.adjective()} ${this.name}`,
     };
 
@@ -218,9 +218,26 @@ export class BaseObject<TProps> {
     // Apply defaults in reverse order (parent to child)
     // so child defaults override parent defaults
     for (let i = defaultsStack.length - 1; i >= 0; i--) {
-      Object.assign(defaults, defaultsStack[i]);
+      // Use defaultsDeep instead of Object.assign for proper deep merging
+      defaults = defaultsDeep({}, defaultsStack[i], defaults);
     }
 
-    return new this(defaultsDeep({}, defaults, overrides)) as any;
+    // Use defaultsDeep with overrides first, so they take precedence over defaults
+    const mergedData = defaultsDeep({}, overrides, defaults);
+    console.log(
+      "BaseObject.mock() - mergedData:",
+      JSON.stringify(mergedData, null, 2)
+    );
+    console.log(
+      "BaseObject.mock() - overrides:",
+      JSON.stringify(overrides, null, 2)
+    );
+
+    // Create the instance with the merged data
+    const instance = new this(mergedData);
+    console.log("BaseObject.mock() - instance.name:", (instance as any).name);
+    console.log("BaseObject.mock() - instance._id:", (instance as any)._id);
+
+    return instance as any;
   }
 }

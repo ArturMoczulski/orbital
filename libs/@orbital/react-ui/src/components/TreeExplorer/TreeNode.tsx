@@ -3,24 +3,24 @@ import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import React from "react";
-import { ExplorerObject } from "../types";
+import { TreeNodeData } from "../types";
 import { TreeNodeActions } from "./TreeNodeActions";
 
-interface TreeNodeProps<T extends ExplorerObject> {
+interface TreeNodeProps<T extends TreeNodeData> {
   object: T;
   level?: number;
   objects: T[];
   expandedNodes: Record<string, boolean>;
   toggleNode: (id: string) => void;
   type: string;
-  onDelete?: (id: string, event: React.MouseEvent) => void;
+  onDelete?: (event: React.MouseEvent, object: T) => void;
   itemActions?: (object: T, defaultActions: React.ReactNode) => React.ReactNode;
 }
 
 /**
  * Default tree node component for the TreeExplorer
  */
-export function TreeNode<T extends ExplorerObject>({
+export function TreeNode<T extends TreeNodeData>({
   object,
   level = 0,
   objects,
@@ -33,10 +33,10 @@ export function TreeNode<T extends ExplorerObject>({
   const children = objects.filter((o) => o.parentId === object._id);
   const isExpanded = !!expandedNodes[object._id];
 
-  const handleDeleteClick = (id: string, event: React.MouseEvent) => {
+  const handleDeleteClick = (event: React.MouseEvent, obj: T) => {
     event.stopPropagation();
     if (onDelete) {
-      onDelete(id, event);
+      onDelete(event, obj);
     }
   };
 

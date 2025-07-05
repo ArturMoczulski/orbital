@@ -1,12 +1,12 @@
 import DeleteIcon from "@mui/icons-material/Delete";
 import React from "react";
-import { ExplorerObject } from "../types";
+import { TreeNodeData } from "../types";
 import { TreeNodeActionButton } from "./TreeNodeActionButton";
 
-export interface TreeNodeActionsProps<T extends ExplorerObject> {
+export interface TreeNodeActionsProps<T extends TreeNodeData> {
   object: T;
   type: string;
-  onDelete?: (objectId: string, event: React.MouseEvent) => void;
+  onDelete?: (event: React.MouseEvent, object: T) => void;
 }
 
 /**
@@ -14,7 +14,7 @@ export interface TreeNodeActionsProps<T extends ExplorerObject> {
  * This component renders the standard action buttons (currently just delete)
  * It can be used as-is, extended, or completely replaced by custom itemActions
  */
-export function TreeNodeActions<T extends ExplorerObject>({
+export function TreeNodeActions<T extends TreeNodeData>({
   object,
   type,
   onDelete,
@@ -25,10 +25,10 @@ export function TreeNodeActions<T extends ExplorerObject>({
       {onDelete && (
         <TreeNodeActionButton
           icon={<DeleteIcon fontSize="small" />}
-          onClick={(e: React.MouseEvent) => onDelete(object._id, e)}
+          onClick={(e: React.MouseEvent) => onDelete(e, object)}
           title={`Delete ${type}`}
           testId="DeleteButton"
-          objectId={object._id}
+          object={object}
         />
       )}
     </>

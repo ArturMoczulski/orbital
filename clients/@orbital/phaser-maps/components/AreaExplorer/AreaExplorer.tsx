@@ -9,7 +9,7 @@ import {
 import { AreaActionsButtons } from "./AreaActionsButtons";
 
 interface AreaExplorerProps {
-  onSelect: (areaId: string, areaMap: AreaMap) => void;
+  onSelect: (area: Area, areaMap: AreaMap) => void;
 }
 
 /**
@@ -18,22 +18,22 @@ interface AreaExplorerProps {
  */
 export default function AreaExplorer({ onSelect }: AreaExplorerProps) {
   const { worldId } = useWorld();
-  const [selectedMapId, setSelectedMapId] = useState<string | null>(null);
+  const [selectedArea, setSelectedArea] = useState<Area | null>(null);
 
   const {
     data: mapData,
     isLoading: isMapLoading,
     error: mapError,
   } = useAreasControllerGetMapQuery(
-    { _id: selectedMapId! },
-    { skip: !selectedMapId }
+    { _id: selectedArea?._id! },
+    { skip: !selectedArea }
   ) as { data?: AreaMap; isLoading: boolean; error?: unknown };
 
   useEffect(() => {
-    if (selectedMapId && mapData) {
-      onSelect(selectedMapId, mapData);
+    if (selectedArea && mapData) {
+      onSelect(selectedArea, mapData);
     }
-  }, [selectedMapId, mapData, onSelect]);
+  }, [selectedArea, mapData, onSelect]);
 
   // Use the enhanced TreeExplorer with API-based functionality
   return (
@@ -43,7 +43,9 @@ export default function AreaExplorer({ onSelect }: AreaExplorerProps) {
       itemActions={(area: Area, defaultActions: React.ReactNode) => (
         <AreaActionsButtons
           area={area}
-          onLoadMap={setSelectedMapId}
+          onLoadMap={(e: React.MouseEvent, areaObj: Area) =>
+            setSelectedArea(areaObj)
+          }
           defaultActions={defaultActions}
         />
       )}

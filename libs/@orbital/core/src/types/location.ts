@@ -1,10 +1,9 @@
-import { z } from "zod";
 import { faker } from "@faker-js/faker";
-import { randomUUID } from "crypto";
-import { BaseObject } from "./base-object";
-import { Area, AreaSchema } from "./area";
-import { Position, PositionSchema } from "./position";
+import { z } from "zod";
 import { ZodSchema } from "../decorators/zod-schema.decorator";
+import { Area, AreaSchema } from "./area";
+import { BaseObject } from "./base-object";
+import { Position, PositionSchema } from "./position";
 
 /**
  * Represents a location with an area and position.
@@ -37,15 +36,14 @@ export class Location
   name: string = "";
   description?: string;
 
-  /** Create a fake Location instance with randomized data */
-  static mock(overrides: Partial<LocationProps> = {}): Location {
-    const base: Partial<LocationProps> = {
+  /** Provide default values for mocking a Location */
+  static mockDefaults(): Partial<LocationProps> {
+    return {
       area: Area.mock(),
       position: Position.mock(),
       name: faker.location.street(),
       description: faker.lorem.sentence(),
     };
-    return new Location({ ...base, ...overrides });
   }
 
   constructor(data: unknown) {

@@ -2,23 +2,9 @@
 // This file provides a fluent API for interacting with the AreaExplorer component in tests
 
 import { AreaSchema } from "@orbital/core/src/types/area";
-import {
-  TreeExplorerInteractable,
-  treeExplorer,
-} from "@orbital/react-ui/src/components/TreeExplorer/TreeExplorer.interactable";
-
-/**
- * Enum for Area Explorer custom actions
- * Currently only supports LoadMap action
- *
- * Using an enum provides better type safety and maintainability
- * than string literals
- */
-export enum AreaTreeNodeCustomAction {
-  LoadMap = "LoadMap",
-}
-
-// No need for a separate array constant as we'll use Object.values(enum) directly
+import { TreeExplorerInteractable, treeExplorer } from "@orbital/react-ui";
+import { z } from "zod";
+import { AreaTreeNodeCustomAction } from "./AreaActionsButtons";
 
 /**
  * AreaExplorerInteractable class extends TreeExplorerInteractable
@@ -30,26 +16,40 @@ export class AreaExplorerInteractable extends TreeExplorerInteractable<
 > {
   /**
    * Load a map for a specific area
-   * @param areaName The name of the area to load the map for
+   * @param area The area object to load the map for
    */
-  loadMap(areaName: string): AreaExplorerInteractable {
-    // Find the area by name and click its map button
-    // Use the typed custom action
-    this.item(areaName).action(AreaTreeNodeCustomAction.LoadMap);
+  loadMap(area: z.infer<typeof AreaSchema>): AreaExplorerInteractable {
+    // Use the area's ID directly to find and click the button
+    cy.get(`[data-testid="${AreaTreeNodeCustomAction.LoadMap}Button"]`)
+      .filter(`[data-object-id="${area._id}"]`)
+      .first() // Ensure we only get one element
+      .click({ force: true });
+
     return this;
   }
 
   /**
    * Verify that a map was loaded for a specific area
-   * @param areaId The ID of the area to verify
+   * @param area The area object to verify
    */
-  shouldHaveLoadedMap(areaId: string): AreaExplorerInteractable {
-    // This would check that the onSelect callback was called with the correct area ID
-    cy.get("@onSelectStub").should(
-      "have.been.calledWith",
-      areaId,
-      Cypress.sinon.match.any
-    );
+  shouldHaveLoadedMap(
+    area: z.infer<typeof AreaSchema>
+  ): AreaExplorerInteractable {
+    // Check that the onSelect callback was called
+    cy.get("@onSelectStub").should("have.been.called");
+
+    // Get the first call arguments
+    cy.get("@onSelectStub")
+      .invoke("getCall", 0)
+      .then((call) => {
+        const calledArea = call.args[0];
+
+        // Check that the important properties match
+        expect(calledArea._id).to.equal(area._id);
+        if (area.parentId) expect(calledArea.parentId).to.equal(area.parentId);
+        if (area.name) expect(calledArea.name).to.equal(area.name);
+        if (area.worldId) expect(calledArea.worldId).to.equal(area.worldId);
+      });
     return this;
   }
 }
@@ -68,6 +68,21 @@ export function areaExplorer(): AreaExplorerInteractable {
     Object.values(AreaTreeNodeCustomAction) as AreaTreeNodeCustomAction[]
   );
 
-  // Cast to our specialized class
-  return explorer as unknown as AreaExplorerInteractable;
+  // Create a new instance of our specialized class
+  const areaExplorerInstance = new AreaExplorerInteractable(
+    "Area",
+    AreaSchema,
+    Object.values(AreaTreeNodeCustomAction) as AreaTreeNodeCustomAction[]
+  );
+
+  // Copy properties from the explorer to our instance
+  Object.assign(areaExplorerInstance, {
+    ...explorer,
+    // Preserve the specialized methods
+    loadMap: areaExplorerInstance.loadMap.bind(areaExplorerInstance),
+    shouldHaveLoadedMap:
+      areaExplorerInstance.shouldHaveLoadedMap.bind(areaExplorerInstance),
+  });
+
+  return areaExplorerInstance;
 }

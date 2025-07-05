@@ -19,9 +19,12 @@
   "scripts": {
     "build": "tsc",
     "watch": "tsc --watch",
-    "test": "cypress run",
-    "test:e2e": "cypress run --component --config-file cypress.component.config.js",
-    "test:open": "cypress open --component --config-file cypress.component.config.js",
+    "test": "cypress run --component",
+    "test:e2e": "cypress run",
+    "test:component": "cypress run --component",
+    "test:all": "npm run test:component && npm run test:e2e && npm run test:unit",
+    "test:open": "cypress open --component",
+    "test:open:e2e": "cypress open",
     "test:unit": "NODE_NO_WARNINGS=1 jest --config jest.unit.config.js --passWithNoTests"
   },
   "dependencies": {

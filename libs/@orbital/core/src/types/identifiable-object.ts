@@ -43,13 +43,10 @@ export class IdentifiableObject
     // Generate a new UUID if none is provided
     const uuid = data?._id ?? generateUUID();
 
-    // Create a copy of data without _id for super constructor
-    const { _id: _, ...dataWithoutId } = data || {};
+    // Call super with the full data
+    super(data);
 
-    // Call super with data without _id
-    super(dataWithoutId);
-
-    // Set _id directly as a property
+    // Set _id directly as a property, ensuring it takes precedence
     this._id = uuid;
 
     // Set timestamps with defaults if not provided

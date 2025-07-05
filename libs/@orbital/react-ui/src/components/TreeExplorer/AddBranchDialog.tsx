@@ -3,9 +3,9 @@ import Dialog from "@mui/material/Dialog";
 import DialogTitle from "@mui/material/DialogTitle";
 import { ZodBridge } from "uniforms-bridge-zod";
 import { AutoForm } from "uniforms-mui";
-import { ExplorerObject } from "../types";
+import { TreeNodeData } from "../types";
 
-interface AddBranchDialogProps<T extends ExplorerObject> {
+interface AddBranchDialogProps<T extends TreeNodeData> {
   /**
    * Whether the dialog is open
    */
@@ -44,7 +44,7 @@ interface AddBranchDialogProps<T extends ExplorerObject> {
 /**
  * Dialog for adding a new item in the TreeExplorer
  */
-export function AddBranchDialog<T extends ExplorerObject>({
+export function AddBranchDialog<T extends TreeNodeData>({
   open,
   onClose,
   type,

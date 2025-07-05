@@ -22,11 +22,12 @@
     "clean": "npx pm2 delete all 2>/dev/null || true",
     "lint": "next lint",
     "test": "npx jest --config jest.config.cjs",
-    "e2e": "cypress run --headed --config-file cypress.config.ts",
-    "test:open": "cypress open --config-file cypress.config.ts",
-    "test:run": "cypress run --config-file cypress.config.ts",
-    "test:component": "cypress run --component --config-file cypress.component.config.ts",
-    "test:component:open": "cypress open --component --config-file cypress.component.config.ts",
+    "test:e2e": "cypress run",
+    "test:component": "cypress run --component",
+    "test:all": "npm run test && npm run test:e2e && npm run test:component",
+    "test:open": "cypress open",
+    "test:open:e2e": "cypress open",
+    "test:open:component": "cypress open --component",
     "generate:api": "rtk-query-codegen-openapi openapi-config.cjs"
   },
   "dependencies": {

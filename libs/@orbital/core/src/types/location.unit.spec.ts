@@ -1,5 +1,5 @@
-import { Location } from "./location";
 import { Area } from "./area";
+import { Location } from "./location";
 import { Position } from "./position";
 
 describe("Location", () => {

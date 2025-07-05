@@ -9,10 +9,18 @@ export type {
   TreeNodeActionButtonProps,
 } from "./components/TreeExplorer/TreeNodeActionButton";
 export type {
-  ExplorerObject,
+  TreeNodeData as ExplorerObject,
   QueryResult,
   TreeExplorerProps,
 } from "./components/types";
+
+// Export interactables for testing
+export {
+  treeExplorer,
+  TreeExplorerInteractable,
+  type ZodObjectSchema,
+} from "./components/TreeExplorer/TreeExplorer.interactable";
+export { TreeNodeInteractable } from "./components/TreeExplorer/TreeNode.interactable";
 
 // Export notification components
 export {

@@ -1,5 +1,6 @@
 "use client";
 import Box from "@mui/material/Box";
+import { Area } from "@orbital/core/src/types/area";
 import type { AreaMap } from "@orbital/core/src/types/area-map";
 import { WorldExplorer } from "@orbital/react-ui";
 import dynamic from "next/dynamic";
@@ -17,8 +18,8 @@ export default function ExplorerPage() {
   const [selectedAreaMap, setSelectedAreaMap] = useState<AreaMap | null>(null);
 
   // Handle area selection with map
-  const handleSelectArea = (_id: string, areaMap: AreaMap) => {
-    setSelectedAreaId(_id);
+  const handleSelectArea = (area: Area, areaMap: AreaMap) => {
+    setSelectedAreaId(area._id);
     setSelectedAreaMap(areaMap);
   };
 
