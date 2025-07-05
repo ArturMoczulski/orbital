@@ -43,55 +43,14 @@ export function parseWithReferences<T>(
   data: unknown,
   options: ParseWithReferencesOptions = {}
 ): { success: boolean; data?: T; error?: z.ZodError } {
-  console.log("=== PARSE WITH REFERENCES ===");
-  console.log("Schema type:", schema.constructor.name);
-  console.log(
-    "Schema description:",
-    schema._def.description || "unnamed schema"
-  );
-  console.log("Data:", JSON.stringify(data, null, 2));
-  console.log(
-    "Dependencies:",
-    options.dependencies ? Object.keys(options.dependencies) : "none"
-  );
-
-  // Special debug for CharacterSchema test case
-  if (schema._def.description === "A character with name") {
-    console.log("*** PROCESSING CHARACTER SCHEMA ***");
-    if ((data as any)?.areaIds) {
-      console.log("areaIds:", (data as any).areaIds);
-
-      // Check if we're testing the invalid case with "nonexistent"
-      if ((data as any).areaIds.includes("nonexistent")) {
-        console.log("*** DETECTED TEST CASE WITH NONEXISTENT AREA ***");
-      }
-    }
-  }
-
-  if (
-    schema.constructor.name === "ZodObject" &&
-    (schema as any)._def.typeName === "ZodObject"
-  ) {
-    console.log("Object shape keys:", Object.keys((schema as any).shape));
-  }
-
   // First do standard Zod validation
   const result = schema.safeParse(data);
-  console.log(
-    "Standard Zod validation result:",
-    result.success ? "PASS" : "FAIL"
-  );
   if (!result.success) {
-    console.log(
-      "Zod validation errors:",
-      JSON.stringify(result.error.issues, null, 2)
-    );
     return result;
   }
 
   // Then validate references if dependencies are provided
   if (options.dependencies) {
-    console.log("Validating references with dependencies...");
     // Initialize visitedPaths if not provided
     if (!options.visitedPaths) {
       options.visitedPaths = new Set<string>();
@@ -103,14 +62,8 @@ export function parseWithReferences<T>(
     }
 
     const referenceErrors = validateReferences(schema, data, options);
-    console.log("Reference validation errors:", referenceErrors.length);
 
     if (referenceErrors.length > 0) {
-      console.log(
-        "Reference error details:",
-        JSON.stringify(referenceErrors, null, 2)
-      );
-
       // Create a ZodError with the reference validation issues
       const error = new z.ZodError(referenceErrors);
       return { success: false, error };
@@ -118,7 +71,6 @@ export function parseWithReferences<T>(
   }
 
   // If we got here, validation passed
-  console.log("All validation passed");
   return { success: true, data: result.data as T };
 }
 
@@ -140,13 +92,8 @@ export function validateReferences(
   const issues: z.ZodIssue[] = [];
   const pathStr = currentPath.length > 0 ? currentPath.join(".") : "root";
 
-  console.log(`\n--- VALIDATE REFERENCES [${pathStr}] ---`);
-  console.log(`Schema type: ${schema.constructor.name}`);
-  console.log(`Data: ${JSON.stringify(data, null, 2)}`);
-
   // Check for maximum recursion depth
   if (options.maxDepth !== undefined && currentPath.length > options.maxDepth) {
-    console.log(`Maximum recursion depth reached at path: ${pathStr}`);
     issues.push({
       code: z.ZodIssueCode.custom,
       path: currentPath,
@@ -168,8 +115,6 @@ export function validateReferences(
 
   // Check if we've already visited this schema-data pair
   if (options.visitedPaths?.has(visitKey)) {
-    console.log(`Circular reference detected at path: ${pathStr}`);
-    console.log(`Already visited: ${visitKey}`);
     // We don't add an issue for circular references - we just stop recursion
     // This allows circular references to exist without validation errors
     return issues;
@@ -180,30 +125,14 @@ export function validateReferences(
 
   // Handle object schemas
   if (schema instanceof z.ZodObject) {
-    console.log(
-      `Object schema with keys: ${Object.keys(schema.shape).join(", ")}`
-    );
-
     Object.entries(schema.shape).forEach(([key, fieldSchema]) => {
       const fieldPath = [...currentPath, key];
       const fieldValue = data?.[key];
-
-      console.log(`\nChecking field: ${key}`);
-      console.log(`Field value: ${JSON.stringify(fieldValue)}`);
-      console.log(
-        `Field schema type: ${(fieldSchema as z.ZodTypeAny).constructor.name}`
-      );
 
       // Recursively validate nested fields
       if (fieldValue !== undefined) {
         // Cast to ZodTypeAny to ensure type safety
         const zodFieldSchema = fieldSchema as z.ZodTypeAny;
-
-        // Check if this field schema has a reference
-        if (hasReference(zodFieldSchema)) {
-          const ref = getReference(zodFieldSchema);
-          console.log(`Field ${key} has reference to: ${ref?.name}`);
-        }
 
         const fieldIssues = validateReferences(
           zodFieldSchema,
@@ -211,14 +140,6 @@ export function validateReferences(
           options,
           fieldPath
         );
-
-        console.log(`Field ${key} issues: ${fieldIssues.length}`);
-        if (fieldIssues.length > 0) {
-          console.log(
-            `Field ${key} issue details:`,
-            JSON.stringify(fieldIssues, null, 2)
-          );
-        }
 
         issues.push(...fieldIssues);
       }
@@ -231,31 +152,17 @@ export function validateReferences(
   // Handle array schemas
   else if (schema instanceof z.ZodArray) {
     if (Array.isArray(data)) {
-      console.log(`Array schema with ${data.length} items`);
-      console.log(`Array data: ${JSON.stringify(data)}`);
-      console.log(`Element schema type: ${schema.element.constructor.name}`);
-
       // First check if the array itself has a reference (for MANY_TO_MANY relationships)
       if (hasReference(schema)) {
         const reference = getReference(schema);
-        console.log(`Array has reference to: ${reference?.name}`);
-        console.log(`Reference type: ${reference?.type}`);
-        console.log(`Reference foreign field: ${reference?.foreignField}`);
 
         if (reference) {
           // Try to find the collection by reference name or by schema description
           let collection = options.dependencies?.[reference.name];
 
-          // Debug the collection lookup
-          console.log(`Looking for collection with name: ${reference.name}`);
-          console.log(
-            `Available dependencies: ${Object.keys(options.dependencies || {}).join(", ")}`
-          );
-
           // If collection not found by name, try to extract name from schema description
           if (!collection && reference.schema._def.description) {
             const schemaDesc = reference.schema._def.description;
-            console.log(`Schema description: ${schemaDesc}`);
 
             // Try to extract a better name from the description
             const match =
@@ -265,23 +172,11 @@ export function validateReferences(
 
             if (match) {
               const extractedName = match[1].toLowerCase();
-              console.log(`Extracted name from description: ${extractedName}`);
               collection = options.dependencies?.[extractedName];
-
-              if (collection) {
-                console.log(
-                  `Found collection using extracted name: ${extractedName}`
-                );
-              }
             }
           }
 
-          console.log(
-            `Collection ${reference.name} exists: ${!!collection}, items: ${collection?.length || 0}`
-          );
-
           if (collection) {
-            console.log(`Collection data: ${JSON.stringify(collection)}`);
             const foreignField = reference.foreignField;
 
             // Check each item in the array
@@ -289,15 +184,9 @@ export function validateReferences(
               // Skip null or undefined values
               if (item === null || item === undefined) return;
 
-              console.log(`Checking array item[${index}]: ${item}`);
-
               const itemPath = [...currentPath, index];
               const referencedItem = collection.find(
                 (collectionItem) => collectionItem[foreignField] === item
-              );
-
-              console.log(
-                `Referenced item found for array[${index}]: ${!!referencedItem}`
               );
 
               if (!referencedItem) {
@@ -316,7 +205,6 @@ export function validateReferences(
                     })()
                   : reference.name;
 
-                console.log(`Adding issue for array item[${index}]: ${item}`);
                 issues.push({
                   code: z.ZodIssueCode.custom,
                   path: itemPath,
@@ -324,10 +212,6 @@ export function validateReferences(
                 });
               }
             });
-          } else {
-            console.log(
-              `Collection ${reference.name} not found in dependencies`
-            );
           }
         }
       }
@@ -337,10 +221,6 @@ export function validateReferences(
         const itemPath = [...currentPath, index];
         // Use the element schema for array items
         const elementSchema = schema.element as z.ZodTypeAny;
-
-        console.log(
-          `\nRecursively validating array item[${index}]: ${JSON.stringify(item)}`
-        );
 
         // Special handling for array elements that are strings with references
         if (
@@ -358,24 +238,14 @@ export function validateReferences(
               ? elementSchema._def.innerType
               : elementSchema
           );
-          console.log(
-            `Array element has string reference to: ${reference?.name}`
-          );
 
           if (reference) {
             // Try to find the collection by reference name or by schema description
             let collection = options.dependencies?.[reference.name];
 
-            // Debug the collection lookup
-            console.log(`Looking for collection with name: ${reference.name}`);
-            console.log(
-              `Available dependencies: ${Object.keys(options.dependencies || {}).join(", ")}`
-            );
-
             // If collection not found by name, try to extract name from schema description
             if (!collection && reference.schema._def.description) {
               const schemaDesc = reference.schema._def.description;
-              console.log(`Schema description: ${schemaDesc}`);
 
               // Try to extract a better name from the description
               const match =
@@ -385,40 +255,18 @@ export function validateReferences(
 
               if (match) {
                 const extractedName = match[1].toLowerCase();
-                console.log(
-                  `Extracted name from description: ${extractedName}`
-                );
                 collection = options.dependencies?.[extractedName];
-
-                if (collection) {
-                  console.log(
-                    `Found collection using extracted name: ${extractedName}`
-                  );
-                }
               }
             }
 
-            console.log(
-              `Collection ${reference.name} exists: ${!!collection}, items: ${collection?.length || 0}`
-            );
-
             if (collection) {
               const foreignField = reference.foreignField;
-
-              console.log(
-                `Checking string array item[${index}]: ${item} against ${reference.name}.${foreignField}`
-              );
 
               const referencedItem = collection.find(
                 (collectionItem) => collectionItem[foreignField] === item
               );
 
-              console.log(
-                `Referenced item found for array[${index}]: ${!!referencedItem}`
-              );
-
               if (!referencedItem) {
-                console.log(`Adding issue for array item[${index}]: ${item}`);
                 issues.push({
                   code: z.ZodIssueCode.custom,
                   path: itemPath,
@@ -438,13 +286,6 @@ export function validateReferences(
             options,
             itemPath
           );
-          console.log(`Array item[${index}] issues: ${itemIssues.length}`);
-          if (itemIssues.length > 0) {
-            console.log(
-              `Array item[${index}] issue details:`,
-              JSON.stringify(itemIssues, null, 2)
-            );
-          }
           issues.push(...itemIssues);
         }
       });
@@ -461,24 +302,14 @@ export function validateReferences(
     const reference = getReference(
       schema instanceof z.ZodOptional ? schema._def.innerType : schema
     );
-    console.log(`Field has reference to: ${reference?.name}`);
-    console.log(`Reference type: ${reference?.type}`);
-    console.log(`Reference foreign field: ${reference?.foreignField}`);
 
     if (reference && data !== undefined && data !== null) {
       // Try to find the collection by reference name or by schema description
       let collection = options.dependencies?.[reference.name];
 
-      // Debug the collection lookup
-      console.log(`Looking for collection with name: ${reference.name}`);
-      console.log(
-        `Available dependencies: ${Object.keys(options.dependencies || {}).join(", ")}`
-      );
-
       // If collection not found by name, try to extract name from schema description
       if (!collection && reference.schema._def.description) {
         const schemaDesc = reference.schema._def.description;
-        console.log(`Schema description: ${schemaDesc}`);
 
         // Try to extract a better name from the description
         const match =
@@ -488,34 +319,18 @@ export function validateReferences(
 
         if (match) {
           const extractedName = match[1].toLowerCase();
-          console.log(`Extracted name from description: ${extractedName}`);
           collection = options.dependencies?.[extractedName];
-
-          if (collection) {
-            console.log(
-              `Found collection using extracted name: ${extractedName}`
-            );
-          }
         }
       }
 
-      console.log(
-        `Collection ${reference.name} exists: ${!!collection}, items: ${collection?.length || 0}`
-      );
-
       if (collection) {
-        console.log(`Collection data: ${JSON.stringify(collection)}`);
         const foreignField = reference.foreignField;
-        console.log(`Checking reference: ${data} against ${foreignField}`);
 
         const referencedItem = collection.find(
           (item) => item[foreignField] === data
         );
 
-        console.log(`Referenced item found: ${!!referencedItem}`);
-
         if (!referencedItem) {
-          console.log(`Adding issue for reference: ${data}`);
           issues.push({
             code: z.ZodIssueCode.custom,
             path: currentPath,
@@ -529,6 +344,5 @@ export function validateReferences(
   // Remove this path from visited paths when we're done with this reference
   options.visitedPaths?.delete(visitKey);
 
-  console.log(`Returning ${issues.length} issues for path: ${pathStr}`);
   return issues;
 }

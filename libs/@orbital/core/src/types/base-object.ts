@@ -224,19 +224,9 @@ export class BaseObject<TProps> {
 
     // Use defaultsDeep with overrides first, so they take precedence over defaults
     const mergedData = defaultsDeep({}, overrides, defaults);
-    console.log(
-      "BaseObject.mock() - mergedData:",
-      JSON.stringify(mergedData, null, 2)
-    );
-    console.log(
-      "BaseObject.mock() - overrides:",
-      JSON.stringify(overrides, null, 2)
-    );
 
     // Create the instance with the merged data
     const instance = new this(mergedData);
-    console.log("BaseObject.mock() - instance.name:", (instance as any).name);
-    console.log("BaseObject.mock() - instance._id:", (instance as any)._id);
 
     return instance as any;
   }
