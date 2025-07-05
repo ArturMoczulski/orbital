@@ -93,12 +93,26 @@ interface TreeExplorerStates<
  * TreeExplorerInteractable class represents the TreeExplorer component
  * and provides methods for interacting with it
  */
+/**
+ * TreeExplorerInteractable class represents the TreeExplorer component
+ * and provides methods for interacting with it
+ *
+ * @template CustomActions - String literal type representing available custom actions
+ *                          When using treeExplorer(), this is inferred from the customActions array
+ * @template Schema - Zod schema for form validation
+ */
 class TreeExplorerInteractable<
   CustomActions extends string = never,
   Schema extends ZodObjectSchema = never,
 > extends CypressInteractable<string> {
   readonly typePrefixPascal: string;
+
+  /**
+   * Array of custom action names available for tree nodes
+   * When passed to treeExplorer(), this array's string literals become the CustomActions type
+   */
   readonly customActions?: CustomActions[];
+
   readonly schema: Schema;
 
   /**
@@ -247,7 +261,11 @@ class TreeExplorerInteractable<
 /**
  * Create an TreeExplorer helper for interacting with the component
  * @param typePrefixPascal The PascalCase type prefix (e.g., "Area", "World")
- * @returns An TreeExplorerInteractable instance
+ * @param schema The Zod schema for form validation
+ * @param customActions Array of custom action names that will be available on tree nodes
+ *                     The string literals in this array are used to infer the CustomActions type
+ *                     Example: ["edit", "delete"] creates type "edit" | "delete"
+ * @returns An TreeExplorerInteractable instance with type-safe custom actions
  */
 function treeExplorer<
   T extends string = never,

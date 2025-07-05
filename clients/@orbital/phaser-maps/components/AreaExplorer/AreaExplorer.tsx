@@ -40,7 +40,7 @@ export default function AreaExplorer({ onSelect }: AreaExplorerProps) {
     <TreeExplorer<Area>
       type="Area"
       schema={AreaSchema}
-      itemActions={(area, defaultActions) => (
+      itemActions={(area: Area, defaultActions: React.ReactNode) => (
         <AreaActionsButtons
           area={area}
           onLoadMap={setSelectedMapId}

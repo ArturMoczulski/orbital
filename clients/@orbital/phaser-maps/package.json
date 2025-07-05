@@ -25,6 +25,8 @@
     "e2e": "cypress run --headed --config-file cypress.config.ts",
     "test:open": "cypress open --config-file cypress.config.ts",
     "test:run": "cypress run --config-file cypress.config.ts",
+    "test:component": "cypress run --component --config-file cypress.component.config.ts",
+    "test:component:open": "cypress open --component --config-file cypress.component.config.ts",
     "generate:api": "rtk-query-codegen-openapi openapi-config.cjs"
   },
   "dependencies": {

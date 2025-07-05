@@ -10,6 +10,12 @@ import { TreeExplorerInteractable } from "./TreeExplorer.interactable";
 /**
  * Interface for TreeNode button-related methods
  */
+/**
+ * Interface for TreeNode button-related methods
+ *
+ * @template CustomActions - String literal type representing available custom actions
+ * Each custom action must be one of the strings in the customActions array
+ */
 export interface TreeNodeButtons<CustomActions extends string = never> {
   /**
    * Get the delete button for this tree node
@@ -18,6 +24,7 @@ export interface TreeNodeButtons<CustomActions extends string = never> {
 
   /**
    * Custom action buttons
+   * Keys are derived from the customActions array passed to the TreeExplorer
    */
   custom: {
     [K in CustomActions]: () => Cypress.Chainable;
@@ -28,12 +35,27 @@ export interface TreeNodeButtons<CustomActions extends string = never> {
  * TreeNode class represents a node in the TreeExplorer tree
  * and provides methods for interacting with it
  */
+/**
+ * TreeNode class represents a node in the TreeExplorer tree
+ * and provides methods for interacting with it
+ *
+ * @template CustomActions - String literal type representing available custom actions
+ * @template Schema - Zod schema for form validation
+ */
 export class TreeNodeInteractable<
   CustomActions extends string = never,
   Schema extends ZodObjectSchema = never,
 > extends CypressInteractable<string> {
   private explorer: TreeExplorerInteractable<CustomActions, Schema>;
   private name: string;
+
+  /**
+   * Reference to the explorer's custom actions
+   * This is an array of strings or never if no custom actions are defined
+   */
+  private get customActions(): CustomActions[] | never {
+    return this.explorer.customActions || [];
+  }
 
   /**
    * Button-related methods organized in a nested structure
@@ -65,9 +87,13 @@ export class TreeNodeInteractable<
       custom: {} as { [K in CustomActions]: () => Cypress.Chainable },
     };
 
-    // Add custom action buttons dynamically
-    if (this.explorer.customActions) {
-      this.explorer.customActions.forEach((actionName) => {
+    // Add custom action buttons dynamically from the array of custom action strings
+    // The customActions is an array of strings or never if no custom actions are defined
+    const actions = this.customActions;
+    if (actions && actions.length > 0) {
+      // Iterate through each action name in the customActions array
+      actions.forEach((actionName: CustomActions) => {
+        // Add a method to the custom object for this action
         (this.buttons.custom as any)[actionName] = () => {
           // First hover over the item to make the action buttons visible
           this.hover();
@@ -112,10 +138,21 @@ export class TreeNodeInteractable<
 
   /**
    * Perform a custom action on this item
+   * @param actionName Must be one of the custom actions defined in the explorer's customActions array
+   *                   This parameter is type-safe - TypeScript will only allow values that were
+   *                   included in the customActions array passed to treeExplorer()
+   *                   Example: If customActions was ["edit", "delete"], only "edit" or "delete" are valid
    */
   action(
     actionName: CustomActions
   ): TreeNodeInteractable<CustomActions, Schema> {
+    // Verify that the action exists in our custom actions array
+    if (this.customActions && !this.customActions.includes(actionName)) {
+      throw new Error(
+        `Custom action "${actionName}" is not in the available custom actions: [${this.customActions.join(", ")}]`
+      );
+    }
+
     // Use the custom action button and click it
     if (!this.buttons.custom[actionName]) {
       throw new Error(
