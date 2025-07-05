@@ -7,14 +7,14 @@ import { z } from "zod";
 import {
   FormDialogInteractable,
   ZodObjectSchema,
-} from "../../../cypress/interactables/FormDialog.interactable";
-import { ObjectExplorerInteractable } from "./ObjectExplorer.cy.commands";
+} from "../../../cypress/interactables/Dialog/FormDialog/FormDialog.interactable";
+import { ObjectExplorerInteractable } from "./ObjectExplorer.interactable";
 
 /**
  * ObjectExplorerAddDialog class represents the Add dialog in the ObjectExplorer
  * and provides methods for interacting with it
  */
-export class ObjectExplorerAddDialog<
+export class AddItemDialogInteractable<
   Schema extends ZodObjectSchema = ZodObjectSchema,
   CustomActions extends string = never,
 > extends FormDialogInteractable<Schema> {

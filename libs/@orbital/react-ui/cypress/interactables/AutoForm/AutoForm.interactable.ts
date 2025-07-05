@@ -4,8 +4,8 @@
 /// <reference types="cypress" />
 
 // Import the CypressInteractable base class and inputField factory
-import { CypressInteractable } from "../../../cypress/interactables/Cypress.interactable";
-import { FormInputInteractable, inputField } from "./FormInputFields";
+import { CypressInteractable } from "../Cypress.interactable";
+import { FormInputInteractable, inputField } from "./FormInput.interactable";
 
 /**
  * Type for form input field methods

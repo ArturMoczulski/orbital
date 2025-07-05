@@ -3,7 +3,7 @@
 
 /// <reference types="cypress" />
 
-import { CypressInteractable } from "./Cypress.interactable";
+import { CypressInteractable } from "../Cypress.interactable";
 
 /**
  * DialogInteractable class represents a dialog component
@@ -64,11 +64,21 @@ export class DialogInteractable<
    * This method safely waits for the dialog to be removed from the DOM
    */
   waitForClose(timeout: number = 4000): this {
-    // Use a simpler approach to wait for the dialog to be hidden
-    cy.log(`Waiting for dialog to close: ${this.componentType}`);
-
-    // Wait for the element to have display: none
-    cy.get(this.selector(), { timeout }).should("have.css", "display", "none");
+    // First check if dialog is open, then decide what to do
+    cy.wait(500);
+    this.isOpen().then((isOpen) => {
+      if (isOpen) {
+        // Only wait for it to close if it's currently open
+        cy.log(`Waiting for dialog to close: ${this.componentType}`);
+        cy.get(this.selector(), { timeout }).should(
+          "have.css",
+          "display",
+          "none"
+        );
+      } else {
+        cy.log(`Dialog ${this.componentType} is already closed`);
+      }
+    });
 
     return this;
   }

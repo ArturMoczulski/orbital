@@ -3,7 +3,7 @@
 import { NotificationProvider } from "../NotificationProvider/NotificationProvider";
 import { ObjectExplorer } from "./ObjectExplorer";
 // Import the objectExplorer function directly
-import { objectExplorer } from "./ObjectExplorer.cy.commands";
+import { objectExplorer } from "./ObjectExplorer.interactable";
 // Import IconButton for custom actions
 import IconButton from "@mui/material/IconButton";
 // Import zod for schema definition
@@ -155,7 +155,7 @@ describe("ObjectExplorer Component", () => {
       explorer.dialogs.add.form().getElement().should("be.visible");
     });
 
-    it.only("should add a new item", () => {
+    it("should add a new item", () => {
       const explorer = objectExplorer("Item", simpleSchema);
 
       // Add a new item using the addWithData method

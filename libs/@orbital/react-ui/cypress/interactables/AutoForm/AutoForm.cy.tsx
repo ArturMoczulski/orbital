@@ -3,7 +3,7 @@
 import { ZodBridge } from "uniforms-bridge-zod";
 import { AutoForm } from "uniforms-mui";
 import { z } from "zod";
-import { autoForm } from "./AutoForm.cy.commands";
+import { autoForm } from "./AutoForm.interactable";
 
 describe("AutoForm Interactable", () => {
   describe("Scoped Usage", () => {

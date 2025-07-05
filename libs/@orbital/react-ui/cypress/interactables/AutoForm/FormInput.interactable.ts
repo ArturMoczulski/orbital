@@ -3,7 +3,7 @@
 
 /// <reference types="cypress" />
 
-import { CypressInteractable } from "../../../cypress/interactables/Cypress.interactable";
+import { CypressInteractable } from "../Cypress.interactable";
 
 /**
  * Base class for all form input interactables
