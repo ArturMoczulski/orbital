@@ -25,6 +25,12 @@ export abstract class CypressInteractable<T extends string> {
    * If a parent element is provided, the search is scoped to that element
    */
   getElement() {
+    if (this.parentElement && typeof this.parentElement != "function") {
+      throw new Error(
+        "parentElement must be a function that returns a Cypress.Chainable<JQuery<HTMLElement>>"
+      );
+    }
+
     if (this.parentElement && this.parentElement()) {
       // Return the result of finding the element within the parent
       return this.parentElement().then(($parent) => {

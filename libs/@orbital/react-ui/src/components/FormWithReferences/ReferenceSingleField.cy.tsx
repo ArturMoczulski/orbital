@@ -1,93 +1,10 @@
 // @ts-nocheck
 /// <reference types="cypress" />
-import MenuItem from "@mui/material/MenuItem";
-import TextField from "@mui/material/TextField";
 import { mount } from "cypress/react";
 import { referenceSingleField } from "../../../cypress/interactables/FormWithReferences/ReferenceSingleField.interactable";
+import ReferenceSingleField from "./ReferenceSingleField";
 
-// A simplified version of ReferenceSingleField
-const SimplifiedReferenceSingleField = ({
-  id,
-  name,
-  label,
-  onChange,
-  value = "",
-  reference,
-  required = false,
-  error = false,
-  errorMessage = "",
-  disabled = false,
-  objectType, // Required prop
-}) => {
-  // If no reference options are provided, fall back to a standard text field
-  if (!reference || !reference.options || reference.options.length === 0) {
-    // Use the provided objectType
-
-    return (
-      <TextField
-        id={id}
-        name={name}
-        label={label}
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        required={required}
-        error={error}
-        helperText={errorMessage}
-        disabled={disabled}
-        fullWidth
-        variant="outlined"
-        data-testid={`${objectType}ReferenceSingleField ReferenceSingleField`}
-      />
-    );
-  }
-
-  // Get the foreign field to display and use as value
-  const foreignField = reference.foreignField || "_id";
-  const displayField = "name";
-
-  // Use the provided objectType
-
-  return (
-    <TextField
-      id={id}
-      name={name}
-      label={label}
-      value={value}
-      onChange={(e) => onChange(e.target.value)}
-      required={required}
-      error={error}
-      helperText={errorMessage}
-      disabled={disabled}
-      select
-      fullWidth
-      variant="outlined"
-      data-testid={`${objectType}ReferenceSingleField ReferenceSingleField`}
-    >
-      {!required && (
-        <MenuItem
-          value=""
-          data-testid={`${objectType}ReferenceSingleField-none`}
-          data-field-name={name}
-        >
-          <em>None</em>
-        </MenuItem>
-      )}
-      {reference.options.map((option) => (
-        <MenuItem
-          key={option[foreignField]}
-          value={option[foreignField]}
-          data-testid={`${objectType}ReferenceSingleField-item`}
-          data-object-id={option[foreignField]}
-          data-field-name={name}
-        >
-          {option[displayField] || option[foreignField]}
-        </MenuItem>
-      ))}
-    </TextField>
-  );
-};
-
-describe("SimplifiedReferenceSingleField", () => {
+describe("ReferenceSingleField", () => {
   // Sample data for testing
   const worldsData = [
     { _id: "world1", name: "Earth" },
@@ -114,7 +31,7 @@ describe("SimplifiedReferenceSingleField", () => {
 
     // Mount the component directly
     mount(
-      <SimplifiedReferenceSingleField
+      <ReferenceSingleField
         id="worldId"
         name="worldId"
         label="World"
@@ -147,7 +64,7 @@ describe("SimplifiedReferenceSingleField", () => {
 
     // Mount the component directly
     mount(
-      <SimplifiedReferenceSingleField
+      <ReferenceSingleField
         id="worldId"
         name="worldId"
         label="World"
@@ -170,7 +87,7 @@ describe("SimplifiedReferenceSingleField", () => {
 
     // Mount the component directly
     mount(
-      <SimplifiedReferenceSingleField
+      <ReferenceSingleField
         id="worldId"
         name="worldId"
         label="World"
@@ -194,7 +111,7 @@ describe("SimplifiedReferenceSingleField", () => {
 
     // Mount the component with a selected value
     mount(
-      <SimplifiedReferenceSingleField
+      <ReferenceSingleField
         id="worldId"
         name="worldId"
         label="World"
@@ -216,7 +133,7 @@ describe("SimplifiedReferenceSingleField", () => {
 
     // Mount the component with required=true
     mount(
-      <SimplifiedReferenceSingleField
+      <ReferenceSingleField
         id="worldId"
         name="worldId"
         label="World"
@@ -242,7 +159,7 @@ describe("SimplifiedReferenceSingleField", () => {
 
     // Mount the component with disabled=true
     mount(
-      <SimplifiedReferenceSingleField
+      <ReferenceSingleField
         id="worldId"
         name="worldId"
         label="World"
@@ -264,7 +181,7 @@ describe("SimplifiedReferenceSingleField", () => {
 
     // Mount the component with error=true
     mount(
-      <SimplifiedReferenceSingleField
+      <ReferenceSingleField
         id="worldId"
         name="worldId"
         label="World"
@@ -294,7 +211,7 @@ describe("SimplifiedReferenceSingleField", () => {
 
     // Mount the component with empty reference data
     mount(
-      <SimplifiedReferenceSingleField
+      <ReferenceSingleField
         id="worldId"
         name="worldId"
         label="World"
