@@ -1,0 +1,43 @@
+# Cypress screenshots
+cypress/screenshots/
+
+# Cypress videos
+cypress/videos/
+
+# Cypress downloads
+cypress/downloads/
+
+# Cypress results
+cypress/results/
+
+# Node modules
+node_modules/
+
+# Build artifacts
+dist/
+build/
+
+# Coverage reports
+coverage/
+
+# IDE files
+.idea/
+.vscode/
+*.iml
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Environment variables
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Misc
+.DS_Store
+Thumbs.db
