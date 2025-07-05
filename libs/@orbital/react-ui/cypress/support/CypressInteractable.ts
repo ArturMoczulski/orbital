@@ -69,4 +69,18 @@ export abstract class CypressInteractable<T extends string> {
     });
     return this;
   }
+
+  /**
+   * Proxy for Cypress's should method
+   * This allows chaining should directly on the Interactable instance
+   * @param chainer The chainer string (e.g., 'be.visible', 'exist')
+   * @param value Optional value to check against
+   */
+  should<T = this>(chainer: string, value?: any): T {
+    // Forward the should call to the element
+    this.getElement().should(chainer, value);
+
+    // Return this for chaining
+    return this as unknown as T;
+  }
 }

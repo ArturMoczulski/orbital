@@ -42,12 +42,7 @@ export abstract class FormInputInteractable<
     return this.getElement().clear();
   }
 
-  /**
-   * Assert on the input element
-   */
-  should(chainer: string, value?: any): Cypress.Chainable<JQuery<HTMLElement>> {
-    return this.getElement().should(chainer, value);
-  }
+  // The should method is now inherited from CypressInteractable
 }
 
 /**

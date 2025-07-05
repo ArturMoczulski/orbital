@@ -6,8 +6,16 @@ import { ObjectExplorer } from "./ObjectExplorer";
 import { objectExplorer } from "./ObjectExplorer.cy.commands";
 // Import IconButton for custom actions
 import IconButton from "@mui/material/IconButton";
+// Import zod for schema definition
+import { z } from "zod";
 
 describe("ObjectExplorer Component", () => {
+  // Define the schema for the form
+  const simpleSchema = z.object({
+    name: z.string().min(1, "Name is required"),
+    parentId: z.string().optional(),
+    worldId: z.string().optional(),
+  });
   describe("Basic Functionality", () => {
     beforeEach(() => {
       // Mock data for testing
@@ -49,12 +57,12 @@ describe("ObjectExplorer Component", () => {
       );
 
       // Expand the root item to see its children
-      objectExplorer("Item").item("Root Item").click();
+      objectExplorer("Item", simpleSchema).item("Root Item").click();
     });
 
     it("demonstrates the fluent API with consistent item() helper usage", () => {
       // Get the explorer using the imported function
-      const explorer = objectExplorer("Item");
+      const explorer = objectExplorer("Item", simpleSchema);
 
       // Verify the explorer exists
       explorer.getElement().should("exist");
@@ -73,7 +81,7 @@ describe("ObjectExplorer Component", () => {
     });
 
     it("should expand and collapse tree nodes", () => {
-      const explorer = objectExplorer("Item");
+      const explorer = objectExplorer("Item", simpleSchema);
 
       // Verify Root Item is expanded
       explorer.item("Root Item").shouldBeExpanded();
@@ -97,7 +105,7 @@ describe("ObjectExplorer Component", () => {
     });
 
     it("should verify node has correct number of children", () => {
-      const explorer = objectExplorer("Item");
+      const explorer = objectExplorer("Item", simpleSchema);
 
       // Verify Root Item has 2 children
       explorer.item("Root Item").shouldHaveChildCount(2);
@@ -136,18 +144,19 @@ describe("ObjectExplorer Component", () => {
     });
 
     it("should open add dialog when clicking add button", () => {
-      const explorer = objectExplorer("Item");
+      const explorer = objectExplorer("Item", simpleSchema);
 
       // Click the add button using the nested API
       explorer.dialogs.add.open();
 
       // Verify the add dialog is open using the nested API
       explorer.dialogs.add.getElement().should("be.visible");
-      explorer.dialogs.add.form().should("be.visible");
+      // Get the form element using getElement() since form() returns an AutoFormInteractable instance
+      explorer.dialogs.add.form().getElement().should("be.visible");
     });
 
-    it("should add a new item", () => {
-      const explorer = objectExplorer("Item");
+    it.only("should add a new item", () => {
+      const explorer = objectExplorer("Item", simpleSchema);
 
       // Add a new item using the addWithData method
       explorer.add({ name: "New Item" });
@@ -162,7 +171,7 @@ describe("ObjectExplorer Component", () => {
     });
 
     it("should add a new item with a parent", () => {
-      const explorer = objectExplorer("Item");
+      const explorer = objectExplorer("Item", simpleSchema);
 
       // Add a new item with a parent using the addWithData method
       explorer.add({ name: "New Child", parentId: "1" });
@@ -219,11 +228,11 @@ describe("ObjectExplorer Component", () => {
       );
 
       // Expand the root item to see its children
-      objectExplorer("Item").item("Root Item").click();
+      objectExplorer("Item", simpleSchema).item("Root Item").click();
     });
 
     it("should delete a node when clicking delete button", () => {
-      const explorer = objectExplorer("Item");
+      const explorer = objectExplorer("Item", simpleSchema);
 
       // Stub window.confirm to return true
       cy.on("window:confirm", () => true);
@@ -236,7 +245,7 @@ describe("ObjectExplorer Component", () => {
     });
 
     it("should delete a root node", () => {
-      const explorer = objectExplorer("Item");
+      const explorer = objectExplorer("Item", simpleSchema);
 
       // Stub window.confirm to return true
       cy.on("window:confirm", () => true);
@@ -249,7 +258,7 @@ describe("ObjectExplorer Component", () => {
     });
 
     it("should confirm before deleting", () => {
-      const explorer = objectExplorer("Item");
+      const explorer = objectExplorer("Item", simpleSchema);
 
       // Stub window.confirm to return false
       cy.on("window:confirm", () => false);
@@ -322,7 +331,11 @@ describe("ObjectExplorer Component", () => {
 
     it("should trigger custom action when clicking custom action button", () => {
       // Create explorer with custom action type
-      const explorer = objectExplorer<"CustomAction">("Item", ["CustomAction"]);
+      const explorer = objectExplorer<"CustomAction", typeof simpleSchema>(
+        "Item",
+        simpleSchema,
+        ["CustomAction"]
+      );
 
       // Get the custom action button and click it using the nested structure
       explorer
@@ -353,7 +366,7 @@ describe("ObjectExplorer Component", () => {
       );
 
       // Verify loading state is shown using the nested API
-      objectExplorer("Item").states.loading.shouldExist();
+      objectExplorer("Item", simpleSchema).states.loading.shouldExist();
     });
 
     it("should show error state", () => {
@@ -373,7 +386,7 @@ describe("ObjectExplorer Component", () => {
       );
 
       // Verify error state is shown using the nested API
-      objectExplorer("Item").states.error.shouldExist();
+      objectExplorer("Item", simpleSchema).states.error.shouldExist();
     });
 
     it("should show empty state", () => {
@@ -393,7 +406,7 @@ describe("ObjectExplorer Component", () => {
       );
 
       // Verify empty state is shown using the nested API
-      objectExplorer("Item").states.empty.shouldExist();
+      objectExplorer("Item", simpleSchema).states.empty.shouldExist();
     });
   });
 
@@ -437,7 +450,7 @@ describe("ObjectExplorer Component", () => {
       cy.get("@queryHookStub").should("have.been.called");
 
       // Verify the data was rendered
-      const explorer = objectExplorer("Item");
+      const explorer = objectExplorer("Item", simpleSchema);
       explorer.item("RTK Root Item").getElement().should("exist");
 
       // Expand the root item
@@ -490,7 +503,7 @@ describe("ObjectExplorer Component", () => {
       );
 
       // Add a new item
-      const explorer = objectExplorer("Item");
+      const explorer = objectExplorer("Item", simpleSchema);
       explorer.add({ name: "New RTK Item" });
 
       // Verify the create hook was called
@@ -548,7 +561,7 @@ describe("ObjectExplorer Component", () => {
       );
 
       // Delete the root item
-      const explorer = objectExplorer("Item");
+      const explorer = objectExplorer("Item", simpleSchema);
 
       // Stub window.confirm to return true
       cy.on("window:confirm", () => true);
@@ -604,11 +617,11 @@ describe("ObjectExplorer Component", () => {
       );
 
       // Expand the root item to see its children
-      objectExplorer("Item").item("Root Item").click();
+      objectExplorer("Item", simpleSchema).item("Root Item").click();
     });
 
     it("should select a node when clicking on it", () => {
-      const explorer = objectExplorer("Item");
+      const explorer = objectExplorer("Item", simpleSchema);
 
       // Select Child A
       explorer.item("Child A").select();

@@ -3,6 +3,18 @@
 
 // Import the CypressInteractable base class
 import { CypressInteractable } from "../../../cypress/support/CypressInteractable";
+// Import the AutoForm components
+import {
+  AutoFormInteractable,
+  autoForm,
+} from "../AutoForm/AutoForm.cy.commands";
+// Import Zod for schema handling
+import { z } from "zod";
+
+/**
+ * Type alias for any Zod object schema
+ */
+type ZodObjectSchema = z.ZodObject<any, any, any, any>;
 
 /**
  * Interface for TreeNode button-related methods
@@ -27,8 +39,9 @@ interface TreeNodeButtons<CustomActions extends string = never> {
  */
 class TreeNodeInteractable<
   CustomActions extends string = never,
+  Schema extends ZodObjectSchema = never,
 > extends CypressInteractable<string> {
-  private explorer: ObjectExplorerInteractable<CustomActions>;
+  private explorer: ObjectExplorerInteractable<CustomActions, Schema>;
   private name: string;
 
   /**
@@ -37,7 +50,7 @@ class TreeNodeInteractable<
   readonly buttons: TreeNodeButtons<CustomActions>;
 
   constructor(
-    explorer: ObjectExplorerInteractable<CustomActions>,
+    explorer: ObjectExplorerInteractable<CustomActions, Schema>,
     name: string
   ) {
     super("TreeNode"); // Pass the base component type to the parent class
@@ -96,7 +109,7 @@ class TreeNodeInteractable<
   /**
    * Delete this item
    */
-  delete(): TreeNodeInteractable<CustomActions> {
+  delete(): TreeNodeInteractable<CustomActions, Schema> {
     // Stub the window.confirm to always return true
     cy.on("window:confirm", () => true);
 
@@ -109,8 +122,15 @@ class TreeNodeInteractable<
   /**
    * Perform a custom action on this item
    */
-  action(actionName: CustomActions): TreeNodeInteractable<CustomActions> {
+  action(
+    actionName: CustomActions
+  ): TreeNodeInteractable<CustomActions, Schema> {
     // Use the custom action button and click it
+    if (!this.buttons.custom[actionName]) {
+      throw new Error(
+        `Custom action "${actionName}" does not exist on component ${this.componentType}`
+      );
+    }
     this.buttons.custom[actionName]().click({ force: true });
 
     return this;
@@ -119,7 +139,7 @@ class TreeNodeInteractable<
   /**
    * Check if this node is expanded
    */
-  shouldBeExpanded(): TreeNodeInteractable<CustomActions> {
+  shouldBeExpanded(): TreeNodeInteractable<CustomActions, Schema> {
     // In the expanded state, we can check if children are visible
     // We don't need to check for specific icons since they're not easily targetable
 
@@ -139,7 +159,7 @@ class TreeNodeInteractable<
   /**
    * Check if this node is collapsed
    */
-  shouldBeCollapsed(): TreeNodeInteractable<CustomActions> {
+  shouldBeCollapsed(): TreeNodeInteractable<CustomActions, Schema> {
     // In the collapsed state, we can check if children are not visible
     // We don't need to check for specific icons since they're not easily targetable
 
@@ -160,7 +180,7 @@ class TreeNodeInteractable<
   /**
    * Check if this node has children
    */
-  shouldHaveChildren(): TreeNodeInteractable<CustomActions> {
+  shouldHaveChildren(): TreeNodeInteractable<CustomActions, Schema> {
     // Expand the node first to make children visible
     this.click();
 
@@ -190,7 +210,9 @@ class TreeNodeInteractable<
   /**
    * Check if this node has a specific number of children
    */
-  shouldHaveChildCount(count: number): TreeNodeInteractable<CustomActions> {
+  shouldHaveChildCount(
+    count: number
+  ): TreeNodeInteractable<CustomActions, Schema> {
     // Expand the node first to make children visible
     this.click();
 
@@ -235,7 +257,7 @@ class TreeNodeInteractable<
   /**
    * Select this node (triggers onSelect callback)
    */
-  select(): TreeNodeInteractable<CustomActions> {
+  select(): TreeNodeInteractable<CustomActions, Schema> {
     // The select functionality is triggered by clicking on the node text
     // In the ObjectExplorer component, the text is in a Typography component
 
@@ -275,7 +297,7 @@ class TreeNodeInteractable<
   /**
    * Check if this node has a specific object ID
    */
-  shouldHaveId(id: string): TreeNodeInteractable<CustomActions> {
+  shouldHaveId(id: string): TreeNodeInteractable<CustomActions, Schema> {
     this.findElement().should("have.attr", "data-object-id", id);
     return this;
   }
@@ -286,7 +308,10 @@ class TreeNodeInteractable<
 /**
  * Interface for dialog-related methods
  */
-interface ObjectExplorerDialogs<CustomActions extends string = never> {
+interface ObjectExplorerDialogs<
+  CustomActions extends string = never,
+  Schema extends ZodObjectSchema = never,
+> {
   add: {
     /**
      * Get the Add dialog element
@@ -294,22 +319,21 @@ interface ObjectExplorerDialogs<CustomActions extends string = never> {
     getElement: () => Cypress.Chainable;
 
     /**
-     * Get the Add form element
+     * Get the Add form as an AutoFormInteractable
      */
-    form: () => Cypress.Chainable;
+    form: () => AutoFormInteractable<z.infer<Schema>>;
 
     /**
      * Open the Add dialog
      */
-    open: () => ObjectExplorerInteractable<CustomActions>;
+    open: () => ObjectExplorerInteractable<CustomActions, Schema>;
 
     /**
      * Fill and submit the Add form
      */
-    submit: (data: {
-      name: string;
-      parentId?: string;
-    }) => ObjectExplorerInteractable<CustomActions>;
+    submit: (
+      data: Partial<z.infer<Schema>>
+    ) => ObjectExplorerInteractable<CustomActions, Schema>;
   };
 }
 
@@ -331,7 +355,10 @@ interface ObjectExplorerButtons<CustomActions extends string = never> {
 /**
  * Interface for state-related methods
  */
-interface ObjectExplorerStates<CustomActions extends string = never> {
+interface ObjectExplorerStates<
+  CustomActions extends string = never,
+  Schema extends ZodObjectSchema = never,
+> {
   loading: {
     /**
      * Get the loading state element
@@ -341,7 +368,7 @@ interface ObjectExplorerStates<CustomActions extends string = never> {
     /**
      * Check if the explorer is in loading state
      */
-    shouldExist: () => ObjectExplorerInteractable<CustomActions>;
+    shouldExist: () => ObjectExplorerInteractable<CustomActions, Schema>;
   };
 
   error: {
@@ -353,7 +380,7 @@ interface ObjectExplorerStates<CustomActions extends string = never> {
     /**
      * Check if the explorer is in error state
      */
-    shouldExist: () => ObjectExplorerInteractable<CustomActions>;
+    shouldExist: () => ObjectExplorerInteractable<CustomActions, Schema>;
   };
 
   empty: {
@@ -365,12 +392,12 @@ interface ObjectExplorerStates<CustomActions extends string = never> {
     /**
      * Check if the explorer is in empty state
      */
-    shouldExist: () => ObjectExplorerInteractable<CustomActions>;
+    shouldExist: () => ObjectExplorerInteractable<CustomActions, Schema>;
 
     /**
      * Click the Add button in empty state
      */
-    add: () => ObjectExplorerInteractable<CustomActions>;
+    add: () => ObjectExplorerInteractable<CustomActions, Schema>;
   };
 }
 
@@ -380,14 +407,16 @@ interface ObjectExplorerStates<CustomActions extends string = never> {
  */
 class ObjectExplorerInteractable<
   CustomActions extends string = never,
+  Schema extends ZodObjectSchema = never,
 > extends CypressInteractable<string> {
   readonly typePrefixPascal: string;
   readonly customActions?: CustomActions[];
+  readonly schema: Schema;
 
   /**
    * Dialog-related methods organized in a nested structure
    */
-  readonly dialogs: ObjectExplorerDialogs<CustomActions>;
+  readonly dialogs: ObjectExplorerDialogs<CustomActions, Schema>;
 
   /**
    * Button-related methods organized in a nested structure
@@ -397,11 +426,16 @@ class ObjectExplorerInteractable<
   /**
    * State-related methods organized in a nested structure
    */
-  readonly states: ObjectExplorerStates<CustomActions>;
+  readonly states: ObjectExplorerStates<CustomActions, Schema>;
 
-  constructor(typePrefixPascal: string, customActions?: CustomActions[]) {
+  constructor(
+    typePrefixPascal: string,
+    schema: Schema,
+    customActions?: CustomActions[]
+  ) {
     super(`ObjectExplorer`); // Pass the base component type to the parent class
     this.typePrefixPascal = typePrefixPascal;
+    this.schema = schema;
     this.customActions = customActions;
 
     // Initialize the buttons property
@@ -420,19 +454,19 @@ class ObjectExplorerInteractable<
             .should("exist");
         },
         form: () => {
-          // Get the form within the dialog context
-          return this.dialogs.add
-            .getElement()
-            .find('[data-testid="AddForm"]')
-            .should("exist");
+          // Get the form within the dialog context using the autoForm helper
+          return autoForm<z.infer<Schema>>({
+            formTestId: "AddForm",
+            parent: () => this.dialogs.add.getElement(),
+          });
         },
         open: () => {
           // Check if we're in empty state and use the appropriate button
           this.getElement().then(($el) => {
             if ($el.find('[data-testid="EmptyState"]').length > 0) {
-              this.buttons.addEmpty().click();
+              this.buttons.addEmpty().click({ force: true });
             } else {
-              this.buttons.add().click();
+              this.buttons.add().click({ force: true });
             }
           });
           return this;
@@ -441,19 +475,8 @@ class ObjectExplorerInteractable<
           // Open the add dialog
           this.dialogs.add.open();
 
-          // Fill the form within the context of the dialog
-          this.dialogs.add.form().within(() => {
-            // Fill the name field - clear it first to ensure clean input
-            cy.get('input[name="name"]').clear().type(data.name);
-
-            // Fill the parentId field if provided
-            if (data.parentId) {
-              cy.get('input[name="parentId"]').clear().type(data.parentId);
-            }
-
-            // Submit the form - use force: true to ensure it clicks even if something is on top
-            cy.get('button[type="submit"]').click({ force: true });
-          });
+          // Use the AutoFormInteractable to fill and submit the form
+          this.dialogs.add.form().submit(data);
 
           // Wait for the dialog to close
           this.dialogs.add.getElement().should("not.exist");
@@ -516,8 +539,8 @@ class ObjectExplorerInteractable<
   /**
    * Select a tree node in this explorer by name
    */
-  item(name: string): TreeNodeInteractable<CustomActions> {
-    return new TreeNodeInteractable<CustomActions>(this, name);
+  item(name: string): TreeNodeInteractable<CustomActions, Schema> {
+    return new TreeNodeInteractable<CustomActions, Schema>(this, name);
   }
 
   /**
@@ -525,7 +548,7 @@ class ObjectExplorerInteractable<
    */
   shouldHaveRootItemCount(
     count: number
-  ): ObjectExplorerInteractable<CustomActions> {
+  ): ObjectExplorerInteractable<CustomActions, Schema> {
     this.getElement()
       .find('[data-testid="TreeNode"]')
       .filter((_, el) => {
@@ -542,7 +565,7 @@ class ObjectExplorerInteractable<
    */
   shouldHaveTotalItemCount(
     count: number
-  ): ObjectExplorerInteractable<CustomActions> {
+  ): ObjectExplorerInteractable<CustomActions, Schema> {
     this.getElement()
       .find('[data-testid="TreeNode"]')
       .should("have.length", count);
@@ -559,37 +582,8 @@ class ObjectExplorerInteractable<
   add(data: {
     name: string;
     parentId?: string;
-  }): ObjectExplorerInteractable<CustomActions> {
-    // Check if we're in empty state and use the appropriate button
-    this.getElement().then(($el) => {
-      if ($el.find('[data-testid="EmptyState"]').length > 0) {
-        this.buttons.addEmpty().click();
-      } else {
-        this.buttons.add().click();
-      }
-    });
-
-    // Wait for the dialog to appear
-    cy.get('[data-testid="ObjectExplorerAddDialog"]').should("be.visible");
-
-    // Fill and submit the form
-    cy.get('[data-testid="AddForm"]').within(() => {
-      // Fill the name field - clear it first to ensure clean input
-      cy.get('input[name="name"]').clear().type(data.name);
-
-      // Fill the parentId field if provided
-      if (data.parentId) {
-        cy.get('input[name="parentId"]').clear().type(data.parentId);
-      }
-
-      // Submit the form - use force: true to ensure it clicks even if something is on top
-      cy.get('button[type="submit"]').click({ force: true });
-    });
-
-    // Wait for the dialog to close
-    cy.get('[data-testid="ObjectExplorerAddDialog"]').should("not.exist");
-
-    return this;
+  }): ObjectExplorerInteractable<CustomActions, Schema> {
+    return this.dialogs.add.submit(data as Partial<z.infer<Schema>>);
   }
 }
 
@@ -598,12 +592,28 @@ class ObjectExplorerInteractable<
  * @param typePrefixPascal The PascalCase type prefix (e.g., "Area", "World")
  * @returns An ObjectExplorerInteractable instance
  */
-function objectExplorer<T extends string = never>(
+function objectExplorer<
+  T extends string = never,
+  S extends ZodObjectSchema = never,
+>(
   typePrefixPascal: string,
+  schema?: S,
   customActions?: T[]
-): ObjectExplorerInteractable<T> {
-  return new ObjectExplorerInteractable<T>(typePrefixPascal, customActions);
+): ObjectExplorerInteractable<T, S> {
+  // Use the provided schema or fall back to the default schema
+  const finalSchema = schema as S;
+
+  return new ObjectExplorerInteractable<T, S>(
+    typePrefixPascal,
+    finalSchema,
+    customActions
+  );
 }
 
-// Export the helper function and classes
-export { objectExplorer, ObjectExplorerInteractable, TreeNodeInteractable };
+// Export the helper function, classes, and types
+export {
+  ObjectExplorerInteractable,
+  TreeNodeInteractable,
+  objectExplorer,
+  type ZodObjectSchema,
+};
