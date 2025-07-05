@@ -86,8 +86,11 @@ export interface TreeExplorerProps<T extends TreeNodeData> {
   /**
    * Optional Zod schema for the AutoForm in the add object dialog
    * If provided, this schema will be used instead of the default schema
+   * Can be a standard ZodBridge or our custom ZodReferencesBridge
    */
-  schema?: any;
+  schema?:
+    | import("uniforms-bridge-zod").ZodBridge<any>
+    | import("../forms/ZodReferencesBridge").ZodReferencesBridge<any>;
 
   /**
    * Optional callback function when a new object is added

@@ -3,10 +3,12 @@ import Box from "@mui/material/Box";
 import IconButton from "@mui/material/IconButton";
 import { useTheme } from "@mui/material/styles";
 import Typography from "@mui/material/Typography";
+import { RelationshipType } from "@orbital/core/src/zod/reference/reference";
 import { lowerFirst } from "lodash";
 import React, { useEffect, useState } from "react";
 import { ZodBridge } from "uniforms-bridge-zod";
 import { z } from "zod";
+import { ZodReferencesBridge } from "../../forms/ZodReferencesBridge";
 import { useOrbitalTheme } from "../../theme/ThemeContext";
 import { useNotification } from "../NotificationProvider/NotificationProvider";
 import { QueryResult, TreeExplorerProps, TreeNodeData } from "../types";
@@ -191,16 +193,50 @@ export function TreeExplorer<T extends TreeNodeData>({
 
   const rootObjects = objects.filter((o) => !o.parentId);
 
-  // Create a very simple schema for the form with basic types
-  // that are known to work with ZodBridge
-  const simpleSchema = z.object({
-    name: z.string().min(1, "Name is required"),
-    parentId: z.string().optional(),
-    worldId: z.string().optional(),
-  });
+  // Create a schema for the form with reference support
+  const formSchema = (() => {
+    // If a schema was provided, use it
+    if (providedSchema) {
+      return providedSchema;
+    }
 
-  // Create the form schema bridge
-  const formSchema = new ZodBridge({ schema: simpleSchema });
+    // Create a schema with references if we have world data
+    const worldData =
+      api?.queryHook && api.queryHook.name.includes("world")
+        ? api.queryHook().data || []
+        : [];
+
+    // Create a schema with basic types and references
+    const schema = z.object({
+      name: z.string().min(1, "Name is required"),
+      parentId: z.string().optional(),
+      worldId: z
+        .string()
+        .reference({
+          schema: z
+            .object({
+              _id: z.string(),
+              name: z.string(),
+              shard: z.string(),
+              techLevel: z.number(),
+            })
+            .describe("A world in the game universe"),
+          type: RelationshipType.MANY_TO_ONE,
+          name: "world",
+        })
+        .optional(),
+    });
+
+    // Use ZodReferencesBridge if we have world data, otherwise use standard ZodBridge
+    return worldData.length > 0
+      ? new ZodReferencesBridge({
+          schema,
+          dependencies: {
+            world: worldData,
+          },
+        })
+      : new ZodBridge({ schema });
+  })();
 
   return (
     <>

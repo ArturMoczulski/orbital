@@ -2,7 +2,8 @@ import Box from "@mui/material/Box";
 import Dialog from "@mui/material/Dialog";
 import DialogTitle from "@mui/material/DialogTitle";
 import { ZodBridge } from "uniforms-bridge-zod";
-import { AutoForm } from "uniforms-mui";
+import { FormWithReferences } from "../../forms";
+import { ZodReferencesBridge } from "../../forms/ZodReferencesBridge";
 import { TreeNodeData } from "../types";
 
 interface AddBranchDialogProps<T extends TreeNodeData> {
@@ -37,8 +38,9 @@ interface AddBranchDialogProps<T extends TreeNodeData> {
 
   /**
    * The schema for the form
+   * Can be a standard ZodBridge or our custom ZodReferencesBridge
    */
-  formSchema: ZodBridge<any>;
+  formSchema: ZodBridge<any> | ZodReferencesBridge<any>;
 }
 
 /**
@@ -70,7 +72,7 @@ export function AddBranchDialog<T extends TreeNodeData>({
     >
       <DialogTitle>Add New {type}</DialogTitle>
       <Box sx={{ p: 3 }} data-testid="AddForm">
-        <AutoForm
+        <FormWithReferences
           schema={formSchema}
           onSubmit={async (data) => {
             if (onAdd) {
