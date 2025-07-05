@@ -16,7 +16,7 @@ import { TreeExplorerInteractable } from "./TreeExplorer.interactable";
  */
 export class AddBranchDialogInteractable<
   Schema extends ZodObjectSchema = ZodObjectSchema,
-  CustomActions extends string = never,
+  CustomActions extends string | number | symbol = never,
 > extends FormDialogInteractable<Schema> {
   private explorer: TreeExplorerInteractable<CustomActions, Schema>;
 

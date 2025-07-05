@@ -8,22 +8,17 @@ import {
 } from "@orbital/react-ui/src/components/TreeExplorer/TreeExplorer.interactable";
 
 /**
- * Type definition for Area Explorer custom actions
- * Currently only supports "LoadMap" action
+ * Enum for Area Explorer custom actions
+ * Currently only supports LoadMap action
  *
- * This type is used to ensure type safety when using custom actions
- * If you need to add more actions, add them to this type and to the AREA_EXPLORER_CUSTOM_ACTIONS array
+ * Using an enum provides better type safety and maintainability
+ * than string literals
  */
-export type AreaTreeNodeCustomAction = "LoadMap";
+export enum AreaTreeNodeCustomAction {
+  LoadMap = "LoadMap",
+}
 
-/**
- * Array of all available custom actions for the AreaExplorer
- * This array is derived from the AreaTeeNodeCustomAction type
- * If you update the type, make sure to update this array as well
- */
-export const AREA_EXPLORER_CUSTOM_ACTIONS: AreaTreeNodeCustomAction[] = [
-  "LoadMap",
-];
+// No need for a separate array constant as we'll use Object.values(enum) directly
 
 /**
  * AreaExplorerInteractable class extends TreeExplorerInteractable
@@ -40,7 +35,7 @@ export class AreaExplorerInteractable extends TreeExplorerInteractable<
   loadMap(areaName: string): AreaExplorerInteractable {
     // Find the area by name and click its map button
     // Use the typed custom action
-    this.item(areaName).action("LoadMap" as AreaTreeNodeCustomAction);
+    this.item(areaName).action(AreaTreeNodeCustomAction.LoadMap);
     return this;
   }
 
@@ -66,10 +61,11 @@ export class AreaExplorerInteractable extends TreeExplorerInteractable<
 export function areaExplorer(): AreaExplorerInteractable {
   // Use the treeExplorer helper with "Area" as the type prefix
   // Only the actions defined in AreaTreeNodeCustomAction are supported
+  // Convert enum to array using Object.values
   const explorer = treeExplorer<AreaTreeNodeCustomAction, typeof AreaSchema>(
     "Area",
     AreaSchema,
-    AREA_EXPLORER_CUSTOM_ACTIONS
+    Object.values(AreaTreeNodeCustomAction) as AreaTreeNodeCustomAction[]
   );
 
   // Cast to our specialized class

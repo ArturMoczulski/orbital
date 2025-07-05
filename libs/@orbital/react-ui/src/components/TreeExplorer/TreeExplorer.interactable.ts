@@ -16,7 +16,7 @@ import { z } from "zod";
  * Interface for dialog-related methods
  */
 interface TreeExplorerDialogs<
-  CustomActions extends string = never,
+  CustomActions extends string | number | symbol = never,
   Schema extends ZodObjectSchema = never,
 > {
   /**
@@ -28,7 +28,9 @@ interface TreeExplorerDialogs<
 /**
  * Interface for button-related methods
  */
-interface TreeExplorerButtons<CustomActions extends string = never> {
+interface TreeExplorerButtons<
+  CustomActions extends string | number | symbol = never,
+> {
   /**
    * Get the Add button element
    */
@@ -44,7 +46,7 @@ interface TreeExplorerButtons<CustomActions extends string = never> {
  * Interface for state-related methods
  */
 interface TreeExplorerStates<
-  CustomActions extends string = never,
+  CustomActions extends string | number | symbol = never,
   Schema extends ZodObjectSchema = never,
 > {
   loading: {
@@ -97,19 +99,21 @@ interface TreeExplorerStates<
  * TreeExplorerInteractable class represents the TreeExplorer component
  * and provides methods for interacting with it
  *
- * @template CustomActions - String literal type representing available custom actions
+ * @template CustomActions - Type representing available custom actions (string, number, or symbol)
  *                          When using treeExplorer(), this is inferred from the customActions array
+ *                          Can be a string literal type or an enum
  * @template Schema - Zod schema for form validation
  */
 class TreeExplorerInteractable<
-  CustomActions extends string = never,
+  CustomActions extends string | number | symbol = never,
   Schema extends ZodObjectSchema = never,
 > extends CypressInteractable<string> {
   readonly typePrefixPascal: string;
 
   /**
    * Array of custom action names available for tree nodes
-   * When passed to treeExplorer(), this array's string literals become the CustomActions type
+   * When passed to treeExplorer(), this array's values become the CustomActions type
+   * Can contain string literals or enum values
    */
   readonly customActions?: CustomActions[];
 
@@ -263,12 +267,13 @@ class TreeExplorerInteractable<
  * @param typePrefixPascal The PascalCase type prefix (e.g., "Area", "World")
  * @param schema The Zod schema for form validation
  * @param customActions Array of custom action names that will be available on tree nodes
- *                     The string literals in this array are used to infer the CustomActions type
+ *                     The values in this array are used to infer the CustomActions type
  *                     Example: ["edit", "delete"] creates type "edit" | "delete"
+ *                     Example: [MyEnum.Action1, MyEnum.Action2] creates type MyEnum.Action1 | MyEnum.Action2
  * @returns An TreeExplorerInteractable instance with type-safe custom actions
  */
 function treeExplorer<
-  T extends string = never,
+  T extends string | number | symbol = never,
   S extends ZodObjectSchema = never,
 >(
   typePrefixPascal: string,

@@ -13,10 +13,18 @@ import { TreeExplorerInteractable } from "./TreeExplorer.interactable";
 /**
  * Interface for TreeNode button-related methods
  *
- * @template CustomActions - String literal type representing available custom actions
- * Each custom action must be one of the strings in the customActions array
+ * @template CustomActions - Can be a string literal type or an enum
+ * Each custom action must be one of the values in the customActions array
  */
-export interface TreeNodeButtons<CustomActions extends string = never> {
+/**
+ * Interface for TreeNode button-related methods
+ *
+ * @template CustomActions - Can be a string literal type or an enum
+ * Each custom action must be one of the values in the customActions array
+ */
+export interface TreeNodeButtons<
+  CustomActions extends string | number | symbol = never,
+> {
   /**
    * Get the delete button for this tree node
    */
@@ -39,11 +47,18 @@ export interface TreeNodeButtons<CustomActions extends string = never> {
  * TreeNode class represents a node in the TreeExplorer tree
  * and provides methods for interacting with it
  *
- * @template CustomActions - String literal type representing available custom actions
+ * @template CustomActions - Can be a string literal type or an enum
+ * @template Schema - Zod schema for form validation
+ */
+/**
+ * TreeNode class represents a node in the TreeExplorer tree
+ * and provides methods for interacting with it
+ *
+ * @template CustomActions - Can be a string literal type or an enum
  * @template Schema - Zod schema for form validation
  */
 export class TreeNodeInteractable<
-  CustomActions extends string = never,
+  CustomActions extends string | number | symbol = never,
   Schema extends ZodObjectSchema = never,
 > extends CypressInteractable<string> {
   private explorer: TreeExplorerInteractable<CustomActions, Schema>;
@@ -51,7 +66,7 @@ export class TreeNodeInteractable<
 
   /**
    * Reference to the explorer's custom actions
-   * This is an array of strings or never if no custom actions are defined
+   * This is an array of custom action values (strings, numbers, or symbols) or never if no custom actions are defined
    */
   private get customActions(): CustomActions[] | never {
     return this.explorer.customActions || [];
@@ -87,8 +102,8 @@ export class TreeNodeInteractable<
       custom: {} as { [K in CustomActions]: () => Cypress.Chainable },
     };
 
-    // Add custom action buttons dynamically from the array of custom action strings
-    // The customActions is an array of strings or never if no custom actions are defined
+    // Add custom action buttons dynamically from the array of custom action values
+    // The customActions is an array of custom action values (strings, numbers, or symbols) or never if no custom actions are defined
     const actions = this.customActions;
     if (actions && actions.length > 0) {
       // Iterate through each action name in the customActions array
@@ -103,7 +118,7 @@ export class TreeNodeInteractable<
             .getElement()
             .contains(this.name)
             .closest('[data-testid="TreeNode"]')
-            .find(`[data-testid="${actionName}"]`)
+            .find(`[data-testid="${String(actionName)}"]`)
             .should("exist");
         };
       });
@@ -142,6 +157,7 @@ export class TreeNodeInteractable<
    *                   This parameter is type-safe - TypeScript will only allow values that were
    *                   included in the customActions array passed to treeExplorer()
    *                   Example: If customActions was ["edit", "delete"], only "edit" or "delete" are valid
+   *                   Example: If customActions was [MyEnum.Action1, MyEnum.Action2], only MyEnum.Action1 or MyEnum.Action2 are valid
    */
   action(
     actionName: CustomActions
@@ -149,14 +165,14 @@ export class TreeNodeInteractable<
     // Verify that the action exists in our custom actions array
     if (this.customActions && !this.customActions.includes(actionName)) {
       throw new Error(
-        `Custom action "${actionName}" is not in the available custom actions: [${this.customActions.join(", ")}]`
+        `Custom action "${String(actionName)}" is not in the available custom actions: [${this.customActions.map(String).join(", ")}]`
       );
     }
 
     // Use the custom action button and click it
     if (!this.buttons.custom[actionName]) {
       throw new Error(
-        `Custom action "${actionName}" does not exist on component ${this.componentType}`
+        `Custom action "${String(actionName)}" does not exist on component ${this.componentType}`
       );
     }
     this.buttons.custom[actionName]().click({ force: true });
