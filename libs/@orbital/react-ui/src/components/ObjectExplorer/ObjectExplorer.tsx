@@ -1,21 +1,17 @@
 import AddIcon from "@mui/icons-material/Add";
-import ChevronRightIcon from "@mui/icons-material/ChevronRight";
-import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import Box from "@mui/material/Box";
-import Dialog from "@mui/material/Dialog";
-import DialogTitle from "@mui/material/DialogTitle";
 import IconButton from "@mui/material/IconButton";
 import { useTheme } from "@mui/material/styles";
 import Typography from "@mui/material/Typography";
 import { lowerFirst } from "lodash";
 import React, { useEffect, useState } from "react";
 import { ZodBridge } from "uniforms-bridge-zod";
-import { AutoForm } from "uniforms-mui";
 import { z } from "zod";
 import { useOrbitalTheme } from "../../theme/ThemeContext";
 import { useNotification } from "../NotificationProvider/NotificationProvider";
 import { ExplorerObject, ObjectExplorerProps, QueryResult } from "../types";
-import { DefaultTreeNodeActions } from "./DefaultTreeNodeActions";
+import { AddItemDialog } from "./AddItemDialog";
+import { TreeNode } from "./TreeNode";
 
 /**
  * A generic tree-view component for displaying hierarchical objects
@@ -172,78 +168,6 @@ export function ObjectExplorer<T extends ExplorerObject>({
     }
   };
 
-  const DefaultTreeNode = ({
-    object,
-    level = 0,
-  }: {
-    object: T;
-    level?: number;
-  }) => {
-    const children = objects.filter((o) => o.parentId === object._id);
-    const isExpanded = !!expandedNodes[object._id];
-
-    return (
-      <Box key={object._id} sx={{ ml: level * 2 }}>
-        <Box
-          sx={{
-            display: "flex",
-            alignItems: "center",
-            py: 1,
-            px: 1,
-            cursor: "pointer",
-            borderRadius: 1,
-            "&:hover": { bgcolor: "secondary.main" },
-          }}
-          onClick={() => toggleNode(object._id)}
-          data-testid="TreeNode"
-          data-object-id={object._id}
-        >
-          {children.length > 0 ? (
-            isExpanded ? (
-              <ExpandMoreIcon fontSize="small" />
-            ) : (
-              <ChevronRightIcon fontSize="small" />
-            )
-          ) : (
-            <Box sx={{ width: 24 }} />
-          )}
-          <Typography sx={{ flexGrow: 1, ml: 1 }}>{object.name}</Typography>
-
-          {/* Action buttons container */}
-          <Box sx={{ display: "flex", alignItems: "center" }}>
-            {/* Render default actions or custom actions */}
-            {(() => {
-              // Create the default actions component
-              const defaultActions = (
-                <DefaultTreeNodeActions
-                  object={object}
-                  type={type}
-                  onDelete={onDelete ? handleDeleteClick : undefined}
-                />
-              );
-
-              // If custom item actions are provided, pass them the default actions
-              return itemActions
-                ? itemActions(object, defaultActions)
-                : defaultActions;
-            })()}
-          </Box>
-        </Box>
-        {isExpanded && children.length > 0 && (
-          <Box>
-            {children.map((child) => (
-              <DefaultTreeNode
-                key={child._id}
-                object={child}
-                level={level + 1}
-              />
-            ))}
-          </Box>
-        )}
-      </Box>
-    );
-  };
-
   if (isLoading) {
     return (
       <Box
@@ -352,7 +276,16 @@ export function ObjectExplorer<T extends ExplorerObject>({
           ) : (
             rootObjects.map((obj) =>
               !renderNode ? (
-                <DefaultTreeNode key={obj._id} object={obj} />
+                <TreeNode
+                  key={obj._id}
+                  object={obj}
+                  objects={objects}
+                  expandedNodes={expandedNodes}
+                  toggleNode={toggleNode}
+                  type={type}
+                  onDelete={onDelete ? handleDeleteClick : undefined}
+                  itemActions={itemActions}
+                />
               ) : (
                 <Box key={obj._id}>
                   {
@@ -369,45 +302,15 @@ export function ObjectExplorer<T extends ExplorerObject>({
         </Box>
       </Box>
 
-      {/* Add Object Modal */}
-      <Dialog
-        data-testid="ObjectExplorerAddDialog"
+      {/* Use the new AddItemDialog component */}
+      <AddItemDialog<T>
         open={showAddModal}
         onClose={closeAddModal}
-        fullWidth
-        maxWidth="md"
-        PaperProps={{
-          sx: {
-            width: "80%",
-            height: "80%",
-            border: "2px solid",
-            borderColor: "primary.main",
-          },
-        }}
-      >
-        <DialogTitle>Add New Object</DialogTitle>
-        <Box sx={{ p: 3 }} data-testid="AddForm">
-          <AutoForm
-            schema={formSchema}
-            onSubmit={async (data) => {
-              if (onAdd) {
-                try {
-                  await onAdd(data as Partial<T>);
-                  notify(`${type} created successfully`, "success");
-                  closeAddModal();
-                } catch (error: any) {
-                  // Error handling is already in handleApiAdd, this is just a fallback
-                  // The modal will stay open so the user can correct the input
-                  console.error("Form submission error:", error);
-                }
-              } else {
-                console.log("Form submitted:", data);
-                notify("No handler provided for form submission", "warning");
-              }
-            }}
-          />
-        </Box>
-      </Dialog>
+        type={type}
+        onAdd={onAdd}
+        notify={notify}
+        formSchema={formSchema}
+      />
     </>
   );
 }
