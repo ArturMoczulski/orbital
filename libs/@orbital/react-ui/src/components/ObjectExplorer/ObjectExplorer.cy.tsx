@@ -138,19 +138,19 @@ describe("ObjectExplorer Component", () => {
     it("should open add dialog when clicking add button", () => {
       const explorer = objectExplorer("Item");
 
-      // Click the add button
-      explorer.add();
+      // Click the add button using the nested API
+      explorer.dialogs.add.open();
 
-      // Verify the add dialog is open
-      explorer.addDialog().should("be.visible");
-      explorer.addForm().should("be.visible");
+      // Verify the add dialog is open using the nested API
+      explorer.dialogs.add.getElement().should("be.visible");
+      explorer.dialogs.add.form().should("be.visible");
     });
 
     it("should add a new item", () => {
       const explorer = objectExplorer("Item");
 
-      // Add a new item
-      explorer.addItem({ name: "New Item" });
+      // Add a new item using the addWithData method
+      explorer.add({ name: "New Item" });
 
       // Verify the add stub was called with data that includes the name
       // The form also includes worldId: undefined from the schema
@@ -164,8 +164,8 @@ describe("ObjectExplorer Component", () => {
     it("should add a new item with a parent", () => {
       const explorer = objectExplorer("Item");
 
-      // Add a new item with a parent
-      explorer.addItem({ name: "New Child", parentId: "1" });
+      // Add a new item with a parent using the addWithData method
+      explorer.add({ name: "New Child", parentId: "1" });
 
       // Verify the add stub was called with data that includes the name and parentId
       // The form also includes worldId: undefined from the schema
@@ -257,7 +257,7 @@ describe("ObjectExplorer Component", () => {
       // Get the delete button and click it
       explorer
         .item("Child A")
-        .deleteButton()
+        .buttons.delete()
         .should("be.visible")
         .click({ force: true });
 
@@ -321,12 +321,13 @@ describe("ObjectExplorer Component", () => {
     });
 
     it("should trigger custom action when clicking custom action button", () => {
-      const explorer = objectExplorer("Item");
+      // Create explorer with custom action type
+      const explorer = objectExplorer<"CustomAction">("Item", ["CustomAction"]);
 
-      // Get the custom action button and click it
+      // Get the custom action button and click it using the nested structure
       explorer
         .item("Root Item")
-        .actionButton("CustomAction")
+        .buttons.custom.CustomAction()
         .click({ force: true });
 
       // Verify the custom action stub was called with the correct ID
@@ -351,8 +352,8 @@ describe("ObjectExplorer Component", () => {
         </NotificationProvider>
       );
 
-      // Verify loading state is shown
-      objectExplorer("Item").shouldBeLoading();
+      // Verify loading state is shown using the nested API
+      objectExplorer("Item").states.loading.shouldExist();
     });
 
     it("should show error state", () => {
@@ -371,8 +372,8 @@ describe("ObjectExplorer Component", () => {
         </NotificationProvider>
       );
 
-      // Verify error state is shown
-      objectExplorer("Item").shouldHaveError();
+      // Verify error state is shown using the nested API
+      objectExplorer("Item").states.error.shouldExist();
     });
 
     it("should show empty state", () => {
@@ -391,8 +392,8 @@ describe("ObjectExplorer Component", () => {
         </NotificationProvider>
       );
 
-      // Verify empty state is shown
-      objectExplorer("Item").shouldBeEmpty();
+      // Verify empty state is shown using the nested API
+      objectExplorer("Item").states.empty.shouldExist();
     });
   });
 
@@ -490,7 +491,7 @@ describe("ObjectExplorer Component", () => {
 
       // Add a new item
       const explorer = objectExplorer("Item");
-      explorer.addItem({ name: "New RTK Item" });
+      explorer.add({ name: "New RTK Item" });
 
       // Verify the create hook was called
       cy.get("@createHookStub").should("have.been.called");

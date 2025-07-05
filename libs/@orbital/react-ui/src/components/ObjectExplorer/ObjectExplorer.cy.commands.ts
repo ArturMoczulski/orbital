@@ -5,17 +5,79 @@
 import { CypressInteractable } from "../../../cypress/support/CypressInteractable";
 
 /**
+ * Interface for TreeNode button-related methods
+ */
+interface TreeNodeButtons<CustomActions extends string = never> {
+  /**
+   * Get the delete button for this tree node
+   */
+  delete: () => Cypress.Chainable;
+
+  /**
+   * Custom action buttons
+   */
+  custom: {
+    [K in CustomActions]: () => Cypress.Chainable;
+  };
+}
+
+/**
  * TreeNode class represents a node in the ObjectExplorer tree
  * and provides methods for interacting with it
  */
-class TreeNodeInteractable extends CypressInteractable<string> {
-  private explorer: ObjectExplorerInteractable;
+class TreeNodeInteractable<
+  CustomActions extends string = never,
+> extends CypressInteractable<string> {
+  private explorer: ObjectExplorerInteractable<CustomActions>;
   private name: string;
 
-  constructor(explorer: ObjectExplorerInteractable, name: string) {
+  /**
+   * Button-related methods organized in a nested structure
+   */
+  readonly buttons: TreeNodeButtons<CustomActions>;
+
+  constructor(
+    explorer: ObjectExplorerInteractable<CustomActions>,
+    name: string
+  ) {
     super("TreeNode"); // Pass the base component type to the parent class
     this.explorer = explorer;
     this.name = name;
+
+    // Initialize the buttons property
+    this.buttons = {
+      delete: () => {
+        // First hover over the item to make the delete button visible
+        this.hover();
+
+        // Find and return the delete button using the explorer's element for scoping
+        return this.explorer
+          .getElement()
+          .contains(this.name)
+          .closest('[data-testid="TreeNode"]')
+          .find('[data-testid="DeleteButton"]')
+          .should("exist");
+      },
+      custom: {} as { [K in CustomActions]: () => Cypress.Chainable },
+    };
+
+    // Add custom action buttons dynamically
+    if (this.explorer.customActions) {
+      this.explorer.customActions.forEach((actionName) => {
+        (this.buttons.custom as any)[actionName] = () => {
+          // First hover over the item to make the action buttons visible
+          this.hover();
+
+          // Find and return the action button using the explorer's element for scoping
+          return this.explorer
+            .getElement()
+            .contains(this.name)
+            .closest('[data-testid="TreeNode"]')
+            .find(`[data-testid="${actionName}"]`)
+            .should("exist");
+        };
+      });
+    }
   }
 
   /**
@@ -32,56 +94,24 @@ class TreeNodeInteractable extends CypressInteractable<string> {
   // click() and hover() methods are now inherited from CypressInteractable
 
   /**
-   * Get the delete button for this item
-   */
-  deleteButton(): Cypress.Chainable {
-    // First hover over the item to make the delete button visible
-    this.hover();
-
-    // Find and return the delete button using the explorer's element for scoping
-    return this.explorer
-      .getElement()
-      .contains(this.name)
-      .closest('[data-testid="TreeNode"]')
-      .find('[data-testid="DeleteButton"]')
-      .should("exist");
-  }
-
-  /**
    * Delete this item
    */
-  delete(): TreeNodeInteractable {
+  delete(): TreeNodeInteractable<CustomActions> {
     // Stub the window.confirm to always return true
     cy.on("window:confirm", () => true);
 
-    // Use the deleteButton method and click it
-    this.deleteButton().click({ force: true });
+    // Use the buttons.delete method and click it
+    this.buttons.delete().click({ force: true });
 
     return this;
   }
 
   /**
-   * Get a custom action button for this item
-   */
-  actionButton(actionName: string): Cypress.Chainable {
-    // First hover over the item to make the action buttons visible
-    this.hover();
-
-    // Find and return the action button using the explorer's element for scoping
-    return this.explorer
-      .getElement()
-      .contains(this.name)
-      .closest('[data-testid="TreeNode"]')
-      .find(`[data-testid="${actionName}"]`)
-      .should("exist");
-  }
-
-  /**
    * Perform a custom action on this item
    */
-  action(actionName: string): TreeNodeInteractable {
-    // Use the actionButton method and click it
-    this.actionButton(actionName).click({ force: true });
+  action(actionName: CustomActions): TreeNodeInteractable<CustomActions> {
+    // Use the custom action button and click it
+    this.buttons.custom[actionName]().click({ force: true });
 
     return this;
   }
@@ -89,7 +119,7 @@ class TreeNodeInteractable extends CypressInteractable<string> {
   /**
    * Check if this node is expanded
    */
-  shouldBeExpanded(): TreeNodeInteractable {
+  shouldBeExpanded(): TreeNodeInteractable<CustomActions> {
     // In the expanded state, we can check if children are visible
     // We don't need to check for specific icons since they're not easily targetable
 
@@ -109,7 +139,7 @@ class TreeNodeInteractable extends CypressInteractable<string> {
   /**
    * Check if this node is collapsed
    */
-  shouldBeCollapsed(): TreeNodeInteractable {
+  shouldBeCollapsed(): TreeNodeInteractable<CustomActions> {
     // In the collapsed state, we can check if children are not visible
     // We don't need to check for specific icons since they're not easily targetable
 
@@ -130,7 +160,7 @@ class TreeNodeInteractable extends CypressInteractable<string> {
   /**
    * Check if this node has children
    */
-  shouldHaveChildren(): TreeNodeInteractable {
+  shouldHaveChildren(): TreeNodeInteractable<CustomActions> {
     // Expand the node first to make children visible
     this.click();
 
@@ -160,7 +190,7 @@ class TreeNodeInteractable extends CypressInteractable<string> {
   /**
    * Check if this node has a specific number of children
    */
-  shouldHaveChildCount(count: number): TreeNodeInteractable {
+  shouldHaveChildCount(count: number): TreeNodeInteractable<CustomActions> {
     // Expand the node first to make children visible
     this.click();
 
@@ -205,7 +235,7 @@ class TreeNodeInteractable extends CypressInteractable<string> {
   /**
    * Select this node (triggers onSelect callback)
    */
-  select(): TreeNodeInteractable {
+  select(): TreeNodeInteractable<CustomActions> {
     // The select functionality is triggered by clicking on the node text
     // In the ObjectExplorer component, the text is in a Typography component
 
@@ -248,7 +278,7 @@ class TreeNodeInteractable extends CypressInteractable<string> {
   /**
    * Check if this node has a specific object ID
    */
-  shouldHaveId(id: string): TreeNodeInteractable {
+  shouldHaveId(id: string): TreeNodeInteractable<CustomActions> {
     this.findElement().should("have.attr", "data-object-id", id);
     return this;
   }
@@ -257,15 +287,223 @@ class TreeNodeInteractable extends CypressInteractable<string> {
 }
 
 /**
+ * Interface for dialog-related methods
+ */
+interface ObjectExplorerDialogs<CustomActions extends string = never> {
+  add: {
+    /**
+     * Get the Add dialog element
+     */
+    getElement: () => Cypress.Chainable;
+
+    /**
+     * Get the Add form element
+     */
+    form: () => Cypress.Chainable;
+
+    /**
+     * Open the Add dialog
+     */
+    open: () => ObjectExplorerInteractable<CustomActions>;
+
+    /**
+     * Fill and submit the Add form
+     */
+    submit: (data: {
+      name: string;
+      parentId?: string;
+    }) => ObjectExplorerInteractable<CustomActions>;
+  };
+}
+
+/**
+ * Interface for button-related methods
+ */
+interface ObjectExplorerButtons<CustomActions extends string = never> {
+  /**
+   * Get the Add button element
+   */
+  add: () => Cypress.Chainable;
+
+  /**
+   * Get the Add button element in the empty state
+   */
+  addEmpty: () => Cypress.Chainable;
+}
+
+/**
+ * Interface for state-related methods
+ */
+interface ObjectExplorerStates<CustomActions extends string = never> {
+  loading: {
+    /**
+     * Get the loading state element
+     */
+    getElement: () => Cypress.Chainable;
+
+    /**
+     * Check if the explorer is in loading state
+     */
+    shouldExist: () => ObjectExplorerInteractable<CustomActions>;
+  };
+
+  error: {
+    /**
+     * Get the error state element
+     */
+    getElement: () => Cypress.Chainable;
+
+    /**
+     * Check if the explorer is in error state
+     */
+    shouldExist: () => ObjectExplorerInteractable<CustomActions>;
+  };
+
+  empty: {
+    /**
+     * Get the empty state element
+     */
+    getElement: () => Cypress.Chainable;
+
+    /**
+     * Check if the explorer is in empty state
+     */
+    shouldExist: () => ObjectExplorerInteractable<CustomActions>;
+
+    /**
+     * Click the Add button in empty state
+     */
+    add: () => ObjectExplorerInteractable<CustomActions>;
+  };
+}
+
+/**
  * ObjectExplorerInteractable class represents the ObjectExplorer component
  * and provides methods for interacting with it
  */
-class ObjectExplorerInteractable extends CypressInteractable<string> {
+class ObjectExplorerInteractable<
+  CustomActions extends string = never,
+> extends CypressInteractable<string> {
   readonly typePrefixPascal: string;
+  readonly customActions?: CustomActions[];
 
-  constructor(typePrefixPascal: string) {
+  /**
+   * Dialog-related methods organized in a nested structure
+   */
+  readonly dialogs: ObjectExplorerDialogs<CustomActions>;
+
+  /**
+   * Button-related methods organized in a nested structure
+   */
+  readonly buttons: ObjectExplorerButtons<CustomActions>;
+
+  /**
+   * State-related methods organized in a nested structure
+   */
+  readonly states: ObjectExplorerStates<CustomActions>;
+
+  constructor(typePrefixPascal: string, customActions?: CustomActions[]) {
     super(`ObjectExplorer`); // Pass the base component type to the parent class
     this.typePrefixPascal = typePrefixPascal;
+    this.customActions = customActions;
+
+    // Initialize the buttons property
+    this.buttons = {
+      add: () => this.getElement().find('[data-testid="AddButton"]'),
+      addEmpty: () => this.getElement().find('[data-testid="AddButtonEmpty"]'),
+    };
+
+    // Initialize the dialogs property with more specific selectors
+    this.dialogs = {
+      add: {
+        getElement: () => {
+          // Use the ObjectExplorer prefixed selector for components outside the main structure
+          return cy
+            .get('[data-testid="ObjectExplorerAddDialog"]')
+            .should("exist");
+        },
+        form: () => {
+          // Get the form within the dialog context
+          return this.dialogs.add
+            .getElement()
+            .find('[data-testid="AddForm"]')
+            .should("exist");
+        },
+        open: () => {
+          // Check if we're in empty state and use the appropriate button
+          this.getElement().then(($el) => {
+            if ($el.find('[data-testid="EmptyState"]').length > 0) {
+              this.buttons.addEmpty().click();
+            } else {
+              this.buttons.add().click();
+            }
+          });
+          return this;
+        },
+        submit: (data) => {
+          // Open the add dialog
+          this.dialogs.add.open();
+
+          // Fill the form within the context of the dialog
+          this.dialogs.add.form().within(() => {
+            // Fill the name field - clear it first to ensure clean input
+            cy.get('input[name="name"]').clear().type(data.name);
+
+            // Fill the parentId field if provided
+            if (data.parentId) {
+              cy.get('input[name="parentId"]').clear().type(data.parentId);
+            }
+
+            // Submit the form - use force: true to ensure it clicks even if something is on top
+            cy.get('button[type="submit"]').click({ force: true });
+          });
+
+          // Wait for the dialog to close
+          this.dialogs.add.getElement().should("not.exist");
+
+          return this;
+        },
+      },
+    };
+
+    // Initialize the states property with more specific selectors
+    this.states = {
+      loading: {
+        getElement: () => {
+          // Use the ObjectExplorer prefixed selector for components outside the main structure
+          return cy
+            .get('[data-testid="ObjectExplorerLoadingState"]')
+            .should("exist");
+        },
+        shouldExist: () => {
+          this.states.loading.getElement().should("exist");
+          return this;
+        },
+      },
+      error: {
+        getElement: () => {
+          // Use the ObjectExplorer prefixed selector for components outside the main structure
+          return cy
+            .get('[data-testid="ObjectExplorerErrorState"]')
+            .should("exist");
+        },
+        shouldExist: () => {
+          this.states.error.getElement().should("exist");
+          return this;
+        },
+      },
+      empty: {
+        getElement: () => this.getElement().find('[data-testid="EmptyState"]'),
+        shouldExist: () => {
+          this.states.empty.getElement().should("exist");
+          return this;
+        },
+        add: () => {
+          this.buttons.addEmpty().click();
+          return this;
+        },
+      },
+    };
   }
 
   /**
@@ -281,122 +519,16 @@ class ObjectExplorerInteractable extends CypressInteractable<string> {
   /**
    * Select a tree node in this explorer by name
    */
-  item(name: string): TreeNodeInteractable {
-    return new TreeNodeInteractable(this, name);
-  }
-
-  /**
-   * Get the Add button element
-   */
-  addButton(): Cypress.Chainable {
-    return this.getElement().find('[data-testid="AddButton"]');
-  }
-
-  /**
-   * Get the Add button element in the empty state
-   */
-  addButtonEmpty(): Cypress.Chainable {
-    return this.getElement().find('[data-testid="AddButtonEmpty"]');
-  }
-
-  /**
-   * Get the Add dialog element
-   */
-  addDialog(): Cypress.Chainable {
-    // Note: The dialog might be rendered outside the component's DOM tree
-    // (e.g., in a portal), but we'll scope it to the component as requested
-    return this.getElement().find('[data-testid="AddDialog"]');
-  }
-
-  /**
-   * Get the Add form element
-   */
-  addForm(): Cypress.Chainable {
-    // Note: The form might be rendered inside the dialog which might be
-    // outside the component's DOM tree, but we'll scope it as requested
-    return this.getElement().find('[data-testid="AddForm"]');
-  }
-
-  /**
-   * Click the Add button to open the add dialog
-   */
-  add(): ObjectExplorerInteractable {
-    this.addButton().click();
-    return this;
-  }
-
-  /**
-   * Click the Add button in the empty state
-   */
-  addEmpty(): ObjectExplorerInteractable {
-    this.addButtonEmpty().click();
-    return this;
-  }
-
-  /**
-   * Fill and submit the add form
-   * @param data Object with form field values
-   */
-  addItem(data: {
-    name: string;
-    parentId?: string;
-  }): ObjectExplorerInteractable {
-    // Open the add dialog
-    this.add();
-
-    // Fill the form
-    this.addForm().within(() => {
-      // Fill the name field - clear it first to ensure clean input
-      cy.get('input[name="name"]').clear().type(data.name);
-
-      // Fill the parentId field if provided
-      if (data.parentId) {
-        cy.get('input[name="parentId"]').clear().type(data.parentId);
-      }
-
-      // Submit the form - use force: true to ensure it clicks even if something is on top
-      cy.get('button[type="submit"]').click({ force: true });
-    });
-
-    // Wait for the dialog to close
-    this.addDialog().should("not.exist");
-
-    return this;
-  }
-
-  /**
-   * Check if the explorer is in loading state
-   */
-  shouldBeLoading(): ObjectExplorerInteractable {
-    // In loading state, the component renders a LoadingState element
-    // Scope the selector to the component
-    this.getElement().find('[data-testid="LoadingState"]').should("exist");
-    return this;
-  }
-
-  /**
-   * Check if the explorer is in error state
-   */
-  shouldHaveError(): ObjectExplorerInteractable {
-    // In error state, the component renders an ErrorState element
-    // Scope the selector to the component
-    this.getElement().find('[data-testid="ErrorState"]').should("exist");
-    return this;
-  }
-
-  /**
-   * Check if the explorer is in empty state
-   */
-  shouldBeEmpty(): ObjectExplorerInteractable {
-    // Scope the selector to the component
-    this.getElement().find('[data-testid="EmptyState"]').should("exist");
-    return this;
+  item(name: string): TreeNodeInteractable<CustomActions> {
+    return new TreeNodeInteractable<CustomActions>(this, name);
   }
 
   /**
    * Check the number of root items in the explorer
    */
-  shouldHaveRootItemCount(count: number): ObjectExplorerInteractable {
+  shouldHaveRootItemCount(
+    count: number
+  ): ObjectExplorerInteractable<CustomActions> {
     this.getElement()
       .find('[data-testid="TreeNode"]')
       .filter((_, el) => {
@@ -411,10 +543,55 @@ class ObjectExplorerInteractable extends CypressInteractable<string> {
   /**
    * Check the total number of items in the explorer
    */
-  shouldHaveTotalItemCount(count: number): ObjectExplorerInteractable {
+  shouldHaveTotalItemCount(
+    count: number
+  ): ObjectExplorerInteractable<CustomActions> {
     this.getElement()
       .find('[data-testid="TreeNode"]')
       .should("have.length", count);
+    return this;
+  }
+
+  /**
+   * Add a new item to the explorer
+   * This method encapsulates the entire workflow:
+   * 1. Click the appropriate Add button (regular or empty state)
+   * 2. Fill out the form with the provided properties
+   * 3. Submit the form
+   */
+  add(data: {
+    name: string;
+    parentId?: string;
+  }): ObjectExplorerInteractable<CustomActions> {
+    // Check if we're in empty state and use the appropriate button
+    this.getElement().then(($el) => {
+      if ($el.find('[data-testid="EmptyState"]').length > 0) {
+        this.buttons.addEmpty().click();
+      } else {
+        this.buttons.add().click();
+      }
+    });
+
+    // Wait for the dialog to appear
+    cy.get('[data-testid="ObjectExplorerAddDialog"]').should("be.visible");
+
+    // Fill and submit the form
+    cy.get('[data-testid="AddForm"]').within(() => {
+      // Fill the name field - clear it first to ensure clean input
+      cy.get('input[name="name"]').clear().type(data.name);
+
+      // Fill the parentId field if provided
+      if (data.parentId) {
+        cy.get('input[name="parentId"]').clear().type(data.parentId);
+      }
+
+      // Submit the form - use force: true to ensure it clicks even if something is on top
+      cy.get('button[type="submit"]').click({ force: true });
+    });
+
+    // Wait for the dialog to close
+    cy.get('[data-testid="ObjectExplorerAddDialog"]').should("not.exist");
+
     return this;
   }
 }
@@ -424,8 +601,11 @@ class ObjectExplorerInteractable extends CypressInteractable<string> {
  * @param typePrefixPascal The PascalCase type prefix (e.g., "Area", "World")
  * @returns An ObjectExplorerInteractable instance
  */
-function objectExplorer(typePrefixPascal: string): ObjectExplorerInteractable {
-  return new ObjectExplorerInteractable(typePrefixPascal);
+function objectExplorer<T extends string = never>(
+  typePrefixPascal: string,
+  customActions?: T[]
+): ObjectExplorerInteractable<T> {
+  return new ObjectExplorerInteractable<T>(typePrefixPascal, customActions);
 }
 
 // Export the helper function and classes

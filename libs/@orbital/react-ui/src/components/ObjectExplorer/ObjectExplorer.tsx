@@ -246,7 +246,10 @@ export function ObjectExplorer<T extends ExplorerObject>({
 
   if (isLoading) {
     return (
-      <Box sx={{ p: 2, color: "text.primary" }} data-testid="LoadingState">
+      <Box
+        sx={{ p: 2, color: "text.primary" }}
+        data-testid="ObjectExplorerLoadingState"
+      >
         Loading {typeName.toLowerCase()}...
       </Box>
     );
@@ -254,7 +257,10 @@ export function ObjectExplorer<T extends ExplorerObject>({
 
   if (error) {
     return (
-      <Box sx={{ p: 2, color: "error.main" }} data-testid="ErrorState">
+      <Box
+        sx={{ p: 2, color: "error.main" }}
+        data-testid="ObjectExplorerErrorState"
+      >
         Error loading {typeName.toLowerCase()}
       </Box>
     );
@@ -365,7 +371,7 @@ export function ObjectExplorer<T extends ExplorerObject>({
 
       {/* Add Object Modal */}
       <Dialog
-        data-testid="AddDialog"
+        data-testid="ObjectExplorerAddDialog"
         open={showAddModal}
         onClose={closeAddModal}
         fullWidth
