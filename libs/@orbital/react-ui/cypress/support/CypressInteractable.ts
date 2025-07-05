@@ -4,14 +4,18 @@
  */
 export abstract class CypressInteractable<T extends string> {
   protected componentType: T;
-  protected parentElement?: Cypress.Chainable<JQuery<HTMLElement>>;
+  protected parentElement?: () => Cypress.Chainable<JQuery<HTMLElement>>;
 
   constructor(
     componentType: T,
-    parentElement?: Cypress.Chainable<JQuery<HTMLElement>>
+    parentElement?: () => Cypress.Chainable<JQuery<HTMLElement>>
   ) {
     this.componentType = componentType;
     this.parentElement = parentElement;
+  }
+
+  selector() {
+    return `[data-testid="${this.componentType}"]`;
   }
 
   /**
@@ -21,14 +25,19 @@ export abstract class CypressInteractable<T extends string> {
    * If a parent element is provided, the search is scoped to that element
    */
   getElement() {
-    const selector = `[data-testid="${this.componentType}"]`;
+    if (this.parentElement && this.parentElement()) {
+      // Return the result of finding the element within the parent
+      return this.parentElement().then(($parent) => {
+        // Find the element using jQuery's find()
+        const $found = $parent.find(this.selector());
 
-    if (this.parentElement) {
-      // Use find() instead of within() to maintain the context
-      // This allows us to chain further find() calls without losing context
-      return this.parentElement.get(selector).should("exist");
+        // Return a new chainable for the found element
+        return cy.wrap($found);
+      });
     }
-    return cy.get(selector).should("exist");
+
+    // If no parent element, use cy.get() directly
+    return cy.get(this.selector()).should("exist");
   }
 
   /**

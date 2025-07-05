@@ -244,9 +244,6 @@ class TreeNodeInteractable<
       // Get the object ID from the element
       const objectId = $el.attr("data-object-id");
 
-      // Log the object ID to verify it's correct
-      cy.log(`Object ID: ${objectId}`);
-
       // Since the onSelect callback isn't directly triggered by clicking on the node
       // in the component (it's only used with renderNode), we'll directly call the stub
 

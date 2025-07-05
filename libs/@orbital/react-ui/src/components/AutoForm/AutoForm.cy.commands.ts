@@ -3,36 +3,18 @@
 
 /// <reference types="cypress" />
 
-// Import the CypressInteractable base class
+// Import the CypressInteractable base class and inputField factory
 import { CypressInteractable } from "../../../cypress/support/CypressInteractable";
+import { FormInputInteractable, inputField } from "./FormInputFields";
 
 /**
  * Type for form input field methods
  */
-type FormInputField<T> = {
-  /**
-   * Get the input element
-   */
-  getElement: () => Cypress.Chainable<JQuery<HTMLElement>>;
-
-  /**
-   * Type a value into the input
-   */
-  type: (value: T) => Cypress.Chainable<JQuery<HTMLElement>>;
-
-  /**
-   * Clear the input
-   */
-  clear: () => Cypress.Chainable<JQuery<HTMLElement>>;
-
-  /**
-   * Assert on the input element
-   */
-  should: (
-    chainer: string,
-    value?: any
-  ) => Cypress.Chainable<JQuery<HTMLElement>>;
-};
+/**
+ * Use FormInputInteractable as the base type for form input fields
+ * This ensures consistency between the proxy and the actual implementation
+ */
+type FormInputField<T> = FormInputInteractable<T>;
 
 /**
  * Interface for form input-related methods
@@ -63,7 +45,7 @@ interface AutoFormOptions {
   /**
    * Optional parent element to scope the form within
    */
-  parent?: Cypress.Chainable<JQuery<HTMLElement>>;
+  parent?: () => Cypress.Chainable<JQuery<HTMLElement>>;
 }
 
 /**
@@ -85,7 +67,7 @@ class AutoFormInteractable<
 
   constructor(
     formTestId: string,
-    parentElement?: Cypress.Chainable<JQuery<HTMLElement>>
+    parentElement?: () => Cypress.Chainable<JQuery<HTMLElement>>
   ) {
     super(formTestId, parentElement);
 
@@ -97,29 +79,7 @@ class AutoFormInteractable<
           return undefined;
         }
 
-        return {
-          getElement: () => {
-            // Get a fresh element each time to avoid context issues
-            return this.getElement().find(`[name="${prop}"]`).should("exist");
-          },
-          type: (value: any) => {
-            // Get a fresh element each time to avoid context issues
-            return this.getElement()
-              .find(`[name="${prop}"]`)
-              .clear()
-              .type(String(value));
-          },
-          clear: () => {
-            // Get a fresh element each time to avoid context issues
-            return this.getElement().find(`[name="${prop}"]`).clear();
-          },
-          should: (chainer: string, value?: any) => {
-            // Get a fresh element each time to avoid context issues
-            return this.getElement()
-              .find(`[name="${prop}"]`)
-              .should(chainer, value);
-          },
-        } as FormInputField<any>;
+        return inputField(prop as string, () => this.getElement());
       },
     });
 
@@ -140,7 +100,7 @@ class AutoFormInteractable<
     Object.entries(data).forEach(([key, value]) => {
       if (value !== undefined && value !== null) {
         // Use the inputs property to access the field
-        (this.inputs as any)[key].type(value);
+        (this.inputs as any)[key].setValue(value);
       }
     });
 
@@ -176,6 +136,7 @@ function autoForm<T extends Record<string, any>>(
   if (typeof formTestIdOrOptions === "string") {
     return new AutoFormInteractable<T>(formTestIdOrOptions);
   } else {
+    cy.log(`autoform parent`, formTestIdOrOptions.parent);
     return new AutoFormInteractable<T>(
       formTestIdOrOptions.formTestId,
       formTestIdOrOptions.parent

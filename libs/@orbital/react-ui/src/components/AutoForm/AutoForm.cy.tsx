@@ -36,13 +36,8 @@ describe("AutoForm Interactable", () => {
     });
 
     it("should access form inputs using scoped interactable", () => {
-      // Debug: Log the DOM structure to see what's available
-      cy.get(".parentContainer").then(($el) => {
-        cy.log("Parent container HTML:", $el.html());
-      });
-
       // Get the parent element
-      const parent = cy.get(".parentContainer");
+      const parent = () => cy.get(".parentContainer");
 
       // Create a scoped AutoForm interactable using class selector
       const form = autoForm<{
@@ -55,9 +50,9 @@ describe("AutoForm Interactable", () => {
       });
 
       // Access individual inputs
-      form.inputs.name.type("John Scoped");
-      form.inputs.age.type(30);
-      form.inputs.email.type("john.scoped@example.com");
+      form.inputs.name.setValue("John Scoped");
+      form.inputs.age.setValue(30);
+      form.inputs.email.setValue("john.scoped@example.com");
 
       // Verify the values using the fluent API
       form.inputs.name.should("have.value", "John Scoped");
@@ -67,7 +62,7 @@ describe("AutoForm Interactable", () => {
 
     it("should fill and submit the form using scoped interactable", () => {
       // Get the parent element
-      const parent = cy.get(".parentContainer");
+      const parent = () => cy.get(".parentContainer");
 
       // Create a scoped AutoForm interactable using class selector
       const form = autoForm<{
@@ -131,9 +126,9 @@ describe("AutoForm Interactable", () => {
       }>("TestForm");
 
       // Access individual inputs
-      form.inputs.name.type("John Doe");
-      form.inputs.age.type(30);
-      form.inputs.email.type("john.doe@example.com");
+      form.inputs.name.setValue("John Doe");
+      form.inputs.age.setValue(30);
+      form.inputs.email.setValue("john.doe@example.com");
 
       // Verify the values using the fluent API
       form.inputs.name.should("have.value", "John Doe");
@@ -225,6 +220,29 @@ describe("AutoForm Interactable", () => {
 
       // Access the submit button
       form.buttons.submit().should("exist");
+    });
+
+    it("should use consistent setValue method for all input types", () => {
+      // Create an AutoForm interactable
+      const form = autoForm<{
+        name: string;
+        age: number;
+        email: string;
+      }>("TestForm");
+
+      // Use setValue for all input types
+      form.inputs.name.setValue("Consistent API");
+      form.inputs.name.should("have.value", "Consistent API");
+
+      form.inputs.email.setValue("consistent.api@example.com");
+      form.inputs.email.should("have.value", "consistent.api@example.com");
+
+      form.inputs.age.setValue(50);
+      form.inputs.age.should("have.value", "50");
+
+      // Clear and verify
+      form.inputs.name.clear();
+      form.inputs.name.should("have.value", "");
     });
   });
 });
