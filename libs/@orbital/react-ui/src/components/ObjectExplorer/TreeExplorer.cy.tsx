@@ -1,15 +1,15 @@
 // @ts-nocheck
 /// <reference types="cypress" />
 import { NotificationProvider } from "../NotificationProvider/NotificationProvider";
-import { ObjectExplorer } from "./ObjectExplorer";
+import { TreeExplorer } from "./TreeExplorer";
 // Import the objectExplorer function directly
-import { objectExplorer } from "./ObjectExplorer.interactable";
+import { treeExplorer } from "./TreeExplorer.interactable";
 // Import IconButton for custom actions
 import IconButton from "@mui/material/IconButton";
 // Import zod for schema definition
 import { z } from "zod";
 
-describe("ObjectExplorer Component", () => {
+describe("TreeExplorer Component", () => {
   // Define the schema for the form
   const simpleSchema = z.object({
     name: z.string().min(1, "Name is required"),
@@ -43,7 +43,7 @@ describe("ObjectExplorer Component", () => {
       // Mount the component with mock data
       cy.mount(
         <NotificationProvider>
-          <ObjectExplorer
+          <TreeExplorer
             queryResult={{
               data: mockObjects,
               isLoading: false,
@@ -57,12 +57,12 @@ describe("ObjectExplorer Component", () => {
       );
 
       // Expand the root item to see its children
-      objectExplorer("Item", simpleSchema).item("Root Item").click();
+      treeExplorer("Item", simpleSchema).item("Root Item").click();
     });
 
     it("demonstrates the fluent API with consistent item() helper usage", () => {
       // Get the explorer using the imported function
-      const explorer = objectExplorer("Item", simpleSchema);
+      const explorer = treeExplorer("Item", simpleSchema);
 
       // Verify the explorer exists
       explorer.getElement().should("exist");
@@ -81,7 +81,7 @@ describe("ObjectExplorer Component", () => {
     });
 
     it("should expand and collapse tree nodes", () => {
-      const explorer = objectExplorer("Item", simpleSchema);
+      const explorer = treeExplorer("Item", simpleSchema);
 
       // Verify Root Item is expanded
       explorer.item("Root Item").shouldBeExpanded();
@@ -105,7 +105,7 @@ describe("ObjectExplorer Component", () => {
     });
 
     it("should verify node has correct number of children", () => {
-      const explorer = objectExplorer("Item", simpleSchema);
+      const explorer = treeExplorer("Item", simpleSchema);
 
       // Verify Root Item has 2 children
       explorer.item("Root Item").shouldHaveChildCount(2);
@@ -129,7 +129,7 @@ describe("ObjectExplorer Component", () => {
       // Mount the component with mock data
       cy.mount(
         <NotificationProvider>
-          <ObjectExplorer
+          <TreeExplorer
             queryResult={{
               data: mockObjects,
               isLoading: false,
@@ -144,7 +144,7 @@ describe("ObjectExplorer Component", () => {
     });
 
     it("should open add dialog when clicking add button", () => {
-      const explorer = objectExplorer("Item", simpleSchema);
+      const explorer = treeExplorer("Item", simpleSchema);
 
       // Click the add button using the nested API
       explorer.dialogs.add.open();
@@ -156,7 +156,7 @@ describe("ObjectExplorer Component", () => {
     });
 
     it("should add a new item", () => {
-      const explorer = objectExplorer("Item", simpleSchema);
+      const explorer = treeExplorer("Item", simpleSchema);
 
       // Add a new item using the addWithData method
       explorer.add({ name: "New Item" });
@@ -171,7 +171,7 @@ describe("ObjectExplorer Component", () => {
     });
 
     it("should add a new item with a parent", () => {
-      const explorer = objectExplorer("Item", simpleSchema);
+      const explorer = treeExplorer("Item", simpleSchema);
 
       // Add a new item with a parent using the addWithData method
       explorer.add({ name: "New Child", parentId: "1" });
@@ -214,7 +214,7 @@ describe("ObjectExplorer Component", () => {
       // Mount the component with mock data
       cy.mount(
         <NotificationProvider>
-          <ObjectExplorer
+          <TreeExplorer
             queryResult={{
               data: mockObjects,
               isLoading: false,
@@ -228,11 +228,11 @@ describe("ObjectExplorer Component", () => {
       );
 
       // Expand the root item to see its children
-      objectExplorer("Item", simpleSchema).item("Root Item").click();
+      treeExplorer("Item", simpleSchema).item("Root Item").click();
     });
 
     it("should delete a node when clicking delete button", () => {
-      const explorer = objectExplorer("Item", simpleSchema);
+      const explorer = treeExplorer("Item", simpleSchema);
 
       // Stub window.confirm to return true
       cy.on("window:confirm", () => true);
@@ -245,7 +245,7 @@ describe("ObjectExplorer Component", () => {
     });
 
     it("should delete a root node", () => {
-      const explorer = objectExplorer("Item", simpleSchema);
+      const explorer = treeExplorer("Item", simpleSchema);
 
       // Stub window.confirm to return true
       cy.on("window:confirm", () => true);
@@ -258,7 +258,7 @@ describe("ObjectExplorer Component", () => {
     });
 
     it("should confirm before deleting", () => {
-      const explorer = objectExplorer("Item", simpleSchema);
+      const explorer = treeExplorer("Item", simpleSchema);
 
       // Stub window.confirm to return false
       cy.on("window:confirm", () => false);
@@ -315,7 +315,7 @@ describe("ObjectExplorer Component", () => {
       // Mount the component with mock data and custom actions
       cy.mount(
         <NotificationProvider>
-          <ObjectExplorer
+          <TreeExplorer
             queryResult={{
               data: mockObjects,
               isLoading: false,
@@ -331,7 +331,7 @@ describe("ObjectExplorer Component", () => {
 
     it("should trigger custom action when clicking custom action button", () => {
       // Create explorer with custom action type
-      const explorer = objectExplorer<"CustomAction", typeof simpleSchema>(
+      const explorer = treeExplorer<"CustomAction", typeof simpleSchema>(
         "Item",
         simpleSchema,
         ["CustomAction"]
@@ -353,7 +353,7 @@ describe("ObjectExplorer Component", () => {
       // Mount the component with loading state
       cy.mount(
         <NotificationProvider>
-          <ObjectExplorer
+          <TreeExplorer
             queryResult={{
               data: null,
               isLoading: true,
@@ -366,14 +366,14 @@ describe("ObjectExplorer Component", () => {
       );
 
       // Verify loading state is shown using the nested API
-      objectExplorer("Item", simpleSchema).states.loading.shouldExist();
+      treeExplorer("Item", simpleSchema).states.loading.shouldExist();
     });
 
     it("should show error state", () => {
       // Mount the component with error state
       cy.mount(
         <NotificationProvider>
-          <ObjectExplorer
+          <TreeExplorer
             queryResult={{
               data: null,
               isLoading: false,
@@ -386,14 +386,14 @@ describe("ObjectExplorer Component", () => {
       );
 
       // Verify error state is shown using the nested API
-      objectExplorer("Item", simpleSchema).states.error.shouldExist();
+      treeExplorer("Item", simpleSchema).states.error.shouldExist();
     });
 
     it("should show empty state", () => {
       // Mount the component with empty state
       cy.mount(
         <NotificationProvider>
-          <ObjectExplorer
+          <TreeExplorer
             queryResult={{
               data: [],
               isLoading: false,
@@ -406,7 +406,7 @@ describe("ObjectExplorer Component", () => {
       );
 
       // Verify empty state is shown using the nested API
-      objectExplorer("Item", simpleSchema).states.empty.shouldExist();
+      treeExplorer("Item", simpleSchema).states.empty.shouldExist();
     });
   });
 
@@ -436,7 +436,7 @@ describe("ObjectExplorer Component", () => {
       // Mount the component with RTK Query API
       cy.mount(
         <NotificationProvider>
-          <ObjectExplorer
+          <TreeExplorer
             type="Item"
             objectTypeName="Items"
             api={{
@@ -450,7 +450,7 @@ describe("ObjectExplorer Component", () => {
       cy.get("@queryHookStub").should("have.been.called");
 
       // Verify the data was rendered
-      const explorer = objectExplorer("Item", simpleSchema);
+      const explorer = treeExplorer("Item", simpleSchema);
       explorer.item("RTK Root Item").getElement().should("exist");
 
       // Expand the root item
@@ -491,7 +491,7 @@ describe("ObjectExplorer Component", () => {
       // Mount the component with RTK Query API
       cy.mount(
         <NotificationProvider>
-          <ObjectExplorer
+          <TreeExplorer
             type="Item"
             objectTypeName="Items"
             api={{
@@ -503,7 +503,7 @@ describe("ObjectExplorer Component", () => {
       );
 
       // Add a new item
-      const explorer = objectExplorer("Item", simpleSchema);
+      const explorer = treeExplorer("Item", simpleSchema);
       explorer.add({ name: "New RTK Item" });
 
       // Verify the create hook was called
@@ -549,7 +549,7 @@ describe("ObjectExplorer Component", () => {
       // Mount the component with RTK Query API
       cy.mount(
         <NotificationProvider>
-          <ObjectExplorer
+          <TreeExplorer
             type="Item"
             objectTypeName="Items"
             api={{
@@ -561,7 +561,7 @@ describe("ObjectExplorer Component", () => {
       );
 
       // Delete the root item
-      const explorer = objectExplorer("Item", simpleSchema);
+      const explorer = treeExplorer("Item", simpleSchema);
 
       // Stub window.confirm to return true
       cy.on("window:confirm", () => true);
@@ -603,7 +603,7 @@ describe("ObjectExplorer Component", () => {
       // Mount the component with mock data
       cy.mount(
         <NotificationProvider>
-          <ObjectExplorer
+          <TreeExplorer
             queryResult={{
               data: mockObjects,
               isLoading: false,
@@ -617,11 +617,11 @@ describe("ObjectExplorer Component", () => {
       );
 
       // Expand the root item to see its children
-      objectExplorer("Item", simpleSchema).item("Root Item").click();
+      treeExplorer("Item", simpleSchema).item("Root Item").click();
     });
 
     it("should select a node when clicking on it", () => {
-      const explorer = objectExplorer("Item", simpleSchema);
+      const explorer = treeExplorer("Item", simpleSchema);
 
       // Select Child A
       explorer.item("Child A").select();

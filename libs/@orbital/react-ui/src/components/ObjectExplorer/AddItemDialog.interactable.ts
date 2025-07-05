@@ -8,7 +8,7 @@ import {
   FormDialogInteractable,
   ZodObjectSchema,
 } from "../../../cypress/interactables/Dialog/FormDialog/FormDialog.interactable";
-import { ObjectExplorerInteractable } from "./ObjectExplorer.interactable";
+import { TreeExplorerInteractable } from "./TreeExplorer.interactable";
 
 /**
  * ObjectExplorerAddDialog class represents the Add dialog in the ObjectExplorer
@@ -18,7 +18,7 @@ export class AddItemDialogInteractable<
   Schema extends ZodObjectSchema = ZodObjectSchema,
   CustomActions extends string = never,
 > extends FormDialogInteractable<Schema> {
-  private explorer: ObjectExplorerInteractable<CustomActions, Schema>;
+  private explorer: TreeExplorerInteractable<CustomActions, Schema>;
 
   /**
    * Constructor for ObjectExplorerAddDialog
@@ -26,7 +26,7 @@ export class AddItemDialogInteractable<
    * @param schema The Zod schema for the form
    */
   constructor(
-    explorer: ObjectExplorerInteractable<CustomActions, Schema>,
+    explorer: TreeExplorerInteractable<CustomActions, Schema>,
     schema: Schema
   ) {
     super(
@@ -58,7 +58,7 @@ export class AddItemDialogInteractable<
    */
   submitAndReturnExplorer(
     data: Partial<z.infer<Schema>>
-  ): ObjectExplorerInteractable<CustomActions, Schema> {
+  ): TreeExplorerInteractable<CustomActions, Schema> {
     // Use the parent submit method to fill and submit the form
     this.submit(data);
 

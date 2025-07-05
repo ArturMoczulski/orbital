@@ -4,7 +4,7 @@ import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import React from "react";
 import { ExplorerObject } from "../types";
-import { DefaultTreeNodeActions } from "./DefaultTreeNodeActions";
+import { TreeNodeActions } from "./TreeNodeActions";
 
 interface TreeNodeProps<T extends ExplorerObject> {
   object: T;
@@ -73,7 +73,7 @@ export function TreeNode<T extends ExplorerObject>({
           {(() => {
             // Create the default actions component
             const defaultActions = (
-              <DefaultTreeNodeActions
+              <TreeNodeActions
                 object={object}
                 type={type}
                 onDelete={onDelete ? handleDeleteClick : undefined}

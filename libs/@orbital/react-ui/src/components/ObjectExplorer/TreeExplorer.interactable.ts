@@ -15,7 +15,7 @@ import { z } from "zod";
 /**
  * Interface for dialog-related methods
  */
-interface ObjectExplorerDialogs<
+interface TreeExplorerDialogs<
   CustomActions extends string = never,
   Schema extends ZodObjectSchema = never,
 > {
@@ -56,7 +56,7 @@ interface ObjectExplorerStates<
     /**
      * Check if the explorer is in loading state
      */
-    shouldExist: () => ObjectExplorerInteractable<CustomActions, Schema>;
+    shouldExist: () => TreeExplorerInteractable<CustomActions, Schema>;
   };
 
   error: {
@@ -68,7 +68,7 @@ interface ObjectExplorerStates<
     /**
      * Check if the explorer is in error state
      */
-    shouldExist: () => ObjectExplorerInteractable<CustomActions, Schema>;
+    shouldExist: () => TreeExplorerInteractable<CustomActions, Schema>;
   };
 
   empty: {
@@ -80,12 +80,12 @@ interface ObjectExplorerStates<
     /**
      * Check if the explorer is in empty state
      */
-    shouldExist: () => ObjectExplorerInteractable<CustomActions, Schema>;
+    shouldExist: () => TreeExplorerInteractable<CustomActions, Schema>;
 
     /**
      * Click the Add button in empty state
      */
-    add: () => ObjectExplorerInteractable<CustomActions, Schema>;
+    add: () => TreeExplorerInteractable<CustomActions, Schema>;
   };
 }
 
@@ -93,7 +93,7 @@ interface ObjectExplorerStates<
  * ObjectExplorerInteractable class represents the ObjectExplorer component
  * and provides methods for interacting with it
  */
-class ObjectExplorerInteractable<
+class TreeExplorerInteractable<
   CustomActions extends string = never,
   Schema extends ZodObjectSchema = never,
 > extends CypressInteractable<string> {
@@ -104,7 +104,7 @@ class ObjectExplorerInteractable<
   /**
    * Dialog-related methods organized in a nested structure
    */
-  readonly dialogs: ObjectExplorerDialogs<CustomActions, Schema>;
+  readonly dialogs: TreeExplorerDialogs<CustomActions, Schema>;
 
   /**
    * Button-related methods organized in a nested structure
@@ -202,7 +202,7 @@ class ObjectExplorerInteractable<
    */
   shouldHaveRootItemCount(
     count: number
-  ): ObjectExplorerInteractable<CustomActions, Schema> {
+  ): TreeExplorerInteractable<CustomActions, Schema> {
     this.getElement()
       .find('[data-testid="TreeNode"]')
       .filter((_, el) => {
@@ -219,7 +219,7 @@ class ObjectExplorerInteractable<
    */
   shouldHaveTotalItemCount(
     count: number
-  ): ObjectExplorerInteractable<CustomActions, Schema> {
+  ): TreeExplorerInteractable<CustomActions, Schema> {
     this.getElement()
       .find('[data-testid="TreeNode"]')
       .should("have.length", count);
@@ -236,7 +236,7 @@ class ObjectExplorerInteractable<
   add(data: {
     name: string;
     parentId?: string;
-  }): ObjectExplorerInteractable<CustomActions, Schema> {
+  }): TreeExplorerInteractable<CustomActions, Schema> {
     this.dialogs.add.open();
     return this.dialogs.add.submitAndReturnExplorer(
       data as Partial<z.infer<Schema>>
@@ -249,18 +249,18 @@ class ObjectExplorerInteractable<
  * @param typePrefixPascal The PascalCase type prefix (e.g., "Area", "World")
  * @returns An ObjectExplorerInteractable instance
  */
-function objectExplorer<
+function treeExplorer<
   T extends string = never,
   S extends ZodObjectSchema = never,
 >(
   typePrefixPascal: string,
   schema?: S,
   customActions?: T[]
-): ObjectExplorerInteractable<T, S> {
+): TreeExplorerInteractable<T, S> {
   // Use the provided schema or fall back to the default schema
   const finalSchema = schema as S;
 
-  return new ObjectExplorerInteractable<T, S>(
+  return new TreeExplorerInteractable<T, S>(
     typePrefixPascal,
     finalSchema,
     customActions
@@ -268,4 +268,4 @@ function objectExplorer<
 }
 
 // Export the helper function, classes, and types
-export { objectExplorer, ObjectExplorerInteractable, type ZodObjectSchema };
+export { treeExplorer, TreeExplorerInteractable, type ZodObjectSchema };

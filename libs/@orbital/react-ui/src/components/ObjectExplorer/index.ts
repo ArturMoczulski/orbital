@@ -1,3 +1,3 @@
-export * from "./DefaultTreeNodeActions";
-export * from "./ObjectExplorer";
+export * from "./TreeExplorer";
 export * from "./TreeNodeActionButton";
+export * from "./TreeNodeActions";

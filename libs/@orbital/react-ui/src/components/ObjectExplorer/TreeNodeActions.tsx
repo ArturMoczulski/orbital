@@ -3,7 +3,7 @@ import React from "react";
 import { ExplorerObject } from "../types";
 import { TreeNodeActionButton } from "./TreeNodeActionButton";
 
-export interface DefaultTreeNodeActionsProps<T extends ExplorerObject> {
+export interface TreeNodeActionsProps<T extends ExplorerObject> {
   object: T;
   type: string;
   onDelete?: (objectId: string, event: React.MouseEvent) => void;
@@ -14,11 +14,11 @@ export interface DefaultTreeNodeActionsProps<T extends ExplorerObject> {
  * This component renders the standard action buttons (currently just delete)
  * It can be used as-is, extended, or completely replaced by custom itemActions
  */
-export function DefaultTreeNodeActions<T extends ExplorerObject>({
+export function TreeNodeActions<T extends ExplorerObject>({
   object,
   type,
   onDelete,
-}: DefaultTreeNodeActionsProps<T>) {
+}: TreeNodeActionsProps<T>) {
   return (
     <>
       {/* Delete button (if onDelete is provided) */}

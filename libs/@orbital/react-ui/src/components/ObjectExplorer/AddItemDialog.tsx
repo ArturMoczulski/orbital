@@ -5,7 +5,7 @@ import { ZodBridge } from "uniforms-bridge-zod";
 import { AutoForm } from "uniforms-mui";
 import { ExplorerObject } from "../types";
 
-interface AddItemDialogProps<T extends ExplorerObject> {
+interface AddBranchDialogProps<T extends ExplorerObject> {
   /**
    * Whether the dialog is open
    */
@@ -44,14 +44,14 @@ interface AddItemDialogProps<T extends ExplorerObject> {
 /**
  * Dialog for adding a new item in the ObjectExplorer
  */
-export function AddItemDialog<T extends ExplorerObject>({
+export function AddBranchDialog<T extends ExplorerObject>({
   open,
   onClose,
   type,
   onAdd,
   notify,
   formSchema,
-}: AddItemDialogProps<T>) {
+}: AddBranchDialogProps<T>) {
   return (
     <Dialog
       data-testid="ObjectExplorerAddDialog"

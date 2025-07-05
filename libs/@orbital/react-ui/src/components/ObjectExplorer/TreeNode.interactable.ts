@@ -5,7 +5,7 @@
 
 import { CypressInteractable } from "../../../cypress/interactables/Cypress.interactable";
 import { ZodObjectSchema } from "../../../cypress/interactables/Dialog/FormDialog/FormDialog.interactable";
-import { ObjectExplorerInteractable } from "./ObjectExplorer.interactable";
+import { TreeExplorerInteractable } from "./TreeExplorer.interactable";
 
 /**
  * Interface for TreeNode button-related methods
@@ -32,7 +32,7 @@ export class TreeNodeInteractable<
   CustomActions extends string = never,
   Schema extends ZodObjectSchema = never,
 > extends CypressInteractable<string> {
-  private explorer: ObjectExplorerInteractable<CustomActions, Schema>;
+  private explorer: TreeExplorerInteractable<CustomActions, Schema>;
   private name: string;
 
   /**
@@ -41,7 +41,7 @@ export class TreeNodeInteractable<
   readonly buttons: TreeNodeButtons<CustomActions>;
 
   constructor(
-    explorer: ObjectExplorerInteractable<CustomActions, Schema>,
+    explorer: TreeExplorerInteractable<CustomActions, Schema>,
     name: string
   ) {
     super("TreeNode"); // Pass the base component type to the parent class

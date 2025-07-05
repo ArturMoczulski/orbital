@@ -4,7 +4,7 @@ import type { AreaMap } from "@orbital/core/src/types/area-map";
 import { WorldExplorer } from "@orbital/react-ui";
 import dynamic from "next/dynamic";
 import { useState } from "react";
-import AreaExplorer from "../components/AreaExplorer";
+import AreaExplorer from "../components/AreaExplorer/AreaExplorer";
 import { useAreasControllerGetByIdQuery } from "../services/adminApi.generated";
 
 // Dynamically load PhaserClient without SSR

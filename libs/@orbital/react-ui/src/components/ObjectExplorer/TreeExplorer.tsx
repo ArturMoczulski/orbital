@@ -10,13 +10,13 @@ import { z } from "zod";
 import { useOrbitalTheme } from "../../theme/ThemeContext";
 import { useNotification } from "../NotificationProvider/NotificationProvider";
 import { ExplorerObject, ObjectExplorerProps, QueryResult } from "../types";
-import { AddItemDialog } from "./AddItemDialog";
+import { AddBranchDialog } from "./AddItemDialog";
 import { TreeNode } from "./TreeNode";
 
 /**
  * A generic tree-view component for displaying hierarchical objects
  */
-export function ObjectExplorer<T extends ExplorerObject>({
+export function TreeExplorer<T extends ExplorerObject>({
   queryResult: providedQueryResult,
   onSelect,
   type,
@@ -303,7 +303,7 @@ export function ObjectExplorer<T extends ExplorerObject>({
       </Box>
 
       {/* Use the new AddItemDialog component */}
-      <AddItemDialog<T>
+      <AddBranchDialog<T>
         open={showAddModal}
         onClose={closeAddModal}
         type={type}
