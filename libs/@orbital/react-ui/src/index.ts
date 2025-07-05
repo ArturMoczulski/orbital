@@ -56,3 +56,6 @@ export {
   type WorldContextValue,
   type WorldProviderProps,
 } from "./contexts";
+
+// Export testing utilities
+export { createMockStore, ReduxProvider } from "./testing/redux-mock-store";

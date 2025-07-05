@@ -2,7 +2,12 @@
 /// <reference types="cypress" />
 import { Area } from "@orbital/core/src/types/area";
 import { AreaMap } from "@orbital/core/src/types/area-map";
-import { NotificationProvider, WorldProvider } from "@orbital/react-ui";
+import {
+  NotificationProvider,
+  ReduxProvider,
+  WorldProvider,
+} from "@orbital/react-ui";
+import { adminApi } from "../../services/adminApi.generated";
 import AreaExplorer from "./AreaExplorer";
 import { areaExplorer } from "./AreaExplorer.interactable";
 
@@ -94,11 +99,16 @@ describe("AreaExplorer Component", () => {
 
       // Mount the component with mock data
       cy.mount(
-        <NotificationProvider>
-          <WorldProvider worldId="world1">
-            <AreaExplorer onSelect={onSelectStub} />
-          </WorldProvider>
-        </NotificationProvider>
+        <ReduxProvider
+          reducers={{ [adminApi.reducerPath]: adminApi.reducer }}
+          middleware={[adminApi.middleware]}
+        >
+          <NotificationProvider>
+            <WorldProvider worldId="world1">
+              <AreaExplorer onSelect={onSelectStub} />
+            </WorldProvider>
+          </NotificationProvider>
+        </ReduxProvider>
       );
 
       // Expand the root item to see its children
@@ -169,11 +179,16 @@ describe("AreaExplorer Component", () => {
 
       // Mount the component with loading state
       cy.mount(
-        <NotificationProvider>
-          <WorldProvider worldId="world1">
-            <AreaExplorer onSelect={onSelectStub} />
-          </WorldProvider>
-        </NotificationProvider>
+        <ReduxProvider
+          reducers={{ [adminApi.reducerPath]: adminApi.reducer }}
+          middleware={[adminApi.middleware]}
+        >
+          <NotificationProvider>
+            <WorldProvider worldId="world1">
+              <AreaExplorer onSelect={onSelectStub} />
+            </WorldProvider>
+          </NotificationProvider>
+        </ReduxProvider>
       );
 
       // Verify loading state is shown
@@ -197,11 +212,16 @@ describe("AreaExplorer Component", () => {
 
       // Mount the component with error state
       cy.mount(
-        <NotificationProvider>
-          <WorldProvider worldId="world1">
-            <AreaExplorer onSelect={onSelectStub} />
-          </WorldProvider>
-        </NotificationProvider>
+        <ReduxProvider
+          reducers={{ [adminApi.reducerPath]: adminApi.reducer }}
+          middleware={[adminApi.middleware]}
+        >
+          <NotificationProvider>
+            <WorldProvider worldId="world1">
+              <AreaExplorer onSelect={onSelectStub} />
+            </WorldProvider>
+          </NotificationProvider>
+        </ReduxProvider>
       );
 
       // Verify error state is shown
@@ -225,11 +245,16 @@ describe("AreaExplorer Component", () => {
 
       // Mount the component with empty state
       cy.mount(
-        <NotificationProvider>
-          <WorldProvider worldId="world1">
-            <AreaExplorer onSelect={onSelectStub} />
-          </WorldProvider>
-        </NotificationProvider>
+        <ReduxProvider
+          reducers={{ [adminApi.reducerPath]: adminApi.reducer }}
+          middleware={[adminApi.middleware]}
+        >
+          <NotificationProvider>
+            <WorldProvider worldId="world1">
+              <AreaExplorer onSelect={onSelectStub} />
+            </WorldProvider>
+          </NotificationProvider>
+        </ReduxProvider>
       );
 
       // Verify empty state is shown
@@ -276,11 +301,16 @@ describe("AreaExplorer Component", () => {
 
       // Mount the component
       cy.mount(
-        <NotificationProvider>
-          <WorldProvider worldId="world1">
-            <AreaExplorer onSelect={onSelectStub} />
-          </WorldProvider>
-        </NotificationProvider>
+        <ReduxProvider
+          reducers={{ [adminApi.reducerPath]: adminApi.reducer }}
+          middleware={[adminApi.middleware]}
+        >
+          <NotificationProvider>
+            <WorldProvider worldId="world1">
+              <AreaExplorer onSelect={onSelectStub} />
+            </WorldProvider>
+          </NotificationProvider>
+        </ReduxProvider>
       );
 
       // Get the Main Area mock area - convert to Area object for loadMap
@@ -336,11 +366,16 @@ describe("AreaExplorer Component", () => {
 
       // Mount the component
       cy.mount(
-        <NotificationProvider>
-          <WorldProvider worldId="world1">
-            <AreaExplorer onSelect={onSelectStub} />
-          </WorldProvider>
-        </NotificationProvider>
+        <ReduxProvider
+          reducers={{ [adminApi.reducerPath]: adminApi.reducer }}
+          middleware={[adminApi.middleware]}
+        >
+          <NotificationProvider>
+            <WorldProvider worldId="world1">
+              <AreaExplorer onSelect={onSelectStub} />
+            </WorldProvider>
+          </NotificationProvider>
+        </ReduxProvider>
       );
 
       // Get the Main Area mock area - convert to Area object for loadMap
