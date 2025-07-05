@@ -118,6 +118,7 @@ describe("parseWithReferences", () => {
           dependencies: {
             area: testAreas,
           },
+          maxDepth: 3, // Explicitly set higher maxDepth for array references
         }
       );
 
@@ -135,6 +136,7 @@ describe("parseWithReferences", () => {
           dependencies: {
             area: testAreas,
           },
+          maxDepth: 3, // Explicitly set higher maxDepth for array references
         }
       );
 
@@ -190,6 +192,7 @@ describe("parseWithReferences", () => {
             world: testWorlds,
             area: testAreas,
           },
+          maxDepth: 5, // Explicitly set higher maxDepth for nested objects
         }
       );
 
@@ -225,6 +228,7 @@ describe("parseWithReferences", () => {
             world: testWorlds,
             area: testAreas,
           },
+          maxDepth: 5, // Explicitly set higher maxDepth for nested objects
         }
       );
 

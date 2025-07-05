@@ -16,6 +16,18 @@ export interface ParseWithReferencesOptions {
    * @internal
    */
   path?: (string | number)[];
+
+  /**
+   * Maximum depth for recursive validation
+   * Default: 1 - Only validate immediate relationships
+   */
+  maxDepth?: number;
+
+  /**
+   * Visited schema-data pairs to detect circular references
+   * @internal
+   */
+  visitedPaths?: Set<string>;
 }
 
 /**
@@ -80,6 +92,16 @@ export function parseWithReferences<T>(
   // Then validate references if dependencies are provided
   if (options.dependencies) {
     console.log("Validating references with dependencies...");
+    // Initialize visitedPaths if not provided
+    if (!options.visitedPaths) {
+      options.visitedPaths = new Set<string>();
+    }
+
+    // Set default maxDepth if not provided
+    if (options.maxDepth === undefined) {
+      options.maxDepth = 1; // Default to only validating immediate relationships
+    }
+
     const referenceErrors = validateReferences(schema, data, options);
     console.log("Reference validation errors:", referenceErrors.length);
 
@@ -121,6 +143,40 @@ export function validateReferences(
   console.log(`\n--- VALIDATE REFERENCES [${pathStr}] ---`);
   console.log(`Schema type: ${schema.constructor.name}`);
   console.log(`Data: ${JSON.stringify(data, null, 2)}`);
+
+  // Check for maximum recursion depth
+  if (options.maxDepth !== undefined && currentPath.length > options.maxDepth) {
+    console.log(`Maximum recursion depth reached at path: ${pathStr}`);
+    issues.push({
+      code: z.ZodIssueCode.custom,
+      path: currentPath,
+      message: `Maximum recursion depth exceeded at ${pathStr}`,
+    });
+    return issues;
+  }
+
+  // Create a unique key for this schema-data pair
+  // We use schema constructor name, path, and data type/id for identification
+  const schemaId = schema._def.description || schema.constructor.name;
+  const dataId =
+    typeof data === "object" && data !== null && data._id
+      ? data._id
+      : typeof data === "string"
+        ? data
+        : JSON.stringify(data).substring(0, 50); // Use a substring of JSON for complex objects
+  const visitKey = `${schemaId}:${pathStr}:${dataId}`;
+
+  // Check if we've already visited this schema-data pair
+  if (options.visitedPaths?.has(visitKey)) {
+    console.log(`Circular reference detected at path: ${pathStr}`);
+    console.log(`Already visited: ${visitKey}`);
+    // We don't add an issue for circular references - we just stop recursion
+    // This allows circular references to exist without validation errors
+    return issues;
+  }
+
+  // Add this schema-data pair to visited paths
+  options.visitedPaths?.add(visitKey);
 
   // Handle object schemas
   if (schema instanceof z.ZodObject) {
@@ -167,6 +223,10 @@ export function validateReferences(
         issues.push(...fieldIssues);
       }
     });
+
+    // Remove this path from visited paths when we're done with this object
+    // This allows the same schema to be reused in different parts of the object graph
+    options.visitedPaths?.delete(visitKey);
   }
   // Handle array schemas
   else if (schema instanceof z.ZodArray) {
@@ -284,10 +344,20 @@ export function validateReferences(
 
         // Special handling for array elements that are strings with references
         if (
-          elementSchema instanceof z.ZodString &&
-          hasReference(elementSchema)
+          (elementSchema instanceof z.ZodString ||
+            (elementSchema instanceof z.ZodOptional &&
+              elementSchema._def.innerType instanceof z.ZodString)) &&
+          hasReference(
+            elementSchema instanceof z.ZodOptional
+              ? elementSchema._def.innerType
+              : elementSchema
+          )
         ) {
-          const reference = getReference(elementSchema);
+          const reference = getReference(
+            elementSchema instanceof z.ZodOptional
+              ? elementSchema._def.innerType
+              : elementSchema
+          );
           console.log(
             `Array element has string reference to: ${reference?.name}`
           );
@@ -378,11 +448,19 @@ export function validateReferences(
           issues.push(...itemIssues);
         }
       });
+
+      // Remove this path from visited paths when we're done with this array
+      options.visitedPaths?.delete(visitKey);
     }
   }
   // Handle references
-  else if (hasReference(schema)) {
-    const reference = getReference(schema);
+  else if (
+    hasReference(schema) ||
+    (schema instanceof z.ZodOptional && hasReference(schema._def.innerType))
+  ) {
+    const reference = getReference(
+      schema instanceof z.ZodOptional ? schema._def.innerType : schema
+    );
     console.log(`Field has reference to: ${reference?.name}`);
     console.log(`Reference type: ${reference?.type}`);
     console.log(`Reference foreign field: ${reference?.foreignField}`);
@@ -447,6 +525,9 @@ export function validateReferences(
       }
     }
   }
+
+  // Remove this path from visited paths when we're done with this reference
+  options.visitedPaths?.delete(visitKey);
 
   console.log(`Returning ${issues.length} issues for path: ${pathStr}`);
   return issues;
