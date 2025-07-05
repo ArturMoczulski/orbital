@@ -51,6 +51,7 @@ function ReferenceSingleField({
         required={required}
         value={value ?? ""}
         variant="outlined"
+        data-testid="ReferenceSingleField"
       />
     );
   }
@@ -74,6 +75,7 @@ function ReferenceSingleField({
       select
       value={value ?? ""}
       variant="outlined"
+      data-testid="ReferenceSingleField"
     >
       {/* Add an empty option if not required */}
       {!required && (

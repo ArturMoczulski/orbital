@@ -29,6 +29,11 @@ module.exports = defineConfig({
       bundler: "webpack",
       webpackConfig: require("./webpack.config.js"),
     },
+    setupNodeEvents(on, config) {
+      require("cypress-terminal-report/src/installLogsPrinter")(on, {
+        printLogsToConsole: "always",
+      });
+    },
     // Use absolute paths for spec files
     specPattern: [
       "src/components/**/*.cy.{ts,tsx}",
@@ -46,6 +51,9 @@ module.exports = defineConfig({
   e2e: {
     setupNodeEvents(on, config) {
       // implement node event listeners here
+      require("cypress-terminal-report/src/installLogsPrinter")(on, {
+        printLogsToConsole: "always",
+      });
     },
     specPattern: [
       "src/**/*.e2e.cy.{js,jsx,ts,tsx}",

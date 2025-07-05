@@ -19,6 +19,18 @@ import "./commands";
 // Alternatively you can use CommonJS syntax:
 // require('./commands')
 
+// Register the cypress-terminal-report log collector
+require("cypress-terminal-report/src/installLogsCollector")({
+  collectTypes: [
+    "cons:log",
+    "cons:info",
+    "cons:warn",
+    "cons:error",
+    "cy:log",
+    "cy:command",
+  ],
+});
+
 // Augment the Cypress namespace to include type definitions for
 // your custom command.
 // Alternatively, can be defined in cypress/support/e2e.d.ts

@@ -6720,6 +6720,7 @@ __metadata:
     "@types/react-dom": "npm:^18.2.3"
     css-loader: "npm:^6.7.3"
     cypress: "npm:^14.5.0"
+    cypress-terminal-report: "npm:^7.2.0"
     jest: "npm:^30.0.0"
     lodash: "npm:^4.17.21"
     notistack: "npm:^3.0.2"
@@ -11615,6 +11616,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"compare-versions@npm:^6.1.1":
+  version: 6.1.1
+  resolution: "compare-versions@npm:6.1.1"
+  checksum: 10c0/415205c7627f9e4f358f571266422980c9fe2d99086be0c9a48008ef7c771f32b0fbe8e97a441ffedc3910872f917a0675fe0fe3c3b6d331cda6d8690be06338
+  languageName: node
+  linkType: hard
+
 "component-emitter@npm:^1.3.0":
   version: 1.3.1
   resolution: "component-emitter@npm:1.3.1"
@@ -12044,6 +12052,19 @@ __metadata:
   version: 0.1.2
   resolution: "culvert@npm:0.1.2"
   checksum: 10c0/185fc6fd1b3bc8c8e60c8e60f4ac71123d80267e97127f00acd0fc18e2abc69d2a30d1a8bc60e5ee651e940d67a2476688d6b851acb963a27c2043d9a8677d39
+  languageName: node
+  linkType: hard
+
+"cypress-terminal-report@npm:^7.2.0":
+  version: 7.2.0
+  resolution: "cypress-terminal-report@npm:7.2.0"
+  dependencies:
+    chalk: "npm:^4.0.0"
+    compare-versions: "npm:^6.1.1"
+    superstruct: "npm:0.14.2"
+  peerDependencies:
+    cypress: ">=10.0.0"
+  checksum: 10c0/e2d3fb8697860ff11f3ce1fd56061d4333d10ec277650493a95b183abd67187edb9616069bdbca6dab2c1c35c83c67b45a2228d36fa7d36966d5e7cc977d0a29
   languageName: node
   linkType: hard
 
@@ -24511,6 +24532,13 @@ __metadata:
     qs: "npm:^6.11.0"
     semver: "npm:^7.3.8"
   checksum: 10c0/016416fc9c3d3a04fb648bc0efb3d3d5c9d96da00de47e4a625d9976d28c6c37ab0a7f185f2c3ec6d653ee8bb522f70fba0c1072aea7774341a6c0269a9fa77f
+  languageName: node
+  linkType: hard
+
+"superstruct@npm:0.14.2":
+  version: 0.14.2
+  resolution: "superstruct@npm:0.14.2"
+  checksum: 10c0/e5518f6701524fb8cbae504a84dc9c304bf3fe01616230a5eb4e14af9bfc4e3518b94bfe457e57a5d1b99a2b54f82881b4a39e0b266caa6053f84aa294613b94
   languageName: node
   linkType: hard
 
