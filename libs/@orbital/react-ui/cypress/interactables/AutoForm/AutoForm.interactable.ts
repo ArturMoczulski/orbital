@@ -100,7 +100,8 @@ class AutoFormInteractable<
     Object.entries(data).forEach(([key, value]) => {
       if (value !== undefined && value !== null) {
         // Use the inputs property to access the field
-        (this.inputs as any)[key].setValue(value);
+        // Use selectById which is the method available on FormInputInteractable
+        (this.inputs as any)[key].selectById(value);
       }
     });
 

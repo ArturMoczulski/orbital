@@ -3,6 +3,7 @@ export {
   FormWithReferences,
   ReferenceFormProvider,
 } from "./FormWithReferences";
+export { default as FormWithReferencesAutoField } from "./FormWithReferencesAutoField";
 export { default as ReferenceArrayField } from "./ReferenceArrayField";
 export { default as ReferenceAutoField } from "./ReferenceAutoField";
 export { default as ReferenceSingleField } from "./ReferenceSingleField";

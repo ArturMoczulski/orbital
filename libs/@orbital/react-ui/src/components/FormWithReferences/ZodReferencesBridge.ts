@@ -81,14 +81,6 @@ export class ZodReferencesBridge<T extends z.ZodType<any, any, any>> {
       for (const segment of path) {
         if (schema instanceof z.ZodObject && segment in schema.shape) {
           schema = schema.shape[segment];
-        } else if (
-          schema instanceof z.ZodObject &&
-          segment === "regionId" &&
-          "nested" in schema.shape
-        ) {
-          // Special case for the test
-          const nestedSchema = schema.shape.nested as z.ZodObject<any>;
-          return nestedSchema.shape.regionId as z.ZodType<any>;
         } else {
           // If we can't find the field, return a generic schema
           return z.any();
@@ -105,63 +97,6 @@ export class ZodReferencesBridge<T extends z.ZodType<any, any, any>> {
   // Override getField to add reference metadata
   getField(name: string): any {
     try {
-      // Special cases for tests
-      if (name === "tags") {
-        return {
-          type: "array",
-          reference: {
-            name: "tag",
-            type: RelationshipType.MANY_TO_MANY,
-            options: this.dependencies?.tag || [],
-          },
-          uniforms: {
-            component: REFERENCE_ARRAY_FIELD,
-          },
-        };
-      }
-
-      if (name === "worldId") {
-        return {
-          type: "string",
-          reference: {
-            name: "world",
-            type: RelationshipType.MANY_TO_ONE,
-            foreignField: "_id",
-            options: this.dependencies?.world || [],
-          },
-          uniforms: {
-            component: REFERENCE_SINGLE_FIELD,
-          },
-        };
-      }
-
-      if (name === "nested.regionId") {
-        return {
-          type: "string",
-          reference: {
-            name: "region",
-            options: this.dependencies?.region || [],
-          },
-          uniforms: {
-            component: REFERENCE_SINGLE_FIELD,
-          },
-        };
-      }
-
-      if (name === "name") {
-        return {
-          type: "string",
-          uniforms: {},
-        };
-      }
-
-      if (name === "nonexistent.path") {
-        return {
-          type: "any",
-          uniforms: {},
-        };
-      }
-
       // Try to get the field from the bridge
       const field = this.bridge.getField(name);
 
@@ -191,12 +126,19 @@ export class ZodReferencesBridge<T extends z.ZodType<any, any, any>> {
         const reference = getReference(schema);
         if (!reference) return fieldWithType;
 
+        // Get the options for this reference
+        const options = this.dependencies?.[reference.name] || [];
+
+        // Debug: Log reference information
+        console.log(`Field ${name} has reference:`, reference);
+        console.log(`Dependencies for ${reference.name}:`, options);
+
         // Add reference metadata to the field
         return {
           ...fieldWithType,
           reference: {
             ...reference,
-            options: this.dependencies?.[reference.name] || [],
+            options,
           },
           uniforms: {
             ...fieldWithType.uniforms,
@@ -211,15 +153,7 @@ export class ZodReferencesBridge<T extends z.ZodType<any, any, any>> {
 
       return fieldWithType;
     } catch (error) {
-      // For invalid paths, return a generic field
-      if (name?.includes("nonexistent")) {
-        return {
-          type: "any",
-          uniforms: {},
-        };
-      }
-
-      // For other errors, create a basic field with the required properties
+      // For any errors, create a basic field with the required properties
       return {
         type: "string",
         uniforms: {},

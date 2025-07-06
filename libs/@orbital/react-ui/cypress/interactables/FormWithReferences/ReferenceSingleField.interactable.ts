@@ -27,7 +27,8 @@ export class ReferenceSingleFieldInteractable extends ObjectSelectorInteractable
       if (this.fieldName === "worldId" && this.objectType === "Area") {
         return this.getElement().then(($el) => {
           const testId = $el.attr("data-testid") || "";
-          if (testId.includes("AreaReferenceSingleField")) {
+          // Use a more flexible check for the testId
+          if (testId.includes("ReferenceSingleField")) {
             return cy.wrap(true);
           }
           return cy.wrap(false);

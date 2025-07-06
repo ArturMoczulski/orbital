@@ -24,6 +24,7 @@ export type ReferenceArrayFieldProps = {
   reference?: ReferenceMetadata & {
     options: any[];
   };
+  objectType: string; // Required prop to specify the containing object type
 };
 
 function ReferenceArrayField({
@@ -39,13 +40,19 @@ function ReferenceArrayField({
   required,
   value = [],
   reference,
+  objectType, // Required prop, no default value
 }: ReferenceArrayFieldProps) {
   // If no reference options are provided, return a message
   if (!reference || !reference.options || reference.options.length === 0) {
     return (
       <FormControl fullWidth error={error} margin="dense">
         <InputLabel>{label}</InputLabel>
-        <OutlinedInput disabled label={label} />
+        <OutlinedInput
+          disabled
+          label={label}
+          data-testid={`${objectType}ReferenceArrayField`}
+          data-field-name={name}
+        />
         <FormHelperText>
           {errorMessage || "No options available"}
         </FormHelperText>
@@ -69,7 +76,13 @@ function ReferenceArrayField({
           const value = event.target.value;
           onChange(typeof value === "string" ? value.split(",") : value);
         }}
-        input={<OutlinedInput label={label} />}
+        input={
+          <OutlinedInput
+            label={label}
+            data-testid={`${objectType}ReferenceArrayField`}
+            data-field-name={name}
+          />
+        }
         renderValue={(selected) => {
           // Display selected items by name
           return selected
@@ -85,7 +98,13 @@ function ReferenceArrayField({
         required={required}
       >
         {reference.options.map((option) => (
-          <MenuItem key={option[foreignField]} value={option[foreignField]}>
+          <MenuItem
+            key={option[foreignField]}
+            value={option[foreignField]}
+            data-testid={`${objectType}ReferenceArrayField-item`}
+            data-object-id={option[foreignField]}
+            data-field-name={name}
+          >
             <Checkbox checked={value.indexOf(option[foreignField]) > -1} />
             <ListItemText
               primary={option[displayField] || option[foreignField]}

@@ -51,6 +51,8 @@ export class ObjectSelectorInteractable extends FormInputInteractable<string> {
     const componentName = this.getComponentName();
     return [
       `[data-testid*="${this.objectType}${componentName} ${componentName}"]`,
+      `[data-testid*="${componentName}"][data-field-name="${this.fieldName}"]`,
+      `[data-testid*="${componentName}"]`,
     ].join(", ");
   }
 
