@@ -19,14 +19,14 @@ describe("ZodReferencesBridge", () => {
     description: z.string().optional(),
     worldId: z.string().reference({
       schema: worldSchema,
-      type: RelationshipType.MANY_TO_ONE,
+      type: RelationshipType.BELONGS_TO,
       name: "world",
     }),
     tags: z
       .array(z.string())
       .reference({
         schema: z.object({ _id: z.string(), name: z.string() }),
-        type: RelationshipType.MANY_TO_MANY,
+        type: RelationshipType.HAS_MANY,
         name: "tag",
       })
       .optional(),
@@ -95,7 +95,7 @@ describe("ZodReferencesBridge", () => {
       expect(field).toBeDefined();
       expect(field.reference).toBeDefined();
       expect(field.reference.name).toBe("world");
-      expect(field.reference.type).toBe(RelationshipType.MANY_TO_ONE);
+      expect(field.reference.type).toBe(RelationshipType.BELONGS_TO);
       expect(field.reference.options).toEqual(worldData);
       expect(field.uniforms).toBeDefined();
       expect(field.uniforms.component).toBe("ReferenceSingleField");
@@ -114,7 +114,7 @@ describe("ZodReferencesBridge", () => {
       expect(field).toBeDefined();
       expect(field.reference).toBeDefined();
       expect(field.reference.name).toBe("tag");
-      expect(field.reference.type).toBe(RelationshipType.MANY_TO_MANY);
+      expect(field.reference.type).toBe(RelationshipType.HAS_MANY);
       expect(field.reference.options).toEqual(tagData);
       expect(field.uniforms).toBeDefined();
       expect(field.uniforms.component).toBe("ReferenceArrayField");

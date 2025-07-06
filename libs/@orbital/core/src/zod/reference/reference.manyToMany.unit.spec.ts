@@ -20,12 +20,12 @@ const CourseSchema = z
 
 describe("MANY_TO_MANY Relationship Tests", () => {
   describe("ZodArray MANY_TO_MANY references", () => {
-    it("should create a MANY_TO_MANY relationship with default type", () => {
+    it("should create a HAS_MANY relationship with default type", () => {
       // Students can enroll in many courses, and courses can have many students
       const schema = z.object({
         courseIds: z.array(z.string()).reference({
           schema: CourseSchema,
-          // No type specified - should default to MANY_TO_MANY for arrays
+          // No type specified - should default to HAS_MANY for arrays
         }),
       });
 
@@ -35,7 +35,7 @@ describe("MANY_TO_MANY Relationship Tests", () => {
       expect(reference?.schema).toBe(CourseSchema);
       expect(reference?.foreignField).toBe("_id");
       expect(reference?.name).toBe("course");
-      expect(reference?.type).toBe(RelationshipType.MANY_TO_MANY);
+      expect(reference?.type).toBe(RelationshipType.HAS_MANY);
     });
 
     it("should create a MANY_TO_MANY relationship with explicit type", () => {

@@ -10,8 +10,11 @@ import { ZodBridge } from "uniforms-bridge-zod";
 import { z } from "zod";
 
 // Component names as constants to avoid typos and make refactoring easier
-const REFERENCE_ARRAY_FIELD = "ReferenceArrayField";
-const REFERENCE_SINGLE_FIELD = "ReferenceSingleField";
+const HAS_MANY_FIELD = "HasManyField";
+const BELONGS_TO_FIELD = "BelongsToField";
+const RECURSIVE_RELATIONSHIP_FIELD = "RecursiveRelationshipField";
+const PARENT_FIELD = "ParentField";
+const CHILDREN_FIELD = "ChildrenField";
 
 export class ZodReferencesBridge<T extends z.ZodType<any, any, any>> {
   // Store the schema and bridge instance
@@ -131,6 +134,31 @@ export class ZodReferencesBridge<T extends z.ZodType<any, any, any>> {
         // Get the options for this reference
         const options = this.dependencies?.[reference.name] || [];
 
+        // Determine the appropriate component based on relationship type
+        let component;
+        let multiple = false;
+
+        if (reference.type === RelationshipType.RECURSIVE) {
+          // For RECURSIVE, determine if it's multiple based on schema type
+          multiple = schema instanceof z.ZodArray;
+
+          // Use specialized components based on whether it's a single or multiple selection
+          if (multiple) {
+            // For multiple selection (children), use ChildrenField
+            component = CHILDREN_FIELD;
+          } else {
+            // For single selection (parent), use ParentField
+            component = PARENT_FIELD;
+          }
+        } else if (
+          reference.type === RelationshipType.MANY_TO_MANY ||
+          reference.type === RelationshipType.HAS_MANY
+        ) {
+          component = HAS_MANY_FIELD;
+        } else {
+          component = BELONGS_TO_FIELD;
+        }
+
         // Add reference metadata to the field
         return {
           ...fieldWithType,
@@ -140,11 +168,8 @@ export class ZodReferencesBridge<T extends z.ZodType<any, any, any>> {
           },
           uniforms: {
             ...fieldWithType.uniforms,
-            // Set the component to ReferenceArrayField or ReferenceSingleField
-            component:
-              reference.type === RelationshipType.MANY_TO_MANY
-                ? REFERENCE_ARRAY_FIELD
-                : REFERENCE_SINGLE_FIELD,
+            component,
+            multiple, // Only used by RecursiveField
           },
         };
       }

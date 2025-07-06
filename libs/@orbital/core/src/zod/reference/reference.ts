@@ -5,28 +5,39 @@ import { z } from "zod";
  */
 export enum RelationshipType {
   /**
-   * One-to-one relationship (1:1)
-   * A single record in the first table is related to a single record in the second table
+   * Belongs-to relationship
+   * This model contains a foreign key pointing to another model
+   * (Similar to the "belongs_to" association in Rails)
    */
-  ONE_TO_ONE = "ONE_TO_ONE",
+  BELONGS_TO = "BELONGS_TO",
 
   /**
-   * One-to-many relationship (1:N)
-   * A single record in the first table is related to multiple records in the second table
+   * Has-one relationship
+   * This model is referenced by exactly one instance of another model
+   * (Similar to the "has_one" association in Rails)
    */
-  ONE_TO_MANY = "ONE_TO_MANY",
+  HAS_ONE = "HAS_ONE",
 
   /**
-   * Many-to-one relationship (N:1)
-   * Multiple records in the first table are related to a single record in the second table
+   * Has-many relationship
+   * This model is referenced by multiple instances of another model
+   * (Similar to the "has_many" association in Rails)
    */
-  MANY_TO_ONE = "MANY_TO_ONE",
+  HAS_MANY = "HAS_MANY",
 
   /**
-   * Many-to-many relationship (N:M)
-   * Multiple records in the first table are related to multiple records in the second table
+   * Many-to-many relationship
+   * This model and another model reference each other through a join table
+   * (Similar to the "has_and_belongs_to_many" association in Rails)
    */
   MANY_TO_MANY = "MANY_TO_MANY",
+
+  /**
+   * Recursive relationship
+   * This model references itself (e.g., for hierarchical data)
+   * (Similar to self-referential associations in Rails)
+   */
+  RECURSIVE = "RECURSIVE",
 }
 
 /**
@@ -52,7 +63,7 @@ export interface ReferenceOptions {
 
   /**
    * Type of relationship
-   * Default: MANY_TO_ONE for ZodString, MANY_TO_MANY for ZodArray
+   * Default: BELONGS_TO for ZodString, HAS_MANY for ZodArray
    */
   type?: RelationshipType;
 }
@@ -135,8 +146,8 @@ z.ZodString.prototype.reference = function (options: ReferenceOptions) {
   // Determine relationship name if not provided
   const relationshipName = options.name || getSchemaName(options.schema);
 
-  // Default to MANY_TO_ONE for string fields (foreign keys)
-  const relationType = options.type || RelationshipType.MANY_TO_ONE;
+  // Default to BELONGS_TO for string fields (foreign keys)
+  const relationType = options.type || RelationshipType.BELONGS_TO;
 
   // Create a new ZodString with the reference metadata
   const newZodString = new z.ZodString({
@@ -160,8 +171,8 @@ z.ZodArray.prototype.reference = function (options: ReferenceOptions) {
   // Determine relationship name if not provided
   const relationshipName = options.name || getSchemaName(options.schema);
 
-  // Default to MANY_TO_MANY for array fields
-  const relationType = options.type || RelationshipType.MANY_TO_MANY;
+  // Default to HAS_MANY for array fields
+  const relationType = options.type || RelationshipType.HAS_MANY;
 
   // Create a new ZodArray with the reference metadata
   const newZodArray = new z.ZodArray({

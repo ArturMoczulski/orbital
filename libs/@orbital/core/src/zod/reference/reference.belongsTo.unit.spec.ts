@@ -19,14 +19,14 @@ const ProductSchema = z
   })
   .describe("A product with name and price");
 
-describe("MANY_TO_ONE Relationship Tests", () => {
-  describe("ZodString MANY_TO_ONE references", () => {
-    it("should create a MANY_TO_ONE relationship with default type", () => {
+describe("BELONGS_TO Relationship Tests", () => {
+  describe("ZodString BELONGS_TO references", () => {
+    it("should create a BELONGS_TO relationship with default type", () => {
       // Many products belong to one category (categoryId in Product references Category)
       const schema = z.object({
         categoryId: z.string().reference({
           schema: CategorySchema,
-          // No type specified - should default to MANY_TO_ONE
+          // No type specified - should default to BELONGS_TO
         }),
       });
 
@@ -36,30 +36,30 @@ describe("MANY_TO_ONE Relationship Tests", () => {
       expect(reference?.schema).toBe(CategorySchema);
       expect(reference?.foreignField).toBe("_id");
       expect(reference?.name).toBe("category");
-      expect(reference?.type).toBe(RelationshipType.MANY_TO_ONE);
+      expect(reference?.type).toBe(RelationshipType.BELONGS_TO);
     });
 
-    it("should create a MANY_TO_ONE relationship with explicit type", () => {
+    it("should create a BELONGS_TO relationship with explicit type", () => {
       const schema = z.object({
         categoryId: z.string().reference({
           schema: CategorySchema,
-          type: RelationshipType.MANY_TO_ONE,
+          type: RelationshipType.BELONGS_TO,
         }),
       });
 
       const reference = getReference(schema.shape.categoryId);
 
       expect(reference).toBeDefined();
-      expect(reference?.type).toBe(RelationshipType.MANY_TO_ONE);
+      expect(reference?.type).toBe(RelationshipType.BELONGS_TO);
     });
 
-    it("should support custom field and name in MANY_TO_ONE relationship", () => {
+    it("should support custom field and name in BELONGS_TO relationship", () => {
       const schema = z.object({
         categoryName: z.string().reference({
           schema: CategorySchema,
           foreignField: "name",
           name: "productCategory",
-          type: RelationshipType.MANY_TO_ONE,
+          type: RelationshipType.BELONGS_TO,
         }),
       });
 
@@ -69,12 +69,12 @@ describe("MANY_TO_ONE Relationship Tests", () => {
       expect(reference?.schema).toBe(CategorySchema);
       expect(reference?.foreignField).toBe("name");
       expect(reference?.name).toBe("productCategory");
-      expect(reference?.type).toBe(RelationshipType.MANY_TO_ONE);
+      expect(reference?.type).toBe(RelationshipType.BELONGS_TO);
     });
   });
 
-  describe("Practical MANY_TO_ONE examples", () => {
-    it("should model a Products-Category many-to-one relationship", () => {
+  describe("Practical BELONGS_TO examples", () => {
+    it("should model a Products-Category belongs-to relationship", () => {
       // In a real application, many Products would belong to one Category
       const ProductSchemaWithCategory = z.object({
         _id: z.string(),
@@ -82,7 +82,7 @@ describe("MANY_TO_ONE Relationship Tests", () => {
         price: z.number(),
         categoryId: z.string().reference({
           schema: CategorySchema,
-          type: RelationshipType.MANY_TO_ONE,
+          type: RelationshipType.BELONGS_TO,
         }),
       });
 
@@ -93,11 +93,11 @@ describe("MANY_TO_ONE Relationship Tests", () => {
       expect(hasReference(ProductSchemaWithCategory.shape.categoryId)).toBe(
         true
       );
-      expect(reference?.type).toBe(RelationshipType.MANY_TO_ONE);
+      expect(reference?.type).toBe(RelationshipType.BELONGS_TO);
       expect(reference?.name).toBe("category");
     });
 
-    it("should model a Comments-Post many-to-one relationship", () => {
+    it("should model a Comments-Post belongs-to relationship", () => {
       // Post schema
       const PostSchema = z
         .object({
@@ -113,13 +113,13 @@ describe("MANY_TO_ONE Relationship Tests", () => {
         text: z.string(),
         postId: z.string().reference({
           schema: PostSchema,
-          type: RelationshipType.MANY_TO_ONE,
+          type: RelationshipType.BELONGS_TO,
         }),
       });
 
       const reference = getReference(CommentSchema.shape.postId);
 
-      expect(reference?.type).toBe(RelationshipType.MANY_TO_ONE);
+      expect(reference?.type).toBe(RelationshipType.BELONGS_TO);
       expect(reference?.name).toBe("blog post");
     });
   });

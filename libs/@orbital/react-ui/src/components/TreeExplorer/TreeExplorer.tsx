@@ -221,7 +221,7 @@ export function TreeExplorer<T extends TreeNodeData>({
               techLevel: z.number(),
             })
             .describe("A world in the game universe"),
-          type: RelationshipType.MANY_TO_ONE,
+          type: RelationshipType.BELONGS_TO,
           name: "world",
         })
         .optional(),

@@ -24,7 +24,7 @@ describe("HasManyField.interactable", () => {
   // Define reference metadata for testing
   const referenceMetadata = {
     name: "tag",
-    type: RelationshipType.ONE_TO_MANY,
+    type: RelationshipType.HAS_MANY,
     foreignField: "_id",
     options: tagOptions,
   };

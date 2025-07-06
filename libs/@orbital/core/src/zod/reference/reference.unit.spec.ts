@@ -88,7 +88,7 @@ describe("Zod Reference Extension Core Functionality", () => {
         schema: TestPersonSchema,
         foreignField: "name",
         name: "employee",
-        type: RelationshipType.ONE_TO_ONE,
+        type: RelationshipType.HAS_ONE,
       });
 
       const reference = getReference(schema);
@@ -96,7 +96,7 @@ describe("Zod Reference Extension Core Functionality", () => {
       expect(reference?.schema).toBe(TestPersonSchema);
       expect(reference?.foreignField).toBe("name");
       expect(reference?.name).toBe("employee");
-      expect(reference?.type).toBe(RelationshipType.ONE_TO_ONE);
+      expect(reference?.type).toBe(RelationshipType.HAS_ONE);
     });
 
     it("should return reference metadata for ZodArray schemas with reference metadata", () => {
@@ -134,16 +134,16 @@ describe("Zod Reference Extension Core Functionality", () => {
       expect(getReference(arraySchema)?.foreignField).toBe("_id");
     });
 
-    it("should use default relationship type MANY_TO_ONE for ZodString when not specified", () => {
+    it("should use default relationship type BELONGS_TO for ZodString when not specified", () => {
       const schema = z.string().reference({ schema: TestPersonSchema });
-      expect(getReference(schema)?.type).toBe(RelationshipType.MANY_TO_ONE);
+      expect(getReference(schema)?.type).toBe(RelationshipType.BELONGS_TO);
     });
 
-    it("should use default relationship type MANY_TO_MANY for ZodArray when not specified", () => {
+    it("should use default relationship type HAS_MANY for ZodArray when not specified", () => {
       const schema = z
         .array(z.string())
         .reference({ schema: TestPersonSchema });
-      expect(getReference(schema)?.type).toBe(RelationshipType.MANY_TO_MANY);
+      expect(getReference(schema)?.type).toBe(RelationshipType.HAS_MANY);
     });
 
     it("should derive name from schema description when not specified", () => {

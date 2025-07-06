@@ -41,18 +41,6 @@ export class BelongsToFieldInteractable extends ObjectSelectorInteractable {
   override isRequired(): Cypress.Chainable<boolean> {
     return super.isRequired();
   }
-
-  /**
-   * Clear the current selection
-   * @returns The element for chaining
-   */
-  clear(): Cypress.Chainable<JQuery<HTMLElement>> {
-    // Get the element
-    const element = this.getElement();
-
-    // For BelongsToField, we'll clear by setting an empty value
-    return this.selectById("");
-  }
 }
 
 /**

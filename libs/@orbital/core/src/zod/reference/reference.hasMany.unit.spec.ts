@@ -19,14 +19,14 @@ const BookSchema = z
   })
   .describe("A book with title and author");
 
-describe("ONE_TO_MANY Relationship Tests", () => {
-  describe("ZodArray ONE_TO_MANY references", () => {
-    it("should create a ONE_TO_MANY relationship with explicit type", () => {
+describe("HAS_MANY Relationship Tests", () => {
+  describe("ZodArray HAS_MANY references", () => {
+    it("should create a HAS_MANY relationship with explicit type", () => {
       // Author has many books (represented as an array of book IDs)
       const schema = z.object({
         bookIds: z.array(z.string()).reference({
           schema: BookSchema,
-          type: RelationshipType.ONE_TO_MANY,
+          type: RelationshipType.HAS_MANY,
         }),
       });
 
@@ -36,16 +36,16 @@ describe("ONE_TO_MANY Relationship Tests", () => {
       expect(reference?.schema).toBe(BookSchema);
       expect(reference?.foreignField).toBe("_id");
       expect(reference?.name).toBe("book");
-      expect(reference?.type).toBe(RelationshipType.ONE_TO_MANY);
+      expect(reference?.type).toBe(RelationshipType.HAS_MANY);
     });
 
-    it("should support custom field and name in ONE_TO_MANY relationship", () => {
+    it("should support custom field and name in HAS_MANY relationship", () => {
       const schema = z.object({
         publishedBooks: z.array(z.string()).reference({
           schema: BookSchema,
           foreignField: "title",
           name: "publication",
-          type: RelationshipType.ONE_TO_MANY,
+          type: RelationshipType.HAS_MANY,
         }),
       });
 
@@ -55,12 +55,12 @@ describe("ONE_TO_MANY Relationship Tests", () => {
       expect(reference?.schema).toBe(BookSchema);
       expect(reference?.foreignField).toBe("title");
       expect(reference?.name).toBe("publication");
-      expect(reference?.type).toBe(RelationshipType.ONE_TO_MANY);
+      expect(reference?.type).toBe(RelationshipType.HAS_MANY);
     });
   });
 
-  describe("Practical ONE_TO_MANY examples", () => {
-    it("should model an Author-Books one-to-many relationship", () => {
+  describe("Practical HAS_MANY examples", () => {
+    it("should model an Author-Books has-many relationship", () => {
       // In a real application, an Author would have many Books
       const AuthorSchemaWithBooks = z.object({
         _id: z.string(),
@@ -68,18 +68,18 @@ describe("ONE_TO_MANY Relationship Tests", () => {
         bio: z.string().optional(),
         bookIds: z.array(z.string()).reference({
           schema: BookSchema,
-          type: RelationshipType.ONE_TO_MANY,
+          type: RelationshipType.HAS_MANY,
         }),
       });
 
       const reference = getReference(AuthorSchemaWithBooks.shape.bookIds);
 
       expect(hasReference(AuthorSchemaWithBooks.shape.bookIds)).toBe(true);
-      expect(reference?.type).toBe(RelationshipType.ONE_TO_MANY);
+      expect(reference?.type).toBe(RelationshipType.HAS_MANY);
       expect(reference?.name).toBe("book");
     });
 
-    it("should model a Department-Employees one-to-many relationship", () => {
+    it("should model a Department-Employees has-many relationship", () => {
       // Department schema
       const DepartmentSchema = z
         .object({
@@ -103,7 +103,7 @@ describe("ONE_TO_MANY Relationship Tests", () => {
         name: z.string(),
         employeeIds: z.array(z.string()).reference({
           schema: EmployeeSchema,
-          type: RelationshipType.ONE_TO_MANY,
+          type: RelationshipType.HAS_MANY,
           name: "employee",
         }),
       });
@@ -112,7 +112,7 @@ describe("ONE_TO_MANY Relationship Tests", () => {
         DepartmentWithEmployeesSchema.shape.employeeIds
       );
 
-      expect(reference?.type).toBe(RelationshipType.ONE_TO_MANY);
+      expect(reference?.type).toBe(RelationshipType.HAS_MANY);
       expect(reference?.name).toBe("employee");
     });
   });
