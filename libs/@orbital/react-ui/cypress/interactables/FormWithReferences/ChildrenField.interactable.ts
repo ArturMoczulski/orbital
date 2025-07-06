@@ -20,11 +20,19 @@ export class ChildrenFieldInteractable extends ObjectSelectorInteractable {
   constructor(
     fieldName: string,
     objectType: string,
-    parentElement?: () => Cypress.Chainable<JQuery<HTMLElement>>
+    parentElement?: () => Cypress.Chainable<JQuery<HTMLElement>>,
+    objectId?: string
   ) {
     // Pass the correct data-testid prefix to the ObjectSelectorInteractable
     // and set multiple to true since this is a multi-select field
-    super(fieldName, parentElement, "ChildrenField", true, objectType);
+    super(
+      fieldName,
+      parentElement,
+      "ChildrenField",
+      true,
+      objectType,
+      objectId
+    );
     this.objectType = objectType;
   }
 }
@@ -39,9 +47,15 @@ export class ChildrenFieldInteractable extends ObjectSelectorInteractable {
 export function childrenField(
   fieldName: string,
   objectType: string,
-  parentElement?: () => Cypress.Chainable<JQuery<HTMLElement>>
+  parentElement?: () => Cypress.Chainable<JQuery<HTMLElement>>,
+  objectId?: string
 ): ChildrenFieldInteractable {
-  return new ChildrenFieldInteractable(fieldName, objectType, parentElement);
+  return new ChildrenFieldInteractable(
+    fieldName,
+    objectType,
+    parentElement,
+    objectId
+  );
 }
 
 // Export the factory function and class

@@ -24,11 +24,12 @@ export class HasManyFieldInteractable extends ObjectSelectorInteractable {
   constructor(
     fieldName: string,
     objectType: string,
-    parentElement?: () => Cypress.Chainable<JQuery<HTMLElement>>
+    parentElement?: () => Cypress.Chainable<JQuery<HTMLElement>>,
+    objectId?: string
   ) {
     // Pass the objectType as the dataTestId prefix to the ObjectSelectorInteractable
     // and set multiple to true since this is an array field
-    super(fieldName, parentElement, "HasManyField", true, objectType);
+    super(fieldName, parentElement, "HasManyField", true, objectType, objectId);
     this.objectType = objectType;
   }
 
@@ -50,9 +51,15 @@ export class HasManyFieldInteractable extends ObjectSelectorInteractable {
 export function hasManyField(
   fieldName: string,
   objectType: string,
-  parentElement?: () => Cypress.Chainable<JQuery<HTMLElement>>
+  parentElement?: () => Cypress.Chainable<JQuery<HTMLElement>>,
+  objectId?: string
 ): HasManyFieldInteractable {
-  return new HasManyFieldInteractable(fieldName, objectType, parentElement);
+  return new HasManyFieldInteractable(
+    fieldName,
+    objectType,
+    parentElement,
+    objectId
+  );
 }
 
 // Export the factory function and class

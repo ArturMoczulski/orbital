@@ -27,11 +27,19 @@ export class BelongsToFieldInteractable extends ObjectSelectorInteractable {
   constructor(
     fieldName: string,
     objectType: string,
-    parentElement?: () => Cypress.Chainable<JQuery<HTMLElement>>
+    parentElement?: () => Cypress.Chainable<JQuery<HTMLElement>>,
+    objectId?: string
   ) {
     // Pass the objectType as the dataTestId prefix to the ObjectSelectorInteractable
     // objectType should be in PascalCase when used in component names
-    super(fieldName, parentElement, "BelongsToField", false, objectType);
+    super(
+      fieldName,
+      parentElement,
+      "BelongsToField",
+      false,
+      objectType,
+      objectId
+    );
     this.objectType = objectType;
   }
 
@@ -53,9 +61,15 @@ export class BelongsToFieldInteractable extends ObjectSelectorInteractable {
 export function belongsToField(
   fieldName: string,
   objectType: string,
-  parentElement?: () => Cypress.Chainable<JQuery<HTMLElement>>
+  parentElement?: () => Cypress.Chainable<JQuery<HTMLElement>>,
+  objectId?: string
 ): BelongsToFieldInteractable {
-  return new BelongsToFieldInteractable(fieldName, objectType, parentElement);
+  return new BelongsToFieldInteractable(
+    fieldName,
+    objectType,
+    parentElement,
+    objectId
+  );
 }
 
 // Export the factory function and class

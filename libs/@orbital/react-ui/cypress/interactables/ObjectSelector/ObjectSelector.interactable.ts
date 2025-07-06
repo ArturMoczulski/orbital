@@ -80,7 +80,8 @@ export class ObjectSelectorInteractable extends FormInputInteractable<
     parentElement?: () => Cypress.Chainable<JQuery<HTMLElement>>,
     private dataTestId: string = "ObjectSelector",
     private multiple: boolean = false,
-    protected objectType?: string
+    protected objectType?: string,
+    protected objectId?: string
   ) {
     super(fieldName, parentElement);
   }
@@ -101,10 +102,22 @@ export class ObjectSelectorInteractable extends FormInputInteractable<
    * This looks for a select field with the given name and data-testid
    */
   override selector() {
-    return [
-      `[data-testid="${this.dataTestId}"][data-field-name="${this.fieldName}"]`,
-      `[data-field-name="${this.fieldName}"][role="combobox"]`,
-    ].join(", ");
+    const selectors = [];
+
+    // Add selector with objectId if available
+    if (this.objectId) {
+      selectors.push(
+        `[data-testid="${this.dataTestId}"][data-field-name="${this.fieldName}"][data-object-id="${this.objectId}"]`
+      );
+    }
+
+    // Add standard selectors
+    selectors.push(
+      `[data-testid="${this.dataTestId}"][data-field-name="${this.fieldName}"]`
+    );
+    selectors.push(`[data-field-name="${this.fieldName}"][role="combobox"]`);
+
+    return selectors.join(", ");
   }
 
   /**
@@ -632,14 +645,16 @@ export function objectSelector(
   parentElement?: () => Cypress.Chainable<JQuery<HTMLElement>>,
   dataTestId: string = "ObjectSelector",
   multiple: boolean = false,
-  objectType?: string
+  objectType?: string,
+  objectId?: string
 ): ObjectSelectorInteractable {
   return new ObjectSelectorInteractable(
     fieldName,
     parentElement,
     dataTestId,
     multiple,
-    objectType
+    objectType,
+    objectId
   );
 }
 

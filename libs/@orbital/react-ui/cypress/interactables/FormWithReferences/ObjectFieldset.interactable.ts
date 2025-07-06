@@ -20,16 +20,24 @@ export class ObjectFieldsetInteractable extends CypressInteractable<string> {
   protected objectType: string;
 
   /**
+   * The object ID for this fieldset (optional)
+   */
+  protected objectId?: string;
+
+  /**
    * Constructor for ObjectFieldsetInteractable
    * @param objectType The type of object this fieldset is for
    * @param parentElement Optional parent element to scope the fieldset within
+   * @param objectId Optional object ID to target a specific fieldset
    */
   constructor(
     objectType: string,
-    parentElement?: () => Cypress.Chainable<JQuery<HTMLElement>>
+    parentElement?: () => Cypress.Chainable<JQuery<HTMLElement>>,
+    objectId?: string
   ) {
     super(objectType, parentElement);
     this.objectType = objectType;
+    this.objectId = objectId;
   }
 
   /**
@@ -38,7 +46,11 @@ export class ObjectFieldsetInteractable extends CypressInteractable<string> {
    * or with data-object-type attribute
    */
   override selector() {
-    // First try the specific PascalCase format
+    // First try the specific PascalCase format with both type and ID if available
+    if (this.objectId) {
+      return `[data-testid="ObjectFieldset"][data-object-type="${this.objectType}"][data-object-id="${this.objectId}"]`;
+    }
+    // Otherwise just use the object type
     return `[data-testid="ObjectFieldset"][data-object-type="${this.objectType}"]`;
   }
 
@@ -47,14 +59,29 @@ export class ObjectFieldsetInteractable extends CypressInteractable<string> {
    * or has a different value
    */
   flexibleSelector() {
-    return [
-      // Try with data-object-type
-      `[data-testid="ObjectFieldset"][data-object-type="${this.objectType}"]`,
-      // Try with just the data-testid
-      `[data-testid="ObjectFieldset"]`,
-      // Try with data-object-type
-      `[data-object-type="${this.objectType}"]`,
-    ].join(", ");
+    const selectors = [];
+
+    // Try with both data-object-type and data-object-id if available
+    if (this.objectId) {
+      selectors.push(
+        `[data-testid="ObjectFieldset"][data-object-type="${this.objectType}"][data-object-id="${this.objectId}"]`
+      );
+      selectors.push(
+        `[data-testid="ObjectFieldset"][data-object-id="${this.objectId}"]`
+      );
+      selectors.push(
+        `[data-object-type="${this.objectType}"][data-object-id="${this.objectId}"]`
+      );
+    }
+
+    // Add selectors without object ID
+    selectors.push(
+      `[data-testid="ObjectFieldset"][data-object-type="${this.objectType}"]`
+    );
+    selectors.push(`[data-testid="ObjectFieldset"]`);
+    selectors.push(`[data-object-type="${this.objectType}"]`);
+
+    return selectors.join(", ");
   }
 
   /**
@@ -242,9 +269,10 @@ export class ObjectFieldsetInteractable extends CypressInteractable<string> {
  */
 export function objectFieldset(
   objectType: string,
-  parentElement?: () => Cypress.Chainable<JQuery<HTMLElement>>
+  parentElement?: () => Cypress.Chainable<JQuery<HTMLElement>>,
+  objectId?: string
 ): ObjectFieldsetInteractable {
-  return new ObjectFieldsetInteractable(objectType, parentElement);
+  return new ObjectFieldsetInteractable(objectType, parentElement, objectId);
 }
 
 // Export the factory function and class
