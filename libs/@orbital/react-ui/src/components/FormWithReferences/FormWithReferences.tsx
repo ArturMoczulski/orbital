@@ -1,21 +1,21 @@
 import React from "react";
 import { ZodBridge } from "uniforms-bridge-zod";
 import { AutoField, AutoForm as UniformsAutoForm } from "uniforms-mui";
-import ReferenceArrayField from "./ReferenceArrayField";
-import ReferenceSingleField from "./ReferenceSingleField";
+import BelongsToField from "./BelongsToField";
+import HasManyField from "./HasManyField";
 import {
   inferObjectTypeFromSchema,
   ZodReferencesBridge,
 } from "./ZodReferencesBridge";
 
 // Component names as constants to avoid typos and make refactoring easier
-const REFERENCE_ARRAY_FIELD = "ReferenceArrayField";
-const REFERENCE_SINGLE_FIELD = "ReferenceSingleField";
+const HAS_MANY_FIELD = "HasManyField";
+const BELONGS_TO_FIELD = "BelongsToField";
 
 // Register custom field types with Uniforms
 const fieldTypes = {
-  [REFERENCE_SINGLE_FIELD]: ReferenceSingleField,
-  [REFERENCE_ARRAY_FIELD]: ReferenceArrayField,
+  [BELONGS_TO_FIELD]: BelongsToField,
+  [HAS_MANY_FIELD]: HasManyField,
 };
 
 /**
@@ -52,7 +52,7 @@ export function ReferenceFormProvider(props: any) {
     const objectType = context.uniforms?.objectType || "Unknown";
 
     // Check if the field has a reference in its uniforms metadata
-    if (props.field?.uniforms?.component === REFERENCE_SINGLE_FIELD) {
+    if (props.field?.uniforms?.component === BELONGS_TO_FIELD) {
       // Create a wrapper component that passes the reference props
       const ReferenceSingleFieldWithProps = (fieldProps: any) => {
         // Extract reference from the field
@@ -60,7 +60,7 @@ export function ReferenceFormProvider(props: any) {
 
         // Pass the reference props and objectType to ReferenceSingleField
         return (
-          <ReferenceSingleField
+          <BelongsToField
             {...fieldProps}
             reference={reference}
             objectType={objectType}
@@ -71,7 +71,7 @@ export function ReferenceFormProvider(props: any) {
       return ReferenceSingleFieldWithProps;
     }
 
-    if (props.field?.uniforms?.component === REFERENCE_ARRAY_FIELD) {
+    if (props.field?.uniforms?.component === HAS_MANY_FIELD) {
       // Create a wrapper component that passes the reference props
       const ReferenceArrayFieldWithProps = (fieldProps: any) => {
         // Extract reference from the field
@@ -79,7 +79,7 @@ export function ReferenceFormProvider(props: any) {
 
         // Pass the reference props and objectType to ReferenceArrayField
         return (
-          <ReferenceArrayField
+          <HasManyField
             {...fieldProps}
             reference={reference}
             objectType={objectType}

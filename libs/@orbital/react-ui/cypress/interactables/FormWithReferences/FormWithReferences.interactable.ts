@@ -10,22 +10,20 @@ import {
   FormInputField,
 } from "../AutoForm/AutoForm.interactable";
 import { inputField } from "../AutoForm/FormInput.interactable";
-import {
-  referenceArrayField,
-  ReferenceArrayFieldInteractable,
-} from "./ReferenceArrayField.interactable";
-import {
-  referenceSingleField,
-  ReferenceSingleFieldInteractable,
-} from "./ReferenceSingleField.interactable";
+import belongsToField, {
+  BelongsToFieldInteractable,
+} from "./BelongsToField.interactable.js";
+import hasManyField, {
+  HasManyFieldInteractable,
+} from "./HasManyField.interactable.js";
 
 /**
  * Type for form input field methods with reference field support
  */
 type FormWithReferencesInputField<T> =
   | FormInputField<T>
-  | ReferenceSingleFieldInteractable
-  | ReferenceArrayFieldInteractable;
+  | BelongsToFieldInteractable
+  | HasManyFieldInteractable;
 
 /**
  * Interface for form input-related methods with reference field support
@@ -124,7 +122,7 @@ class FormWithReferencesInteractable<
                         cy.log(
                           `Creating ReferenceSingleFieldInteractable for "${prop}"`
                         );
-                        interactable = referenceSingleField(
+                        interactable = belongsToField(
                           prop,
                           this.objectType,
                           () => this.getElement()
@@ -133,10 +131,8 @@ class FormWithReferencesInteractable<
                         cy.log(
                           `Creating ReferenceArrayFieldInteractable for "${prop}"`
                         );
-                        interactable = referenceArrayField(
-                          prop,
-                          this.objectType,
-                          () => this.getElement()
+                        interactable = hasManyField(prop, this.objectType, () =>
+                          this.getElement()
                         );
                       } else {
                         cy.log(`Creating standard input field for "${prop}"`);

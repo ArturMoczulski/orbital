@@ -1,9 +1,9 @@
 import { ReferenceMetadata } from "@orbital/core/src/zod/reference/reference";
 import { camelCase, startCase } from "lodash";
 import { connectField } from "uniforms";
-import ObjectSelector from "../ObjectSelector/ObjectSelector";
+import ObjectSelector from "../ObjectSelector";
 
-export type ReferenceSingleFieldProps = {
+export type BelongsToFieldProps = {
   disabled?: boolean;
   error?: boolean;
   errorMessage?: string;
@@ -15,13 +15,13 @@ export type ReferenceSingleFieldProps = {
   readOnly?: boolean;
   required?: boolean;
   value?: string;
-  reference: ReferenceMetadata & {
+  reference?: ReferenceMetadata & {
     options: any[];
   };
   objectType: string; // Required prop to specify the containing object type
 };
 
-function ReferenceSingleField({
+function BelongsToField({
   disabled,
   error,
   errorMessage,
@@ -34,8 +34,8 @@ function ReferenceSingleField({
   required,
   value,
   reference,
-  objectType,
-}: ReferenceSingleFieldProps) {
+  objectType, // Required prop, no default value
+}: BelongsToFieldProps) {
   const toPascalCase = (str: string): string =>
     startCase(camelCase(str)).replace(/\s/g, "");
 
@@ -56,24 +56,32 @@ function ReferenceSingleField({
     return undefined;
   };
 
-  // If no reference options are provided, fall back to a standard text field
+  // Handle the onChange event to ensure we always return a string
+  const handleChange = (newValue: string | string[]) => {
+    if (Array.isArray(newValue)) {
+      onChange(newValue.length > 0 ? newValue[0] : "");
+    } else {
+      onChange(newValue);
+    }
+  };
+
+  // If no reference options are provided, fall back to a disabled field
   if (!reference || !reference.options || reference.options.length === 0) {
     return (
       <ObjectSelector
-        disabled={disabled}
+        disabled={true}
         error={error}
-        errorMessage={errorMessage}
+        errorMessage={errorMessage || "No options available"}
         id={id}
         label={getLabel()}
         name={name}
-        onChange={onChange}
+        onChange={handleChange}
         placeholder={placeholder}
         readOnly={readOnly}
         required={required}
         value={value}
         options={[]}
-        objectType={objectType}
-        componentName="ReferenceSingleField"
+        data-testid={`${objectType}BelongsToField`}
       />
     );
   }
@@ -90,18 +98,17 @@ function ReferenceSingleField({
       id={id}
       label={getLabel()}
       name={name}
-      onChange={onChange}
+      onChange={handleChange}
       placeholder={placeholder}
       readOnly={readOnly}
       required={required}
       value={value}
       options={reference.options}
-      objectType={objectType}
       idField={foreignField}
       displayField={displayField}
-      componentName="ReferenceSingleField"
+      data-testid={`${objectType}BelongsToField`}
     />
   );
 }
 
-export default connectField(ReferenceSingleField);
+export default connectField(BelongsToField);

@@ -1,4 +1,11 @@
+import Checkbox from "@mui/material/Checkbox";
+import FormControl from "@mui/material/FormControl";
+import FormHelperText from "@mui/material/FormHelperText";
+import InputLabel from "@mui/material/InputLabel";
+import ListItemText from "@mui/material/ListItemText";
 import MenuItem from "@mui/material/MenuItem";
+import OutlinedInput from "@mui/material/OutlinedInput";
+import Select from "@mui/material/Select";
 import TextField from "@mui/material/TextField";
 
 export type ObjectSelectorProps = {
@@ -8,20 +15,22 @@ export type ObjectSelectorProps = {
   id: string;
   label?: string;
   name: string;
-  onChange: (value: string) => void;
+  onChange: (value: string | string[]) => void;
   placeholder?: string;
   readOnly?: boolean;
   required?: boolean;
-  value?: string;
+  value?: string | string[];
   options: any[];
-  objectType: string; // Required prop to specify the containing object type
   idField?: string; // Field to use as the ID/value (default: "_id")
   displayField?: string; // Field to display (default: "name")
   componentName?: string; // The name of the parent component (e.g., "ReferenceSingleField")
+  className?: string; // Optional class name for styling
+  "data-testid"?: string; // Optional data-testid for testing
+  multiple?: boolean; // Whether to allow multiple selections
 };
 
 /**
- * ObjectSelector component allows selecting an object from a list of options
+ * ObjectSelector component allows selecting one or multiple objects from a list of options
  * This is a generic component that can be used for any type of object selection
  */
 export function ObjectSelector({
@@ -37,36 +46,135 @@ export function ObjectSelector({
   required,
   value,
   options,
-  objectType,
   idField = "_id",
   displayField = "name",
   componentName = "ObjectSelector",
+  className,
+  "data-testid": dataTestId,
+  multiple = false,
 }: ObjectSelectorProps) {
-  // Generate the data-testid based on objectType and componentName
-  const dataTestId = `${objectType}${componentName} ${componentName}`;
-  // If no options are provided, fall back to a standard text field
+  // Generate the data-testid based on componentName or provided dataTestId
+  const testId = dataTestId || componentName;
+
+  // Normalize value to handle both single and multiple modes
+  const normalizedValue = multiple
+    ? Array.isArray(value)
+      ? value
+      : value
+        ? [value]
+        : []
+    : Array.isArray(value)
+      ? value[0] || ""
+      : value || "";
+
+  // If no options are provided, handle empty state
   if (!options || options.length === 0) {
+    if (multiple) {
+      // For multiple mode, show a disabled field with a message (like MultiObjectSelector)
+      return (
+        <FormControl fullWidth error={error} margin="dense">
+          <InputLabel>{label}</InputLabel>
+          <OutlinedInput
+            disabled
+            label={label}
+            data-testid={testId}
+            data-field-name={name}
+          />
+          <FormHelperText>
+            {errorMessage || "No options available"}
+          </FormHelperText>
+        </FormControl>
+      );
+    } else {
+      // For single mode, fall back to a standard text field (like original ObjectSelector)
+      return (
+        <TextField
+          disabled={disabled}
+          error={error}
+          fullWidth
+          helperText={errorMessage}
+          id={id}
+          label={label}
+          margin="dense"
+          name={name}
+          onChange={(event) => onChange(event.target.value)}
+          placeholder={placeholder}
+          required={required}
+          value={normalizedValue}
+          variant="outlined"
+          data-testid={testId}
+          data-field-name={name}
+        />
+      );
+    }
+  }
+
+  // For multiple selection mode
+  if (multiple) {
     return (
-      <TextField
-        disabled={disabled}
-        error={error}
-        fullWidth
-        helperText={errorMessage}
-        id={id}
-        label={label}
-        margin="dense"
-        name={name}
-        onChange={(event) => onChange(event.target.value)}
-        placeholder={placeholder}
-        required={required}
-        value={value ?? ""}
-        variant="outlined"
-        data-testid={dataTestId}
-        data-field-name={name}
-      />
+      <FormControl fullWidth error={error} margin="dense">
+        <InputLabel id={`${id}-label`}>{label}</InputLabel>
+        <Select
+          labelId={`${id}-label`}
+          id={id}
+          multiple
+          value={normalizedValue as string[]}
+          onChange={(event) => {
+            const value = event.target.value;
+            onChange(typeof value === "string" ? value.split(",") : value);
+          }}
+          input={
+            <OutlinedInput
+              label={label}
+              data-testid={testId}
+              data-field-name={name}
+            />
+          }
+          renderValue={(selected) => {
+            // Display selected items by name
+            return (selected as string[])
+              .map((id) => {
+                const option = options.find((opt) => opt[idField] === id);
+                return option ? option[displayField] || id : id;
+              })
+              .join(", ");
+          }}
+          disabled={disabled || readOnly}
+          required={required}
+          // Use MenuProps to add a custom class that can be used for selection
+          MenuProps={{
+            className: `object-selector-${name} ${className || ""}`,
+            // Use PaperProps to add data attributes to the dropdown container
+            PaperProps: {
+              "data-testid": `${testId}-dropdown`,
+              "data-component-name": componentName,
+            } as any,
+          }}
+        >
+          {options.map((option) => (
+            <MenuItem
+              key={option[idField]}
+              value={option[idField]}
+              data-testid={`${testId}-item`}
+              data-value-id={option[idField]}
+              data-field-name={name}
+              data-object-id={option[idField]} // For backward compatibility
+            >
+              <Checkbox
+                checked={
+                  (normalizedValue as string[]).indexOf(option[idField]) > -1
+                }
+              />
+              <ListItemText primary={option[displayField] || option[idField]} />
+            </MenuItem>
+          ))}
+        </Select>
+        {errorMessage && <FormHelperText>{errorMessage}</FormHelperText>}
+      </FormControl>
     );
   }
 
+  // For single selection mode
   return (
     <TextField
       disabled={disabled || readOnly}
@@ -80,19 +188,18 @@ export function ObjectSelector({
       onChange={(event) => onChange(event.target.value)}
       required={required}
       select
-      value={value ?? ""}
+      value={normalizedValue}
       variant="outlined"
-      data-testid={dataTestId}
+      data-testid={testId}
       data-field-name={name}
       // Use MenuProps to add a custom class that can be used for selection
       SelectProps={{
         MenuProps: {
-          className: `${objectType}-object-selector-${name}`,
+          className: `object-selector-${name} ${className || ""}`,
           // Use PaperProps to add data attributes to the dropdown container
           PaperProps: {
-            "data-testid": `${objectType}${componentName}-dropdown`,
+            "data-testid": `${testId}-dropdown`,
             "data-component-name": componentName,
-            "data-object-type": objectType,
           } as any,
         },
       }}
@@ -101,7 +208,7 @@ export function ObjectSelector({
       {!required && (
         <MenuItem
           value=""
-          data-testid={`${objectType}${componentName}-none`}
+          data-testid={`${testId}-none`}
           data-field-name={name}
         >
           <em>None</em>
@@ -114,8 +221,9 @@ export function ObjectSelector({
           key={option[idField]}
           value={option[idField]}
           // Add data attributes to each menu item for better identification
-          data-testid={`${objectType}${componentName}-item`}
+          data-testid={`${testId}-item`}
           data-object-id={option[idField]}
+          data-value-id={option[idField]} // For compatibility with MultiObjectSelector
           data-field-name={name}
         >
           {option[displayField] || option[idField]}

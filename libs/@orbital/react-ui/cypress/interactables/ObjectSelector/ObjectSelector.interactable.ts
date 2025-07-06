@@ -6,30 +6,72 @@
 import { FormInputInteractable } from "../AutoForm/FormInput.interactable";
 
 /**
+ * Helper class to represent a selectable item in an ObjectSelector
+ */
+export class ObjectSelectorItem {
+  private element: JQuery<HTMLElement>;
+  private id: string;
+  private name: string;
+  private isChecked: boolean;
+
+  constructor(element: JQuery<HTMLElement>) {
+    this.element = element;
+    this.id =
+      element.attr("data-value-id") || element.attr("data-object-id") || "";
+    this.name = element.text().trim();
+    this.isChecked = element.find(".Mui-checked").length > 0;
+  }
+
+  /**
+   * Get the ID of the item
+   */
+  getId(): string {
+    return this.id;
+  }
+
+  /**
+   * Get the display name of the item
+   */
+  getName(): string {
+    return this.name;
+  }
+
+  /**
+   * Check if the item is currently selected
+   */
+  isSelected(): boolean {
+    return this.isChecked;
+  }
+
+  /**
+   * Click on the item to select or deselect it
+   */
+  click(): Cypress.Chainable<JQuery<HTMLElement>> {
+    return cy.wrap(this.element).click({ force: true });
+  }
+}
+
+/**
  * ObjectSelectorInteractable class represents an ObjectSelector component
  * and provides methods for interacting with it
  */
-export class ObjectSelectorInteractable extends FormInputInteractable<string> {
-  /**
-   * The type of object this selector is for (e.g., "world", "area")
-   * Protected so it can be accessed by subclasses
-   */
-  protected objectType: string;
-
+export class ObjectSelectorInteractable extends FormInputInteractable<
+  string | string[]
+> {
   /**
    * Constructor for ObjectSelectorInteractable
    * @param fieldName The name of the field
-   * @param objectType The type of object this selector is for
    * @param parentElement Optional parent element to scope the field within
+   * @param dataTestId Optional data-testid to use for selecting elements
+   * @param multiple Whether this is a multi-select field
    */
   constructor(
     fieldName: string,
-    objectType: string,
     parentElement?: () => Cypress.Chainable<JQuery<HTMLElement>>,
-    protected componentName?: string
+    private dataTestId: string = "ObjectSelector",
+    private multiple: boolean = false
   ) {
     super(fieldName, parentElement);
-    this.objectType = objectType;
   }
 
   /**
@@ -38,73 +80,274 @@ export class ObjectSelectorInteractable extends FormInputInteractable<string> {
    */
   protected getComponentName(): string {
     // Get the class name from the constructor
-    const className = this.componentName || this.constructor.name;
+    const className = this.dataTestId;
     // Remove "Interactable" from the end
     return className.replace(/Interactable$/, "");
   }
 
   /**
    * Override the selector method to target the component
-   * This looks for a select field with the given name and component type
+   * This looks for a select field with the given name and data-testid
    */
   override selector() {
-    const componentName = this.getComponentName();
     return [
-      `[data-testid*="${this.objectType}${componentName} ${componentName}"]`,
-      `[data-testid*="${componentName}"][data-field-name="${this.fieldName}"]`,
-      `[data-testid*="${componentName}"]`,
+      `[data-testid="${this.dataTestId}"][data-field-name="${this.fieldName}"]`,
+      `[data-field-name="${this.fieldName}"][role="combobox"]`,
     ].join(", ");
   }
 
   /**
-   * Get the data-testid prefix for menu items
+   * Open the dropdown menu
+   * @returns A chainable that resolves when the dropdown is open
    */
-  protected getItemTestIdPrefix(): string {
-    return `${this.objectType}${this.getComponentName()}`;
-  }
+  openDropdown(): Cypress.Chainable<JQuery<HTMLElement>> {
+    // Click directly on the combobox element which is what Material UI uses for the Select
+    cy.get(
+      `[data-testid="${this.dataTestId}"][data-field-name="${this.fieldName}"]`
+    )
+      .find('[role="combobox"]')
+      .click({ force: true });
 
-  setValue(value: string): Cypress.Chainable<JQuery<HTMLElement>> {
-    return this.selectByText(value);
+    // Material UI creates a portal outside the component tree for the dropdown
+    // Wait for any dropdown to appear - try multiple selectors
+    // Use a more general selector that should work with Material UI Select
+    return cy
+      .get("body")
+      .find('.MuiPopover-root, [role="presentation"] .MuiPaper-root')
+      .should("be.visible");
   }
 
   /**
-   * Set a value on the object selector by selecting an option by ID
-   * @param value The value to select
+   * Close the dropdown menu
+   * @returns A chainable that resolves when the dropdown is closed
    */
-  selectById(value: string): Cypress.Chainable<JQuery<HTMLElement>> {
-    // Get the element and click to open the dropdown using our enhanced click method
+  closeDropdown(): Cypress.Chainable<JQuery<HTMLElement>> {
+    // Click away to close the dropdown
+    cy.get("body").click(0, 0);
+    return cy
+      .get("body")
+      .find('.MuiPopover-root, [role="presentation"] .MuiPaper-root')
+      .should("not.exist");
+  }
+
+  /**
+   * Get all selectable items in the dropdown
+   * @returns A chainable that resolves to an array of ObjectSelectorItem objects
+   */
+  getItems(): Cypress.Chainable<ObjectSelectorItem[]> {
+    // Always open the dropdown first to ensure it's visible
+    // This is more reliable than checking if it's already open
+    return this.openDropdown().then(() => {
+      // Try to find menu items with multiple possible selectors
+      return cy
+        .get("body")
+        .find('.MuiPopover-root, [role="presentation"] .MuiPaper-root')
+        .find('.MuiMenuItem-root, [role="option"], li')
+        .then(($menuItems) => {
+          const items: ObjectSelectorItem[] = [];
+          $menuItems.each((_, el) => {
+            const item = new ObjectSelectorItem(Cypress.$(el));
+            items.push(item);
+          });
+          return cy.wrap(items);
+        });
+    });
+  }
+
+  /**
+   * Get only the selected items in the dropdown
+   * @returns A chainable that resolves to an array of selected ObjectSelectorItem objects
+   */
+  getSelectedItems(): Cypress.Chainable<ObjectSelectorItem[]> {
+    // Create an empty array with the correct type
+    const emptyItems: ObjectSelectorItem[] = [];
+
+    // Check if dropdown is already open
+    return cy
+      .get("body")
+      .find('.MuiPopover-root, [role="presentation"] .MuiPaper-root')
+      .then(($popover) => {
+        const isDropdownOpen = $popover.length > 0;
+
+        if (isDropdownOpen) {
+          // If dropdown is already open, get items directly
+          return this.getItems().then((items) => {
+            const selectedItems = items.filter((item) => item.isSelected());
+            return cy.wrap(selectedItems);
+          });
+        } else {
+          // If dropdown is closed, return empty array with correct type
+          return cy.wrap(emptyItems);
+        }
+      });
+  }
+
+  /**
+   * Get the IDs of the selected items
+   * @returns A chainable that resolves to an array of selected item IDs
+   */
+  getSelectedValues(): Cypress.Chainable<string[]> {
+    // Get the value directly from the native input element
+    return this.getElement().then(($el) => {
+      // Try to get the value from the native input
+      const value = $el.find("input.MuiSelect-nativeInput").val();
+
+      if (value) {
+        if (this.multiple) {
+          const selectedIds = value
+            .toString()
+            .split(",")
+            .filter((id) => id.trim() !== "");
+          return cy.wrap(selectedIds);
+        } else {
+          // For single select, return as array with one item for consistency
+          return cy.wrap(value ? [value.toString()] : []);
+        }
+      }
+
+      // Check if the combobox is empty (no text content)
+      const comboboxText = $el.find('[role="combobox"]').text().trim();
+      if (!comboboxText || comboboxText === "" || comboboxText === "​") {
+        return cy.wrap([] as string[]);
+      }
+
+      // If no value in the native input, check for selected chips in the UI (for multiple mode)
+      if (this.multiple) {
+        const chips = $el.find(".MuiChip-root");
+        const selectedIds: string[] = [];
+
+        if (chips.length > 0) {
+          chips.each((_, chip) => {
+            const chipEl = Cypress.$(chip);
+            const dataValue =
+              chipEl.attr("data-value") || chipEl.attr("data-tag-value");
+            if (dataValue) {
+              selectedIds.push(dataValue);
+            }
+          });
+
+          if (selectedIds.length > 0) {
+            return cy.wrap(selectedIds);
+          }
+        }
+      }
+
+      // Check if dropdown is already open before trying to open it
+      return cy
+        .get("body")
+        .find('.MuiPopover-root, [role="presentation"] .MuiPaper-root')
+        .then(($popover) => {
+          const isDropdownOpen = $popover.length > 0;
+
+          // If dropdown is not open and we still don't have values,
+          // we can assume there are no selections (since we already checked the input and combobox)
+          if (!isDropdownOpen) {
+            return cy.wrap([] as string[]);
+          }
+
+          // If dropdown is already open, check for selected items
+          return this.getItems().then((items) => {
+            const selectedItems = items.filter((item) => item.isSelected());
+            const selectedIds = selectedItems.map((item) => item.getId());
+            return cy.wrap(selectedIds);
+          });
+        });
+    });
+  }
+
+  /**
+   * Get a specific item by ID
+   * @param id The ID of the item to find
+   * @returns A chainable that resolves to the item or undefined if not found
+   */
+  getItemById(id: string): Cypress.Chainable<ObjectSelectorItem | undefined> {
+    return this.getItems().then((items) => {
+      const foundItem = items.find((item) => item.getId() === id);
+      return cy.wrap(foundItem || undefined);
+    });
+  }
+
+  /**
+   * Get a specific item by name
+   * @param name The name of the item to find
+   * @returns A chainable that resolves to the item or undefined if not found
+   */
+  getItemByName(
+    name: string
+  ): Cypress.Chainable<ObjectSelectorItem | undefined> {
+    return this.getItems().then((items) => {
+      const foundItem = items.find((item) => item.getName().includes(name));
+      return cy.wrap(foundItem || undefined);
+    });
+  }
+
+  /**
+   * Set a value on the object selector by selecting option(s) by ID
+   * @param value The value(s) to select (string for single mode, string[] for multiple mode)
+   */
+  selectById(value: string | string[]): Cypress.Chainable<JQuery<HTMLElement>> {
+    // Get the element
     const element = this.getElement();
 
-    // Use our enhanced click method to open the dropdown
-    this.click();
+    // Open the dropdown
+    this.openDropdown();
 
-    // Material UI renders the dropdown in a portal at the body level
-    // We need to use the element to trigger the dropdown, but then find the options in the body
+    if (this.multiple) {
+      // For multiple mode
+      const values = Array.isArray(value) ? value : [value];
 
-    // If value is empty, select the "None" option
-    // Get the field name from the element
-    return element.then(($el) => {
-      const fieldName = this.fieldName;
-      const testIdPrefix = this.getItemTestIdPrefix();
+      // Get all items
+      return this.getItems().then((items) => {
+        // First, clear any existing selections by clicking on each checked item
+        items.forEach((item) => {
+          if (item.isSelected()) {
+            item.click();
+          }
+        });
 
-      if (!value) {
-        // Find the "None" option using the data attributes
-        return cy
-          .get("body")
+        // Now select each value if there are any to select
+        if (values && values.length > 0) {
+          values.forEach((val) => {
+            // Find the item by ID or name
+            const item = items.find(
+              (item) => item.getId() === val || item.getName().includes(val)
+            );
+
+            if (item) {
+              item.click();
+            }
+          });
+        }
+
+        // Close the dropdown
+        this.closeDropdown();
+        return element;
+      });
+    } else {
+      // For single mode
+      const val = Array.isArray(value) ? value[0] : value;
+
+      // If value is empty, select the "None" option
+      if (!val) {
+        cy.get("body")
           .find(
-            `[data-testid="${testIdPrefix}-none"][data-field-name="${fieldName}"]`
+            `[data-testid="${this.dataTestId}-none"][data-field-name="${this.fieldName}"]`
           )
+          .click();
+      } else {
+        // Find the option with the given value using the data attributes
+        cy.get("body")
+          .find(
+            `[data-testid="${this.dataTestId}-item"][data-field-name="${this.fieldName}"]`
+          )
+          .filter(`[data-value-id="${val}"], [data-object-id="${val}"]`)
           .click();
       }
 
-      // Find the option with the given value using the data attributes
-      return cy
-        .get("body")
-        .find(
-          `[data-testid="${testIdPrefix}-item"][data-object-id="${value}"][data-field-name="${fieldName}"]`
-        )
-        .click();
-    });
+      // Close the dropdown
+      this.closeDropdown();
+      return element;
+    }
   }
 
   /**
@@ -112,53 +355,48 @@ export class ObjectSelectorInteractable extends FormInputInteractable<string> {
    * @param displayText The text displayed in the option
    */
   selectByText(displayText: string): Cypress.Chainable<JQuery<HTMLElement>> {
-    // Get the element and click to open the dropdown using our enhanced click method
+    // Get the element and open the dropdown
     const element = this.getElement();
-    this.click();
+    this.openDropdown();
 
-    // Material UI renders the dropdown in a portal at the body level
-    // We need to use the element to trigger the dropdown, but then find the options in the body
-    // Get the field name from the element
-    return element.then(($el) => {
-      const fieldName = this.fieldName;
-      const testIdPrefix = this.getItemTestIdPrefix();
+    // Find the option with the given display text
+    cy.get("body")
+      .find(
+        `[data-testid="${this.dataTestId}-item"][data-field-name="${this.fieldName}"]`
+      )
+      .contains(displayText)
+      .click();
 
-      // Find the option with the given display text
-      return cy
-        .get("body")
-        .find(
-          `[data-testid="${testIdPrefix}-item"][data-field-name="${fieldName}"]`
-        )
-        .contains(displayText)
-        .click();
-    });
+    // Close the dropdown if in single mode
+    if (!this.multiple) {
+      this.closeDropdown();
+    }
+
+    return element;
   }
 
   /**
-   * Get all available options
+   * Set value(s) on the object selector
+   * @param value The value(s) to select (string for single mode, string[] for multiple mode)
    */
-  getOptions(): Cypress.Chainable<JQuery<HTMLElement>> {
-    // Get the element and click to open the dropdown using our enhanced click method
-    const element = this.getElement();
-    this.click();
+  setValue(value: string | string[]): Cypress.Chainable<JQuery<HTMLElement>> {
+    return this.selectById(value);
+  }
 
-    // Add a wait for the dropdown to appear
-    cy.wait(100);
-
-    // Material UI renders the dropdown in a portal at the body level
-    // We need to use the element to trigger the dropdown, but then find the options in the body
-    // Get the field name from the element
-    return element.then(($el) => {
-      const fieldName = this.fieldName;
-      const testIdPrefix = this.getItemTestIdPrefix();
-
-      // Find all options using the data attributes - specifically look for the menu items
-      return cy
-        .get("body")
-        .find(
-          `[data-testid="${testIdPrefix}-none"][data-field-name="${fieldName}"], [data-testid="${testIdPrefix}-item"][data-field-name="${fieldName}"]`
-        );
-    });
+  /**
+   * Get the currently selected value(s)
+   * @returns A chainable that resolves to the selected value (string for single mode) or values (string[] for multiple mode)
+   */
+  getValue(): Cypress.Chainable<any> {
+    if (this.multiple) {
+      return this.getSelectedValues() as Cypress.Chainable<string[]>;
+    } else {
+      return this.getSelectedValues().then((values) => {
+        return cy.wrap(
+          values.length > 0 ? values[0] : ""
+        ) as Cypress.Chainable<string>;
+      });
+    }
   }
 
   /**
@@ -166,7 +404,6 @@ export class ObjectSelectorInteractable extends FormInputInteractable<string> {
    */
   getSelectedText(): Cypress.Chainable<string> {
     // For Material-UI Select, the selected text is in the div with class MuiSelect-select
-    // which might be a sibling or parent of our element
     return this.getElement()
       .find(".MuiSelect-select, [role=button]")
       .first()
@@ -184,6 +421,12 @@ export class ObjectSelectorInteractable extends FormInputInteractable<string> {
         return cy.wrap(true);
       }
 
+      // Check if any parent elements have the error class
+      const $parent = $el.closest(".MuiFormControl-root");
+      if ($parent.hasClass("Mui-error")) {
+        return cy.wrap(true);
+      }
+
       // Check if any child elements have the error class
       return cy.wrap($el.find(".Mui-error").length > 0);
     });
@@ -193,7 +436,10 @@ export class ObjectSelectorInteractable extends FormInputInteractable<string> {
    * Get the error message if any
    */
   getErrorMessage(): Cypress.Chainable<string> {
-    return this.getElement().find(".MuiFormHelperText-root").invoke("text");
+    return this.getElement()
+      .closest(".MuiFormControl-root")
+      .find(".MuiFormHelperText-root")
+      .invoke("text");
   }
 
   /**
@@ -281,21 +527,22 @@ export class ObjectSelectorInteractable extends FormInputInteractable<string> {
 /**
  * Factory function to create an ObjectSelector interactable
  * @param fieldName The name of the field
- * @param objectType The type of object this selector is for
  * @param parentElement Optional parent element to scope the field within
+ * @param dataTestId Optional data-testid to use for selecting elements
+ * @param multiple Whether this is a multi-select field
  * @returns An ObjectSelector interactable
  */
 export function objectSelector(
   fieldName: string,
-  objectType: string,
   parentElement?: () => Cypress.Chainable<JQuery<HTMLElement>>,
-  componentName?: string
+  dataTestId: string = "ObjectSelector",
+  multiple: boolean = false
 ): ObjectSelectorInteractable {
   return new ObjectSelectorInteractable(
     fieldName,
-    objectType,
     parentElement,
-    componentName
+    dataTestId,
+    multiple
   );
 }
 
