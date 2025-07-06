@@ -3,6 +3,7 @@ import { camelCase, startCase } from "lodash";
 import { ZodBridge } from "uniforms-bridge-zod";
 import { z } from "zod";
 import ObjectSelector from "../ObjectSelector";
+import { useObject } from "./ObjectProvider";
 import { useObjectSchema } from "./ObjectSchemaContext";
 import {
   inferObjectTypeFromSchema,
@@ -40,6 +41,7 @@ export type ReferenceFieldProps = {
 
   // Testing props
   "data-testid"?: string; // Allow passing a custom testid
+  objectId?: string; // Optional prop to override the object ID from context
 };
 
 /**
@@ -72,17 +74,27 @@ export function ReferenceField({
   idField: customIdField,
   displayField: customDisplayField,
   "data-testid": dataTestId,
+  objectId,
 }: ReferenceFieldProps) {
-  // Try to get schema and objectType from context if not provided as props
+  // Try to get schema, objectType, and objectId from context if not provided as props
   let contextSchema;
   let contextObjectType;
+  let contextObjectId;
 
   try {
-    const context = useObjectSchema();
-    contextSchema = context.schema;
-    contextObjectType = context.objectType;
+    const schemaContext = useObjectSchema();
+    contextSchema = schemaContext.schema;
+    contextObjectType = schemaContext.objectType;
+
+    // Try to get objectId from the object context
+    try {
+      const objectContext = useObject();
+      contextObjectId = objectContext.objectId;
+    } catch (error) {
+      // Object context not available, will use props only
+    }
   } catch (error) {
-    // Context not available, will use props only
+    // Schema context not available, will use props only
   }
 
   // Use provided schema or get from context
@@ -185,9 +197,10 @@ export function ReferenceField({
         value={value}
         options={[]}
         data-testid={
-          dataTestId ||
-          `${objectType}${multiple ? "ChildrenField" : "ParentField"}`
+          dataTestId || `${multiple ? "ChildrenField" : "ParentField"}`
         }
+        objectType={objectType}
+        objectId={objectId !== undefined ? objectId : contextObjectId}
       />
     );
   }
@@ -214,9 +227,10 @@ export function ReferenceField({
       idField={idField}
       displayField={displayField}
       data-testid={
-        dataTestId ||
-        `${objectType}${multiple ? "ChildrenField" : "ParentField"}`
+        dataTestId || `${multiple ? "ChildrenField" : "ParentField"}`
       }
+      objectType={objectType}
+      objectId={objectId !== undefined ? objectId : contextObjectId}
     />
   );
 }

@@ -59,19 +59,25 @@ describe("ObjectFieldsetInteractable", () => {
     // Log what the interactable is looking for
     const fieldset = objectFieldset("User");
     cy.log(`Interactable selector: ${fieldset.selector()}`);
+    cy.log(`Interactable flexible selector: ${fieldset.flexibleSelector()}`);
 
     // Try to find the element directly with each selector part
-    cy.get(`[data-testid="UserObjectFieldset"]`).then(($el) => {
-      cy.log(`Found by UserObjectFieldset: ${$el.length > 0}`);
-    });
-
-    cy.get(`[data-testid*="ObjectFieldset"][data-object-id="main"]`).then(
+    cy.get(`[data-testid="ObjectFieldset"][data-object-type="User"]`).then(
       ($el) => {
         cy.log(
-          `Found by ObjectFieldset+data-object-id=main: ${$el.length > 0}`
+          `Found by ObjectFieldset+data-object-type=User: ${$el.length > 0}`
         );
       }
     );
+
+    // Check if data-object-id exists (it might not in this test)
+    cy.get(`[data-testid="ObjectFieldset"]`).then(($el) => {
+      const hasObjectId = $el.attr("data-object-id") !== undefined;
+      cy.log(`Has data-object-id attribute: ${hasObjectId}`);
+      if (hasObjectId) {
+        cy.log(`data-object-id value: ${$el.attr("data-object-id")}`);
+      }
+    });
 
     cy.get(`[data-testid*="ObjectFieldset"][data-object-type="User"]`).then(
       ($el) => {
@@ -94,6 +100,22 @@ describe("ObjectFieldsetInteractable", () => {
 
     // Verify it can find the element
     fieldset.should("exist");
+  });
+
+  it("finds the fieldset even when objectType is not explicitly provided", () => {
+    // In this test, we don't explicitly provide the objectType
+    mount(
+      <ObjectProvider schema={testBridge} data={testData}>
+        <ObjectFieldset />
+      </ObjectProvider>
+    );
+
+    // Create the interactable with the expected objectType
+    // This should work because we've made the interactable more flexible
+    const fieldset = objectFieldset("User");
+
+    // Use the flexible selector directly to verify it can find the element
+    cy.get(fieldset.flexibleSelector()).should("exist");
   });
 
   it("gets all field names in the fieldset", () => {
@@ -257,7 +279,11 @@ describe("ObjectFieldsetInteractable", () => {
             objectType="User"
             objectId="required-disabled-test"
           >
-            <div data-testid="UserObjectFieldset" data-object-id="User">
+            <div
+              data-testid="ObjectFieldset"
+              data-object-type="User"
+              data-object-id="required-disabled-test"
+            >
               {/* Manually create fields to test required and disabled states */}
               <div className="MuiFormControl-root">
                 <label className="MuiFormLabel-root">
@@ -506,5 +532,49 @@ describe("ObjectFieldsetInteractable", () => {
     // Verify the input fields were updated
     userFieldset.getFieldValue("name").should("equal", "Jane Smith");
     addressFieldset.getFieldValue("city").should("equal", "New City");
+  });
+
+  it("verifies data-object-type and data-object-id attributes", () => {
+    // Create a component with explicit object type and ID
+    mount(
+      <ObjectProvider
+        schema={testBridge}
+        data={testData}
+        objectType="User"
+        objectId="test-user-123"
+      >
+        <ObjectFieldset />
+      </ObjectProvider>
+    );
+
+    const fieldset = objectFieldset("User");
+
+    // Verify the fieldset exists
+    fieldset.should("exist");
+
+    // Use the new methods to verify data attributes
+    fieldset.getObjectType().should("equal", "User");
+    fieldset.getObjectId().should("equal", "test-user-123");
+
+    // Test with a different object type and ID
+    mount(
+      <ObjectProvider
+        schema={testBridge}
+        data={testData}
+        objectType="Customer"
+        objectId="customer-456"
+      >
+        <ObjectFieldset />
+      </ObjectProvider>
+    );
+
+    const customerFieldset = objectFieldset("Customer");
+
+    // Verify the fieldset exists
+    customerFieldset.should("exist");
+
+    // Use the new methods to verify data attributes
+    customerFieldset.getObjectType().should("equal", "Customer");
+    customerFieldset.getObjectId().should("equal", "customer-456");
   });
 });

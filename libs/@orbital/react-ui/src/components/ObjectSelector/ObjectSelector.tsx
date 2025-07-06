@@ -26,6 +26,8 @@ export type ObjectSelectorProps = {
   componentName?: string; // The name of the parent component (e.g., "ReferenceSingleField")
   className?: string; // Optional class name for styling
   "data-testid"?: string; // Optional data-testid for testing
+  objectType?: string; // Optional object type for data-object-type attribute
+  objectId?: string; // Optional object ID for data-object-id attribute
   multiple?: boolean; // Whether to allow multiple selections
 };
 
@@ -51,6 +53,8 @@ export function ObjectSelector({
   componentName = "ObjectSelector",
   className,
   "data-testid": dataTestId,
+  objectType,
+  objectId,
   multiple = false,
 }: ObjectSelectorProps) {
   // Generate the data-testid based on componentName or provided dataTestId
@@ -72,7 +76,15 @@ export function ObjectSelector({
     if (multiple) {
       // For multiple mode, show a disabled field with a message (like MultiObjectSelector)
       return (
-        <FormControl fullWidth error={error} margin="dense">
+        <FormControl
+          fullWidth
+          error={error}
+          margin="dense"
+          data-object-type={objectType}
+          {...(objectId !== undefined && {
+            "data-object-id": objectId,
+          })}
+        >
           <InputLabel>{label}</InputLabel>
           <OutlinedInput
             disabled
@@ -104,6 +116,10 @@ export function ObjectSelector({
           variant="outlined"
           data-testid={testId}
           data-field-name={name}
+          data-object-type={objectType}
+          {...(objectId !== undefined && {
+            "data-object-id": objectId,
+          })}
         />
       );
     }
@@ -112,7 +128,13 @@ export function ObjectSelector({
   // For multiple selection mode
   if (multiple) {
     return (
-      <FormControl fullWidth error={error} margin="dense">
+      <FormControl
+        fullWidth
+        error={error}
+        margin="dense"
+        data-object-type={objectType}
+        {...(objectId !== undefined && { "data-object-id": objectId })}
+      >
         <InputLabel id={`${id}-label`}>{label}</InputLabel>
         <Select
           labelId={`${id}-label`}
@@ -192,6 +214,8 @@ export function ObjectSelector({
       variant="outlined"
       data-testid={testId}
       data-field-name={name}
+      data-object-type={objectType}
+      {...(objectId !== undefined && { "data-object-id": objectId })}
       // Use MenuProps to add a custom class that can be used for selection
       SelectProps={{
         MenuProps: {

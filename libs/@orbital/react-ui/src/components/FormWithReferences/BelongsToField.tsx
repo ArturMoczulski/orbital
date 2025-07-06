@@ -84,9 +84,7 @@ function BelongsToField({
       objectType={finalObjectType}
       schema={schema}
       multiple={false}
-      data-testid={
-        finalObjectType ? `${finalObjectType}BelongsToField` : undefined
-      }
+      data-testid="BelongsToField"
     />
   );
 }

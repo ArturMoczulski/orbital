@@ -31,7 +31,7 @@ export class BelongsToFieldInteractable extends ObjectSelectorInteractable {
   ) {
     // Pass the objectType as the dataTestId prefix to the ObjectSelectorInteractable
     // objectType should be in PascalCase when used in component names
-    super(fieldName, parentElement, `${objectType}BelongsToField`, false);
+    super(fieldName, parentElement, "BelongsToField", false, objectType);
     this.objectType = objectType;
   }
 

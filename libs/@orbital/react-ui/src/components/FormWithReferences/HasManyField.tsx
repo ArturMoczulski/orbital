@@ -88,9 +88,7 @@ function HasManyField({
       objectType={finalObjectType}
       schema={schema}
       multiple={true}
-      data-testid={
-        finalObjectType ? `${finalObjectType}HasManyField` : undefined
-      }
+      data-testid="HasManyField"
     />
   );
 }

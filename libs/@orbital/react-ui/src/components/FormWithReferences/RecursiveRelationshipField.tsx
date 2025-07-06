@@ -101,7 +101,7 @@ function RecursiveRelationshipField({
         objectType={finalObjectType}
         schema={schema}
         currentId={currentId}
-        data-testid={`${finalObjectType}RecursiveRelationshipField`}
+        data-testid="RecursiveRelationshipField"
       />
     );
   }
@@ -123,7 +123,7 @@ function RecursiveRelationshipField({
       reference={reference}
       objectType={finalObjectType}
       schema={schema}
-      data-testid={`${finalObjectType}RecursiveRelationshipField`}
+      data-testid="RecursiveRelationshipField"
     />
   );
 }

@@ -24,7 +24,7 @@ export class ChildrenFieldInteractable extends ObjectSelectorInteractable {
   ) {
     // Pass the correct data-testid prefix to the ObjectSelectorInteractable
     // and set multiple to true since this is a multi-select field
-    super(fieldName, parentElement, `${objectType}ChildrenField`, true);
+    super(fieldName, parentElement, "ChildrenField", true, objectType);
     this.objectType = objectType;
   }
 }

@@ -98,7 +98,7 @@ function ChildrenField({
       schema={schema}
       currentId={currentId} // Filter out the current item to prevent self-reference
       multiple={true}
-      data-testid={dataTestId || `${finalObjectType}ChildrenField`}
+      data-testid={dataTestId || "ChildrenField"}
     />
   );
 }

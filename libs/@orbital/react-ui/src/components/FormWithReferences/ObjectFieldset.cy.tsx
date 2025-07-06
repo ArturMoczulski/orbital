@@ -51,27 +51,16 @@ describe("ObjectFieldset", () => {
       cy.log(`data-object-type: ${$el.attr("data-object-type")}`);
     });
 
-    // Check the objectType from the context
-    cy.window().then((win) => {
-      // Add a temporary property to window to expose the objectType
-      const originalCreateElement = win.React.createElement;
-      win.React.createElement = function (type, props, ...children) {
-        if (props && props.className === "ObjectFieldsetDebug") {
-          cy.log(`ObjectType from context: ${props.objectType}`);
-        }
-        return originalCreateElement.call(win.React, type, props, ...children);
-      };
+    // Check for the data-object-type attribute directly
+    cy.get('[data-testid="ObjectFieldset"]').should(
+      "have.attr",
+      "data-object-type"
+    );
 
-      // Mount a component that will expose the objectType
-      mount(
-        <ObjectProvider schema={testBridge} data={testData}>
-          {({ objectType }) => (
-            <>
-              <div className="ObjectFieldsetDebug" objectType={objectType} />
-              <ObjectFieldset />
-            </>
-          )}
-        </ObjectProvider>
+    // Log the data-object-type value
+    cy.get('[data-testid="ObjectFieldset"]').then(($el) => {
+      cy.log(
+        `ObjectType from data-object-type: ${$el.attr("data-object-type")}`
       );
     });
   });
@@ -204,7 +193,9 @@ describe("ObjectFieldset", () => {
 
     // Check that fields are rendered
     cy.get('input[name="title"]').should("exist");
-    cy.get('[data-testid="PostParentField"]').should("exist");
+    cy.get('[data-testid="ParentField"][data-object-type="Post"]').should(
+      "exist"
+    );
   });
 
   it("works with multiple fieldsets in a single form", () => {
@@ -284,8 +275,12 @@ describe("ObjectFieldset", () => {
     cy.get('input[name="zipCode"]').should("exist");
 
     // Check that the form contains both fieldsets
-    cy.get('[data-testid="UserObjectFieldset"]').should("exist");
-    cy.get('[data-testid="AddressObjectFieldset"]').should("exist");
+    cy.get('[data-testid="ObjectFieldset"][data-object-type="User"]').should(
+      "exist"
+    );
+    cy.get('[data-testid="ObjectFieldset"][data-object-type="Address"]').should(
+      "exist"
+    );
 
     // Add a wait to ensure the form is fully rendered
     cy.wait(100);

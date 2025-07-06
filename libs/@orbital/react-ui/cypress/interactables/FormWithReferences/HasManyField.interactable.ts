@@ -28,7 +28,7 @@ export class HasManyFieldInteractable extends ObjectSelectorInteractable {
   ) {
     // Pass the objectType as the dataTestId prefix to the ObjectSelectorInteractable
     // and set multiple to true since this is an array field
-    super(fieldName, parentElement, `${objectType}HasManyField`, true);
+    super(fieldName, parentElement, "HasManyField", true, objectType);
     this.objectType = objectType;
   }
 

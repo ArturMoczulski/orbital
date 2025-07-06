@@ -11,6 +11,7 @@ import { FormInputInteractable } from "../AutoForm/FormInput.interactable";
 export class ObjectSelectorItem {
   private element: JQuery<HTMLElement>;
   private id: string;
+  private objectType: string | undefined;
   private name: string;
   private isChecked: boolean;
 
@@ -18,6 +19,7 @@ export class ObjectSelectorItem {
     this.element = element;
     this.id =
       element.attr("data-value-id") || element.attr("data-object-id") || "";
+    this.objectType = element.attr("data-object-type");
     this.name = element.text().trim();
     this.isChecked = element.find(".Mui-checked").length > 0;
   }
@@ -27,6 +29,13 @@ export class ObjectSelectorItem {
    */
   getId(): string {
     return this.id;
+  }
+
+  /**
+   * Get the object type of the item if available
+   */
+  getObjectType(): string | undefined {
+    return this.objectType;
   }
 
   /**
@@ -64,12 +73,14 @@ export class ObjectSelectorInteractable extends FormInputInteractable<
    * @param parentElement Optional parent element to scope the field within
    * @param dataTestId Optional data-testid to use for selecting elements
    * @param multiple Whether this is a multi-select field
+   * @param objectType Optional object type for data-object-type attribute
    */
   constructor(
     fieldName: string,
     parentElement?: () => Cypress.Chainable<JQuery<HTMLElement>>,
     private dataTestId: string = "ObjectSelector",
-    private multiple: boolean = false
+    private multiple: boolean = false,
+    protected objectType?: string
   ) {
     super(fieldName, parentElement);
   }
@@ -584,6 +595,28 @@ export class ObjectSelectorInteractable extends FormInputInteractable<
     // For multi-select, clear by setting empty array
     return this.selectById(this.multiple ? [] : "");
   }
+
+  /**
+   * Get the object type from the component's data-object-type attribute
+   * @returns A chainable that resolves to the object type or undefined if not set
+   */
+  getObjectType(): Cypress.Chainable<string | undefined> {
+    return this.getElement().then(($el) => {
+      const objectType = $el.attr("data-object-type");
+      return cy.wrap(objectType || undefined);
+    });
+  }
+
+  /**
+   * Get the object ID from the component's data-object-id attribute
+   * @returns A chainable that resolves to the object ID or undefined if not set
+   */
+  getObjectId(): Cypress.Chainable<string | undefined> {
+    return this.getElement().then(($el) => {
+      const objectId = $el.attr("data-object-id");
+      return cy.wrap(objectId || undefined);
+    });
+  }
 }
 
 /**
@@ -598,13 +631,15 @@ export function objectSelector(
   fieldName: string,
   parentElement?: () => Cypress.Chainable<JQuery<HTMLElement>>,
   dataTestId: string = "ObjectSelector",
-  multiple: boolean = false
+  multiple: boolean = false,
+  objectType?: string
 ): ObjectSelectorInteractable {
   return new ObjectSelectorInteractable(
     fieldName,
     parentElement,
     dataTestId,
-    multiple
+    multiple,
+    objectType
   );
 }
 

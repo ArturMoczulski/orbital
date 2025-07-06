@@ -39,6 +39,12 @@ export interface ObjectFieldsetProps {
    * Optional children to render after the fields
    */
   children?: React.ReactNode;
+
+  /**
+   * Optional object ID to use for the data-object-id attribute
+   * If not provided, will use the objectId from useObject()
+   */
+  objectId?: string;
 }
 
 /**
@@ -52,9 +58,16 @@ export function ObjectFieldset({
   showInlineError,
   className,
   children,
+  objectId: propObjectId,
 }: ObjectFieldsetProps) {
   // Get object data and schema from ObjectProvider
-  const { schema, data, objectType, updateData } = useObject(objectKey);
+  const {
+    schema,
+    data,
+    objectType,
+    objectId: contextObjectId,
+    updateData,
+  } = useObject(objectKey);
 
   // Create a uniforms-compatible context
   const formContext = useMemo(() => {
@@ -151,8 +164,12 @@ export function ObjectFieldset({
   return (
     <div
       className={className}
-      data-testid={`${objectType}ObjectFieldset`}
-      data-object-id={objectKey}
+      data-testid="ObjectFieldset"
+      {...((propObjectId !== undefined ? propObjectId : contextObjectId) !==
+        undefined && {
+        "data-object-id":
+          propObjectId !== undefined ? propObjectId : contextObjectId,
+      })}
       data-object-type={objectType}
     >
       {/* Provide the uniforms context */}

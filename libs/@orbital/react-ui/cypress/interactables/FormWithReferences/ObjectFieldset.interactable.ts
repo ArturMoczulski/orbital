@@ -34,12 +34,27 @@ export class ObjectFieldsetInteractable extends CypressInteractable<string> {
 
   /**
    * Override the selector method to target the fieldset
-   * This looks for a div with data-testid="${objectType}ObjectFieldset"
-   * or with data-object-id attribute
+   * This looks for a div with data-testid="ObjectFieldset" and data-object-type="${objectType}"
+   * or with data-object-type attribute
    */
   override selector() {
     // First try the specific PascalCase format
-    return `[data-testid="${this.objectType}ObjectFieldset"]`;
+    return `[data-testid="ObjectFieldset"][data-object-type="${this.objectType}"]`;
+  }
+
+  /**
+   * Get a more flexible selector that will match the fieldset even if data-object-type is not set
+   * or has a different value
+   */
+  flexibleSelector() {
+    return [
+      // Try with data-object-type
+      `[data-testid="ObjectFieldset"][data-object-type="${this.objectType}"]`,
+      // Try with just the data-testid
+      `[data-testid="ObjectFieldset"]`,
+      // Try with data-object-type
+      `[data-object-type="${this.objectType}"]`,
+    ].join(", ");
   }
 
   /**
@@ -57,17 +72,8 @@ export class ObjectFieldsetInteractable extends CypressInteractable<string> {
       cy.log(`Element not found with selector: ${this.selector()}`);
       cy.log(`Trying alternative selectors for objectType: ${this.objectType}`);
 
-      // Try with data-object-type
-      return cy.get(
-        [
-          // Try with data-object-type
-          `[data-testid*="ObjectFieldset"][data-object-type="${this.objectType}"]`,
-          // Try with lowercase objectType
-          `[data-testid="${this.objectType.toLowerCase()}ObjectFieldset"]`,
-          // Try with data-testid containing the objectType
-          `[data-testid*="${this.objectType}"]`,
-        ].join(", ")
-      );
+      // Use the flexible selector
+      return cy.get(this.flexibleSelector());
     });
   }
 
@@ -203,6 +209,28 @@ export class ObjectFieldsetInteractable extends CypressInteractable<string> {
    */
   isFieldDisabled(fieldName: string): Cypress.Chainable<boolean> {
     return this.field(fieldName).isDisabled();
+  }
+
+  /**
+   * Get the object type from the component's data-object-type attribute
+   * @returns A chainable that resolves to the object type or undefined if not set
+   */
+  getObjectType(): Cypress.Chainable<string | undefined> {
+    return this.getElement().then(($el) => {
+      const objectType = $el.attr("data-object-type");
+      return cy.wrap(objectType || undefined);
+    });
+  }
+
+  /**
+   * Get the object ID from the component's data-object-id attribute
+   * @returns A chainable that resolves to the object ID or undefined if not set
+   */
+  getObjectId(): Cypress.Chainable<string | undefined> {
+    return this.getElement().then(($el) => {
+      const objectId = $el.attr("data-object-id");
+      return cy.wrap(objectId || undefined);
+    });
   }
 }
 

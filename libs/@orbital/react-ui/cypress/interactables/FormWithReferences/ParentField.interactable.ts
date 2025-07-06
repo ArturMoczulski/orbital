@@ -24,7 +24,7 @@ export class ParentFieldInteractable extends ObjectSelectorInteractable {
   ) {
     // Pass the correct data-testid prefix to the ObjectSelectorInteractable
     // and set multiple to false since this is a single-select field
-    super(fieldName, parentElement, `${objectType}ParentField`, false);
+    super(fieldName, parentElement, "ParentField", false, objectType);
     this.objectType = objectType;
   }
 }

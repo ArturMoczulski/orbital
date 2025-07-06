@@ -92,7 +92,7 @@ function ParentField({
       schema={schema}
       currentId={value} // Filter out the current item to prevent self-reference
       multiple={false}
-      data-testid={dataTestId || `${finalObjectType}ParentField`}
+      data-testid={dataTestId || "ParentField"}
     />
   );
 }
