@@ -12,10 +12,10 @@ import {
 import { inputField } from "../AutoForm/FormInput.interactable";
 import belongsToField, {
   BelongsToFieldInteractable,
-} from "./BelongsToField.interactable.js";
+} from "./BelongsToField.interactable";
 import hasManyField, {
   HasManyFieldInteractable,
-} from "./HasManyField.interactable.js";
+} from "./HasManyField.interactable";
 
 /**
  * Type for form input field methods with reference field support

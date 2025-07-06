@@ -1,7 +1,10 @@
 import { ReferenceMetadata } from "@orbital/core/src/zod/reference/reference";
-import { camelCase, startCase } from "lodash";
 import { connectField } from "uniforms";
-import ObjectSelector from "../ObjectSelector";
+import { ZodBridge } from "uniforms-bridge-zod";
+import { z } from "zod";
+import { useObjectSchema } from "./ObjectSchemaContext";
+import ReferenceField from "./ReferenceField";
+import { ZodReferencesBridge } from "./ZodReferencesBridge";
 
 export type HasManyFieldProps = {
   disabled?: boolean;
@@ -18,7 +21,8 @@ export type HasManyFieldProps = {
   reference?: ReferenceMetadata & {
     options: any[];
   };
-  objectType: string; // Required prop to specify the containing object type
+  objectType?: string; // Optional, can be inferred from schema or context
+  schema?: z.ZodType<any> | ZodBridge<any> | ZodReferencesBridge<any>; // Optional, can be provided via context
 };
 
 function HasManyField({
@@ -34,90 +38,59 @@ function HasManyField({
   required,
   value = [],
   reference,
-  objectType, // Required prop, no default value
+  objectType,
+  schema: propSchema,
 }: HasManyFieldProps) {
-  const toPascalCase = (str: string): string =>
-    startCase(camelCase(str)).replace(/\s/g, "");
-
-  // Helper to get a proper label from field name or reference
-  const getLabel = (): string | undefined => {
-    // Use provided label if available
-    if (label) return label;
-
-    // Use reference name if available
-    if (reference?.name) return toPascalCase(reference.name);
-
-    // Extract reference name from field name (e.g., "tagIds" -> "Tags")
-    if (name.endsWith("Ids")) {
-      const referenceName = name.slice(0, -3); // Remove 'Ids' suffix
-      return toPascalCase(referenceName);
+  // Create a wrapper for onChange that can handle both string and string[] values
+  // but will only pass string[] values to the original onChange function
+  const handleChange = (newValue: string | string[]) => {
+    if (Array.isArray(newValue)) {
+      onChange(newValue);
+    } else if (newValue === "") {
+      // Empty string means no selection, so pass empty array
+      onChange([]);
+    } else {
+      // Single string value, convert to array with one item
+      onChange([newValue]);
     }
-
-    return undefined;
   };
 
-  // If no reference options are provided, fall back to a disabled field
-  if (!reference || !reference.options || reference.options.length === 0) {
-    return (
-      <ObjectSelector
-        multiple={true}
-        disabled={true}
-        error={error}
-        errorMessage={errorMessage || "No options available"}
-        id={id}
-        label={getLabel()}
-        name={name}
-        onChange={(value) => {
-          if (Array.isArray(value)) {
-            onChange(value);
-          } else {
-            onChange([]);
-          }
-        }}
-        placeholder={placeholder}
-        readOnly={readOnly}
-        required={required}
-        value={value}
-        options={[]}
-        data-testid={`${objectType}HasManyField`}
-      />
-    );
+  // Try to get schema and objectType from context if not provided as prop
+  let contextSchema;
+  let contextObjectType;
+  try {
+    const context = useObjectSchema();
+    contextSchema = context.schema;
+    contextObjectType = context.objectType;
+  } catch (error) {
+    // Context not available, will use props only
   }
 
-  // Get the foreign field to display and use as value
-  const foreignField = reference.foreignField || "_id";
-  const displayField = "name"; // Assuming all referenced objects have a name field
+  // Use provided schema or get from context
+  const schema = propSchema || contextSchema;
+  // Use provided objectType or get from context
+  const finalObjectType = objectType || contextObjectType;
 
   return (
-    <ObjectSelector
-      multiple={true}
+    <ReferenceField
       disabled={disabled}
       error={error}
       errorMessage={errorMessage}
       id={id}
-      label={getLabel()}
+      label={label}
       name={name}
-      onChange={(value) => {
-        // Since this is a HasManyField, we always expect an array
-        // But ObjectSelector can return string | string[], so we need to handle both
-        if (Array.isArray(value)) {
-          onChange(value);
-        } else if (value === "") {
-          // Empty string means no selection, so pass empty array
-          onChange([]);
-        } else {
-          // Single string value, convert to array with one item
-          onChange([value]);
-        }
-      }}
+      onChange={handleChange}
       placeholder={placeholder}
       readOnly={readOnly}
       required={required}
       value={value}
-      options={reference.options}
-      idField={foreignField}
-      displayField={displayField}
-      data-testid={`${objectType}HasManyField`}
+      reference={reference}
+      objectType={finalObjectType}
+      schema={schema}
+      multiple={true}
+      data-testid={
+        finalObjectType ? `${finalObjectType}HasManyField` : undefined
+      }
     />
   );
 }

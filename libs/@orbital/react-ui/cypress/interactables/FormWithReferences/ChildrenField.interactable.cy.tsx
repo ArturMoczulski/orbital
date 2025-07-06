@@ -10,6 +10,7 @@ import { ZodBridge } from "uniforms-bridge-zod";
 import { AutoForm } from "uniforms-mui";
 import { z } from "zod";
 import ChildrenField from "../../../src/components/FormWithReferences/ChildrenField";
+import { ObjectSchemaProvider } from "../../../src/components/FormWithReferences/ObjectSchemaContext";
 import { childrenField } from "./ChildrenField.interactable";
 
 describe("ChildrenField.interactable", () => {
@@ -70,25 +71,26 @@ describe("ChildrenField.interactable", () => {
       : nodeOptions;
 
     return (
-      <AutoForm
-        schema={new ZodBridge({ schema: formSchema })}
-        model={{ childrenIds: value }}
-        onSubmit={() => {}}
-      >
-        <ChildrenField
-          name="childrenIds"
-          objectType="Node"
-          disabled={disabled}
-          required={required}
-          options={filteredOptions}
-          onChange={handleChange}
-          reference={{
-            ...referenceMetadata,
-            options: filteredOptions,
-          }}
-          currentId={currentNodeId}
-        />
-      </AutoForm>
+      <ObjectSchemaProvider schema={formSchema} objectType="Node">
+        <AutoForm
+          schema={new ZodBridge({ schema: formSchema })}
+          model={{ childrenIds: value }}
+          onSubmit={() => {}}
+        >
+          <ChildrenField
+            name="childrenIds"
+            disabled={disabled}
+            required={required}
+            options={filteredOptions}
+            onChange={handleChange}
+            reference={{
+              ...referenceMetadata,
+              options: filteredOptions,
+            }}
+            currentId={currentNodeId}
+          />
+        </AutoForm>
+      </ObjectSchemaProvider>
     );
   };
 
@@ -196,21 +198,22 @@ describe("ChildrenField.interactable", () => {
   it("should handle empty reference options gracefully", () => {
     // Create a test component with no options
     const TestFormNoOptions = () => (
-      <AutoForm
-        schema={new ZodBridge({ schema })}
-        model={{ childrenIds: [] }}
-        onSubmit={() => {}}
-      >
-        <ChildrenField
-          name="childrenIds"
-          objectType="Node"
-          reference={{
-            ...referenceMetadata,
-            options: [],
-          }}
-          currentId=""
-        />
-      </AutoForm>
+      <ObjectSchemaProvider schema={schema} objectType="Node">
+        <AutoForm
+          schema={new ZodBridge({ schema })}
+          model={{ childrenIds: [] }}
+          onSubmit={() => {}}
+        >
+          <ChildrenField
+            name="childrenIds"
+            reference={{
+              ...referenceMetadata,
+              options: [],
+            }}
+            currentId=""
+          />
+        </AutoForm>
+      </ObjectSchemaProvider>
     );
 
     mount(<TestFormNoOptions />);
@@ -227,34 +230,36 @@ describe("ChildrenField.interactable", () => {
     const TestFormWithMultipleFields = () => (
       <div>
         <div data-testid="first-container">
-          <AutoForm
-            schema={new ZodBridge({ schema })}
-            model={{ childrenIds: ["node1", "node2"] }}
-            onSubmit={() => {}}
-          >
-            <ChildrenField
-              name="childrenIds"
-              objectType="Node"
-              options={nodeOptions}
-              reference={referenceMetadata}
-              currentId=""
-            />
-          </AutoForm>
+          <ObjectSchemaProvider schema={schema} objectType="Node">
+            <AutoForm
+              schema={new ZodBridge({ schema })}
+              model={{ childrenIds: ["node1", "node2"] }}
+              onSubmit={() => {}}
+            >
+              <ChildrenField
+                name="childrenIds"
+                options={nodeOptions}
+                reference={referenceMetadata}
+                currentId=""
+              />
+            </AutoForm>
+          </ObjectSchemaProvider>
         </div>
         <div data-testid="second-container">
-          <AutoForm
-            schema={new ZodBridge({ schema })}
-            model={{ childrenIds: ["node3", "node4"] }}
-            onSubmit={() => {}}
-          >
-            <ChildrenField
-              name="childrenIds"
-              objectType="Node"
-              options={nodeOptions}
-              reference={referenceMetadata}
-              currentId=""
-            />
-          </AutoForm>
+          <ObjectSchemaProvider schema={schema} objectType="Node">
+            <AutoForm
+              schema={new ZodBridge({ schema })}
+              model={{ childrenIds: ["node3", "node4"] }}
+              onSubmit={() => {}}
+            >
+              <ChildrenField
+                name="childrenIds"
+                options={nodeOptions}
+                reference={referenceMetadata}
+                currentId=""
+              />
+            </AutoForm>
+          </ObjectSchemaProvider>
         </div>
       </div>
     );
@@ -287,19 +292,20 @@ describe("ChildrenField.interactable", () => {
   it("should handle error state", () => {
     // Mount a basic form first
     mount(
-      <AutoForm
-        schema={new ZodBridge({ schema })}
-        model={{ childrenIds: ["node1", "node2"] }}
-        onSubmit={() => {}}
-      >
-        <ChildrenField
-          name="childrenIds"
-          objectType="Node"
-          options={nodeOptions}
-          reference={referenceMetadata}
-          currentId=""
-        />
-      </AutoForm>
+      <ObjectSchemaProvider schema={schema} objectType="Node">
+        <AutoForm
+          schema={new ZodBridge({ schema })}
+          model={{ childrenIds: ["node1", "node2"] }}
+          onSubmit={() => {}}
+        >
+          <ChildrenField
+            name="childrenIds"
+            options={nodeOptions}
+            reference={referenceMetadata}
+            currentId=""
+          />
+        </AutoForm>
+      </ObjectSchemaProvider>
     );
 
     const field = childrenField("childrenIds", "Node");

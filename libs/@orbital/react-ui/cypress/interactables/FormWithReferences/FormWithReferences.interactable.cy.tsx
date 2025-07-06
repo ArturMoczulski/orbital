@@ -29,14 +29,14 @@ describe("FormWithReferences Interactable", () => {
     description: z.string().optional(),
     worldId: z.string().reference({
       schema: worldSchema,
-      type: RelationshipType.MANY_TO_ONE,
+      type: RelationshipType.BELONGS_TO,
       name: "world",
     }),
     tags: z
       .array(z.string())
       .reference({
         schema: z.object({ _id: z.string(), name: z.string() }),
-        type: RelationshipType.MANY_TO_MANY,
+        type: RelationshipType.HAS_MANY,
         name: "tag",
       })
       .optional(),
@@ -245,7 +245,7 @@ describe("FormWithReferences Interactable", () => {
         description: z.string().optional(),
         worldId: z.string().reference({
           schema: worldSchema,
-          type: RelationshipType.MANY_TO_ONE,
+          type: RelationshipType.BELONGS_TO,
           name: "world",
         }),
       })

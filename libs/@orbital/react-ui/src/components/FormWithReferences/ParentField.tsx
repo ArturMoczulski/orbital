@@ -1,7 +1,10 @@
 import { ReferenceMetadata } from "@orbital/core/src/zod/reference/reference";
-import { camelCase, startCase } from "lodash";
 import { connectField } from "uniforms";
-import ObjectSelector from "../ObjectSelector";
+import { ZodBridge } from "uniforms-bridge-zod";
+import { z } from "zod";
+import { useObjectSchema } from "./ObjectSchemaContext";
+import ReferenceField from "./ReferenceField";
+import { ZodReferencesBridge } from "./ZodReferencesBridge";
 
 export type ParentFieldProps = {
   disabled?: boolean;
@@ -18,7 +21,8 @@ export type ParentFieldProps = {
   reference?: ReferenceMetadata & {
     options: any[];
   };
-  objectType: string; // Required prop to specify the containing object type
+  objectType?: string; // Optional, can be inferred from schema or context
+  schema?: z.ZodType<any> | ZodBridge<any> | ZodReferencesBridge<any>; // Optional, can be provided via context
   "data-testid"?: string; // Allow passing a custom testid
 };
 
@@ -26,7 +30,7 @@ export type ParentFieldProps = {
  * ParentField is a specialized component for handling parent relationships in recursive structures.
  * It's used for fields like "parentId" that reference a single parent node.
  *
- * This component directly uses ObjectSelector and adds filtering to prevent self-reference.
+ * This component uses ReferenceField and adds filtering to prevent self-reference.
  */
 function ParentField({
   disabled,
@@ -42,42 +46,26 @@ function ParentField({
   value,
   reference,
   objectType,
+  schema: propSchema,
   "data-testid": dataTestId,
 }: ParentFieldProps) {
-  // Filter out the current item from options to prevent self-reference
-  // This is important for recursive relationships to avoid circular references
-  const currentId = value;
+  // Try to get schema and objectType from context if not provided as prop
+  let contextSchema;
+  let contextObjectType;
+  try {
+    const context = useObjectSchema();
+    contextSchema = context.schema;
+    contextObjectType = context.objectType;
+  } catch (error) {
+    // Context not available, will use props only
+  }
 
-  // Create a modified reference with filtered options
-  const filteredReference = reference && {
-    ...reference,
-    options:
-      currentId && reference.options
-        ? reference.options.filter((option) => option._id !== currentId)
-        : reference?.options || [],
-  };
-
-  const toPascalCase = (str: string): string =>
-    startCase(camelCase(str)).replace(/\s/g, "");
-
-  // Helper to get a proper label from field name or reference
-  const getLabel = (): string | undefined => {
-    // Use provided label if available
-    if (label) return label;
-
-    // Use reference name if available
-    if (filteredReference?.name) return toPascalCase(filteredReference.name);
-
-    // Extract reference name from field name (e.g., "worldId" -> "World")
-    if (name.endsWith("Id")) {
-      const referenceName = name.slice(0, -2); // Remove 'Id' suffix
-      return toPascalCase(referenceName);
-    }
-
-    return undefined;
-  };
-
-  // Handle the onChange event to ensure we always return a string
+  // Use provided schema or get from context
+  const schema = propSchema || contextSchema;
+  // Use provided objectType or get from context
+  const finalObjectType = objectType || contextObjectType;
+  // Create a wrapper for onChange that can handle both string and string[] values
+  // but will only pass string values to the original onChange function
   const handleChange = (newValue: string | string[]) => {
     if (Array.isArray(newValue)) {
       onChange(newValue.length > 0 ? newValue[0] : "");
@@ -86,52 +74,25 @@ function ParentField({
     }
   };
 
-  // If no reference options are provided, fall back to a disabled field
-  if (
-    !filteredReference ||
-    !filteredReference.options ||
-    filteredReference.options.length === 0
-  ) {
-    return (
-      <ObjectSelector
-        disabled={true}
-        error={error}
-        errorMessage={errorMessage || "No options available"}
-        id={id}
-        label={getLabel()}
-        name={name}
-        onChange={handleChange}
-        placeholder={placeholder}
-        readOnly={readOnly}
-        required={required}
-        value={value}
-        options={[]}
-        data-testid={dataTestId || `${objectType}ParentField`}
-      />
-    );
-  }
-
-  // Get the foreign field to display and use as value
-  const foreignField = filteredReference.foreignField || "_id";
-  const displayField = "name"; // Assuming all referenced objects have a name field
-
   return (
-    <ObjectSelector
+    <ReferenceField
       disabled={disabled}
       error={error}
       errorMessage={errorMessage}
       id={id}
-      label={getLabel()}
+      label={label}
       name={name}
       onChange={handleChange}
       placeholder={placeholder}
       readOnly={readOnly}
       required={required}
       value={value}
-      options={filteredReference.options}
-      idField={foreignField}
-      displayField={displayField}
-      data-testid={dataTestId || `${objectType}ParentField`}
+      reference={reference}
+      objectType={finalObjectType}
+      schema={schema}
+      currentId={value} // Filter out the current item to prevent self-reference
+      multiple={false}
+      data-testid={dataTestId || `${finalObjectType}ParentField`}
     />
   );
 }

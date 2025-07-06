@@ -3,6 +3,7 @@ import { ZodBridge } from "uniforms-bridge-zod";
 import { AutoField, AutoForm as UniformsAutoForm } from "uniforms-mui";
 import BelongsToField from "./BelongsToField";
 import HasManyField from "./HasManyField";
+import { ObjectSchemaProvider } from "./ObjectSchemaContext";
 import {
   inferObjectTypeFromSchema,
   ZodReferencesBridge,
@@ -22,8 +23,8 @@ const fieldTypes = {
  * Provider component that adds reference field support to Uniforms
  */
 export function ReferenceFormProvider(props: any) {
-  // Extract objectType from props
-  const { objectType, ...otherProps } = props;
+  // Extract schema and objectType from props
+  const { schema, objectType, ...otherProps } = props;
 
   // Create a context for the form
   const context = React.useMemo(() => {
@@ -64,6 +65,7 @@ export function ReferenceFormProvider(props: any) {
             {...fieldProps}
             reference={reference}
             objectType={objectType}
+            schema={schema}
           />
         );
       };
@@ -83,6 +85,7 @@ export function ReferenceFormProvider(props: any) {
             {...fieldProps}
             reference={reference}
             objectType={objectType}
+            schema={schema}
           />
         );
       };
@@ -95,12 +98,14 @@ export function ReferenceFormProvider(props: any) {
 
   // Render the form with our custom context and component detector
   return (
-    // @ts-ignore - TypeScript doesn't understand the componentDetectorContext API correctly
-    <AutoField.componentDetectorContext.Provider
-      value={customComponentDetector}
-    >
-      <UniformsAutoForm {...formProps} context={context} />
-    </AutoField.componentDetectorContext.Provider>
+    <ObjectSchemaProvider schema={schema} objectType={objectType}>
+      {/* @ts-ignore - TypeScript doesn't understand the componentDetectorContext API correctly */}
+      <AutoField.componentDetectorContext.Provider
+        value={customComponentDetector}
+      >
+        <UniformsAutoForm {...formProps} context={context} />
+      </AutoField.componentDetectorContext.Provider>
+    </ObjectSchemaProvider>
   );
 }
 

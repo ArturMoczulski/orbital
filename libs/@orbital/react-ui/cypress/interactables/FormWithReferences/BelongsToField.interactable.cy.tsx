@@ -10,6 +10,7 @@ import { ZodBridge } from "uniforms-bridge-zod";
 import { AutoForm } from "uniforms-mui";
 import { z } from "zod";
 import BelongsToField from "../../../src/components/FormWithReferences/BelongsToField";
+import { ObjectSchemaProvider } from "../../../src/components/FormWithReferences/ObjectSchemaContext";
 import { belongsToField } from "./BelongsToField.interactable";
 
 describe("BelongsToField.interactable", () => {
@@ -61,21 +62,22 @@ describe("BelongsToField.interactable", () => {
     };
 
     return (
-      <AutoForm
-        schema={new ZodBridge({ schema: formSchema })}
-        model={{ worldId: value }}
-        onSubmit={() => {}}
-      >
-        <BelongsToField
-          name="worldId"
-          objectType="World"
-          disabled={disabled}
-          required={required}
-          options={worldOptions}
-          onChange={handleChange}
-          reference={referenceMetadata}
-        />
-      </AutoForm>
+      <ObjectSchemaProvider schema={formSchema} objectType="World">
+        <AutoForm
+          schema={new ZodBridge({ schema: formSchema })}
+          model={{ worldId: value }}
+          onSubmit={() => {}}
+        >
+          <BelongsToField
+            name="worldId"
+            disabled={disabled}
+            required={required}
+            options={worldOptions}
+            onChange={handleChange}
+            reference={referenceMetadata}
+          />
+        </AutoForm>
+      </ObjectSchemaProvider>
     );
   };
 
@@ -134,20 +136,21 @@ describe("BelongsToField.interactable", () => {
   it("should handle empty options gracefully", () => {
     // Create a test component with no options
     const TestFormNoOptions = () => (
-      <AutoForm
-        schema={new ZodBridge({ schema })}
-        model={{ worldId: "" }}
-        onSubmit={() => {}}
-      >
-        <BelongsToField
-          name="worldId"
-          objectType="World"
-          reference={{
-            ...referenceMetadata,
-            options: [],
-          }}
-        />
-      </AutoForm>
+      <ObjectSchemaProvider schema={schema} objectType="World">
+        <AutoForm
+          schema={new ZodBridge({ schema })}
+          model={{ worldId: "" }}
+          onSubmit={() => {}}
+        >
+          <BelongsToField
+            name="worldId"
+            reference={{
+              ...referenceMetadata,
+              options: [],
+            }}
+          />
+        </AutoForm>
+      </ObjectSchemaProvider>
     );
 
     mount(<TestFormNoOptions />);
@@ -164,32 +167,34 @@ describe("BelongsToField.interactable", () => {
     const TestFormWithMultipleFields = () => (
       <div>
         <div data-testid="first-container">
-          <AutoForm
-            schema={new ZodBridge({ schema })}
-            model={{ worldId: "world1" }}
-            onSubmit={() => {}}
-          >
-            <BelongsToField
-              name="worldId"
-              objectType="World"
-              options={worldOptions}
-              reference={referenceMetadata}
-            />
-          </AutoForm>
+          <ObjectSchemaProvider schema={schema} objectType="World">
+            <AutoForm
+              schema={new ZodBridge({ schema })}
+              model={{ worldId: "world1" }}
+              onSubmit={() => {}}
+            >
+              <BelongsToField
+                name="worldId"
+                options={worldOptions}
+                reference={referenceMetadata}
+              />
+            </AutoForm>
+          </ObjectSchemaProvider>
         </div>
         <div data-testid="second-container">
-          <AutoForm
-            schema={new ZodBridge({ schema })}
-            model={{ worldId: "world2" }}
-            onSubmit={() => {}}
-          >
-            <BelongsToField
-              name="worldId"
-              objectType="World"
-              options={worldOptions}
-              reference={referenceMetadata}
-            />
-          </AutoForm>
+          <ObjectSchemaProvider schema={schema} objectType="World">
+            <AutoForm
+              schema={new ZodBridge({ schema })}
+              model={{ worldId: "world2" }}
+              onSubmit={() => {}}
+            >
+              <BelongsToField
+                name="worldId"
+                options={worldOptions}
+                reference={referenceMetadata}
+              />
+            </AutoForm>
+          </ObjectSchemaProvider>
         </div>
       </div>
     );
@@ -213,18 +218,19 @@ describe("BelongsToField.interactable", () => {
   it("should handle error state", () => {
     // Mount a basic form first
     mount(
-      <AutoForm
-        schema={new ZodBridge({ schema })}
-        model={{ worldId: "world1" }}
-        onSubmit={() => {}}
-      >
-        <BelongsToField
-          name="worldId"
-          objectType="World"
-          options={worldOptions}
-          reference={referenceMetadata}
-        />
-      </AutoForm>
+      <ObjectSchemaProvider schema={schema} objectType="World">
+        <AutoForm
+          schema={new ZodBridge({ schema })}
+          model={{ worldId: "world1" }}
+          onSubmit={() => {}}
+        >
+          <BelongsToField
+            name="worldId"
+            options={worldOptions}
+            reference={referenceMetadata}
+          />
+        </AutoForm>
+      </ObjectSchemaProvider>
     );
 
     const field = belongsToField("worldId", "World");

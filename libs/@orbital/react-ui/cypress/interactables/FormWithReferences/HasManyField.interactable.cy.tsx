@@ -10,6 +10,7 @@ import { ZodBridge } from "uniforms-bridge-zod";
 import { AutoForm } from "uniforms-mui";
 import { z } from "zod";
 import HasManyField from "../../../src/components/FormWithReferences/HasManyField";
+import { ObjectSchemaProvider } from "../../../src/components/FormWithReferences/ObjectSchemaContext";
 import { hasManyField } from "./HasManyField.interactable";
 
 describe("HasManyField.interactable", () => {
@@ -62,21 +63,22 @@ describe("HasManyField.interactable", () => {
     };
 
     return (
-      <AutoForm
-        schema={new ZodBridge({ schema: formSchema })}
-        model={{ tagIds: value }}
-        onSubmit={() => {}}
-      >
-        <HasManyField
-          name="tagIds"
-          objectType="Movie"
-          disabled={disabled}
-          required={required}
-          options={tagOptions}
-          onChange={handleChange}
-          reference={referenceMetadata}
-        />
-      </AutoForm>
+      <ObjectSchemaProvider schema={formSchema} objectType="Movie">
+        <AutoForm
+          schema={new ZodBridge({ schema: formSchema })}
+          model={{ tagIds: value }}
+          onSubmit={() => {}}
+        >
+          <HasManyField
+            name="tagIds"
+            disabled={disabled}
+            required={required}
+            options={tagOptions}
+            onChange={handleChange}
+            reference={referenceMetadata}
+          />
+        </AutoForm>
+      </ObjectSchemaProvider>
     );
   };
 
@@ -163,20 +165,21 @@ describe("HasManyField.interactable", () => {
   it("should handle empty reference options gracefully", () => {
     // Create a test component with no options
     const TestFormNoOptions = () => (
-      <AutoForm
-        schema={new ZodBridge({ schema })}
-        model={{ tagIds: [] }}
-        onSubmit={() => {}}
-      >
-        <HasManyField
-          name="tagIds"
-          objectType="Movie"
-          reference={{
-            ...referenceMetadata,
-            options: [],
-          }}
-        />
-      </AutoForm>
+      <ObjectSchemaProvider schema={schema} objectType="Movie">
+        <AutoForm
+          schema={new ZodBridge({ schema })}
+          model={{ tagIds: [] }}
+          onSubmit={() => {}}
+        >
+          <HasManyField
+            name="tagIds"
+            reference={{
+              ...referenceMetadata,
+              options: [],
+            }}
+          />
+        </AutoForm>
+      </ObjectSchemaProvider>
     );
 
     mount(<TestFormNoOptions />);
@@ -199,32 +202,34 @@ describe("HasManyField.interactable", () => {
     const TestFormWithMultipleFields = () => (
       <div>
         <div data-testid="first-container">
-          <AutoForm
-            schema={new ZodBridge({ schema })}
-            model={{ tagIds: ["tag1", "tag2"] }}
-            onSubmit={() => {}}
-          >
-            <HasManyField
-              name="tagIds"
-              objectType="Movie"
-              options={tagOptions}
-              reference={referenceMetadata}
-            />
-          </AutoForm>
+          <ObjectSchemaProvider schema={schema} objectType="Movie">
+            <AutoForm
+              schema={new ZodBridge({ schema })}
+              model={{ tagIds: ["tag1", "tag2"] }}
+              onSubmit={() => {}}
+            >
+              <HasManyField
+                name="tagIds"
+                options={tagOptions}
+                reference={referenceMetadata}
+              />
+            </AutoForm>
+          </ObjectSchemaProvider>
         </div>
         <div data-testid="second-container">
-          <AutoForm
-            schema={new ZodBridge({ schema })}
-            model={{ tagIds: ["tag3", "tag4"] }}
-            onSubmit={() => {}}
-          >
-            <HasManyField
-              name="tagIds"
-              objectType="Movie"
-              options={tagOptions}
-              reference={referenceMetadata}
-            />
-          </AutoForm>
+          <ObjectSchemaProvider schema={schema} objectType="Movie">
+            <AutoForm
+              schema={new ZodBridge({ schema })}
+              model={{ tagIds: ["tag3", "tag4"] }}
+              onSubmit={() => {}}
+            >
+              <HasManyField
+                name="tagIds"
+                options={tagOptions}
+                reference={referenceMetadata}
+              />
+            </AutoForm>
+          </ObjectSchemaProvider>
         </div>
       </div>
     );
@@ -262,18 +267,19 @@ describe("HasManyField.interactable", () => {
   it("should handle error state", () => {
     // Mount a basic form first
     mount(
-      <AutoForm
-        schema={new ZodBridge({ schema })}
-        model={{ tagIds: ["tag1", "tag2"] }}
-        onSubmit={() => {}}
-      >
-        <HasManyField
-          name="tagIds"
-          objectType="Movie"
-          options={tagOptions}
-          reference={referenceMetadata}
-        />
-      </AutoForm>
+      <ObjectSchemaProvider schema={schema} objectType="Movie">
+        <AutoForm
+          schema={new ZodBridge({ schema })}
+          model={{ tagIds: ["tag1", "tag2"] }}
+          onSubmit={() => {}}
+        >
+          <HasManyField
+            name="tagIds"
+            options={tagOptions}
+            reference={referenceMetadata}
+          />
+        </AutoForm>
+      </ObjectSchemaProvider>
     );
 
     const field = hasManyField("tagIds", "Movie");
