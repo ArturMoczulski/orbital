@@ -23,6 +23,7 @@ export type HasManyFieldProps = {
   };
   objectType?: string; // Optional, can be inferred from schema or context
   schema?: z.ZodType<any> | ZodBridge<any> | ZodReferencesBridge<any>; // Optional, can be provided via context
+  objectId?: string; // Unique identifier for the parent object
 };
 
 function HasManyField({
@@ -40,6 +41,7 @@ function HasManyField({
   reference,
   objectType,
   schema: propSchema,
+  objectId,
 }: HasManyFieldProps) {
   // Create a wrapper for onChange that can handle both string and string[] values
   // but will only pass string[] values to the original onChange function
@@ -89,6 +91,7 @@ function HasManyField({
       schema={schema}
       multiple={true}
       data-testid="HasManyField"
+      objectId={objectId}
     />
   );
 }

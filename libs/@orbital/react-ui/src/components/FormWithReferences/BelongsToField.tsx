@@ -23,6 +23,7 @@ export type BelongsToFieldProps = {
   };
   objectType?: string; // Optional, can be inferred from schema or context
   schema?: z.ZodType<any> | ZodBridge<any> | ZodReferencesBridge<any>; // Optional, can be provided via context
+  objectId?: string; // Optional, used to identify the component in tests
 };
 
 function BelongsToField({
@@ -40,6 +41,7 @@ function BelongsToField({
   reference,
   objectType,
   schema: propSchema,
+  objectId,
 }: BelongsToFieldProps) {
   // Create a wrapper for onChange that can handle both string and string[] values
   // but will only pass string values to the original onChange function
@@ -85,6 +87,7 @@ function BelongsToField({
       schema={schema}
       multiple={false}
       data-testid="BelongsToField"
+      objectId={objectId}
     />
   );
 }

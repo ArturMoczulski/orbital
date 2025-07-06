@@ -22,6 +22,7 @@ export type ChildrenFieldProps = {
     options: any[];
   };
   objectType?: string; // Optional, can be inferred from schema or context
+  objectId?: string; // ID of the object this field belongs to
   schema?: z.ZodType<any> | ZodBridge<any> | ZodReferencesBridge<any>; // Optional, can be provided via context
   currentId?: string; // ID of the current node to filter out from options
   "data-testid"?: string; // Allow passing a custom testid
@@ -47,6 +48,7 @@ function ChildrenField({
   value = [],
   reference,
   objectType,
+  objectId,
   schema: propSchema,
   currentId, // ID of the current node to filter out from options
   "data-testid": dataTestId,
@@ -95,6 +97,7 @@ function ChildrenField({
       value={value}
       reference={reference}
       objectType={finalObjectType}
+      objectId={objectId}
       schema={schema}
       currentId={currentId} // Filter out the current item to prevent self-reference
       multiple={true}

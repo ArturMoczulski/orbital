@@ -153,6 +153,8 @@ export function ObjectSelector({
               label={label}
               data-testid={testId}
               data-field-name={name}
+              data-object-type={objectType}
+              {...(objectId !== undefined && { "data-object-id": objectId })}
             />
           }
           renderValue={(selected) => {
