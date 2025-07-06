@@ -150,11 +150,8 @@ export function ReferenceField({
     return undefined;
   };
 
-  // Filter options if currentId is provided (for recursive relationships)
-  const filteredOptions =
-    currentId && reference?.options
-      ? reference.options.filter((option) => option._id !== currentId)
-      : reference?.options || [];
+  // Get the options from the reference
+  const referenceOptions = reference?.options || [];
 
   // Handle the onChange event based on whether this is a single or multi-select field
   const handleChange = (newValue: string | string[]) => {
@@ -180,7 +177,7 @@ export function ReferenceField({
   };
 
   // If no reference options are provided, fall back to a disabled field
-  if (!reference || !reference.options || reference.options.length === 0) {
+  if (!reference || referenceOptions.length === 0) {
     return (
       <ObjectSelector
         multiple={multiple}
@@ -223,7 +220,7 @@ export function ReferenceField({
       readOnly={readOnly}
       required={required}
       value={value}
-      options={filteredOptions}
+      options={referenceOptions}
       idField={idField}
       displayField={displayField}
       data-testid={

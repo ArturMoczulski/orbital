@@ -22,6 +22,7 @@ export type ParentFieldProps = {
     options: any[];
   };
   objectType?: string; // Optional, can be inferred from schema or context
+  objectId?: string; // Optional object ID for data-object-id attribute
   schema?: z.ZodType<any> | ZodBridge<any> | ZodReferencesBridge<any>; // Optional, can be provided via context
   "data-testid"?: string; // Allow passing a custom testid
 };
@@ -46,6 +47,7 @@ function ParentField({
   value,
   reference,
   objectType,
+  objectId,
   schema: propSchema,
   "data-testid": dataTestId,
 }: ParentFieldProps) {
@@ -89,6 +91,7 @@ function ParentField({
       value={value}
       reference={reference}
       objectType={finalObjectType}
+      objectId={objectId}
       schema={schema}
       currentId={value} // Filter out the current item to prevent self-reference
       multiple={false}

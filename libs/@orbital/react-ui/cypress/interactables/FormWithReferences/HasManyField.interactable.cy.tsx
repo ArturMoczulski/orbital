@@ -361,4 +361,350 @@ describe("HasManyField.interactable", () => {
       .find('[role="combobox"]')
       .should("not.contain.text", "Action");
   });
+
+  describe("Multiple HasManyFields on the same page", () => {
+    // Sample data for testing
+    const tagOptions = [
+      { _id: "tag1", name: "Action" },
+      { _id: "tag2", name: "Comedy" },
+      { _id: "tag3", name: "Drama" },
+      { _id: "tag4", name: "Sci-Fi" },
+    ];
+
+    const genreOptions = [
+      { _id: "genre1", name: "Fiction" },
+      { _id: "genre2", name: "Non-Fiction" },
+      { _id: "genre3", name: "Biography" },
+      { _id: "genre4", name: "History" },
+    ];
+
+    // Define reference metadata for testing
+    const tagReferenceMetadata = {
+      name: "tag",
+      type: RelationshipType.HAS_MANY,
+      foreignField: "_id",
+      options: tagOptions,
+    };
+
+    const genreReferenceMetadata = {
+      name: "genre",
+      type: RelationshipType.HAS_MANY,
+      foreignField: "_id",
+      options: genreOptions,
+    };
+
+    it("should handle same object type but different IDs", () => {
+      // Create a test component with two fields of the same object type but different IDs
+      const TestFormWithSameTypeFields = () => {
+        const [movie1Tags, setMovie1Tags] = useState(["tag1", "tag2"]);
+        const [movie2Tags, setMovie2Tags] = useState(["tag3", "tag4"]);
+
+        return (
+          <div>
+            <div data-testid="movie1-container">
+              <ObjectSchemaProvider schema={schema} objectType="Movie">
+                <AutoForm
+                  schema={new ZodBridge({ schema })}
+                  model={{ tagIds: movie1Tags }}
+                  onSubmit={() => {}}
+                >
+                  <HasManyField
+                    name="tagIds"
+                    options={tagOptions}
+                    reference={tagReferenceMetadata}
+                    objectId="movie-1"
+                    onChange={(newValue) => setMovie1Tags(newValue)}
+                  />
+                </AutoForm>
+              </ObjectSchemaProvider>
+            </div>
+            <div data-testid="movie2-container">
+              <ObjectSchemaProvider schema={schema} objectType="Movie">
+                <AutoForm
+                  schema={new ZodBridge({ schema })}
+                  model={{ tagIds: movie2Tags }}
+                  onSubmit={() => {}}
+                >
+                  <HasManyField
+                    name="tagIds"
+                    options={tagOptions}
+                    reference={tagReferenceMetadata}
+                    objectId="movie-2"
+                    onChange={(newValue) => setMovie2Tags(newValue)}
+                  />
+                </AutoForm>
+              </ObjectSchemaProvider>
+            </div>
+          </div>
+        );
+      };
+
+      mount(<TestFormWithSameTypeFields />);
+
+      // Create parent-scoped interactables for each container
+      const movie1Container = () => cy.get('[data-testid="movie1-container"]');
+      const movie2Container = () => cy.get('[data-testid="movie2-container"]');
+
+      // Create field interactables with the same object type but different IDs
+      const movie1Field = hasManyField(
+        "tagIds",
+        "Movie",
+        movie1Container,
+        "movie-1"
+      );
+      const movie2Field = hasManyField(
+        "tagIds",
+        "Movie",
+        movie2Container,
+        "movie-2"
+      );
+
+      // Verify each field has the correct values
+      cy.wait(100); // Wait for the component to fully render
+
+      // Check first field
+      movie1Field
+        .getElement()
+        .find('[role="combobox"]')
+        .should("contain.text", "Action")
+        .should("contain.text", "Comedy");
+
+      // Check second field
+      movie2Field
+        .getElement()
+        .find('[role="combobox"]')
+        .should("contain.text", "Drama")
+        .should("contain.text", "Sci-Fi");
+
+      // Test interactions with each field
+      movie1Field.selectById(["tag3"]);
+      movie2Field.selectById(["tag1"]);
+
+      // Verify the values were updated correctly
+      movie1Field
+        .getElement()
+        .find('[role="combobox"]')
+        .should("contain.text", "Drama")
+        .should("not.contain.text", "Action")
+        .should("not.contain.text", "Comedy");
+
+      movie2Field
+        .getElement()
+        .find('[role="combobox"]')
+        .should("contain.text", "Action")
+        .should("not.contain.text", "Drama")
+        .should("not.contain.text", "Sci-Fi");
+    });
+
+    it("should handle different object types but same IDs", () => {
+      // Create a schema for the genre field
+      const genreSchema = z.object({
+        genreIds: z.array(z.string()).optional(),
+      });
+
+      // Create a test component with fields of different object types but same IDs
+      const TestFormWithDifferentTypeFields = () => {
+        const [movieTags, setMovieTags] = useState(["tag1", "tag2"]);
+        const [bookGenres, setBookGenres] = useState(["genre1", "genre2"]);
+
+        return (
+          <div>
+            <div data-testid="movie-container">
+              <ObjectSchemaProvider schema={schema} objectType="Movie">
+                <AutoForm
+                  schema={new ZodBridge({ schema })}
+                  model={{ tagIds: movieTags }}
+                  onSubmit={() => {}}
+                >
+                  <HasManyField
+                    name="tagIds"
+                    options={tagOptions}
+                    reference={tagReferenceMetadata}
+                    objectId="shared-id-123"
+                    onChange={(newValue) => setMovieTags(newValue)}
+                  />
+                </AutoForm>
+              </ObjectSchemaProvider>
+            </div>
+            <div data-testid="book-container">
+              <ObjectSchemaProvider schema={genreSchema} objectType="Book">
+                <AutoForm
+                  schema={new ZodBridge({ schema: genreSchema })}
+                  model={{ genreIds: bookGenres }}
+                  onSubmit={() => {}}
+                >
+                  <HasManyField
+                    name="genreIds"
+                    options={genreOptions}
+                    reference={genreReferenceMetadata}
+                    objectId="shared-id-123"
+                    onChange={(newValue) => setBookGenres(newValue)}
+                  />
+                </AutoForm>
+              </ObjectSchemaProvider>
+            </div>
+          </div>
+        );
+      };
+
+      mount(<TestFormWithDifferentTypeFields />);
+
+      // Create parent-scoped interactables for each container
+      const movieContainer = () => cy.get('[data-testid="movie-container"]');
+      const bookContainer = () => cy.get('[data-testid="book-container"]');
+
+      // Create field interactables with different object types but the same ID
+      const movieField = hasManyField(
+        "tagIds",
+        "Movie",
+        movieContainer,
+        "shared-id-123"
+      );
+      const bookField = hasManyField(
+        "genreIds",
+        "Book",
+        bookContainer,
+        "shared-id-123"
+      );
+
+      // Verify each field has the correct values
+      cy.wait(100); // Wait for the component to fully render
+
+      // Check movie field
+      movieField
+        .getElement()
+        .find('[role="combobox"]')
+        .should("contain.text", "Action")
+        .should("contain.text", "Comedy");
+
+      // Check book field
+      bookField
+        .getElement()
+        .find('[role="combobox"]')
+        .should("contain.text", "Fiction")
+        .should("contain.text", "Non-Fiction");
+
+      // Test interactions with each field
+      movieField.selectById(["tag3"]);
+      bookField.selectById(["genre3"]);
+
+      // Verify the values were updated correctly
+      movieField
+        .getElement()
+        .find('[role="combobox"]')
+        .should("contain.text", "Drama")
+        .should("not.contain.text", "Action")
+        .should("not.contain.text", "Comedy");
+
+      bookField
+        .getElement()
+        .find('[role="combobox"]')
+        .should("contain.text", "Biography")
+        .should("not.contain.text", "Fiction")
+        .should("not.contain.text", "Non-Fiction");
+    });
+
+    it("should handle parent element and objectId together", () => {
+      // Create a test component with multiple fields of the same type and ID
+      const TestFormWithMultipleFields = () => {
+        const [movie1Tags, setMovie1Tags] = useState(["tag1", "tag2"]);
+        const [movie2Tags, setMovie2Tags] = useState(["tag3", "tag4"]);
+
+        return (
+          <div>
+            <div data-testid="container-1">
+              <div data-testid="movie-1">
+                <ObjectSchemaProvider schema={schema} objectType="Movie">
+                  <AutoForm
+                    schema={new ZodBridge({ schema })}
+                    model={{ tagIds: movie1Tags }}
+                    onSubmit={() => {}}
+                  >
+                    <HasManyField
+                      name="tagIds"
+                      options={tagOptions}
+                      reference={tagReferenceMetadata}
+                      objectId="movie-id-1"
+                      onChange={(newValue) => setMovie1Tags(newValue)}
+                    />
+                  </AutoForm>
+                </ObjectSchemaProvider>
+              </div>
+            </div>
+            <div data-testid="container-2">
+              <div data-testid="movie-1">
+                <ObjectSchemaProvider schema={schema} objectType="Movie">
+                  <AutoForm
+                    schema={new ZodBridge({ schema })}
+                    model={{ tagIds: movie2Tags }}
+                    onSubmit={() => {}}
+                  >
+                    <HasManyField
+                      name="tagIds"
+                      options={tagOptions}
+                      reference={tagReferenceMetadata}
+                      objectId="movie-id-1"
+                      onChange={(newValue) => setMovie2Tags(newValue)}
+                    />
+                  </AutoForm>
+                </ObjectSchemaProvider>
+              </div>
+            </div>
+          </div>
+        );
+      };
+
+      mount(<TestFormWithMultipleFields />);
+
+      // Create field interactables with parent elements and the same objectId
+      const field1 = hasManyField(
+        "tagIds",
+        "Movie",
+        () => cy.get('[data-testid="container-1"]'),
+        "movie-id-1"
+      );
+      const field2 = hasManyField(
+        "tagIds",
+        "Movie",
+        () => cy.get('[data-testid="container-2"]'),
+        "movie-id-1"
+      );
+
+      // Verify each field has the correct values
+      cy.wait(100); // Wait for the component to fully render
+
+      // Check first field
+      field1
+        .getElement()
+        .find('[role="combobox"]')
+        .should("contain.text", "Action")
+        .should("contain.text", "Comedy");
+
+      // Check second field
+      field2
+        .getElement()
+        .find('[role="combobox"]')
+        .should("contain.text", "Drama")
+        .should("contain.text", "Sci-Fi");
+
+      // Test interactions with each field
+      field1.selectById(["tag3"]);
+      field2.selectById(["tag1"]);
+
+      // Verify the values were updated correctly
+      field1
+        .getElement()
+        .find('[role="combobox"]')
+        .should("contain.text", "Drama")
+        .should("not.contain.text", "Action")
+        .should("not.contain.text", "Comedy");
+
+      field2
+        .getElement()
+        .find('[role="combobox"]')
+        .should("contain.text", "Action")
+        .should("not.contain.text", "Drama")
+        .should("not.contain.text", "Sci-Fi");
+    });
+  });
 });

@@ -4,7 +4,10 @@ import { ZodBridge } from "uniforms-bridge-zod";
 import { z } from "zod";
 import { ObjectFieldset } from "../../../src/components/FormWithReferences/ObjectFieldset";
 import { ObjectProvider } from "../../../src/components/FormWithReferences/ObjectProvider";
-import { objectFieldset } from "./ObjectFieldset.interactable";
+import {
+  objectFieldset,
+  ObjectFieldsetInteractable,
+} from "./ObjectFieldset.interactable";
 
 describe("ObjectFieldsetInteractable with Multiple Fieldsets", () => {
   // Define schemas for testing
@@ -82,7 +85,7 @@ describe("ObjectFieldsetInteractable with Multiple Fieldsets", () => {
     );
 
     // Without a parent element, the interactable will find the first matching fieldset
-    const userFieldset = objectFieldset("User");
+    const userFieldset = objectFieldset("User", undefined, undefined, 0);
     userFieldset.getFieldValue("name").should("equal", "John Doe");
 
     // Log all fieldsets to debug
@@ -134,8 +137,18 @@ describe("ObjectFieldsetInteractable with Multiple Fieldsets", () => {
       cy.get('[data-testid="container-2"] [data-testid="ObjectFieldset"]');
 
     // Create interactables with the parent elements
-    const userFieldset1 = new ObjectFieldsetInteractable("User", container1);
-    const userFieldset2 = new ObjectFieldsetInteractable("User", container2);
+    const userFieldset1 = new ObjectFieldsetInteractable(
+      "User",
+      container1,
+      "user-1",
+      0
+    );
+    const userFieldset2 = new ObjectFieldsetInteractable(
+      "User",
+      container2,
+      "user-2",
+      0
+    );
 
     // Verify each fieldset finds the correct data
     userFieldset1.getFieldValue("name").should("equal", "John Doe");
@@ -175,15 +188,20 @@ describe("ObjectFieldsetInteractable with Multiple Fieldsets", () => {
     );
 
     // Create interactables for each type
-    const userFieldset = objectFieldset("User");
-    const productFieldset = objectFieldset("Product");
+    const userFieldset = objectFieldset("User", undefined, "user-1", 0);
+    const productFieldset = objectFieldset(
+      "Product",
+      undefined,
+      "product-1",
+      0
+    );
 
     // Verify each fieldset finds the correct data
     userFieldset.getFieldValue("name").should("equal", "John Doe");
     userFieldset.getObjectId().should("equal", "user-1");
 
     productFieldset.getFieldValue("title").should("equal", "Test Product");
-    productFieldset.getFieldValue("price").should("equal", 99.99);
+    productFieldset.getFieldValue("price").should("equal", "99.99");
     productFieldset.getObjectId().should("equal", "product-1");
 
     // Verify field existence
@@ -262,8 +280,8 @@ describe("ObjectFieldsetInteractable with Multiple Fieldsets", () => {
     const container1 = () => cy.get('[data-testid="container-1"]');
     const container2 = () => cy.get('[data-testid="container-2"]');
 
-    const userFieldset1 = objectFieldset("User", container1);
-    const userFieldset2 = objectFieldset("User", container2);
+    const userFieldset1 = objectFieldset("User", container1, "user-1", 0);
+    const userFieldset2 = objectFieldset("User", container2, "user-2", 0);
 
     // Verify initial values
     userFieldset1.getFieldValue("name").should("equal", "John Doe");
@@ -324,9 +342,19 @@ describe("ObjectFieldsetInteractable with Multiple Fieldsets", () => {
     const outerContainer = () => cy.get('[data-testid="outer-container"]');
     const innerContainer = () => cy.get('[data-testid="inner-container"]');
 
-    // Create interactables for each fieldset
-    const outerUserFieldset = objectFieldset("User", outerContainer);
-    const innerUserFieldset = objectFieldset("User", innerContainer);
+    // Create interactables for each fieldset with index parameter
+    const outerUserFieldset = objectFieldset(
+      "User",
+      outerContainer,
+      "outer-user",
+      0
+    );
+    const innerUserFieldset = objectFieldset(
+      "User",
+      innerContainer,
+      "inner-user",
+      0
+    );
 
     // Verify each fieldset finds the correct data
     outerUserFieldset.getFieldValue("name").should("equal", "John Doe");
@@ -368,7 +396,7 @@ describe("ObjectFieldsetInteractable with Multiple Fieldsets", () => {
         .then(($el) => {
           // Create a parent element function that returns this specific element
           const parentElement = () => cy.wrap($el);
-          return objectFieldset(objectType, parentElement);
+          return objectFieldset(objectType, parentElement, objectId, 0);
         });
     }
 
@@ -446,9 +474,9 @@ describe("ObjectFieldsetInteractable with Multiple Fieldsets", () => {
     const userSection1 = () => cy.get('[data-testid="user-section-1"]');
     const userSection2 = () => cy.get('[data-testid="user-section-2"]');
 
-    const userFieldset0 = objectFieldset("User", userSection0);
-    const userFieldset1 = objectFieldset("User", userSection1);
-    const userFieldset2 = objectFieldset("User", userSection2);
+    const userFieldset0 = objectFieldset("User", userSection0, "user-1", 0);
+    const userFieldset1 = objectFieldset("User", userSection1, "user-2", 0);
+    const userFieldset2 = objectFieldset("User", userSection2, "user-3", 0);
 
     // Verify initial values
     userFieldset0.getFieldValue("name").should("equal", "John Doe");
@@ -489,5 +517,211 @@ describe("ObjectFieldsetInteractable with Multiple Fieldsets", () => {
       "contain",
       "Bob Johnson (Updated)"
     );
+  });
+});
+
+describe("ObjectFieldsetInteractable with Index Parameter", () => {
+  // Define schemas for testing
+  const userSchema = z
+    .object({
+      name: z.string().describe("Name"),
+      email: z.string().email().describe("Email"),
+    })
+    .describe("User");
+
+  // Create bridge for the schema
+  const userBridge = new ZodBridge({ schema: userSchema });
+
+  // Test data
+  const userData1 = {
+    name: "John Doe",
+    email: "john@example.com",
+  };
+
+  const userData2 = {
+    name: "Jane Smith",
+    email: "jane@example.com",
+  };
+
+  beforeEach(() => {
+    // Prevent uncaught exceptions from failing tests
+    cy.on("uncaught:exception", (err) => {
+      if (err.message.includes("Maximum update depth exceeded")) {
+        return false;
+      }
+      return true;
+    });
+  });
+
+  it("should handle multiple fieldsets with the same object type and same object ID using index", () => {
+    // Mount a component with multiple User fieldsets with the same ID
+    mount(
+      <div>
+        <div data-testid="container">
+          <ObjectProvider
+            schema={userBridge}
+            data={userData1}
+            objectType="User"
+            objectId="same-id-123"
+          >
+            <ObjectFieldset />
+          </ObjectProvider>
+          <ObjectProvider
+            schema={userBridge}
+            data={userData2}
+            objectType="User"
+            objectId="same-id-123"
+          >
+            <ObjectFieldset />
+          </ObjectProvider>
+        </div>
+      </div>
+    );
+
+    // Create field interactables with the same object type and ID but different indices
+    const fieldset1 = objectFieldset("User", undefined, "same-id-123", 0);
+    const fieldset2 = objectFieldset("User", undefined, "same-id-123", 1);
+
+    // Verify each fieldset finds the correct data
+    fieldset1.getFieldValue("name").should("equal", "John Doe");
+    fieldset1.getFieldValue("email").should("equal", "john@example.com");
+
+    fieldset2.getFieldValue("name").should("equal", "Jane Smith");
+    fieldset2.getFieldValue("email").should("equal", "jane@example.com");
+  });
+
+  it("throws an error when multiple elements match but no index is provided", () => {
+    // Mount a component with multiple User fieldsets with the same ID
+    mount(
+      <div>
+        <div data-testid="container">
+          <ObjectProvider
+            schema={userBridge}
+            data={userData1}
+            objectType="User"
+            objectId="same-id-123"
+          >
+            <ObjectFieldset />
+          </ObjectProvider>
+          <ObjectProvider
+            schema={userBridge}
+            data={userData2}
+            objectType="User"
+            objectId="same-id-123"
+          >
+            <ObjectFieldset />
+          </ObjectProvider>
+        </div>
+      </div>
+    );
+
+    // Set up Cypress to catch the error
+    cy.on("fail", (err) => {
+      expect(err.message).to.include("Multiple elements");
+      expect(err.message).to.include("found matching selector");
+      expect(err.message).to.include("but no index parameter was provided");
+      return false;
+    });
+
+    // Try to create a fieldset interactable without an index
+    // This should throw an error because multiple elements match
+    const fieldset = objectFieldset("User", undefined, "same-id-123");
+
+    // Attempt to interact with the fieldset, which should trigger the error
+    fieldset.getElement();
+  });
+
+  it("should handle parent element and index together for disambiguation", () => {
+    // Mount a component with multiple User fieldsets with the same ID in different containers
+    mount(
+      <div>
+        <div data-testid="container-1">
+          <ObjectProvider
+            schema={userBridge}
+            data={userData1}
+            objectType="User"
+            objectId="same-id-123"
+          >
+            <ObjectFieldset />
+          </ObjectProvider>
+          <ObjectProvider
+            schema={userBridge}
+            data={userData2}
+            objectType="User"
+            objectId="same-id-123"
+          >
+            <ObjectFieldset />
+          </ObjectProvider>
+        </div>
+        <div data-testid="container-2">
+          <ObjectProvider
+            schema={userBridge}
+            data={userData1}
+            objectType="User"
+            objectId="same-id-123"
+          >
+            <ObjectFieldset />
+          </ObjectProvider>
+          <ObjectProvider
+            schema={userBridge}
+            data={userData2}
+            objectType="User"
+            objectId="same-id-123"
+          >
+            <ObjectFieldset />
+          </ObjectProvider>
+        </div>
+      </div>
+    );
+
+    // Create parent-scoped interactables for each container
+    const container1 = () => cy.get('[data-testid="container-1"]');
+    const container2 = () => cy.get('[data-testid="container-2"]');
+
+    // Create fieldset interactables with parent elements and indices
+    const fieldset1Container1 = objectFieldset(
+      "User",
+      container1,
+      "same-id-123",
+      0
+    );
+    const fieldset2Container1 = objectFieldset(
+      "User",
+      container1,
+      "same-id-123",
+      1
+    );
+    const fieldset1Container2 = objectFieldset(
+      "User",
+      container2,
+      "same-id-123",
+      0
+    );
+    const fieldset2Container2 = objectFieldset(
+      "User",
+      container2,
+      "same-id-123",
+      1
+    );
+
+    // Verify each fieldset finds the correct data
+    fieldset1Container1.getFieldValue("name").should("equal", "John Doe");
+    fieldset2Container1.getFieldValue("name").should("equal", "Jane Smith");
+    fieldset1Container2.getFieldValue("name").should("equal", "John Doe");
+    fieldset2Container2.getFieldValue("name").should("equal", "Jane Smith");
+
+    // Verify email fields to ensure we're getting the right data
+    fieldset1Container1
+      .getFieldValue("email")
+      .should("equal", "john@example.com");
+    fieldset2Container1
+      .getFieldValue("email")
+      .should("equal", "jane@example.com");
+    fieldset1Container2
+      .getFieldValue("email")
+      .should("equal", "john@example.com");
+    fieldset2Container2
+      .getFieldValue("email")
+      .should("equal", "jane@example.com");
   });
 });

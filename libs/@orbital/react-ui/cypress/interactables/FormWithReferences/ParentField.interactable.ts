@@ -21,11 +21,20 @@ export class ParentFieldInteractable extends ObjectSelectorInteractable {
     fieldName: string,
     objectType: string,
     parentElement?: () => Cypress.Chainable<JQuery<HTMLElement>>,
-    objectId?: string
+    objectId?: string,
+    index?: number
   ) {
     // Pass the correct data-testid prefix to the ObjectSelectorInteractable
     // and set multiple to false since this is a single-select field
-    super(fieldName, parentElement, "ParentField", false, objectType, objectId);
+    super(
+      fieldName,
+      parentElement,
+      "ParentField",
+      false,
+      objectType,
+      objectId,
+      index
+    );
     this.objectType = objectType;
   }
 }
@@ -41,13 +50,15 @@ export function parentField(
   fieldName: string,
   objectType: string,
   parentElement?: () => Cypress.Chainable<JQuery<HTMLElement>>,
-  objectId?: string
+  objectId?: string,
+  index?: number
 ): ParentFieldInteractable {
   return new ParentFieldInteractable(
     fieldName,
     objectType,
     parentElement,
-    objectId
+    objectId,
+    index
   );
 }
 

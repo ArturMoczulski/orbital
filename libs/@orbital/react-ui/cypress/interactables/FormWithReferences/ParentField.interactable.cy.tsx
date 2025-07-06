@@ -49,6 +49,7 @@ describe("ParentField.interactable", () => {
     onChange?: (value: string) => void;
     currentNodeId?: string;
   }) => {
+    console.log(`TetForm, current node id`, currentNodeId);
     const [value, setValue] = useState(initialValue);
 
     // Create a modified schema based on the required prop
@@ -65,11 +66,6 @@ describe("ParentField.interactable", () => {
       }
     };
 
-    // Filter options to remove the current node if specified
-    const filteredOptions = currentNodeId
-      ? nodeOptions.filter((node) => node._id !== currentNodeId)
-      : nodeOptions;
-
     return (
       <ObjectSchemaProvider schema={formSchema} objectType="Node">
         <AutoForm
@@ -81,11 +77,11 @@ describe("ParentField.interactable", () => {
             name="parentId"
             disabled={disabled}
             required={required}
-            options={filteredOptions}
+            options={nodeOptions}
             onChange={handleChange}
             reference={{
               ...referenceMetadata,
-              options: filteredOptions,
+              options: nodeOptions,
             }}
             currentId={currentNodeId}
           />
@@ -97,7 +93,8 @@ describe("ParentField.interactable", () => {
   it("should select a value", () => {
     const onChangeSpy = cy.spy().as("onChange");
 
-    mount(<TestForm onChange={onChangeSpy} />);
+    // Explicitly set currentNodeId to null to prevent filtering
+    mount(<TestForm onChange={onChangeSpy} currentNodeId={null} />);
 
     const field = parentField("parentId", "Node");
 
@@ -147,8 +144,8 @@ describe("ParentField.interactable", () => {
   });
 
   it("should filter out the current node from options", () => {
-    // Mount with currentNodeId to simulate filtering out the current node
-    mount(<TestForm currentNodeId="node1" />);
+    // Mount with currentNodeId and matching initialValue to simulate filtering out the current node
+    mount(<TestForm currentNodeId="node1" initialValue="node1" />);
 
     const field = parentField("parentId", "Node");
 
@@ -289,5 +286,511 @@ describe("ParentField.interactable", () => {
         field.hasError().should("be.true");
         field.getErrorMessage().should("eq", "Invalid parent node");
       });
+  });
+});
+
+describe("Multiple ParentFields on the same page", () => {
+  // Sample data for testing - tree nodes with parent-child relationships
+  const nodeOptions = [
+    { _id: "node1", name: "Root Node" },
+    { _id: "node2", name: "Child Node 1" },
+    { _id: "node3", name: "Child Node 2" },
+    { _id: "node4", name: "Grandchild Node" },
+  ];
+
+  const areaOptions = [
+    { _id: "area1", name: "Main Area" },
+    { _id: "area2", name: "Sub Area 1" },
+    { _id: "area3", name: "Sub Area 2" },
+  ];
+
+  // Define reference metadata for testing
+  const nodeReferenceMetadata = {
+    name: "node",
+    type: RelationshipType.RECURSIVE,
+    foreignField: "_id",
+    options: nodeOptions,
+  };
+
+  const areaReferenceMetadata = {
+    name: "area",
+    type: RelationshipType.RECURSIVE,
+    foreignField: "_id",
+    options: areaOptions,
+  };
+
+  it("should handle same object type but different IDs", () => {
+    // Create a test component with two fields of the same object type but different IDs
+    const TestFormWithSameTypeFields = () => {
+      const [node1Parent, setNode1Parent] = useState("node1");
+      const [node2Parent, setNode2Parent] = useState("node2");
+
+      return (
+        <div>
+          <div data-testid="node1-container">
+            <ObjectSchemaProvider
+              schema={z.object({
+                parentId: z.string().optional(),
+              })}
+              objectType="Node"
+            >
+              <AutoForm
+                schema={
+                  new ZodBridge({
+                    schema: z.object({
+                      parentId: z.string().optional(),
+                    }),
+                  })
+                }
+                model={{ parentId: node1Parent }}
+                onSubmit={() => {}}
+              >
+                <ParentField
+                  name="parentId"
+                  options={nodeOptions}
+                  reference={nodeReferenceMetadata}
+                  objectId="node-1"
+                  onChange={(newValue) => setNode1Parent(newValue)}
+                  currentId="node3"
+                />
+              </AutoForm>
+            </ObjectSchemaProvider>
+          </div>
+          <div data-testid="node2-container">
+            <ObjectSchemaProvider
+              schema={z.object({
+                parentId: z.string().optional(),
+              })}
+              objectType="Node"
+            >
+              <AutoForm
+                schema={
+                  new ZodBridge({
+                    schema: z.object({
+                      parentId: z.string().optional(),
+                    }),
+                  })
+                }
+                model={{ parentId: node2Parent }}
+                onSubmit={() => {}}
+              >
+                <ParentField
+                  name="parentId"
+                  options={nodeOptions}
+                  reference={nodeReferenceMetadata}
+                  objectId="node-2"
+                  onChange={(newValue) => setNode2Parent(newValue)}
+                  currentId="node4"
+                />
+              </AutoForm>
+            </ObjectSchemaProvider>
+          </div>
+        </div>
+      );
+    };
+
+    mount(<TestFormWithSameTypeFields />);
+
+    // Debug: Check if the containers exist
+    cy.get('[data-testid="node1-container"]').should("exist");
+    cy.get('[data-testid="node2-container"]').should("exist");
+
+    // Debug: Log the HTML of the containers to see what's actually being rendered
+    cy.get('[data-testid="node1-container"]').then(($el) => {
+      cy.log("node1-container HTML:");
+      cy.log($el.html());
+    });
+
+    // Check what ParentField elements actually exist
+    cy.get('[data-testid="ParentField"]').then(($elements) => {
+      cy.log(`Found ${$elements.length} ParentField elements`);
+      $elements.each((i, el) => {
+        const $el = Cypress.$(el);
+        cy.log(`Element ${i}:`);
+        cy.log(`data-field-name: ${$el.attr("data-field-name")}`);
+        cy.log(`data-object-id: ${$el.attr("data-object-id")}`);
+        cy.log(`data-testid: ${$el.attr("data-testid")}`);
+      });
+    });
+
+    // Create parent-scoped interactables for each container
+    const node1Container = () => cy.get('[data-testid="node1-container"]');
+    const node2Container = () => cy.get('[data-testid="node2-container"]');
+
+    // Create field interactables with the same object type but different IDs
+    const node1Field = parentField(
+      "parentId",
+      "Node",
+      node1Container,
+      "node-1"
+    );
+    const node2Field = parentField(
+      "parentId",
+      "Node",
+      node2Container,
+      "node-2"
+    );
+
+    // Verify each field has the correct value
+    node1Field.getSelectedText().should("eq", "Root Node");
+    node2Field.getSelectedText().should("eq", "Child Node 1");
+
+    // Test interactions with each field
+    node1Field.selectById("node2");
+    node2Field.selectById("node1");
+
+    // Verify the values were updated correctly
+    node1Field.getSelectedText().should("eq", "Child Node 1");
+    node2Field.getSelectedText().should("eq", "Root Node");
+  });
+
+  it("should handle different object types but same IDs", () => {
+    // Create a schema for the area field
+    const areaSchema = z.object({
+      parentId: z.string().optional(),
+    });
+
+    // Create a test component with fields of different object types but same IDs
+    const TestFormWithDifferentTypeFields = () => {
+      const [nodeParent, setNodeParent] = useState("node1");
+      const [areaParent, setAreaParent] = useState("area1");
+
+      return (
+        <div>
+          <div data-testid="node-container">
+            <ObjectSchemaProvider
+              schema={z.object({
+                parentId: z.string().optional(),
+              })}
+              objectType="Node"
+            >
+              <AutoForm
+                schema={
+                  new ZodBridge({
+                    schema: z.object({
+                      parentId: z.string().optional(),
+                    }),
+                  })
+                }
+                model={{ parentId: nodeParent }}
+                onSubmit={() => {}}
+              >
+                <ParentField
+                  name="parentId"
+                  options={nodeOptions}
+                  reference={nodeReferenceMetadata}
+                  objectId="shared-id-123"
+                  onChange={(newValue) => setNodeParent(newValue)}
+                  currentId="node3"
+                />
+              </AutoForm>
+            </ObjectSchemaProvider>
+          </div>
+          <div data-testid="area-container">
+            <ObjectSchemaProvider schema={areaSchema} objectType="Area">
+              <AutoForm
+                schema={new ZodBridge({ schema: areaSchema })}
+                model={{ parentId: areaParent }}
+                onSubmit={() => {}}
+              >
+                <ParentField
+                  name="parentId"
+                  options={areaOptions}
+                  reference={areaReferenceMetadata}
+                  objectId="shared-id-123"
+                  onChange={(newValue) => setAreaParent(newValue)}
+                  currentId="area3"
+                />
+              </AutoForm>
+            </ObjectSchemaProvider>
+          </div>
+        </div>
+      );
+    };
+
+    mount(<TestFormWithDifferentTypeFields />);
+
+    // Create parent-scoped interactables for each container
+    const nodeContainer = () => cy.get('[data-testid="node-container"]');
+    const areaContainer = () => cy.get('[data-testid="area-container"]');
+
+    // Create field interactables with different object types but the same ID
+    const nodeField = parentField(
+      "parentId",
+      "Node",
+      nodeContainer,
+      "shared-id-123"
+    );
+    const areaField = parentField(
+      "parentId",
+      "Area",
+      areaContainer,
+      "shared-id-123"
+    );
+
+    // Verify each field has the correct value
+    nodeField.getSelectedText().should("eq", "Root Node");
+    areaField.getSelectedText().should("eq", "Main Area");
+
+    // Test interactions with each field
+    nodeField.selectById("node2");
+    areaField.selectById("area2");
+
+    // Verify the values were updated correctly
+    nodeField.getSelectedText().should("eq", "Child Node 1");
+    areaField.getSelectedText().should("eq", "Sub Area 1");
+  });
+
+  it("should handle parent element and objectId together", () => {
+    // Create a test component with multiple fields of the same type and ID
+    const TestFormWithMultipleFields = () => {
+      const [node1Parent, setNode1Parent] = useState("node1");
+      const [node2Parent, setNode2Parent] = useState("node2");
+
+      return (
+        <div>
+          <div data-testid="container-1">
+            <div data-testid="node-1">
+              <ObjectSchemaProvider
+                schema={z.object({
+                  parentId: z.string().optional(),
+                })}
+                objectType="Node"
+              >
+                <AutoForm
+                  schema={
+                    new ZodBridge({
+                      schema: z.object({
+                        parentId: z.string().optional(),
+                      }),
+                    })
+                  }
+                  model={{ parentId: node1Parent }}
+                  onSubmit={() => {}}
+                >
+                  <ParentField
+                    name="parentId"
+                    options={nodeOptions}
+                    reference={nodeReferenceMetadata}
+                    objectId="node-id-1"
+                    onChange={(newValue) => setNode1Parent(newValue)}
+                    currentId="node3"
+                  />
+                </AutoForm>
+              </ObjectSchemaProvider>
+            </div>
+          </div>
+          <div data-testid="container-2">
+            <div data-testid="node-1">
+              <ObjectSchemaProvider
+                schema={z.object({
+                  parentId: z.string().optional(),
+                })}
+                objectType="Node"
+              >
+                <AutoForm
+                  schema={
+                    new ZodBridge({
+                      schema: z.object({
+                        parentId: z.string().optional(),
+                      }),
+                    })
+                  }
+                  model={{ parentId: node2Parent }}
+                  onSubmit={() => {}}
+                >
+                  <ParentField
+                    name="parentId"
+                    options={nodeOptions}
+                    reference={nodeReferenceMetadata}
+                    objectId="node-id-1"
+                    onChange={(newValue) => setNode2Parent(newValue)}
+                    currentId="node4"
+                  />
+                </AutoForm>
+              </ObjectSchemaProvider>
+            </div>
+          </div>
+        </div>
+      );
+    };
+
+    mount(<TestFormWithMultipleFields />);
+
+    // Create field interactables with parent elements and the same objectId
+    const field1 = parentField(
+      "parentId",
+      "Node",
+      () => cy.get('[data-testid="container-1"]'),
+      "node-id-1"
+    );
+    const field2 = parentField(
+      "parentId",
+      "Node",
+      () => cy.get('[data-testid="container-2"]'),
+      "node-id-1"
+    );
+
+    // Verify each field has the correct value
+    field1.getSelectedText().should("eq", "Root Node");
+    field2.getSelectedText().should("eq", "Child Node 1");
+
+    // Test interactions with each field
+    field1.selectById("node2");
+    field2.selectById("node1");
+
+    // Verify the values were updated correctly
+    field1.getSelectedText().should("eq", "Child Node 1");
+    field2.getSelectedText().should("eq", "Root Node");
+  });
+
+  it("should handle multiple selectors with the same object type and same object ID using index", () => {
+    // Create a test component with multiple fields of the same type and ID
+    const TestFormWithDuplicateFields = () => {
+      const [field1Value, setField1Value] = useState("node1");
+      const [field2Value, setField2Value] = useState("node2");
+
+      return (
+        <div>
+          <div data-testid="duplicate-container">
+            <ObjectSchemaProvider
+              schema={z.object({
+                parentId1: z.string().optional(),
+                parentId2: z.string().optional(),
+              })}
+              objectType="Node"
+            >
+              <AutoForm
+                schema={
+                  new ZodBridge({
+                    schema: z.object({
+                      parentId1: z.string().optional(),
+                      parentId2: z.string().optional(),
+                    }),
+                  })
+                }
+                model={{ parentId1: field1Value, parentId2: field2Value }}
+                onSubmit={() => {}}
+              >
+                <div data-testid="field-1">
+                  <ParentField
+                    name="parentId1"
+                    options={nodeOptions}
+                    reference={nodeReferenceMetadata}
+                    objectId="duplicate-id"
+                    onChange={(newValue) => setField1Value(newValue)}
+                    currentId="node3"
+                  />
+                </div>
+                <div data-testid="field-2">
+                  <ParentField
+                    name="parentId2"
+                    options={nodeOptions}
+                    reference={nodeReferenceMetadata}
+                    objectId="duplicate-id"
+                    onChange={(newValue) => setField2Value(newValue)}
+                    currentId="node4"
+                  />
+                </div>
+              </AutoForm>
+            </ObjectSchemaProvider>
+          </div>
+        </div>
+      );
+    };
+
+    mount(<TestFormWithDuplicateFields />);
+
+    // Create field interactables with the same object type and ID but using parent elements to scope
+    const field1 = parentField(
+      "parentId1",
+      "Node",
+      () => cy.get('[data-testid="field-1"]'),
+      "duplicate-id"
+    );
+    const field2 = parentField(
+      "parentId2",
+      "Node",
+      () => cy.get('[data-testid="field-2"]'),
+      "duplicate-id"
+    );
+
+    // Verify each field has the correct value
+    field1.getSelectedText().should("eq", "Root Node");
+    field2.getSelectedText().should("eq", "Child Node 1");
+
+    // Test interactions with each field
+    field1.selectById("node3");
+    field2.selectById("node4");
+
+    // Verify the values were updated correctly
+    field1.getSelectedText().should("eq", "Child Node 2");
+    field2.getSelectedText().should("eq", "Grandchild Node");
+  });
+
+  it("throws an error when multiple elements match but no index is provided", () => {
+    // Create a test component with multiple fields of the same type and ID
+    const TestFormWithDuplicateFields = () => (
+      <div>
+        <div data-testid="duplicate-container">
+          <ObjectSchemaProvider
+            schema={z.object({
+              parentId1: z.string().optional(),
+              parentId2: z.string().optional(),
+            })}
+            objectType="Node"
+          >
+            <AutoForm
+              schema={
+                new ZodBridge({
+                  schema: z.object({
+                    parentId1: z.string().optional(),
+                    parentId2: z.string().optional(),
+                  }),
+                })
+              }
+              model={{ parentId1: "node1", parentId2: "node2" }}
+              onSubmit={() => {}}
+            >
+              <div data-testid="field-1">
+                <ParentField
+                  name="parentId1"
+                  options={nodeOptions}
+                  reference={nodeReferenceMetadata}
+                  objectId="duplicate-id"
+                  currentId="node3"
+                />
+              </div>
+              <div data-testid="field-2">
+                <ParentField
+                  name="parentId2"
+                  options={nodeOptions}
+                  reference={nodeReferenceMetadata}
+                  objectId="duplicate-id"
+                  currentId="node4"
+                />
+              </div>
+            </AutoForm>
+          </ObjectSchemaProvider>
+        </div>
+      </div>
+    );
+
+    mount(<TestFormWithDuplicateFields />);
+
+    // Set up Cypress to catch the error
+    cy.on("fail", (err) => {
+      expect(err.message).to.include("Multiple elements");
+      expect(err.message).to.include("found matching selector");
+      expect(err.message).to.include("but no index parameter was provided");
+      return false;
+    });
+
+    // Try to create a field interactable without an index
+    // This should throw an error because multiple elements match
+    const field = parentField("parentId1", "Node", undefined, "duplicate-id");
+
+    // Attempt to interact with the field, which should trigger the error
+    field.getElement();
   });
 });

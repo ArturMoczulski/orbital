@@ -127,6 +127,9 @@ export function ObjectSelector({
 
   // For multiple selection mode
   if (multiple) {
+    // In multiple mode, we don't need to filter out the selected values
+    const displayOptions = options;
+
     return (
       <FormControl
         fullWidth
@@ -153,7 +156,7 @@ export function ObjectSelector({
             />
           }
           renderValue={(selected) => {
-            // Display selected items by name
+            // Display selected items by name - use full options list for display
             return (selected as string[])
               .map((id) => {
                 const option = options.find((opt) => opt[idField] === id);
@@ -173,14 +176,14 @@ export function ObjectSelector({
             } as any,
           }}
         >
-          {options.map((option) => (
+          {displayOptions.map((option) => (
             <MenuItem
               key={option[idField]}
               value={option[idField]}
               data-testid={`${testId}-item`}
               data-value-id={option[idField]}
               data-field-name={name}
-              data-object-id={option[idField]} // For backward compatibility
+              data-object-id={objectId} // ID of the parent object containing the field
             >
               <Checkbox
                 checked={
@@ -197,6 +200,17 @@ export function ObjectSelector({
   }
 
   // For single selection mode
+  // Filter out the currently selected value from dropdown options
+  // This prevents selecting the same value again and is useful for recursive relationships
+  const displayOptions = normalizedValue
+    ? options.filter((option) => option[idField] !== normalizedValue)
+    : options;
+
+  // Find the selected option from the full options list for display
+  const selectedOption = normalizedValue
+    ? options.find((option) => option[idField] === normalizedValue)
+    : null;
+
   return (
     <TextField
       disabled={disabled || readOnly}
@@ -218,6 +232,17 @@ export function ObjectSelector({
       {...(objectId !== undefined && { "data-object-id": objectId })}
       // Use MenuProps to add a custom class that can be used for selection
       SelectProps={{
+        // Use renderValue to explicitly set the display text for the selected value
+        renderValue: (value) => {
+          // If no value is selected, return empty string
+          if (!value) return "";
+
+          // Find the option with the matching value from the full options list
+          const option = options.find((opt) => opt[idField] === value);
+
+          // Return the display text if found, otherwise return the value itself
+          return option ? option[displayField] || option[idField] : value;
+        },
         MenuProps: {
           className: `object-selector-${name} ${className || ""}`,
           // Use PaperProps to add data attributes to the dropdown container
@@ -240,15 +265,16 @@ export function ObjectSelector({
       )}
 
       {/* Map options to menu items */}
-      {options.map((option) => (
+      {displayOptions.map((option) => (
         <MenuItem
           key={option[idField]}
           value={option[idField]}
           // Add data attributes to each menu item for better identification
           data-testid={`${testId}-item`}
-          data-object-id={option[idField]}
-          data-value-id={option[idField]} // For compatibility with MultiObjectSelector
+          data-value-id={option[idField]} // For option/value identification
           data-field-name={name}
+          data-display-text={option[displayField] || option[idField]}
+          data-object-id={objectId} // ID of the parent object containing the field
         >
           {option[displayField] || option[idField]}
         </MenuItem>

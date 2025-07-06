@@ -25,19 +25,27 @@ export class ObjectFieldsetInteractable extends CypressInteractable<string> {
   protected objectId?: string;
 
   /**
+   * Index to use when multiple elements match the selector
+   */
+  protected index?: number;
+
+  /**
    * Constructor for ObjectFieldsetInteractable
    * @param objectType The type of object this fieldset is for
    * @param parentElement Optional parent element to scope the fieldset within
    * @param objectId Optional object ID to target a specific fieldset
+   * @param index Optional index to use when multiple elements match the selector
    */
   constructor(
     objectType: string,
     parentElement?: () => Cypress.Chainable<JQuery<HTMLElement>>,
-    objectId?: string
+    objectId?: string,
+    index?: number
   ) {
     super(objectType, parentElement);
     this.objectType = objectType;
     this.objectId = objectId;
+    this.index = index;
   }
 
   /**
@@ -91,6 +99,23 @@ export class ObjectFieldsetInteractable extends CypressInteractable<string> {
   override getElement(): Cypress.Chainable<JQuery<HTMLElement>> {
     // Try the primary selector first
     return cy.get(this.selector()).then(($el) => {
+      // Check if multiple elements were found and no index was provided
+      if ($el.length > 1 && this.index === undefined) {
+        throw new Error(
+          `Multiple elements (${$el.length}) found matching selector "${this.selector()}" but no index parameter was provided to the interactable. Provide an index parameter to clarify which element to target.`
+        );
+      }
+
+      // If index is provided, return the element at that index
+      if (this.index !== undefined && $el.length > 0) {
+        if (this.index >= $el.length) {
+          throw new Error(
+            `Index ${this.index} is out of bounds. Only ${$el.length} elements found matching selector "${this.selector()}".`
+          );
+        }
+        return cy.wrap($el.eq(this.index));
+      }
+
       if ($el.length > 0) {
         return cy.wrap($el);
       }
@@ -100,7 +125,26 @@ export class ObjectFieldsetInteractable extends CypressInteractable<string> {
       cy.log(`Trying alternative selectors for objectType: ${this.objectType}`);
 
       // Use the flexible selector
-      return cy.get(this.flexibleSelector());
+      return cy.get(this.flexibleSelector()).then(($flexEl) => {
+        // Check if multiple elements were found with flexible selector and no index was provided
+        if ($flexEl.length > 1 && this.index === undefined) {
+          throw new Error(
+            `Multiple elements (${$flexEl.length}) found matching flexible selector "${this.flexibleSelector()}" but no index parameter was provided to the interactable. Provide an index parameter to clarify which element to target.`
+          );
+        }
+
+        // If index is provided, return the element at that index
+        if (this.index !== undefined && $flexEl.length > 0) {
+          if (this.index >= $flexEl.length) {
+            throw new Error(
+              `Index ${this.index} is out of bounds. Only ${$flexEl.length} elements found matching flexible selector "${this.flexibleSelector()}".`
+            );
+          }
+          return cy.wrap($flexEl.eq(this.index));
+        }
+
+        return cy.wrap($flexEl);
+      });
     });
   }
 
@@ -270,9 +314,15 @@ export class ObjectFieldsetInteractable extends CypressInteractable<string> {
 export function objectFieldset(
   objectType: string,
   parentElement?: () => Cypress.Chainable<JQuery<HTMLElement>>,
-  objectId?: string
+  objectId?: string,
+  index?: number
 ): ObjectFieldsetInteractable {
-  return new ObjectFieldsetInteractable(objectType, parentElement, objectId);
+  return new ObjectFieldsetInteractable(
+    objectType,
+    parentElement,
+    objectId,
+    index
+  );
 }
 
 // Export the factory function and class

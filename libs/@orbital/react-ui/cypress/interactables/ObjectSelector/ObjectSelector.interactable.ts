@@ -17,8 +17,9 @@ export class ObjectSelectorItem {
 
   constructor(element: JQuery<HTMLElement>) {
     this.element = element;
-    this.id =
-      element.attr("data-value-id") || element.attr("data-object-id") || "";
+    // For dropdown items/options, data-value-id is the identifier for the option value
+    // data-object-id should not be used for option values
+    this.id = element.attr("data-value-id") || "";
     this.objectType = element.attr("data-object-type");
     this.name = element.text().trim();
     this.isChecked = element.find(".Mui-checked").length > 0;
@@ -81,9 +82,74 @@ export class ObjectSelectorInteractable extends FormInputInteractable<
     private dataTestId: string = "ObjectSelector",
     private multiple: boolean = false,
     protected objectType?: string,
-    protected objectId?: string
+    protected objectId?: string,
+    protected index?: number
   ) {
     super(fieldName, parentElement);
+  }
+
+  /**
+   * Override getElement to handle the index parameter
+   * If multiple elements match the selector and no index is provided, throw an error
+   */
+  override getElement(): Cypress.Chainable<JQuery<HTMLElement>> {
+    if (this.parentElement && typeof this.parentElement != "function") {
+      throw new Error(
+        "parentElement must be a function that returns a Cypress.Chainable<JQuery<HTMLElement>>"
+      );
+    }
+
+    const selector = this.selector();
+
+    if (this.parentElement && this.parentElement()) {
+      // Return the result of finding the element within the parent
+      return this.parentElement().then(($parent) => {
+        // Find the element using jQuery's find()
+        const $found = $parent.find(selector);
+
+        // Check if multiple elements were found and no index was provided
+        if ($found.length > 1 && this.index === undefined) {
+          throw new Error(
+            `Multiple elements (${$found.length}) found matching selector "${selector}" but no index parameter was provided to the interactable. Provide an index parameter to clarify which element to target.`
+          );
+        }
+
+        // If index is provided, return the element at that index
+        if (this.index !== undefined && $found.length > 0) {
+          if (this.index >= $found.length) {
+            throw new Error(
+              `Index ${this.index} is out of bounds. Only ${$found.length} elements found matching selector "${selector}".`
+            );
+          }
+          return cy.wrap($found.eq(this.index));
+        }
+
+        // Return a new chainable for the found element
+        return cy.wrap($found);
+      });
+    }
+
+    // If no parent element, use cy.get() directly
+    return cy.get(selector).then(($elements) => {
+      // Check if multiple elements were found and no index was provided
+      if ($elements.length > 1 && this.index === undefined) {
+        throw new Error(
+          `Multiple elements (${$elements.length}) found matching selector "${selector}" but no index parameter was provided to the interactable. Provide an index parameter to clarify which element to target.`
+        );
+      }
+
+      // If index is provided, return the element at that index
+      if (this.index !== undefined && $elements.length > 0) {
+        if (this.index >= $elements.length) {
+          throw new Error(
+            `Index ${this.index} is out of bounds. Only ${$elements.length} elements found matching selector "${selector}".`
+          );
+        }
+        return cy.wrap($elements.eq(this.index));
+      }
+
+      return cy.wrap($elements);
+    });
   }
 
   /**
@@ -102,22 +168,13 @@ export class ObjectSelectorInteractable extends FormInputInteractable<
    * This looks for a select field with the given name and data-testid
    */
   override selector() {
-    const selectors = [];
-
-    // Add selector with objectId if available
+    // If objectId is available, use the more specific selector
     if (this.objectId) {
-      selectors.push(
-        `[data-testid="${this.dataTestId}"][data-field-name="${this.fieldName}"][data-object-id="${this.objectId}"]`
-      );
+      return `[data-testid="${this.dataTestId}"][data-field-name="${this.fieldName}"][data-object-id="${this.objectId}"]`;
     }
 
-    // Add standard selectors
-    selectors.push(
-      `[data-testid="${this.dataTestId}"][data-field-name="${this.fieldName}"]`
-    );
-    selectors.push(`[data-field-name="${this.fieldName}"][role="combobox"]`);
-
-    return selectors.join(", ");
+    // Otherwise use the standard selector with data-testid and data-field-name
+    return `[data-testid="${this.dataTestId}"][data-field-name="${this.fieldName}"]`;
   }
 
   /**
@@ -125,12 +182,11 @@ export class ObjectSelectorInteractable extends FormInputInteractable<
    * @returns A chainable that resolves when the dropdown is open
    */
   openDropdown(): Cypress.Chainable<JQuery<HTMLElement>> {
+    // Use the same selector logic as the selector() method
+    const element = this.getElement();
+
     // Click directly on the combobox element which is what Material UI uses for the Select
-    cy.get(
-      `[data-testid="${this.dataTestId}"][data-field-name="${this.fieldName}"]`
-    )
-      .find('[role="combobox"]')
-      .click({ force: true });
+    element.find('[role="combobox"]').click({ force: true });
 
     // Material UI creates a portal outside the component tree for the dropdown
     // Wait for any dropdown to appear - try multiple selectors
@@ -359,12 +415,14 @@ export class ObjectSelectorInteractable extends FormInputInteractable<
           )
           .click();
       } else {
+        // Define the selector for finding options
+        const selector = `[data-testid="${this.dataTestId}-item"][data-field-name="${this.fieldName}"]`;
+
         // Find the option with the given value using the data attributes
         cy.get("body")
-          .find(
-            `[data-testid="${this.dataTestId}-item"][data-field-name="${this.fieldName}"]`
-          )
-          .filter(`[data-value-id="${val}"], [data-object-id="${val}"]`)
+          .find(selector)
+          // In the dropdown items, we should only use data-value-id for option values
+          .filter(`[data-value-id="${val}"]`)
           .click();
       }
 
@@ -427,7 +485,6 @@ export class ObjectSelectorInteractable extends FormInputInteractable<
    * Get the currently selected option's text
    */
   getSelectedText(): Cypress.Chainable<string> {
-    // For ParentField and similar components, we need to map the ID to the display text
     // First get the current value (ID)
     return this.getValue().then((value: string | string[]) => {
       // If no value is selected, return empty string
@@ -438,50 +495,96 @@ export class ObjectSelectorInteractable extends FormInputInteractable<
       // Get the ID we need to look up
       const id = Array.isArray(value) ? value[0] : value;
 
-      // Define a mapping of known test IDs to their display names
-      // This is a workaround for the test environment where we can't always
-      // access the actual options data
-      const knownOptions: Record<string, string> = {
-        node1: "Root Node",
-        node2: "Child Node 1",
-        node3: "Child Node 2",
-        node4: "Grandchild Node",
-      };
-
-      // If we have a known mapping for this ID, use it
-      if (
-        typeof id === "string" &&
-        Object.prototype.hasOwnProperty.call(knownOptions, id)
-      ) {
-        return cy.wrap(knownOptions[id]);
-      }
-
-      // Otherwise try to get the text from the UI
-      // First try the standard MuiSelect-select class
+      // Try to get the text directly from the UI first
       return this.getElement().then(($el) => {
+        // First try the standard MuiSelect-select class
         const $selectText = $el.find(".MuiSelect-select, [role=button]");
         if ($selectText.length > 0 && $selectText.text().trim() !== "") {
-          return cy.wrap($selectText.first().text().trim());
+          const text = $selectText.first().text().trim();
+          if (text && text !== "​" && text !== "\u200B") {
+            // Check for zero-width space
+            return cy.wrap(text);
+          }
         }
 
         // For TextField with select=true, try the input element
         const $input = $el.find(".MuiInputBase-input");
         if ($input.length > 0 && $input.first().val()) {
           const inputVal = $input.first().val();
-          return cy.wrap(typeof inputVal === "string" ? inputVal : "");
+          if (inputVal) {
+            return cy.wrap(typeof inputVal === "string" ? inputVal : "");
+          }
         }
 
-        // If we still don't have text, try to open the dropdown and find the item
-        if (typeof id === "string") {
-          return this.openDropdown()
-            .then(() => this.getItemById(id))
-            .then((item) => {
-              this.closeDropdown();
-              return cy.wrap(item ? item.getName() : id);
+        // Try to find any data-* attributes that might contain display text
+        // Look for elements with data-value-id within the component
+        const $element = $el.find(`[data-value-id="${id}"]`);
+        if ($element.length > 0) {
+          // Check for any data attributes that might contain display text
+          const dataAttrs = [
+            "data-display-text",
+            "data-text",
+            "data-label",
+            "data-name",
+          ];
+          for (const attr of dataAttrs) {
+            const displayText = $element.attr(attr);
+            if (displayText) {
+              return cy.wrap(displayText);
+            }
+          }
+        }
+
+        // Check if the field is disabled
+        return this.isDisabled().then((isDisabled) => {
+          if (isDisabled) {
+            // For disabled fields, we can't open the dropdown
+            // Look for data attributes that might contain display information
+            // For disabled fields, look for elements with data-display-text and data-value-id
+            // data-value-id is used for option values within the component
+            const $optionDisplay = $el.find(
+              `[data-display-text][data-value-id="${id}"]`
+            );
+            if ($optionDisplay.length > 0) {
+              const displayText = $optionDisplay.attr("data-display-text");
+              if (displayText) {
+                return cy.wrap(displayText);
+              }
+            }
+
+            // If we can't find the display text for a disabled field, return the ID
+            return cy.wrap(id || "");
+          }
+
+          // If the field is not disabled, try to open the dropdown and get the text
+          try {
+            return this.openDropdown().then(() => {
+              // Define the selector for finding options
+              const selector = `[data-testid="${this.dataTestId}-item"][data-field-name="${this.fieldName}"]`;
+
+              // Use the same approach as selectById - find by data-testid and data-field-name, then filter by data-value-id
+              return cy
+                .get("body")
+                .find(selector)
+                .filter(`[data-value-id="${id}"]`)
+                .then(($option) => {
+                  let displayText = id;
+
+                  if ($option.length > 0) {
+                    // Get the text content of the option
+                    displayText = $option.text().trim();
+                  }
+
+                  // Close the dropdown
+                  this.closeDropdown();
+                  return cy.wrap(displayText);
+                });
             });
-        }
-
-        return cy.wrap("");
+          } catch (e) {
+            // If opening the dropdown fails, return the ID
+            return cy.wrap(id || "");
+          }
+        });
       });
     });
   }
@@ -593,7 +696,8 @@ export class ObjectSelectorInteractable extends FormInputInteractable<
     const element = this.getElement();
 
     // Find and click the element with role="combobox" which is the clickable part in Material-UI Select
-    element.find('[role="combobox"]').click({ force: true });
+    // Use first() to ensure we only click on one element even if multiple are found
+    element.find('[role="combobox"]').first().click({ force: true });
 
     // Return this for method chaining
     return this;
@@ -646,7 +750,8 @@ export function objectSelector(
   dataTestId: string = "ObjectSelector",
   multiple: boolean = false,
   objectType?: string,
-  objectId?: string
+  objectId?: string,
+  index?: number
 ): ObjectSelectorInteractable {
   return new ObjectSelectorInteractable(
     fieldName,
@@ -654,7 +759,8 @@ export function objectSelector(
     dataTestId,
     multiple,
     objectType,
-    objectId
+    objectId,
+    index
   );
 }
 
