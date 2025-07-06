@@ -4,6 +4,11 @@ import { ZodBridge } from "uniforms-bridge-zod";
 import { AutoField } from "uniforms-mui";
 import { useObject } from "./ObjectProvider";
 
+// Import Material-UI components from their specific paths
+import Card from "@mui/material/Card";
+import CardContent from "@mui/material/CardContent";
+import CardHeader from "@mui/material/CardHeader";
+
 /**
  * Props for the ObjectFieldset component
  */
@@ -45,6 +50,26 @@ export interface ObjectFieldsetProps {
    * If not provided, will use the objectId from useObject()
    */
   objectId?: string;
+
+  /**
+   * Function to generate header content
+   * Takes object data and object type as parameters
+   * If returns empty string, header will not be displayed
+   */
+  header?: (data: any, objectType: string) => string;
+
+  /**
+   * Whether to use a Card container
+   * Defaults to true
+   */
+  useCard?: boolean;
+
+  /**
+   * Card variant to use
+   * Set to empty string for no appearance
+   * Defaults to "outlined"
+   */
+  cardVariant?: "outlined" | "elevation" | "";
 }
 
 /**
@@ -59,6 +84,9 @@ export function ObjectFieldset({
   className,
   children,
   objectId: propObjectId,
+  header,
+  useCard = true,
+  cardVariant = "outlined",
 }: ObjectFieldsetProps) {
   // Get object data and schema from ObjectProvider
   const {
@@ -161,7 +189,20 @@ export function ObjectFieldset({
     return fieldNames.filter((field: string) => !omitFields.includes(field));
   }, [fieldNames, omitFields]);
 
-  return (
+  // Determine the header text
+  const headerText = useMemo(() => {
+    // If header function is provided, use it with highest priority
+    if (header) {
+      return header(data, objectType);
+    }
+
+    // Default behavior: objectType: name or _id
+    const displayName = data?.name || data?._id;
+    return displayName ? `${objectType}: ${displayName}` : "";
+  }, [header, data, objectType]);
+
+  // Create the content element with data attributes
+  const contentElement = (
     <div
       className={className}
       data-testid="ObjectFieldset"
@@ -186,6 +227,24 @@ export function ObjectFieldset({
         {children}
       </uniformsContext.Provider>
     </div>
+  );
+
+  // If not using Card, just return the content element
+  if (!useCard) {
+    return contentElement;
+  }
+
+  // Using Card with optional header
+  return (
+    <Card variant={cardVariant ? (cardVariant as any) : undefined}>
+      {headerText && (
+        <CardHeader
+          title={headerText}
+          titleTypographyProps={{ variant: "subtitle1" }}
+        />
+      )}
+      <CardContent>{contentElement}</CardContent>
+    </Card>
   );
 }
 

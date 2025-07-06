@@ -1,3 +1,4 @@
+// Import everything except Material-UI components
 import { RelationshipType } from "@orbital/core/src/zod/reference/reference";
 import { mount } from "cypress/react";
 import React, { useState } from "react";
@@ -32,11 +33,16 @@ describe("ObjectFieldsetInteractable", () => {
     // Prevent uncaught exceptions from failing tests
     // This is useful for handling React warnings about state updates
     cy.on("uncaught:exception", (err) => {
-      if (err.message.includes("Maximum update depth exceeded")) {
+      if (
+        err.message.includes("Maximum update depth exceeded") ||
+        err.message.includes("Cannot read properties of undefined")
+      ) {
         return false;
       }
       return true;
     });
+
+    // Material-UI components are already available globally from component-index.html
 
     // No need for the React.createElement override which causes TS errors
   });

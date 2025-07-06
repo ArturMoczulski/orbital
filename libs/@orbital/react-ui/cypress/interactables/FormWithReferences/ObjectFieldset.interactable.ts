@@ -95,6 +95,7 @@ export class ObjectFieldsetInteractable extends CypressInteractable<string> {
   /**
    * Get the element for this fieldset
    * This method adds additional fallback selectors if the primary selector doesn't find anything
+   * It also handles the case where the fieldset is wrapped in a Card component
    */
   override getElement(): Cypress.Chainable<JQuery<HTMLElement>> {
     // Try the primary selector first
@@ -124,27 +125,93 @@ export class ObjectFieldsetInteractable extends CypressInteractable<string> {
       cy.log(`Element not found with selector: ${this.selector()}`);
       cy.log(`Trying alternative selectors for objectType: ${this.objectType}`);
 
-      // Use the flexible selector
-      return cy.get(this.flexibleSelector()).then(($flexEl) => {
-        // Check if multiple elements were found with flexible selector and no index was provided
-        if ($flexEl.length > 1 && this.index === undefined) {
-          throw new Error(
-            `Multiple elements (${$flexEl.length}) found matching flexible selector "${this.flexibleSelector()}" but no index parameter was provided to the interactable. Provide an index parameter to clarify which element to target.`
-          );
-        }
+      // First, try to find the element inside a Card component
+      cy.log(`Checking if the element is inside a Card component`);
+      return cy
+        .get(`.MuiCard-root .MuiCardContent-root ${this.selector()}`)
+        .then(($cardEl) => {
+          if ($cardEl.length > 0) {
+            cy.log(`Found element inside Card component`);
 
-        // If index is provided, return the element at that index
-        if (this.index !== undefined && $flexEl.length > 0) {
-          if (this.index >= $flexEl.length) {
-            throw new Error(
-              `Index ${this.index} is out of bounds. Only ${$flexEl.length} elements found matching flexible selector "${this.flexibleSelector()}".`
-            );
+            // Check if multiple elements were found and no index was provided
+            if ($cardEl.length > 1 && this.index === undefined) {
+              throw new Error(
+                `Multiple elements (${$cardEl.length}) found inside Card matching selector "${this.selector()}" but no index parameter was provided to the interactable. Provide an index parameter to clarify which element to target.`
+              );
+            }
+
+            // If index is provided, return the element at that index
+            if (this.index !== undefined) {
+              if (this.index >= $cardEl.length) {
+                throw new Error(
+                  `Index ${this.index} is out of bounds. Only ${$cardEl.length} elements found inside Card matching selector "${this.selector()}".`
+                );
+              }
+              return cy.wrap($cardEl.eq(this.index));
+            }
+
+            return cy.wrap($cardEl);
           }
-          return cy.wrap($flexEl.eq(this.index));
-        }
 
-        return cy.wrap($flexEl);
-      });
+          // If not found inside a Card, try the flexible selector
+          return cy.get(this.flexibleSelector()).then(($flexEl) => {
+            // Check if multiple elements were found with flexible selector and no index was provided
+            if ($flexEl.length > 1 && this.index === undefined) {
+              throw new Error(
+                `Multiple elements (${$flexEl.length}) found matching flexible selector "${this.flexibleSelector()}" but no index parameter was provided to the interactable. Provide an index parameter to clarify which element to target.`
+              );
+            }
+
+            // If index is provided, return the element at that index
+            if (this.index !== undefined && $flexEl.length > 0) {
+              if (this.index >= $flexEl.length) {
+                throw new Error(
+                  `Index ${this.index} is out of bounds. Only ${$flexEl.length} elements found matching flexible selector "${this.flexibleSelector()}".`
+                );
+              }
+              return cy.wrap($flexEl.eq(this.index));
+            }
+
+            if ($flexEl.length > 0) {
+              return cy.wrap($flexEl);
+            }
+
+            // Finally, try to find the element inside a Card component using the flexible selector
+            return cy
+              .get(
+                `.MuiCard-root .MuiCardContent-root ${this.flexibleSelector()}`
+              )
+              .then(($cardFlexEl) => {
+                if ($cardFlexEl.length > 0) {
+                  cy.log(
+                    `Found element inside Card component using flexible selector`
+                  );
+
+                  // Check if multiple elements were found and no index was provided
+                  if ($cardFlexEl.length > 1 && this.index === undefined) {
+                    throw new Error(
+                      `Multiple elements (${$cardFlexEl.length}) found inside Card matching flexible selector "${this.flexibleSelector()}" but no index parameter was provided to the interactable. Provide an index parameter to clarify which element to target.`
+                    );
+                  }
+
+                  // If index is provided, return the element at that index
+                  if (this.index !== undefined) {
+                    if (this.index >= $cardFlexEl.length) {
+                      throw new Error(
+                        `Index ${this.index} is out of bounds. Only ${$cardFlexEl.length} elements found inside Card matching flexible selector "${this.flexibleSelector()}".`
+                      );
+                    }
+                    return cy.wrap($cardFlexEl.eq(this.index));
+                  }
+
+                  return cy.wrap($cardFlexEl);
+                }
+
+                // If still not found, return an empty element
+                return cy.wrap($flexEl);
+              });
+          });
+        });
     });
   }
 
@@ -287,10 +354,37 @@ export class ObjectFieldsetInteractable extends CypressInteractable<string> {
    * @returns A chainable that resolves to the object type or undefined if not set
    */
   getObjectType(): Cypress.Chainable<string | undefined> {
-    return this.getElement().then(($el) => {
-      const objectType = $el.attr("data-object-type");
-      return cy.wrap(objectType || undefined);
-    });
+    // Use a variable outside the .then() to store the result
+    let objectTypeResult: string | undefined;
+
+    // First get the element
+    return (
+      this.getElement()
+        .then(($el) => {
+          // First try to get the attribute directly from the element
+          objectTypeResult = $el.attr("data-object-type") || undefined;
+
+          // If not found and the element is inside a Card, try to find it in the Card's header
+          if (!objectTypeResult && $el.closest(".MuiCard-root").length > 0) {
+            // Try to get it from the CardHeader title
+            const cardHeaderTitle = $el
+              .closest(".MuiCard-root")
+              .find(".MuiCardHeader-content .MuiCardHeader-title")
+              .text();
+            if (cardHeaderTitle) {
+              // Extract object type from the header title (format: "ObjectType: Name")
+              const match = cardHeaderTitle.match(/^([^:]+):/);
+              if (match && match[1]) {
+                objectTypeResult = match[1].trim();
+              }
+            }
+          }
+        })
+        // Then wrap the result in a separate chain
+        .then(() => {
+          return cy.wrap(objectTypeResult);
+        })
+    );
   }
 
   /**
@@ -298,10 +392,31 @@ export class ObjectFieldsetInteractable extends CypressInteractable<string> {
    * @returns A chainable that resolves to the object ID or undefined if not set
    */
   getObjectId(): Cypress.Chainable<string | undefined> {
-    return this.getElement().then(($el) => {
-      const objectId = $el.attr("data-object-id");
-      return cy.wrap(objectId || undefined);
-    });
+    // Use a variable outside the .then() to store the result
+    let objectIdResult: string | undefined;
+
+    // First get the element
+    return (
+      this.getElement()
+        .then(($el) => {
+          // First try to get the attribute directly from the element
+          objectIdResult = $el.attr("data-object-id") || undefined;
+
+          // If not found and the element is inside a Card, check if there's a data-object-id on the Card
+          if (!objectIdResult && $el.closest(".MuiCard-root").length > 0) {
+            const cardObjectId = $el
+              .closest(".MuiCard-root")
+              .attr("data-object-id");
+            if (cardObjectId) {
+              objectIdResult = cardObjectId;
+            }
+          }
+        })
+        // Then wrap the result in a separate chain
+        .then(() => {
+          return cy.wrap(objectIdResult);
+        })
+    );
   }
 }
 

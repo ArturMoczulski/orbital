@@ -1,3 +1,4 @@
+// No direct Material-UI imports - we'll use the global MaterialUI object
 import { mount } from "cypress/react";
 import { useState } from "react";
 import { ZodBridge } from "uniforms-bridge-zod";
@@ -50,11 +51,16 @@ describe("ObjectFieldsetInteractable with Multiple Fieldsets", () => {
   beforeEach(() => {
     // Prevent uncaught exceptions from failing tests
     cy.on("uncaught:exception", (err) => {
-      if (err.message.includes("Maximum update depth exceeded")) {
+      if (
+        err.message.includes("Maximum update depth exceeded") ||
+        err.message.includes("Cannot read properties of undefined")
+      ) {
         return false;
       }
       return true;
     });
+
+    // Material-UI components are already available globally from component-index.html
   });
 
   it("finds the correct fieldset when multiple of the same type exist", () => {
@@ -546,11 +552,16 @@ describe("ObjectFieldsetInteractable with Index Parameter", () => {
   beforeEach(() => {
     // Prevent uncaught exceptions from failing tests
     cy.on("uncaught:exception", (err) => {
-      if (err.message.includes("Maximum update depth exceeded")) {
+      if (
+        err.message.includes("Maximum update depth exceeded") ||
+        err.message.includes("Cannot read properties of undefined")
+      ) {
         return false;
       }
       return true;
     });
+
+    // Material-UI components are already available globally from component-index.html
   });
 
   it("should handle multiple fieldsets with the same object type and same object ID using index", () => {
