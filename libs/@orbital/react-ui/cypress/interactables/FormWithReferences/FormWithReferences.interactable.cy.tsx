@@ -188,7 +188,6 @@ describe("FormWithReferences Interactable", () => {
         schema={bridge}
         onSubmit={onSubmit}
         data-testid="test-form"
-        objectType="Area"
       />
     );
 
@@ -275,6 +274,71 @@ describe("FormWithReferences Interactable", () => {
       name: "Test Name",
       description: "Test Description",
       active: true,
+    });
+  });
+
+  it("should automatically infer object type from schema", () => {
+    // Create a form with reference fields but without explicitly providing objectType
+    cy.log("Creating onSubmit stub for auto-inference test");
+    const onSubmit = cy.stub().as("onSubmit");
+
+    // Create a schema with a description that should help infer the type
+    const characterSchema = z
+      .object({
+        name: z.string(),
+        description: z.string().optional(),
+        worldId: z.string().reference({
+          schema: worldSchema,
+          type: RelationshipType.MANY_TO_ONE,
+          name: "world",
+        }),
+      })
+      .describe("A character in the game universe");
+
+    // Create a ZodReferencesBridge for the schema
+    cy.log("Creating ZodReferencesBridge for auto-inference test");
+    const bridge = new ZodReferencesBridge({
+      schema: characterSchema,
+      dependencies: {
+        world: worldData,
+      },
+    });
+
+    // Mount the form WITHOUT providing objectType
+    cy.log("Mounting FormWithReferences component without objectType");
+    mount(
+      <FormWithReferences
+        schema={bridge}
+        onSubmit={onSubmit}
+        data-testid="test-form"
+      />
+    );
+
+    // Check that the form has the correct data-testid attributes
+    cy.get("[data-testid*='CharacterReferenceSingleField']").should("exist");
+
+    // Create the interactable (using "Character" as the expected inferred type)
+    cy.log("Creating FormWithReferences interactable with inferred type");
+    const form = formWithReferences("test-form", "Character");
+
+    // Fill the form
+    cy.log("Filling form with data");
+    form.fill({
+      name: "Test Character",
+      description: "Test Description",
+      worldId: "world1",
+    });
+
+    // Submit the form
+    cy.log("Submitting form");
+    form.submit();
+
+    // Check that onSubmit was called with the correct data
+    cy.log("Checking if onSubmit was called");
+    cy.get("@onSubmit").should("have.been.calledWith", {
+      name: "Test Character",
+      description: "Test Description",
+      worldId: "world1",
     });
   });
 });
