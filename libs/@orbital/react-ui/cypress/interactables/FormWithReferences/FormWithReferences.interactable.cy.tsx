@@ -94,11 +94,9 @@ describe("FormWithReferences Interactable", () => {
 
   it.only("should interact with reference fields", () => {
     // Create a form with reference fields
-    cy.log("Creating onSubmit stub");
     const onSubmit = cy.stub().as("onSubmit");
 
     // Create a ZodReferencesBridge for the schema
-    cy.log("Creating ZodReferencesBridge");
     const bridge = new ZodReferencesBridge({
       schema: areaSchema,
       dependencies: {
@@ -108,7 +106,6 @@ describe("FormWithReferences Interactable", () => {
     });
 
     // Mount the form
-    cy.log("Mounting FormWithReferences component");
     mount(
       <FormWithReferences
         schema={bridge}
@@ -119,11 +116,9 @@ describe("FormWithReferences Interactable", () => {
     );
 
     // Create the interactable
-    cy.log("Creating FormWithReferences interactable");
     const form = formWithReferences("test-form", "Area");
 
     // Fill the form with standard and reference fields
-    cy.log("Filling form with data");
     form.fill({
       name: "Test Area",
       description: "Test Description",
@@ -132,20 +127,15 @@ describe("FormWithReferences Interactable", () => {
     });
 
     // Submit the form
-    cy.log("Submitting form");
     form.submit();
 
     // Debug: Check if the form was actually submitted
     cy.window().then((win) => {
-      cy.log("Window object:", win);
       // Check if there are any form submit events
-      cy.get("form").then(($form) => {
-        cy.log(`Form element found: ${$form.length > 0}`);
-      });
+      cy.get("form");
     });
 
     // Check that onSubmit was called with the correct data
-    cy.log("Checking if onSubmit was called");
     cy.get("@onSubmit").should("have.been.calledWith", {
       name: "Test Area",
       description: "Test Description",
@@ -156,11 +146,9 @@ describe("FormWithReferences Interactable", () => {
 
   it("should handle multiple reference fields", () => {
     // Create a form with multiple reference fields
-    cy.log("Creating onSubmit stub for multiple reference fields test");
     const onSubmit = cy.stub().as("onSubmit");
 
     // Create a ZodReferencesBridge for the schema
-    cy.log("Creating ZodReferencesBridge for multiple reference fields test");
     const bridge = new ZodReferencesBridge({
       schema: areaSchema,
       dependencies: {
@@ -169,20 +157,7 @@ describe("FormWithReferences Interactable", () => {
       },
     });
 
-    // Log the schema structure
-    cy.log("Schema structure:", JSON.stringify(areaSchema._def));
-    cy.log(
-      "Dependencies:",
-      JSON.stringify({
-        world: worldData,
-        tag: tagData,
-      })
-    );
-
     // Mount the form
-    cy.log(
-      "Mounting FormWithReferences component for multiple reference fields test"
-    );
     mount(
       <FormWithReferences
         schema={bridge}
@@ -193,30 +168,16 @@ describe("FormWithReferences Interactable", () => {
 
     // Check what fields are rendered
     cy.get("[data-testid='test-form']").then(($form) => {
-      cy.log(`Form found: ${$form.length > 0}`);
-      cy.log(`Form fields:`, $form.find("input, select").length);
-
-      // Log each field
+      // Check fields exist
       $form.find("input, select").each((index, el) => {
-        const element = el as HTMLInputElement | HTMLSelectElement;
-        cy.log(`Field ${index}:`, {
-          name: element.name,
-          id: element.id,
-          type: element.type,
-          "data-field-name": element.getAttribute("data-field-name"),
-          "data-testid": element.getAttribute("data-testid"),
-        });
+        // Just verify elements exist without logging
       });
     });
 
     // Create the interactable
-    cy.log(
-      "Creating FormWithReferences interactable for multiple reference fields test"
-    );
     const form = formWithReferences("test-form", "Area");
 
     // Fill the form with standard and reference fields
-    cy.log("Filling form with data including array field");
     form.fill({
       name: "Test Area",
       description: "Test Description",
@@ -225,13 +186,9 @@ describe("FormWithReferences Interactable", () => {
     });
 
     // Submit the form
-    cy.log("Submitting form for multiple reference fields test");
     form.submit();
 
     // Check that onSubmit was called with the correct data
-    cy.log(
-      "Checking if onSubmit was called for multiple reference fields test"
-    );
     cy.get("@onSubmit").should("have.been.calledWith", {
       name: "Test Area",
       description: "Test Description",
@@ -279,7 +236,6 @@ describe("FormWithReferences Interactable", () => {
 
   it("should automatically infer object type from schema", () => {
     // Create a form with reference fields but without explicitly providing objectType
-    cy.log("Creating onSubmit stub for auto-inference test");
     const onSubmit = cy.stub().as("onSubmit");
 
     // Create a schema with a description that should help infer the type
@@ -296,7 +252,6 @@ describe("FormWithReferences Interactable", () => {
       .describe("A character in the game universe");
 
     // Create a ZodReferencesBridge for the schema
-    cy.log("Creating ZodReferencesBridge for auto-inference test");
     const bridge = new ZodReferencesBridge({
       schema: characterSchema,
       dependencies: {
@@ -305,7 +260,6 @@ describe("FormWithReferences Interactable", () => {
     });
 
     // Mount the form WITHOUT providing objectType
-    cy.log("Mounting FormWithReferences component without objectType");
     mount(
       <FormWithReferences
         schema={bridge}
@@ -318,11 +272,9 @@ describe("FormWithReferences Interactable", () => {
     cy.get("[data-testid*='CharacterReferenceSingleField']").should("exist");
 
     // Create the interactable (using "Character" as the expected inferred type)
-    cy.log("Creating FormWithReferences interactable with inferred type");
     const form = formWithReferences("test-form", "Character");
 
     // Fill the form
-    cy.log("Filling form with data");
     form.fill({
       name: "Test Character",
       description: "Test Description",
@@ -330,11 +282,9 @@ describe("FormWithReferences Interactable", () => {
     });
 
     // Submit the form
-    cy.log("Submitting form");
     form.submit();
 
     // Check that onSubmit was called with the correct data
-    cy.log("Checking if onSubmit was called");
     cy.get("@onSubmit").should("have.been.calledWith", {
       name: "Test Character",
       description: "Test Description",

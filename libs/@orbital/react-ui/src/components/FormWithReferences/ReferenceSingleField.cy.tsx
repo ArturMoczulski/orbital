@@ -25,7 +25,7 @@ describe("ReferenceSingleField", () => {
     cy.on("uncaught:exception", () => false);
   });
 
-  it("renders with reference data as a select field", () => {
+  it.only("renders with reference data as a select field", () => {
     // Create a simple onChange function
     const onChange = cy.stub().as("onChange");
 

@@ -1,11 +1,12 @@
-import { getSchemaName } from "@orbital/core/src/zod/reference/reference";
-import { camelCase, startCase } from "lodash";
 import React from "react";
 import { ZodBridge } from "uniforms-bridge-zod";
 import { AutoField, AutoForm as UniformsAutoForm } from "uniforms-mui";
 import ReferenceArrayField from "./ReferenceArrayField";
 import ReferenceSingleField from "./ReferenceSingleField";
-import { ZodReferencesBridge } from "./ZodReferencesBridge";
+import {
+  inferObjectTypeFromSchema,
+  ZodReferencesBridge,
+} from "./ZodReferencesBridge";
 
 // Component names as constants to avoid typos and make refactoring easier
 const REFERENCE_ARRAY_FIELD = "ReferenceArrayField";
@@ -130,74 +131,21 @@ export interface FormWithReferencesProps {
 }
 
 /**
- * Attempts to infer the object type from a schema
- * @param schema The schema to infer the object type from
- * @returns The inferred object type or "Unknown" if it can't be determined
- */
-// Use lodash's startCase and camelCase to create Pascal case
-// (startCase('foo-bar') -> 'Foo Bar', so we need to remove spaces with replace)
-const toPascalCase = (str: string): string =>
-  startCase(camelCase(str)).replace(/\s/g, "");
-
-/**
- * Attempts to infer the object type from a schema using the core library's getSchemaName function
- * @param schema The schema to infer the object type from
- * @returns The inferred object type in Pascal case, or "Unknown" if it can't be determined
- */
-function inferObjectTypeFromSchema(
-  schema: ZodBridge<any> | ZodReferencesBridge<any>
-): string {
-  try {
-    // Get the raw schema from either ZodBridge or ZodReferencesBridge
-    const rawSchema =
-      schema instanceof ZodReferencesBridge
-        ? schema.schema
-        : schema instanceof ZodBridge
-          ? schema.schema
-          : null;
-
-    if (!rawSchema) {
-      return "Unknown";
-    }
-
-    // Use the existing getSchemaName function from @orbital/core
-    const schemaName = getSchemaName(rawSchema);
-
-    // Convert to Pascal case
-    if (schemaName && schemaName.length > 0) {
-      const objectType = toPascalCase(schemaName);
-      return objectType;
-    }
-
-    return "Unknown";
-  } catch (error) {
-    return "Unknown";
-  }
-}
-
-/**
  * Form component that handles references
  */
 export function FormWithReferences({
   schema,
   onSubmit,
-  objectType,
   ...props
 }: FormWithReferencesProps) {
-  // If objectType is not provided, try to infer it from the schema
-  const inferredObjectType = objectType || inferObjectTypeFromSchema(schema);
-
-  // Log the object type for debugging
-  console.log(
-    `Using object type: ${inferredObjectType} (${objectType ? "explicitly provided" : "inferred from schema"})`
-  );
+  const objectType = props.objectType || inferObjectTypeFromSchema(schema);
 
   return (
     <ReferenceFormProvider
       schema={schema}
       onSubmit={onSubmit}
-      objectType={inferredObjectType}
       {...props}
+      objectType={objectType}
     />
   );
 }

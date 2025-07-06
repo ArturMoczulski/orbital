@@ -7,21 +7,21 @@ import { AutoForm } from "uniforms-mui";
 import { z } from "zod";
 import ReferenceArrayField from "../../../src/components/FormWithReferences/ReferenceArrayField";
 import ReferenceSingleField from "../../../src/components/FormWithReferences/ReferenceSingleField";
-import { referenceSingleField } from "./ReferenceSingleField.interactable";
+import { referenceArrayField } from "./ReferenceArrayField.interactable";
 
 // Component names as constants to avoid typos and make refactoring easier
 const REFERENCE_ARRAY_FIELD = "ReferenceArrayField";
 const REFERENCE_SINGLE_FIELD = "ReferenceSingleField";
 
-// A minimal form context for testing ReferenceSingleField
+// A minimal form context for testing ReferenceArrayField
 const MinimalFormContext = ({
-  fieldName = "worldId",
-  label = "World",
+  fieldName = "tags",
+  label = "Tags",
   required = false,
   disabled = false,
   error = false,
   errorMessage = "",
-  value = "",
+  value = [],
   onChange = () => {},
   reference,
   objectType = "Area",
@@ -29,7 +29,7 @@ const MinimalFormContext = ({
 }) => {
   // Create a simple schema for the field
   const schema = z.object({
-    [fieldName]: z.string().optional(),
+    [fieldName]: z.array(z.string()).optional(),
   });
 
   // Create a bridge with the schema
@@ -71,20 +71,21 @@ const MinimalFormContext = ({
   );
 };
 
-describe("ReferenceSingleField Interactable", () => {
+describe("ReferenceArrayField Interactable", () => {
   // Sample data for testing
-  const worldsData = [
-    { _id: "world1", name: "Earth" },
-    { _id: "world2", name: "Mars" },
-    { _id: "world3", name: "Jupiter" },
+  const tagsData = [
+    { _id: "tag1", name: "Fantasy" },
+    { _id: "tag2", name: "Sci-Fi" },
+    { _id: "tag3", name: "Horror" },
+    { _id: "tag4", name: "Adventure" },
   ];
 
   // Define reference metadata for testing
   const referenceMetadata = {
-    name: "world",
-    type: RelationshipType.MANY_TO_ONE,
+    name: "tag",
+    type: RelationshipType.MANY_TO_MANY,
     foreignField: "_id",
-    options: worldsData,
+    options: tagsData,
   };
 
   beforeEach(() => {
@@ -94,7 +95,7 @@ describe("ReferenceSingleField Interactable", () => {
     });
   });
 
-  describe("ReferenceSingleField-specific functionality", () => {
+  describe("ReferenceArrayField-specific functionality", () => {
     beforeEach(() => {
       // Create a simple onChange function
       const onChange = cy.stub().as("onChange");
@@ -103,14 +104,14 @@ describe("ReferenceSingleField Interactable", () => {
       mount(
         <div className="container">
           <MinimalFormContext
-            fieldName="worldId"
+            fieldName="tags"
             onChange={onChange}
             reference={referenceMetadata}
             objectType="Area"
           >
-            <ReferenceSingleField
-              name="worldId"
-              label="World"
+            <ReferenceArrayField
+              name="tags"
+              label="Tags"
               reference={referenceMetadata}
               objectType="Area"
             />
@@ -121,54 +122,39 @@ describe("ReferenceSingleField Interactable", () => {
 
     it("should render with the correct data-testid", () => {
       // Create the interactable and verify it can find the element
-      const field = referenceSingleField("worldId", "Area");
+      const field = referenceArrayField("tags", "Area");
       field.getElement().should("exist");
     });
 
-    it("should handle reference metadata correctly", () => {
-      // Select an option and verify the onChange is called with the correct value
-      const field = referenceSingleField("worldId", "Area");
-      field.selectByText("Earth");
+    it("should handle selecting multiple values", () => {
+      // Select multiple options and verify the onChange is called with the correct values
+      const field = referenceArrayField("tags", "Area");
+      field.selectById(["tag1", "tag2"]);
 
-      // Check that onChange was called with the correct value
-      cy.get("@onChange").should("have.been.calledWith", "world1");
+      // Check that onChange was called with the correct values
+      cy.get("@onChange").should("have.been.calledWith", ["tag1", "tag2"]);
+    });
+
+    it("should handle clearing selections", () => {
+      // First select some values
+      const field = referenceArrayField("tags", "Area");
+      field.selectById(["tag1", "tag2"]);
+
+      // Then clear them by selecting an empty array
+      field.selectById([]);
+
+      // Check that onChange was called with an empty array
+      cy.get("@onChange").should("have.been.calledWith", []);
     });
   });
 
   describe("Special case handling", () => {
-    it("should handle the special case for worldId field in isRequired", () => {
-      // Mount with required=true
-      mount(
-        <div className="container">
-          <MinimalFormContext
-            fieldName="worldId"
-            onChange={cy.stub()}
-            reference={referenceMetadata}
-            required={true}
-            objectType="Area"
-          >
-            <ReferenceSingleField
-              name="worldId"
-              label="World"
-              reference={referenceMetadata}
-              required={true}
-              objectType="Area"
-            />
-          </MinimalFormContext>
-        </div>
-      );
-
-      // Use the interactable to check if the field is required
-      const field = referenceSingleField("worldId", "Area");
-      field.isRequired().should("eq", true);
-    });
-
     it("should handle empty reference options gracefully", () => {
       // Mount with empty options
       mount(
         <div className="container">
           <MinimalFormContext
-            fieldName="worldId"
+            fieldName="tags"
             onChange={cy.stub()}
             reference={{
               ...referenceMetadata,
@@ -176,9 +162,9 @@ describe("ReferenceSingleField Interactable", () => {
             }}
             objectType="Area"
           >
-            <ReferenceSingleField
-              name="worldId"
-              label="World"
+            <ReferenceArrayField
+              name="tags"
+              label="Tags"
               reference={{
                 ...referenceMetadata,
                 options: [],
@@ -189,34 +175,35 @@ describe("ReferenceSingleField Interactable", () => {
         </div>
       );
 
-      const field = referenceSingleField("worldId", "Area");
+      const field = referenceArrayField("tags", "Area");
       field.getElement().should("exist");
-      // Should fall back to a text field (no select attribute)
-      field.getElement().should("not.have.attr", "select");
+      // Should show a disabled input with a message about no options
+      field.getElement().parent().should("have.class", "Mui-disabled");
+      cy.contains("No options available").should("exist");
     });
   });
 
   describe("Multiple fields", () => {
-    // Sample data for users
-    const usersData = [
-      { _id: "user1", name: "Alice" },
-      { _id: "user2", name: "Bob" },
-      { _id: "user3", name: "Charlie" },
+    // Sample data for categories
+    const categoriesData = [
+      { _id: "cat1", name: "Action" },
+      { _id: "cat2", name: "Drama" },
+      { _id: "cat3", name: "Comedy" },
     ];
 
-    // Define user reference metadata for testing
-    const userReferenceMetadata = {
-      name: "user",
-      type: RelationshipType.MANY_TO_ONE,
+    // Define category reference metadata for testing
+    const categoryReferenceMetadata = {
+      name: "category",
+      type: RelationshipType.MANY_TO_MANY,
       foreignField: "_id",
-      options: usersData,
+      options: categoriesData,
     };
 
     it("should handle fields of different object types", () => {
       // Create a schema with both fields
       const schema = z.object({
-        worldId: z.string().optional(),
-        userId: z.string().optional(),
+        tags: z.array(z.string()).optional(),
+        categories: z.array(z.string()).optional(),
       });
 
       // Create a bridge with the schema
@@ -239,19 +226,19 @@ describe("ReferenceSingleField Interactable", () => {
         <div>
           <AutoForm schema={bridge} model={{}} context={context}>
             <div className="areaContainer">
-              <ReferenceSingleField
-                name="worldId"
-                label="World"
+              <ReferenceArrayField
+                name="tags"
+                label="Tags"
                 reference={referenceMetadata}
                 objectType="Area"
               />
             </div>
-            <div className="userContainer">
-              <ReferenceSingleField
-                name="userId"
-                label="User"
-                reference={userReferenceMetadata}
-                objectType="User"
+            <div className="movieContainer">
+              <ReferenceArrayField
+                name="categories"
+                label="Categories"
+                reference={categoryReferenceMetadata}
+                objectType="Movie"
               />
             </div>
           </AutoForm>
@@ -259,25 +246,21 @@ describe("ReferenceSingleField Interactable", () => {
       );
 
       // Create interactables for both fields
-      const areaField = referenceSingleField("worldId", "Area");
-      const userField = referenceSingleField("userId", "User");
+      const areaField = referenceArrayField("tags", "Area");
+      const movieField = referenceArrayField("categories", "Movie");
 
       // Verify both fields exist with different data-testid attributes based on objectType
       areaField.getElement().should("exist");
-      userField.getElement().should("exist");
-      cy.get(
-        "[data-testid*='AreaReferenceSingleField ReferenceSingleField']"
-      ).should("exist");
-      cy.get(
-        "[data-testid*='UserReferenceSingleField ReferenceSingleField']"
-      ).should("exist");
+      movieField.getElement().should("exist");
+      cy.get("[data-testid*='AreaReferenceArrayField']").should("exist");
+      cy.get("[data-testid*='MovieReferenceArrayField']").should("exist");
     });
 
-    it("should handle fields of the same type but different IDs", () => {
+    it("should handle fields of the same type but different names", () => {
       // Create a schema with both fields
       const schema = z.object({
-        primaryWorldId: z.string().optional(),
-        secondaryWorldId: z.string().optional(),
+        primaryTags: z.array(z.string()).optional(),
+        secondaryTags: z.array(z.string()).optional(),
       });
 
       // Create a bridge with the schema
@@ -295,22 +278,22 @@ describe("ReferenceSingleField Interactable", () => {
         },
       };
 
-      // Mount component with two fields of the same object type but different IDs
+      // Mount component with two fields of the same object type but different names
       mount(
         <div>
           <AutoForm schema={bridge} model={{}} context={context}>
             <div className="areaContainer1">
-              <ReferenceSingleField
-                name="primaryWorldId"
-                label="Primary World"
+              <ReferenceArrayField
+                name="primaryTags"
+                label="Primary Tags"
                 reference={referenceMetadata}
                 objectType="Area"
               />
             </div>
             <div className="areaContainer2">
-              <ReferenceSingleField
-                name="secondaryWorldId"
-                label="Secondary World"
+              <ReferenceArrayField
+                name="secondaryTags"
+                label="Secondary Tags"
                 reference={referenceMetadata}
                 objectType="Area"
               />
@@ -320,15 +303,20 @@ describe("ReferenceSingleField Interactable", () => {
       );
 
       // Create interactables for both fields
-      const primaryField = referenceSingleField("primaryWorldId", "Area");
-      const secondaryField = referenceSingleField("secondaryWorldId", "Area");
+      const primaryField = referenceArrayField("primaryTags", "Area");
+      const secondaryField = referenceArrayField("secondaryTags", "Area");
 
       // Verify both fields exist and can be distinguished by name
       primaryField.getElement().should("exist");
       secondaryField.getElement().should("exist");
-      cy.get(
-        "[data-testid*='AreaReferenceSingleField ReferenceSingleField']"
-      ).should("have.length", 2);
+      cy.get("[data-testid*='AreaReferenceArrayField']").should(
+        "have.length",
+        2
+      );
+
+      // Verify they have different field names
+      cy.get("[data-field-name='primaryTags']").should("exist");
+      cy.get("[data-field-name='secondaryTags']").should("exist");
     });
   });
 });

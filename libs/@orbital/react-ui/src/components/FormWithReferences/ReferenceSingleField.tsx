@@ -1,4 +1,5 @@
 import { ReferenceMetadata } from "@orbital/core/src/zod/reference/reference";
+import { camelCase, startCase } from "lodash";
 import { connectField } from "uniforms";
 import ObjectSelector from "../ObjectSelector/ObjectSelector";
 
@@ -14,7 +15,7 @@ export type ReferenceSingleFieldProps = {
   readOnly?: boolean;
   required?: boolean;
   value?: string;
-  reference?: ReferenceMetadata & {
+  reference: ReferenceMetadata & {
     options: any[];
   };
   objectType: string; // Required prop to specify the containing object type
@@ -33,8 +34,28 @@ function ReferenceSingleField({
   required,
   value,
   reference,
-  objectType, // Required prop, no default value
+  objectType,
 }: ReferenceSingleFieldProps) {
+  const toPascalCase = (str: string): string =>
+    startCase(camelCase(str)).replace(/\s/g, "");
+
+  // Helper to get a proper label from field name or reference
+  const getLabel = (): string | undefined => {
+    // Use provided label if available
+    if (label) return label;
+
+    // Use reference name if available
+    if (reference?.name) return toPascalCase(reference.name);
+
+    // Extract reference name from field name (e.g., "worldId" -> "World")
+    if (name.endsWith("Id")) {
+      const referenceName = name.slice(0, -2); // Remove 'Id' suffix
+      return toPascalCase(referenceName);
+    }
+
+    return undefined;
+  };
+
   // If no reference options are provided, fall back to a standard text field
   if (!reference || !reference.options || reference.options.length === 0) {
     return (
@@ -43,7 +64,7 @@ function ReferenceSingleField({
         error={error}
         errorMessage={errorMessage}
         id={id}
-        label={label}
+        label={getLabel()}
         name={name}
         onChange={onChange}
         placeholder={placeholder}
@@ -67,7 +88,7 @@ function ReferenceSingleField({
       error={error}
       errorMessage={errorMessage}
       id={id}
-      label={label}
+      label={getLabel()}
       name={name}
       onChange={onChange}
       placeholder={placeholder}
