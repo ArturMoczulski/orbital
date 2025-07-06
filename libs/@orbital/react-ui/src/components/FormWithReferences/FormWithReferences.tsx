@@ -48,15 +48,53 @@ export function ReferenceFormProvider(props: any) {
   // Create a component detector that checks for reference fields
   // This follows the recommended approach for Uniforms v4
   const customComponentDetector = (props: any, uniforms: any) => {
+    // Get the objectType from the context
+    const objectType = context.uniforms?.objectType || "Unknown";
+    console.log(`Using objectType: ${objectType} for field ${props.name}`);
+
     // Check if the field has a reference in its uniforms metadata
     if (props.field?.uniforms?.component === REFERENCE_SINGLE_FIELD) {
       console.log(`Detector: Using ReferenceSingleField for ${props.name}`);
-      return ReferenceSingleField;
+
+      // Create a wrapper component that passes the reference props
+      const ReferenceSingleFieldWithProps = (fieldProps: any) => {
+        // Extract reference from the field
+        const reference = props.field?.reference;
+        console.log(`Reference props for ${props.name}:`, reference);
+
+        // Pass the reference props and objectType to ReferenceSingleField
+        return (
+          <ReferenceSingleField
+            {...fieldProps}
+            reference={reference}
+            objectType={objectType}
+          />
+        );
+      };
+
+      return ReferenceSingleFieldWithProps;
     }
 
     if (props.field?.uniforms?.component === REFERENCE_ARRAY_FIELD) {
       console.log(`Detector: Using ReferenceArrayField for ${props.name}`);
-      return ReferenceArrayField;
+
+      // Create a wrapper component that passes the reference props
+      const ReferenceArrayFieldWithProps = (fieldProps: any) => {
+        // Extract reference from the field
+        const reference = props.field?.reference;
+        console.log(`Reference props for ${props.name}:`, reference);
+
+        // Pass the reference props and objectType to ReferenceArrayField
+        return (
+          <ReferenceArrayField
+            {...fieldProps}
+            reference={reference}
+            objectType={objectType}
+          />
+        );
+      };
+
+      return ReferenceArrayFieldWithProps;
     }
 
     // Return AutoField for non-reference fields

@@ -97,8 +97,9 @@ class FormWithReferencesInteractable<
                     return this.getElement().then(($form) => {
                       // Look for fields with data-testid that includes ReferenceSingleField or ReferenceArrayField
                       // Use more flexible selectors to match the actual elements in the DOM
-                      const singleSelector = `[data-testid*="ReferenceSingleField"][data-field-name="${prop}"], [data-testid*="${this.objectType}ReferenceSingleField"][data-field-name="${prop}"]`;
-                      const arraySelector = `[data-testid*="ReferenceArrayField"][data-field-name="${prop}"], [data-testid*="${this.objectType}ReferenceArrayField"][data-field-name="${prop}"]`;
+                      // Also include the case where objectType might be undefined
+                      const singleSelector = `[data-testid*="ReferenceSingleField"][data-field-name="${prop}"], [data-testid*="${this.objectType}ReferenceSingleField"][data-field-name="${prop}"], [data-testid*="undefinedReferenceSingleField"][data-field-name="${prop}"]`;
+                      const arraySelector = `[data-testid*="ReferenceArrayField"][data-field-name="${prop}"], [data-testid*="${this.objectType}ReferenceArrayField"][data-field-name="${prop}"], [data-testid*="undefinedReferenceArrayField"][data-field-name="${prop}"]`;
 
                       cy.log(
                         `Looking for reference field with selectors: ${singleSelector} or ${arraySelector}`

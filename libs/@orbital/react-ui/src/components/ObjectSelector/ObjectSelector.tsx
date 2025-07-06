@@ -62,6 +62,7 @@ export function ObjectSelector({
         value={value ?? ""}
         variant="outlined"
         data-testid={dataTestId}
+        data-field-name={name}
       />
     );
   }
@@ -82,6 +83,7 @@ export function ObjectSelector({
       value={value ?? ""}
       variant="outlined"
       data-testid={dataTestId}
+      data-field-name={name}
       // Use MenuProps to add a custom class that can be used for selection
       SelectProps={{
         MenuProps: {

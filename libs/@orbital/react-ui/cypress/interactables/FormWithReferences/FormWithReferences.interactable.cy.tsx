@@ -114,6 +114,7 @@ describe("FormWithReferences Interactable", () => {
         schema={bridge}
         onSubmit={onSubmit}
         data-testid="test-form"
+        objectType="Area"
       />
     );
 
@@ -187,6 +188,7 @@ describe("FormWithReferences Interactable", () => {
         schema={bridge}
         onSubmit={onSubmit}
         data-testid="test-form"
+        objectType="Area"
       />
     );
 
