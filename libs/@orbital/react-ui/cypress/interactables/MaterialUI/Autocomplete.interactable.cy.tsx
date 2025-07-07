@@ -474,5 +474,44 @@ describe("AutocompleteInteractable", () => {
         .selected()
         .should("deep.equal", ["Async Option 1", "Last Async Option"]);
     });
+
+    it("should wait for async options to load before selecting", () => {
+      const asyncAutocomplete = new TestAutocompleteInteractable(
+        "async-autocomplete"
+      );
+
+      // Initially closed with no options
+      asyncAutocomplete.isClosed().should("be.true");
+
+      // Call select() directly without manually waiting for loading to complete
+      // The select() method should handle waiting for options to load
+      asyncAutocomplete.select("Async Option 2");
+
+      // Verify the selection was successful
+      cy.contains("Async selected value: Async Option 2").should("exist");
+      asyncAutocomplete.selected().should("eq", "Async Option 2");
+    });
+
+    it("should wait for async options to load before selecting multiple options", () => {
+      const asyncMultipleAutocomplete = new TestAutocompleteInteractable(
+        "async-multiple-autocomplete"
+      );
+
+      // Initially closed with no options
+      asyncMultipleAutocomplete.isClosed().should("be.true");
+
+      // Call select() directly with multiple options without manually waiting
+      // The select() method should handle waiting for options to load
+      const optionsToSelect = ["Async Option 1", "Another Async Option"];
+      asyncMultipleAutocomplete.select(optionsToSelect);
+
+      // Verify the selections were successful
+      cy.contains(
+        `Async multiple selected values: ${optionsToSelect.join(", ")}`
+      ).should("exist");
+      asyncMultipleAutocomplete
+        .selected()
+        .should("deep.equal", optionsToSelect);
+    });
   });
 });
