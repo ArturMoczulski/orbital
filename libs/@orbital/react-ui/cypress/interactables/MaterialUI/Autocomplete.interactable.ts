@@ -71,25 +71,32 @@ export class AutocompleteInteractable
    * @returns this - for method chaining
    */
   open(): Cypress.Chainable<void> {
-    return this.isClosed().then((closed) => {
+    // First check if it's closed
+    this.isClosed().then((closed) => {
       if (closed) {
         this.popper.open();
       }
     });
+
+    // Use type assertion to satisfy TypeScript
+    return cy.wrap(null).then(() => {}) as unknown as Cypress.Chainable<void>;
   }
 
   /**
    * Closes the autocomplete
    * Delegates to the internal popper instance
-   * @returns this - for method chaining
+   * @returns Cypress.Chainable<void> - for method chaining
    */
-  close(): this {
+  close(): Cypress.Chainable<void> {
+    // First check if it's opened
     this.isOpened().then((opened) => {
       if (opened) {
         this.popper.close();
       }
     });
-    return this;
+
+    // Use type assertion to satisfy TypeScript
+    return cy.wrap(null).then(() => {}) as unknown as Cypress.Chainable<void>;
   }
 
   /**
@@ -98,7 +105,10 @@ export class AutocompleteInteractable
    * @returns Cypress.Chainable<boolean> - chainable that yields true if the autocomplete is triggered
    */
   isTriggered(): Cypress.Chainable<boolean> {
-    return this.popper.isTriggered();
+    return cy.wrap(null).then(() => {
+      // Check if the popper exists and is visible
+      return this.popper.isTriggered();
+    });
   }
 
   /**
@@ -142,13 +152,7 @@ export class AutocompleteInteractable
    */
   protected getListbox(): Cypress.Chainable<JQuery<HTMLElement>> {
     return this.open().then(() => {
-      return this.popper
-        .get()
-        .find('[role="listbox"]')
-        .then((results) => {
-          this.close();
-          return results;
-        });
+      return this.popper.get().find('[role="listbox"]');
     });
   }
 
@@ -177,7 +181,13 @@ export class AutocompleteInteractable
    * @returns this - for method chaining
    */
   select(text: string): this {
+    // Click the item
     this.item(text).click();
+
+    // After selecting an item, the autocomplete should close automatically
+    // but we'll wait a moment to ensure it's processed
+    cy.wait(100);
+
     return this;
   }
 }
