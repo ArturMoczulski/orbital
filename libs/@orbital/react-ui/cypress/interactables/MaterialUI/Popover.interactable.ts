@@ -1,118 +1,175 @@
-import { MaterialUIInteractable } from "./MaterialUI.interactable";
+import { Openable } from "../interfaces/Openable";
+import {
+  MaterialUIInteractable,
+  MaterialUIInteractableOptions,
+} from "./MaterialUI.interactable";
+
+/**
+ * Options for PopoverInteractable
+ */
+export interface PopoverInteractableOptions
+  extends MaterialUIInteractableOptions {
+  /**
+   * Optional trigger element selector or interactable
+   * This is the element that opens the popover when clicked
+   */
+  triggerElement?: string | (() => Cypress.Chainable<JQuery<HTMLElement>>);
+}
 
 /**
  * Interactable for Material UI Popover components
- * Provides methods to interact with popovers, dropdowns, and menus in Cypress tests
+ * Implements the Openable interface to provide methods for opening, closing,
+ * and checking the state of the popover
  */
-export class PopoverInteractable extends MaterialUIInteractable {
-  /**
-   * Check if a popover/dropdown is currently open
-   * @returns A chainable that resolves to true if the popover is open, false otherwise
-   */
-  isDropdownOpen(): Cypress.Chainable<boolean> {
-    return PopoverInteractable.isDropdownOpen();
-  }
+export class PopoverInteractable
+  extends MaterialUIInteractable
+  implements Openable
+{
+  protected triggerElement?:
+    | string
+    | (() => Cypress.Chainable<JQuery<HTMLElement>>);
 
-  /**
-   * Open a popover/dropdown by clicking on the trigger element
-   * @returns A chainable that resolves when the popover is open
-   */
-  openDropdown(): Cypress.Chainable<JQuery<HTMLElement>> {
-    return this.get().then(($el) => {
-      return PopoverInteractable.openDropdown($el);
+  constructor(options: PopoverInteractableOptions) {
+    super({
+      ...options,
+      componentName: options.componentName || "Popover",
     });
+    this.triggerElement = options.triggerElement;
   }
 
   /**
-   * Close an open popover/dropdown
-   * @returns A chainable that resolves when the popover is closed
+   * Get the trigger element that opens the popover
    */
-  closeDropdown(): Cypress.Chainable<JQuery<HTMLElement>> {
-    return PopoverInteractable.closeDropdown().then(() => {
-      return this.get();
+  protected getTriggerElement(): Cypress.Chainable<JQuery<HTMLElement>> {
+    if (!this.triggerElement) {
+      throw new Error("No trigger element provided for PopoverInteractable");
+    }
+
+    if (typeof this.triggerElement === "string") {
+      return cy.get(this.triggerElement);
+    }
+
+    return this.triggerElement();
+  }
+
+  /**
+   * Opens the popover by clicking the trigger element
+   * @returns this - for method chaining
+   */
+  open(): this {
+    // Click the trigger element to open the popover
+    this.getTriggerElement().click();
+
+    // Wait for the popover to be visible
+    this.should("be.visible", { timeout: 5000 });
+
+    return this;
+  }
+
+  /**
+   * Closes the popover by clicking outside of it
+   * @returns this - for method chaining
+   */
+  close(): this {
+    // For Material UI popovers, we need to click on the backdrop or press Escape
+    // to properly trigger the onClose handler
+
+    // Try multiple strategies to ensure the popover closes
+    cy.get("body").then(($body) => {
+      // Strategy 1: Click away from the popover (top-left corner)
+      cy.get("body").click(10, 10);
+
+      // Strategy 2: Click in the center of the body
+      cy.wait(100).then(() => {
+        this.isOpened().then((isOpen) => {
+          if (isOpen) {
+            const bodyWidth = $body.width() || 500;
+            const bodyHeight = $body.height() || 500;
+            cy.get("body").click(bodyWidth / 2, bodyHeight / 2);
+          }
+        });
+      });
+
+      // Strategy 3: Press Escape key as a final fallback
+      cy.wait(100).then(() => {
+        this.isOpened().then((isOpen) => {
+          if (isOpen) {
+            cy.get("body").type("{esc}");
+          }
+        });
+      });
     });
+
+    // Wait for animations to complete
+    cy.wait(300);
+
+    return this;
   }
 
   /**
-   * Check if a popover/dropdown is currently open
-   * @returns A chainable that resolves to true if the popover is open, false otherwise
+   * Checks if the popover is currently open
+   * @returns Cypress.Chainable<boolean> - chainable that yields true if the popover is open
    */
-  static isDropdownOpen(): Cypress.Chainable<boolean> {
-    return MaterialUIInteractable.getFromBody(this.componentName()).then(
-      ($el) => {
-        return cy.wrap($el.length > 0);
+  isOpened(): Cypress.Chainable<boolean> {
+    // For Material UI popovers, we check if the element exists in the DOM
+    // since they are completely removed when closed
+    return cy.document().then((doc) => {
+      // First check for .MuiPopover-root elements
+      const popoverElements = doc.querySelectorAll(".MuiPopover-root");
+
+      // If we found any popover elements, check if they're visible
+      if (popoverElements.length > 0) {
+        for (let i = 0; i < popoverElements.length; i++) {
+          const element = popoverElements[i] as HTMLElement;
+          // Check if the element is in the DOM and visible
+          if (element.offsetParent !== null) {
+            return true;
+          }
+        }
       }
-    );
-  }
 
-  /**
-   * Open a popover/dropdown by clicking on the trigger element
-   * @param element The element to click to open the popover
-   * @returns A chainable that resolves when the popover is open
-   */
-  static openDropdown(
-    element: JQuery<HTMLElement>
-  ): Cypress.Chainable<JQuery<HTMLElement>> {
-    // Check if dropdown is already open
-    return PopoverInteractable.isDropdownOpen().then((isOpen) => {
-      if (!isOpen) {
-        // Click directly on the combobox element which is what Material UI uses
-        cy.wrap(element).find('[role="combobox"]').click({ force: true });
-
-        // Wait for the dropdown to appear
-        return cy
-          .get("body")
-          .find('.MuiPopover-root, [role="presentation"] .MuiPaper-root')
-          .should("be.visible");
+      // If we didn't find any visible popover elements, check for the paper element
+      const paperElements = doc.querySelectorAll(".MuiPopover-paper");
+      if (paperElements.length > 0) {
+        for (let i = 0; i < paperElements.length; i++) {
+          const element = paperElements[i] as HTMLElement;
+          if (element.offsetParent !== null) {
+            return true;
+          }
+        }
       }
 
-      // If already open, return the dropdown element
-      return cy
-        .get("body")
-        .find('.MuiPopover-root, [role="presentation"] .MuiPaper-root');
+      return false;
     });
   }
 
   /**
-   * Close an open popover/dropdown
-   * @returns A chainable that resolves when the popover is closed
+   * Checks if the popover is currently closed
+   * @returns Cypress.Chainable<boolean> - chainable that yields true if the popover is closed
    */
-  static closeDropdown(): Cypress.Chainable<JQuery<HTMLElement>> {
-    // Check if dropdown is open
-    return PopoverInteractable.isDropdownOpen().then((isOpen) => {
-      if (isOpen) {
-        // Click away to close the dropdown
-        cy.get("body").click(0, 0);
+  isClosed(): Cypress.Chainable<boolean> {
+    // Return a chainable that yields whether the popover is not visible
+    return this.isOpened().then((isOpen) => !isOpen);
+  }
 
-        // Wait for the dropdown to disappear
-        return cy
-          .get("body")
-          .find('.MuiPopover-root, [role="presentation"] .MuiPaper-root')
-          .should("not.exist");
-      }
+  /**
+   * Gets the content of the popover
+   * @returns Cypress.Chainable<JQuery<HTMLElement>> - the content element of the popover
+   */
+  getContent(): Cypress.Chainable<JQuery<HTMLElement>> {
+    // Find the popover content using the popover element
+    return this.get().find(".MuiPopover-paper");
+  }
 
-      // If already closed, return an empty element
-      return cy.wrap(Cypress.$());
-    });
+  /**
+   * Clicks on an element within the popover content by its data-testid
+   * @param dataTestId - the data-testid of the element to click
+   * @returns this - for method chaining
+   */
+  clickOnElement(dataTestId: string): this {
+    this.getContent().find(`[data-testid="${dataTestId}"]`).click();
+    return this;
   }
 }
 
-/**
- * Factory function to create a Popover interactable
- * @param componentType Optional component type identifier
- * @param parentElement Optional parent element to scope the component within
- * @returns A Popover interactable
- */
-export function popover(
-  options: {
-    componentName?: string;
-    dataTestId?: string;
-    index?: number;
-    parentElement?: () => Cypress.Chainable<JQuery<HTMLElement>>;
-  } = {}
-): PopoverInteractable {
-  return new PopoverInteractable(options);
-}
-
-// Export the factory function and class
-export default popover;
+export default PopoverInteractable;

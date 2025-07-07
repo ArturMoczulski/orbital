@@ -17,13 +17,13 @@ export interface Openable {
 
   /**
    * Checks if the component is currently open
-   * @returns boolean - true if the component is open, false otherwise
+   * @returns Cypress.Chainable<boolean> - chainable that resolves to true if the component is open, false otherwise
    */
-  isOpened(): boolean;
+  isOpened(): Cypress.Chainable<boolean>;
 
   /**
    * Checks if the component is currently closed
-   * @returns boolean - true if the component is closed, false otherwise
+   * @returns Cypress.Chainable<boolean> - chainable that resolves to true if the component is closed, false otherwise
    */
-  isClosed(): boolean;
+  isClosed(): Cypress.Chainable<boolean>;
 }

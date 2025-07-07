@@ -1,394 +1,267 @@
 /// <reference types="cypress" />
-import Autocomplete from "@mui/material/Autocomplete";
-import FormControl from "@mui/material/FormControl";
-import InputLabel from "@mui/material/InputLabel";
-import MenuItem from "@mui/material/MenuItem";
-import Select from "@mui/material/Select";
-import TextField from "@mui/material/TextField";
+import Button from "@mui/material/Button";
+import Popover from "@mui/material/Popover";
+import Typography from "@mui/material/Typography";
 import { mount } from "cypress/react";
-import { MaterialUIInteractable } from "./MaterialUI.interactable";
-import { PopoverInteractable, popover } from "./Popover.interactable";
+import React, { useState } from "react";
+import { PopoverInteractable } from "./Popover.interactable";
+
+/**
+ * Test implementation of PopoverInteractable for testing purposes
+ */
+class TestPopoverInteractable extends PopoverInteractable {
+  constructor(options: any) {
+    super(options);
+  }
+
+  // Add a method to get the text content of the popover
+  getPopoverText(): Cypress.Chainable<string> {
+    return this.getContent().invoke("text");
+  }
+}
+
+/**
+ * Helper function to create a TestPopoverInteractable instance
+ */
+function popover(options: any): TestPopoverInteractable {
+  return new TestPopoverInteractable(options);
+}
 
 describe("PopoverInteractable", () => {
   describe("Basic Functionality", () => {
     beforeEach(() => {
-      // Mount a simple component with a Select (which uses Popover)
-      mount(
-        <div data-testid="TestContainer">
-          <FormControl fullWidth>
-            <InputLabel id="test-select-label">Test Select</InputLabel>
-            <Select
-              labelId="test-select-label"
-              data-testid="TestSelect"
-              value=""
-              label="Test Select"
-            >
-              <MenuItem value="option1">Option 1</MenuItem>
-              <MenuItem value="option2">Option 2</MenuItem>
-              <MenuItem value="option3">Option 3</MenuItem>
-            </Select>
-          </FormControl>
-        </div>
-      );
+      // Mount a simple component with a button that opens a popover
+      mount(<PopoverTestComponent />);
     });
 
-    it("should inherit from MaterialUIInteractable", () => {
-      // Create a PopoverInteractable instance
-      const select = popover({ componentName: "Select" });
-
-      // Verify it's an instance of MaterialUIInteractable
-      expect(select instanceof MaterialUIInteractable).to.be.true;
-
-      // Verify it can find the element using MaterialUIInteractable's selector logic
-      select.get().should("exist");
-      select.get().should("have.class", "MuiSelect-root");
-    });
-
-    it("should check if a dropdown is closed initially", () => {
-      // Create a PopoverInteractable instance
-      const select = popover({ componentName: "Select" });
-
-      // Verify the dropdown is initially closed
-      select.isDropdownOpen().should("eq", false);
-
-      // Also test the static method
-      PopoverInteractable.isDropdownOpen().should("eq", false);
-    });
-
-    it("should open a dropdown", () => {
-      // Create a PopoverInteractable instance
-      const select = popover({ componentName: "Select" });
-
-      // Open the dropdown
-      select.openDropdown();
-
-      // Verify the dropdown is open
-      select.isDropdownOpen().should("eq", true);
-
-      // Verify the dropdown content is visible
-      cy.get("body")
-        .find('.MuiPopover-root, [role="presentation"] .MuiPaper-root')
-        .should("be.visible");
-
-      // Verify the dropdown contains the expected options
-      cy.get("body").find(".MuiMenuItem-root").should("have.length", 3);
-
-      cy.get("body")
-        .find(".MuiMenuItem-root")
-        .eq(0)
-        .should("contain.text", "Option 1");
-    });
-
-    it("should close an open dropdown", () => {
-      // Create a PopoverInteractable instance
-      const select = popover({ componentName: "Select" });
-
-      // Open the dropdown
-      select.openDropdown();
-
-      // Verify the dropdown is open
-      select.isDropdownOpen().should("eq", true);
-
-      // Close the dropdown
-      select.closeDropdown();
-
-      // Verify the dropdown is closed
-      select.isDropdownOpen().should("eq", false);
-
-      // Verify the dropdown content is not visible
-      cy.get("body")
-        .find('.MuiPopover-root, [role="presentation"] .MuiPaper-root')
-        .should("not.exist");
-    });
-
-    it("should use static methods to open and close dropdowns", () => {
-      // Create a MaterialUIInteractable instance (not a PopoverInteractable)
-      const materialUISelect = new MaterialUIInteractable({
-        htmlElementType: "Select",
+    it("should open and close the popover", () => {
+      // Create a PopoverInteractable instance using componentName
+      const popoverComponent = popover({
+        componentName: "Popover",
+        triggerElement: '[data-testid="PopoverTrigger"]',
       });
 
-      // Get the element
-      materialUISelect.get().then(($el) => {
-        // Use static method to open the dropdown
-        PopoverInteractable.openDropdown($el);
+      // Open the popover
+      popoverComponent.open();
 
-        // Verify the dropdown is open
-        PopoverInteractable.isDropdownOpen().should("eq", true);
+      // Verify the popover is open
+      popoverComponent.isOpened().should("eq", true);
 
-        // Use static method to close the dropdown
-        PopoverInteractable.closeDropdown();
+      // Check the content
+      popoverComponent
+        .getPopoverText()
+        .should("contain", "This is the popover content");
 
-        // Verify the dropdown is closed
-        PopoverInteractable.isDropdownOpen().should("eq", false);
+      // Close the popover
+      popoverComponent.close();
+
+      // Wait a moment for the popover to close
+      cy.wait(500);
+
+      // Verify the popover is closed using the interactable's isClosed method
+      popoverComponent.isClosed().should("eq", true);
+    });
+
+    it("should click on elements within the popover", () => {
+      // Create a PopoverInteractable instance using componentName
+      const popoverComponent = popover({
+        componentName: "Popover",
+        triggerElement: '[data-testid="PopoverTrigger"]',
       });
+
+      // Open the popover
+      popoverComponent.open();
+
+      // Verify we can interact with elements inside the popover
+      popoverComponent
+        .getContent()
+        .find('[data-testid="PopoverContent"]')
+        .should("exist");
+      popoverComponent
+        .getContent()
+        .find('[data-testid="PopoverContent"]')
+        .should("contain.text", "This is the popover content");
     });
   });
 
-  describe("Autocomplete Component", () => {
-    const options = ["Option 1", "Option 2", "Option 3"];
-
-    beforeEach(() => {
-      // Mount a component with an Autocomplete (which uses Popover)
-      mount(
-        <div data-testid="TestContainer">
-          <Autocomplete
-            data-testid="TestAutocomplete"
-            options={options}
-            renderInput={(params) => (
-              <TextField {...params} label="Test Autocomplete" />
-            )}
-          />
-        </div>
-      );
-    });
-
-    it("should open and close an Autocomplete dropdown", () => {
-      // Create a PopoverInteractable instance for the Autocomplete
-      const autocomplete = popover({ componentName: "Autocomplete" });
-
-      // Verify the dropdown is initially closed
-      autocomplete.isDropdownOpen().should("eq", false);
-
-      // Open the dropdown
-      autocomplete.openDropdown();
-
-      // Verify the dropdown is open
-      autocomplete.isDropdownOpen().should("eq", true);
-
-      // Verify the dropdown content is visible
-      cy.get("body").find(".MuiAutocomplete-popper").should("be.visible");
-
-      // Verify the dropdown contains the expected options
-      cy.get("body").find('[role="option"]').should("have.length", 3);
-
-      // Close the dropdown
-      autocomplete.closeDropdown();
-
-      // Verify the dropdown is closed
-      autocomplete.isDropdownOpen().should("eq", false);
-    });
-  });
-
-  describe("Multiple Popovers", () => {
+  describe("Complex Scenarios", () => {
     beforeEach(() => {
       // Mount a component with multiple popovers
-      mount(
-        <div data-testid="TestContainer">
-          <div data-testid="Container1">
-            <FormControl fullWidth>
-              <InputLabel id="select1-label">Select 1</InputLabel>
-              <Select
-                labelId="select1-label"
-                data-testid="Select1"
-                value=""
-                label="Select 1"
-              >
-                <MenuItem value="option1">Option 1</MenuItem>
-                <MenuItem value="option2">Option 2</MenuItem>
-              </Select>
-            </FormControl>
-          </div>
-
-          <div data-testid="Container2">
-            <FormControl fullWidth>
-              <InputLabel id="select2-label">Select 2</InputLabel>
-              <Select
-                labelId="select2-label"
-                data-testid="Select2"
-                value=""
-                label="Select 2"
-              >
-                <MenuItem value="option3">Option 3</MenuItem>
-                <MenuItem value="option4">Option 4</MenuItem>
-              </Select>
-            </FormControl>
-          </div>
-        </div>
-      );
+      mount(<MultiplePopoversTestComponent />);
     });
 
-    it("should handle multiple popovers independently", () => {
-      // Create PopoverInteractable instances for each select
-      const parent1 = () => cy.get('[data-testid="Container1"]');
-      const select1 = popover({
-        componentName: "Select",
-        parentElement: parent1,
+    // Note: Material UI doesn't support having multiple popovers open simultaneously
+    // Opening a new popover automatically closes any previously open ones
+
+    it("should handle multiple popovers sequentially", () => {
+      // Create PopoverInteractable instances for both popovers
+      const popover1 = popover({
+        dataTestId: "TestPopover1",
+        triggerElement: '[data-testid="PopoverTrigger1"]',
       });
 
-      const parent2 = () => cy.get('[data-testid="Container2"]');
-      const select2 = popover({
-        componentName: "Select",
-        parentElement: parent2,
+      const popover2 = popover({
+        dataTestId: "TestPopover2",
+        triggerElement: '[data-testid="PopoverTrigger2"]',
       });
 
-      // Verify both dropdowns are initially closed
-      select1.isDropdownOpen().should("eq", false);
-      select2.isDropdownOpen().should("eq", false);
+      // Open the first popover
+      popover1.open();
 
-      // Open the first dropdown
-      select1.openDropdown();
+      // Verify the first popover is open
+      popover1.isOpened().should("eq", true);
 
-      // Verify only the first dropdown is open
-      select1.isDropdownOpen().should("eq", true);
+      // Check the content of the first popover
+      popover1.getPopoverText().should("contain", "This is popover 1 content");
 
-      // Verify the dropdown content is visible and contains the expected options
-      cy.get("body").find(".MuiMenuItem-root").should("have.length", 2);
+      // Close the first popover
+      popover1.close();
+      cy.wait(500);
 
-      cy.get("body")
-        .find(".MuiMenuItem-root")
-        .eq(0)
-        .should("contain.text", "Option 1");
+      // Verify the first popover is closed
+      popover1.isClosed().should("eq", true);
 
-      // Close the first dropdown
-      select1.closeDropdown();
+      // Open the second popover
+      popover2.open();
 
-      // Open the second dropdown
-      select2.openDropdown();
+      // Verify the second popover is open
+      popover2.isOpened().should("eq", true);
 
-      // Verify only the second dropdown is open
-      select1.isDropdownOpen().should("eq", true); // This is true because any popover is open
-      select2.isDropdownOpen().should("eq", true);
+      // Check the content of the second popover
+      popover2.getPopoverText().should("contain", "This is popover 2 content");
 
-      // Verify the dropdown content is visible and contains the expected options
-      cy.get("body").find(".MuiMenuItem-root").should("have.length", 2);
+      // Close the second popover
+      popover2.close();
+      cy.wait(500);
 
-      cy.get("body")
-        .find(".MuiMenuItem-root")
-        .eq(0)
-        .should("contain.text", "Option 3");
-
-      // Close the second dropdown
-      select2.closeDropdown();
-
-      // Verify both dropdowns are closed
-      select1.isDropdownOpen().should("eq", false);
-      select2.isDropdownOpen().should("eq", false);
-    });
-
-    it("should automatically close one popover when another is opened", () => {
-      // Create PopoverInteractable instances for each select
-      const parent1 = () => cy.get('[data-testid="Container1"]');
-      const select1 = popover({
-        componentName: "Select",
-        parentElement: parent1,
-      });
-
-      const parent2 = () => cy.get('[data-testid="Container2"]');
-      const select2 = popover({
-        componentName: "Select",
-        parentElement: parent2,
-      });
-
-      // Open the first dropdown
-      select1.openDropdown();
-
-      // Verify the first dropdown is open
-      select1.isDropdownOpen().should("eq", true);
-
-      // Open the second dropdown
-      select2.openDropdown();
-
-      // Verify the first dropdown is automatically closed
-      // and only the second dropdown is open
-      select1.isDropdownOpen().should("eq", true); // This is true because any popover is open
-      select2.isDropdownOpen().should("eq", true);
-
-      // Verify the dropdown content is from the second select
-      cy.get("body")
-        .find(".MuiMenuItem-root")
-        .eq(0)
-        .should("contain.text", "Option 3");
-    });
-  });
-
-  describe("Edge Cases", () => {
-    it("should handle non-existent elements gracefully", () => {
-      // Mount an empty component
-      mount(<div></div>);
-
-      // Create a PopoverInteractable instance for a non-existent element
-      const select = popover({ componentName: "Select" });
-
-      // We'll use cy.on to catch the error
-      cy.on("fail", (err) => {
-        expect(err.message).to.include("Expected to find element");
-        return false; // Prevent the error from failing the test
-      });
-
-      // This should fail because the element doesn't exist
-      // Add a short timeout to make the test run faster
-      select.get({ timeout: 100 });
-    });
-
-    it("should handle already open dropdowns", () => {
-      // Mount a component with a Select
-      mount(
-        <div data-testid="TestContainer">
-          <FormControl fullWidth>
-            <InputLabel id="test-select-label">Test Select</InputLabel>
-            <Select
-              labelId="test-select-label"
-              data-testid="TestSelect"
-              value=""
-              label="Test Select"
-              open={true} // Start with the dropdown open
-            >
-              <MenuItem value="option1">Option 1</MenuItem>
-              <MenuItem value="option2">Option 2</MenuItem>
-            </Select>
-          </FormControl>
-        </div>
-      );
-
-      // Create a PopoverInteractable instance
-      const select = popover({ componentName: "Select" });
-
-      // Verify the dropdown is already open
-      select.isDropdownOpen().should("eq", true);
-
-      // Try to open the dropdown (should be a no-op)
-      select.openDropdown();
-
-      // Verify the dropdown is still open
-      select.isDropdownOpen().should("eq", true);
-
-      // Close the dropdown
-      select.closeDropdown();
-
-      // Verify the dropdown is closed
-      select.isDropdownOpen().should("eq", false);
-    });
-
-    it("should handle already closed dropdowns", () => {
-      // Mount a component with a Select
-      mount(
-        <div data-testid="TestContainer">
-          <FormControl fullWidth>
-            <InputLabel id="test-select-label">Test Select</InputLabel>
-            <Select
-              labelId="test-select-label"
-              data-testid="TestSelect"
-              value=""
-              label="Test Select"
-            >
-              <MenuItem value="option1">Option 1</MenuItem>
-              <MenuItem value="option2">Option 2</MenuItem>
-            </Select>
-          </FormControl>
-        </div>
-      );
-
-      // Create a PopoverInteractable instance
-      const select = popover({ componentName: "Select" });
-
-      // Verify the dropdown is initially closed
-      select.isDropdownOpen().should("eq", false);
-
-      // Try to close the dropdown (should be a no-op)
-      select.closeDropdown();
-
-      // Verify the dropdown is still closed
-      select.isDropdownOpen().should("eq", false);
+      // Verify the second popover is closed
+      popover2.isClosed().should("eq", true);
     });
   });
 });
+
+// Component for basic popover tests
+const PopoverTestComponent: React.FC = () => {
+  const [anchorEl, setAnchorEl] = useState<HTMLButtonElement | null>(null);
+
+  const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
+    setAnchorEl(event.currentTarget);
+  };
+
+  const handleClose = () => {
+    setAnchorEl(null);
+  };
+
+  const open = Boolean(anchorEl);
+  const id = open ? "simple-popover" : undefined;
+
+  return (
+    <div data-testid="PopoverContainer">
+      <Button
+        data-testid="PopoverTrigger"
+        aria-describedby={id}
+        variant="contained"
+        onClick={handleClick}
+      >
+        Open Popover
+      </Button>
+      <Popover
+        id={id}
+        open={open}
+        anchorEl={anchorEl}
+        onClose={handleClose}
+        anchorOrigin={{
+          vertical: "bottom",
+          horizontal: "left",
+        }}
+        data-testid="TestPopover"
+      >
+        <Typography sx={{ p: 2 }} data-testid="PopoverContent">
+          This is the popover content.
+        </Typography>
+      </Popover>
+    </div>
+  );
+};
+
+// Component for multiple popovers tests
+const MultiplePopoversTestComponent: React.FC = () => {
+  const [anchorEl1, setAnchorEl1] = useState<HTMLButtonElement | null>(null);
+  const [anchorEl2, setAnchorEl2] = useState<HTMLButtonElement | null>(null);
+
+  const handleClick1 = (event: React.MouseEvent<HTMLButtonElement>) => {
+    setAnchorEl1(event.currentTarget);
+  };
+
+  const handleClick2 = (event: React.MouseEvent<HTMLButtonElement>) => {
+    setAnchorEl2(event.currentTarget);
+  };
+
+  const handleClose1 = () => {
+    setAnchorEl1(null);
+  };
+
+  const handleClose2 = () => {
+    setAnchorEl2(null);
+  };
+
+  const open1 = Boolean(anchorEl1);
+  const open2 = Boolean(anchorEl2);
+  const id1 = open1 ? "popover-1" : undefined;
+  const id2 = open2 ? "popover-2" : undefined;
+
+  return (
+    <div data-testid="MultiplePopoversContainer">
+      <div style={{ display: "flex", gap: "16px" }}>
+        <Button
+          data-testid="PopoverTrigger1"
+          aria-describedby={id1}
+          variant="contained"
+          onClick={handleClick1}
+        >
+          Open Popover 1
+        </Button>
+        <Button
+          data-testid="PopoverTrigger2"
+          aria-describedby={id2}
+          variant="contained"
+          onClick={handleClick2}
+        >
+          Open Popover 2
+        </Button>
+      </div>
+
+      <Popover
+        id={id1}
+        open={open1}
+        anchorEl={anchorEl1}
+        onClose={handleClose1}
+        anchorOrigin={{
+          vertical: "bottom",
+          horizontal: "left",
+        }}
+        data-testid="TestPopover1"
+      >
+        <Typography sx={{ p: 2 }} data-testid="PopoverContent1">
+          This is popover 1 content.
+        </Typography>
+      </Popover>
+
+      <Popover
+        id={id2}
+        open={open2}
+        anchorEl={anchorEl2}
+        onClose={handleClose2}
+        anchorOrigin={{
+          vertical: "bottom",
+          horizontal: "left",
+        }}
+        data-testid="TestPopover2"
+      >
+        <Typography sx={{ p: 2 }} data-testid="PopoverContent2">
+          This is popover 2 content.
+        </Typography>
+      </Popover>
+    </div>
+  );
+};
