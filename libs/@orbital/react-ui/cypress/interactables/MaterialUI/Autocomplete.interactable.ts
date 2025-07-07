@@ -1,5 +1,6 @@
 import { Listable, Selectable } from "../interfaces/Listable";
 import { Openable } from "../interfaces/Openable";
+import { Typeable } from "../interfaces/Typeable";
 import {
   MaterialUIInteractable,
   MaterialUIInteractableOptions,
@@ -25,7 +26,7 @@ export interface AutocompleteInteractableOptions
  */
 export class AutocompleteInteractable
   extends MaterialUIInteractable
-  implements Openable, Listable, Selectable
+  implements Openable, Listable, Selectable, Typeable
 {
   /**
    * Internal PopperInteractable instance for delegating Openable methods
@@ -233,6 +234,18 @@ export class AutocompleteInteractable
           }
         });
     }) as unknown as Cypress.Chainable<string | string[]>;
+  }
+
+  /**
+   * Types text into the autocomplete input field
+   * @param text - The text to type
+   * @returns this - for method chaining
+   */
+  type(text: string): this {
+    // Get the input field and type the text
+    this.getTriggerElement().clear().type(text);
+    cy.wait(100); // Wait for the typing to be processed
+    return this;
   }
 }
 

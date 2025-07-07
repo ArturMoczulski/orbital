@@ -26,6 +26,9 @@ const asyncOptions = [
   "Last Async Option",
 ];
 
+// Generate 50 options for large dataset testing
+const largeOptions = Array.from({ length: 50 }, (_, i) => `Option ${i + 1}`);
+
 // Comprehensive test component with multiple autocomplete instances
 const TestAutocompletePageComponent = () => {
   // Single selection autocomplete
@@ -48,6 +51,9 @@ const TestAutocompletePageComponent = () => {
     []
   );
   const [asyncMultipleValue, setAsyncMultipleValue] = useState<string[]>([]);
+
+  // Large options autocomplete
+  const [largeValue, setLargeValue] = useState<string | null>(null);
 
   // Function to simulate async loading
   const loadAsyncOptions = () => {
@@ -197,6 +203,23 @@ const TestAutocompletePageComponent = () => {
             Async multiple selected values:{" "}
             {asyncMultipleValue.length ? asyncMultipleValue.join(", ") : "None"}
           </Typography>
+        </Box>
+      </Box>
+
+      {/* Large options autocomplete for typing test */}
+      <Box sx={{ my: 2 }}>
+        <Typography variant="h6">Large Options Dataset</Typography>
+        <Autocomplete
+          data-testid="large-autocomplete"
+          options={largeOptions}
+          value={largeValue}
+          onChange={(_, newValue) => setLargeValue(newValue)}
+          renderInput={(params) => (
+            <TextField {...params} label="Type to filter 50 options" />
+          )}
+        />
+        <Box sx={{ mt: 1 }}>
+          <Typography>Large selected value: {largeValue || "None"}</Typography>
         </Box>
       </Box>
     </Box>
@@ -512,6 +535,46 @@ describe("AutocompleteInteractable", () => {
       asyncMultipleAutocomplete
         .selected()
         .should("deep.equal", optionsToSelect);
+    });
+  });
+
+  describe("Typing functionality", () => {
+    it("should select an option by typing in the textbox", () => {
+      const largeAutocomplete = new TestAutocompleteInteractable(
+        "large-autocomplete"
+      );
+      const optionToSelect = "Option 48";
+
+      // Type into the input field to filter options
+      largeAutocomplete.type("Option 48");
+
+      // Open should happen automatically after typing
+      largeAutocomplete.isOpened().should("be.true");
+
+      // Select the filtered option
+      largeAutocomplete.select(optionToSelect);
+
+      // Verify the selection was successful
+      cy.contains(`Large selected value: ${optionToSelect}`).should("exist");
+      largeAutocomplete.selected().should("eq", optionToSelect);
+    });
+
+    it("should filter options as user types", () => {
+      const largeAutocomplete = new TestAutocompleteInteractable(
+        "large-autocomplete"
+      );
+
+      // Type a partial string that will match multiple options
+      largeAutocomplete.type("Option 4");
+
+      // Should show filtered options (Option 4, Option 40-49)
+      // We expect 11 options: Option 4 and Option 40-49
+      largeAutocomplete.items().should("have.length.at.most", 11);
+
+      // All visible options should contain "Option 4"
+      largeAutocomplete.items().each(($option) => {
+        expect($option.text()).to.include("Option 4");
+      });
     });
   });
 });
