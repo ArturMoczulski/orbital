@@ -1,6 +1,7 @@
 import { Listable, Selectable } from "../interfaces/Listable";
 import { Openable } from "../interfaces/Openable";
 import { Typeable } from "../interfaces/Typeable";
+import { Validatable } from "../interfaces/Validatable";
 import {
   MaterialUIInteractable,
   MaterialUIInteractableOptions,
@@ -26,7 +27,7 @@ export interface AutocompleteInteractableOptions
  */
 export class AutocompleteInteractable
   extends MaterialUIInteractable
-  implements Openable, Listable, Selectable, Typeable
+  implements Openable, Listable, Selectable, Typeable, Validatable
 {
   /**
    * Internal PopperInteractable instance for delegating Openable methods
@@ -39,9 +40,20 @@ export class AutocompleteInteractable
       componentName: options.componentName || "Autocomplete",
     });
 
+    // If no triggerElement is provided, create a default one that finds the input element
+    const popperOptions = { ...options };
+
+    if (!popperOptions.triggerElement) {
+      popperOptions.triggerElement = () => {
+        return this.get().find("input") as unknown as Cypress.Chainable<
+          JQuery<HTMLElement>
+        >;
+      };
+    }
+
     // Create internal PopperInteractable instance
     this.popper = new PopperInteractable({
-      ...options,
+      ...popperOptions,
       dataTestId: undefined,
       componentName: "Popper", // Use Popper component name for the internal instance
     });
@@ -69,18 +81,10 @@ export class AutocompleteInteractable
   /**
    * Opens the autocomplete by triggering it
    * Delegates to the internal popper instance
-   * @returns this - for method chaining
+   * @returns Cypress.Chainable<void> - for method chaining
    */
   open(): Cypress.Chainable<void> {
-    // First check if it's closed
-    this.isClosed().then((closed) => {
-      if (closed) {
-        this.popper.open();
-      }
-    });
-
-    // Use type assertion to satisfy TypeScript
-    return cy.wrap(null).then(() => {}) as unknown as Cypress.Chainable<void>;
+    return this.popper.open();
   }
 
   /**
@@ -89,15 +93,7 @@ export class AutocompleteInteractable
    * @returns Cypress.Chainable<void> - for method chaining
    */
   close(): Cypress.Chainable<void> {
-    // First check if it's opened
-    this.isOpened().then((opened) => {
-      if (opened) {
-        this.popper.close();
-      }
-    });
-
-    // Use type assertion to satisfy TypeScript
-    return cy.wrap(null).then(() => {}) as unknown as Cypress.Chainable<void>;
+    return this.popper.close();
   }
 
   /**
@@ -106,10 +102,8 @@ export class AutocompleteInteractable
    * @returns Cypress.Chainable<boolean> - chainable that yields true if the autocomplete is triggered
    */
   isTriggered(): Cypress.Chainable<boolean> {
-    return cy.wrap(null).then(() => {
-      // Check if the popper exists and is visible
-      return this.popper.isTriggered();
-    });
+    // Directly delegate to the popper instance
+    return this.popper.isTriggered();
   }
 
   /**
@@ -246,6 +240,74 @@ export class AutocompleteInteractable
     this.getTriggerElement().clear().type(text);
     cy.wait(100); // Wait for the typing to be processed
     return this;
+  }
+
+  /**
+   * Checks if the autocomplete is currently in an error state
+   * @returns Cypress.Chainable<boolean> - chainable that resolves to true if the autocomplete has an error
+   */
+  hasError(): Cypress.Chainable<boolean> {
+    return cy.then(() => {
+      // Check for error state on the TextField
+      return this.get().then(($el) => {
+        // Check for the Mui-error class on various elements
+        // 1. Check the input element
+        const hasInputErrorClass = $el.find("input").hasClass("Mui-error");
+
+        // 2. Check the form control root
+        const hasFormControlErrorClass = $el
+          .find(".MuiFormControl-root")
+          .hasClass("Mui-error");
+
+        // 3. Check the fieldset element (often contains the error styling for the border)
+        const hasFieldsetErrorClass = $el
+          .find("fieldset")
+          .hasClass("Mui-error");
+
+        // 4. Check the label element
+        const hasLabelErrorClass = $el.find("label").hasClass("Mui-error");
+
+        // 5. Check if there's a helper text with error
+        const hasHelperTextError =
+          $el.find(".MuiFormHelperText-root").length > 0;
+
+        // 6. Check if the error prop is set (by checking for specific error-related classes)
+        const hasErrorProp =
+          $el.find(".MuiOutlinedInput-notchedOutline").hasClass("Mui-error") ||
+          $el.find(".MuiInputBase-root").hasClass("Mui-error");
+
+        // Return true if any of the error indicators are found
+        return (
+          hasInputErrorClass ||
+          hasFormControlErrorClass ||
+          hasFieldsetErrorClass ||
+          hasLabelErrorClass ||
+          hasHelperTextError ||
+          hasErrorProp
+        );
+      });
+    });
+  }
+
+  /**
+   * Gets the error message displayed by the autocomplete
+   * @returns Cypress.Chainable<string> - chainable that resolves to the error message text
+   */
+  getError(): Cypress.Chainable<string> {
+    return cy.then(() => {
+      return this.get().then(($el) => {
+        // Check if the helper text element exists
+        const $helperText = $el.find(".MuiFormHelperText-root");
+
+        if ($helperText.length > 0) {
+          // If helper text exists, return its text
+          return Cypress.$($helperText).text();
+        } else {
+          // If no helper text, return empty string
+          return "";
+        }
+      });
+    });
   }
 }
 

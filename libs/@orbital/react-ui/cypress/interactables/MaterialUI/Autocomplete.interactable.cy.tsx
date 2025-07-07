@@ -79,6 +79,25 @@ const TestAutocompletePageComponent = () => {
     <Box sx={{ p: 2 }}>
       <Typography variant="h5">Autocomplete Test Page</Typography>
 
+      {/* Error state autocomplete */}
+      <Box sx={{ my: 2 }}>
+        <Typography variant="h6">Error State</Typography>
+        <Autocomplete
+          data-testid="error-autocomplete"
+          options={options}
+          value={singleValue}
+          onChange={(_, newValue) => setSingleValue(newValue)}
+          renderInput={(params) => (
+            <TextField
+              {...params}
+              label="Error state example"
+              error={true}
+              helperText="This is an error message"
+            />
+          )}
+        />
+      </Box>
+
       {/* Single selection autocomplete */}
       <Box sx={{ my: 2 }}>
         <Typography variant="h6">Single Selection</Typography>
@@ -575,6 +594,38 @@ describe("AutocompleteInteractable", () => {
       largeAutocomplete.items().each(($option) => {
         expect($option.text()).to.include("Option 4");
       });
+    });
+  });
+
+  describe("Validation functionality", () => {
+    it("should detect error state", () => {
+      const errorAutocomplete = new TestAutocompleteInteractable(
+        "error-autocomplete"
+      );
+
+      // Check that hasError returns true for an autocomplete with error state
+      errorAutocomplete.hasError().should("be.true");
+
+      // Check that a regular autocomplete doesn't have error state
+      const regularAutocomplete = new TestAutocompleteInteractable(
+        "single-autocomplete"
+      );
+      regularAutocomplete.hasError().should("be.false");
+    });
+
+    it("should get error message", () => {
+      const errorAutocomplete = new TestAutocompleteInteractable(
+        "error-autocomplete"
+      );
+
+      // Check that getError returns the correct error message
+      errorAutocomplete.getError().should("eq", "This is an error message");
+
+      // Check that a regular autocomplete returns empty string for error message
+      const regularAutocomplete = new TestAutocompleteInteractable(
+        "single-autocomplete"
+      );
+      regularAutocomplete.getError().should("eq", "");
     });
   });
 });

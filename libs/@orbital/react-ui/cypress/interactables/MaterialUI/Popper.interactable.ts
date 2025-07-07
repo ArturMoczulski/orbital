@@ -69,35 +69,46 @@ export class PopperInteractable
 
   /**
    * Opens the popper by triggering it
-   * This is a shortcut to the trigger method
-   * @returns this - for method chaining
+   * Only opens if the popper is currently closed
+   * @returns Cypress.Chainable<void> - for method chaining
    */
-  open(): this {
-    return this.trigger();
+  open(): Cypress.Chainable<void> {
+    // First check if it's closed
+    return this.isClosed().then((closed) => {
+      if (closed) {
+        this.trigger();
+      }
+
+      // Return a chainable to satisfy TypeScript and maintain proper chaining
+      return cy.wrap(null).then(() => {}) as unknown as Cypress.Chainable<void>;
+    });
   }
 
   /**
    * Closes the popper
-   * @returns this - for method chaining
+   * Only closes if the popper is currently open
+   * @returns Cypress.Chainable<void> - for method chaining
    */
-  /**
-   * Closes the popper
-   * @returns this - for method chaining
-   */
-  close(): this {
-    // For Material UI poppers, we need to click outside of it
-    // to properly trigger the onClose handler if one exists
+  close(): Cypress.Chainable<void> {
+    // First check if it's opened
+    return this.isOpened().then((opened) => {
+      if (opened) {
+        // For Material UI poppers, we need to click outside of it
+        // to properly trigger the onClose handler if one exists
 
-    // Simple approach: click in the top-left corner of the body
-    cy.get("body").click(10, 10);
+        // Simple approach: click in the top-left corner of the body
+        cy.get("body").click(10, 10);
 
-    // Press Escape key as a fallback
-    cy.get("body").type("{esc}");
+        // Press Escape key as a fallback
+        cy.get("body").type("{esc}");
 
-    // Wait for animations to complete
-    cy.wait(100);
+        // Wait for animations to complete
+        cy.wait(100);
+      }
 
-    return this;
+      // Return a chainable to satisfy TypeScript and maintain proper chaining
+      return cy.wrap(null).then(() => {}) as unknown as Cypress.Chainable<void>;
+    });
   }
 
   /**

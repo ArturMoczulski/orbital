@@ -8,12 +8,6 @@ export { default as MultiChoiceObjectSelector } from "./MultiChoiceObjectSelecto
 export * from "./SingleChoiceObjectSelector";
 export { default as SingleChoiceObjectSelector } from "./SingleChoiceObjectSelector";
 
-// Export the UI components
-export * from "./MultiObjectSelectUI";
-export { default as MultiObjectSelectUI } from "./MultiObjectSelectUI";
-export * from "./SingleObjectSelectUI";
-export { default as SingleObjectSelectUI } from "./SingleObjectSelectUI";
-
 // Export the provider components
 export { default as AsyncOptionsProvider } from "./providers/AsyncOptionsProvider";
 export * from "./providers/OptionsProvider";

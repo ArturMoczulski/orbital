@@ -72,15 +72,16 @@ export class PopoverInteractable
    * This is a shortcut to the trigger method
    * @returns this - for method chaining
    */
-  open(): this {
-    return this.trigger();
+  open(): Cypress.Chainable<void> {
+    this.trigger();
+    return cy.wrap(null).then(() => {}) as unknown as Cypress.Chainable<void>;
   }
 
   /**
    * Closes the popover by clicking outside of it
    * @returns this - for method chaining
    */
-  close(): this {
+  close(): Cypress.Chainable<void> {
     // For Material UI popovers, we need to click on the backdrop or press Escape
     // to properly trigger the onClose handler
 
@@ -113,7 +114,7 @@ export class PopoverInteractable
     // Wait for animations to complete
     cy.wait(300);
 
-    return this;
+    return cy.wrap(null).then(() => {}) as unknown as Cypress.Chainable<void>;
   }
 
   /**
