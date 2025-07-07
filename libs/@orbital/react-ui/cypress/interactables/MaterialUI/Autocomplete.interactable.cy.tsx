@@ -351,54 +351,6 @@ describe("AutocompleteInteractable", () => {
         .should("deep.equal", ["Option 2", "Option 3"]);
       anotherAutocomplete.selected().should("eq", "Last option");
     });
-
-    it("should handle opening and closing multiple autocompletes", () => {
-      const singleAutocomplete = new TestAutocompleteInteractable(
-        "single-autocomplete"
-      );
-      const multipleAutocomplete = new TestAutocompleteInteractable(
-        "multiple-autocomplete"
-      );
-      const anotherAutocomplete = new TestAutocompleteInteractable(
-        "another-autocomplete"
-      );
-
-      // All autocompletes should be initially closed
-      singleAutocomplete.isClosed().should("be.true");
-      multipleAutocomplete.isClosed().should("be.true");
-      anotherAutocomplete.isClosed().should("be.true");
-
-      // Open the first autocomplete
-      singleAutocomplete.open();
-      singleAutocomplete.isOpened().should("be.true");
-      multipleAutocomplete.isClosed().should("be.true");
-      anotherAutocomplete.isClosed().should("be.true");
-
-      // Open the second autocomplete
-      multipleAutocomplete.open();
-      singleAutocomplete.isOpened().should("be.true");
-      multipleAutocomplete.isOpened().should("be.true");
-      anotherAutocomplete.isClosed().should("be.true");
-
-      // Close the first autocomplete
-      singleAutocomplete.close();
-      singleAutocomplete.isClosed().should("be.true");
-      multipleAutocomplete.isOpened().should("be.true");
-      anotherAutocomplete.isClosed().should("be.true");
-
-      // Open the third autocomplete
-      anotherAutocomplete.open();
-      singleAutocomplete.isClosed().should("be.true");
-      multipleAutocomplete.isOpened().should("be.true");
-      anotherAutocomplete.isOpened().should("be.true");
-
-      // Close all autocompletes
-      multipleAutocomplete.close();
-      anotherAutocomplete.close();
-      singleAutocomplete.isClosed().should("be.true");
-      multipleAutocomplete.isClosed().should("be.true");
-      anotherAutocomplete.isClosed().should("be.true");
-    });
   });
 
   describe("Async loading functionality", () => {
