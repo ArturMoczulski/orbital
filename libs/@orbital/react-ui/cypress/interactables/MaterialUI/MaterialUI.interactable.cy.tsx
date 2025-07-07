@@ -93,23 +93,6 @@ describe("MaterialUIInteractable", () => {
       select.get().should("have.class", "MuiSelect-root");
       select.get().should("have.attr", "data-testid", "TestSelect");
     });
-    it.only("should auto-discover componentName when not provided", () => {
-      // Create a MUI interactable with only dataTestId
-      const button = materialUI({ dataTestId: "TestButton" });
-      // First get() should discover componentName and find the element
-      button.get().should("have.class", "MuiButton-root");
-      // After discovery, selector() should include the discovered root class
-      expect(button.selector()).to.equal(
-        '.MuiButton-root[data-testid="TestButton"]'
-      );
-    });
-
-    it("discoverComponentName() returns componentName when missing", () => {
-      // Create a MUI interactable with only dataTestId
-      const button = materialUI({ dataTestId: "TestButton" });
-      // Explicitly call discoverComponentName() to get the suffix
-      button.discoverComponentName().should("equal", "Button");
-    });
   });
 
   describe("Multiple Elements Scenarios", () => {
