@@ -1,5 +1,4 @@
 import { Openable } from "../interfaces/Openable";
-import { Triggerable } from "../interfaces/Triggerable";
 import {
   MaterialUIInteractable,
   MaterialUIInteractableOptions,
@@ -24,7 +23,7 @@ export interface PopperInteractableOptions
  */
 export class PopperInteractable
   extends MaterialUIInteractable
-  implements Openable, Triggerable
+  implements Openable
 {
   protected triggerElement?:
     | string
@@ -82,37 +81,32 @@ export class PopperInteractable
    * @returns this - for method chaining
    */
   close(): this {
-    // For Material UI poppers, we need to click outside of it
-    // to properly trigger the onClose handler if one exists
+    // First check if the popper is actually open
+    this.isTriggered().then((isOpen) => {
+      if (isOpen) {
+        // If we have a data-testid, try to find a close button within the popper
+        if (this.dataTestId) {
+          // Try to find a close button within this specific popper
+          this.getContent()
+            .find('[data-testid^="close-button"]')
+            .then(($closeButton) => {
+              if ($closeButton.length > 0) {
+                // If we found a close button, click it
+                $closeButton.click();
+              } else {
+                // If no close button, click the trigger element to toggle the popper
+                this.getTriggerElement().click();
+              }
+            });
+        } else {
+          // If no data-testid, use the trigger element to toggle the popper
+          this.getTriggerElement().click();
+        }
 
-    // Try multiple strategies to ensure the popper closes
-    cy.get("body").then(($body) => {
-      // Strategy 1: Click away from the popper (top-left corner)
-      cy.get("body").click(10, 10);
-
-      // Strategy 2: Click in the center of the body
-      cy.wait(100).then(() => {
-        this.isOpened().then((isOpen) => {
-          if (isOpen) {
-            const bodyWidth = $body.width() || 500;
-            const bodyHeight = $body.height() || 500;
-            cy.get("body").click(bodyWidth / 2, bodyHeight / 2);
-          }
-        });
-      });
-
-      // Strategy 3: Press Escape key as a final fallback
-      cy.wait(100).then(() => {
-        this.isOpened().then((isOpen) => {
-          if (isOpen) {
-            cy.get("body").type("{esc}");
-          }
-        });
-      });
+        // Wait for animations to complete
+        cy.wait(300);
+      }
     });
-
-    // Wait for animations to complete
-    cy.wait(300);
 
     return this;
   }
@@ -122,41 +116,20 @@ export class PopperInteractable
    * @returns Cypress.Chainable<boolean> - chainable that yields true if the popper is triggered
    */
   isTriggered(): Cypress.Chainable<boolean> {
-    // For Material UI poppers, we check if the element exists in the DOM
-    // and is visible
+    // Use cy.document() to check if the element exists in the DOM
     return cy.document().then((doc) => {
-      // First check for Popper root elements using the rootSelector
-      const popperElements = doc.querySelectorAll(this.rootSelector);
+      // Use vanilla JS to check if the element exists
+      const selector = this.selector();
+      const elements = doc.querySelectorAll(selector);
 
-      // If we found any popper elements, check if they're visible
-      if (popperElements.length > 0) {
-        for (let i = 0; i < popperElements.length; i++) {
-          const element = popperElements[i] as HTMLElement;
-          // Check if the element is in the DOM and visible
-          if (element.offsetParent !== null) {
-            return true;
-          }
-        }
+      // If no elements found, return false
+      if (elements.length === 0) {
+        return false;
       }
 
-      // If we didn't find any visible popper elements, check for the paper element
-      // that's often inside a popper
-      const paperElements = doc.querySelectorAll(".MuiPaper-root");
-      if (paperElements.length > 0) {
-        for (let i = 0; i < paperElements.length; i++) {
-          const element = paperElements[i] as HTMLElement;
-          // Check if the element is in the DOM, visible, and not part of another component
-          if (
-            element.offsetParent !== null &&
-            !element.closest(".MuiDialog-root") &&
-            !element.closest(".MuiPopover-root")
-          ) {
-            return true;
-          }
-        }
-      }
-
-      return false;
+      // If elements found, check visibility using jQuery
+      const $el = Cypress.$(elements);
+      return $el.length > 0 && $el.is(":visible");
     });
   }
 
@@ -183,28 +156,9 @@ export class PopperInteractable
    * @returns Cypress.Chainable<JQuery<HTMLElement>> - the content element of the popper
    */
   getContent(): Cypress.Chainable<JQuery<HTMLElement>> {
-    // Find the popper content using the get method from the base class
+    // Simply return the popper element using our get method
     // This ensures we use the correct selector based on the component name
-
-    // First try to find the element using our get method
-    return this.get().then(($el) => {
-      if ($el.length > 0) {
-        return cy.wrap($el);
-      }
-
-      // If no popper found, look for paper elements that might be in a popper
-      return cy
-        .get(".MuiPaper-root:not(.MuiDialog-paper):not(.MuiPopover-paper)")
-        .then(($papers) => {
-          if ($papers.length > 0) {
-            return cy.wrap($papers.eq(0));
-          }
-
-          // If still nothing found, return an empty div wrapped in jQuery
-          // This ensures we always return a JQuery<HTMLElement>
-          return cy.wrap(Cypress.$("<div>"));
-        });
-    });
+    return this.get();
   }
 
   /**

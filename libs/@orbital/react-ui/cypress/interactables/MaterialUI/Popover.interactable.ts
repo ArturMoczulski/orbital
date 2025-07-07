@@ -1,5 +1,4 @@
 import { Openable } from "../interfaces/Openable";
-import { Triggerable } from "../interfaces/Triggerable";
 import {
   MaterialUIInteractable,
   MaterialUIInteractableOptions,
@@ -24,7 +23,7 @@ export interface PopoverInteractableOptions
  */
 export class PopoverInteractable
   extends MaterialUIInteractable
-  implements Openable, Triggerable
+  implements Openable
 {
   protected triggerElement?:
     | string
