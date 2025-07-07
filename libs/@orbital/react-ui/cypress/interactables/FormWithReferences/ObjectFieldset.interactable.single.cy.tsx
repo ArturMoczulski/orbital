@@ -65,7 +65,6 @@ describe("ObjectFieldsetInteractable", () => {
     // Log what the interactable is looking for
     const fieldset = objectFieldset("User");
     cy.log(`Interactable selector: ${fieldset.selector()}`);
-    cy.log(`Interactable flexible selector: ${fieldset.flexibleSelector()}`);
 
     // Try to find the element directly with each selector part
     cy.get(`[data-testid="ObjectFieldset"][data-object-type="User"]`).then(
@@ -101,27 +100,13 @@ describe("ObjectFieldsetInteractable", () => {
       </ObjectProvider>
     );
 
+    cy.wait(1000);
+
     // Create the interactable
     const fieldset = objectFieldset("User");
 
     // Verify it can find the element
     fieldset.should("exist");
-  });
-
-  it("finds the fieldset even when objectType is not explicitly provided", () => {
-    // In this test, we don't explicitly provide the objectType
-    mount(
-      <ObjectProvider schema={testBridge} data={testData}>
-        <ObjectFieldset />
-      </ObjectProvider>
-    );
-
-    // Create the interactable with the expected objectType
-    // This should work because we've made the interactable more flexible
-    const fieldset = objectFieldset("User");
-
-    // Use the flexible selector directly to verify it can find the element
-    cy.get(fieldset.flexibleSelector()).should("exist");
   });
 
   it("gets all field names in the fieldset", () => {

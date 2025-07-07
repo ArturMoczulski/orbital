@@ -201,17 +201,19 @@ export function ObjectFieldset({
     return displayName ? `${objectType}: ${displayName}` : "";
   }, [header, data, objectType]);
 
-  // Create the content element with data attributes
+  // Create the content element with data attributes only when useCard is false
   const contentElement = (
     <div
       className={className}
-      data-testid="ObjectFieldset"
-      {...((propObjectId !== undefined ? propObjectId : contextObjectId) !==
-        undefined && {
-        "data-object-id":
-          propObjectId !== undefined ? propObjectId : contextObjectId,
+      {...(!useCard && {
+        "data-testid": "ObjectFieldset",
+        "data-object-type": objectType,
+        ...((propObjectId !== undefined ? propObjectId : contextObjectId) !==
+          undefined && {
+          "data-object-id":
+            propObjectId !== undefined ? propObjectId : contextObjectId,
+        }),
       })}
-      data-object-type={objectType}
     >
       {/* Provide the uniforms context */}
       {/* @ts-ignore - The context value doesn't match exactly what uniforms expects */}
@@ -234,9 +236,18 @@ export function ObjectFieldset({
     return contentElement;
   }
 
-  // Using Card with optional header
+  // Using Card with optional header and data attributes
   return (
-    <Card variant={cardVariant ? (cardVariant as any) : undefined}>
+    <Card
+      variant={cardVariant ? (cardVariant as any) : undefined}
+      data-testid="ObjectFieldset"
+      data-object-type={objectType}
+      {...((propObjectId !== undefined ? propObjectId : contextObjectId) !==
+        undefined && {
+        "data-object-id":
+          propObjectId !== undefined ? propObjectId : contextObjectId,
+      })}
+    >
       {headerText && (
         <CardHeader
           title={headerText}
