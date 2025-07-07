@@ -80,33 +80,25 @@ export class PopperInteractable
    * Closes the popper
    * @returns this - for method chaining
    */
+  /**
+   * Closes the popper
+   * @returns this - for method chaining
+   */
   close(): this {
-    // First check if the popper is actually open
-    this.isTriggered().then((isOpen) => {
-      if (isOpen) {
-        // If we have a data-testid, try to find a close button within the popper
-        if (this.dataTestId) {
-          // Try to find a close button within this specific popper
-          this.getContent()
-            .find('[data-testid^="close-button"]')
-            .then(($closeButton) => {
-              if ($closeButton.length > 0) {
-                // If we found a close button, click it
-                $closeButton.click();
-              } else {
-                // If no close button, click the trigger element to toggle the popper
-                this.getTriggerElement().click();
-              }
-            });
-        } else {
-          // If no data-testid, use the trigger element to toggle the popper
-          this.getTriggerElement().click();
-        }
+    // For Material UI poppers, we need to click outside of it
+    // to properly trigger the onClose handler if one exists
 
-        // Wait for animations to complete
-        cy.wait(300);
-      }
-    });
+    // Simple approach: click in the top-left corner of the body
+    cy.get("body").click(10, 10);
+
+    // Wait a moment for the click to register
+    cy.wait(100);
+
+    // Press Escape key as a fallback
+    cy.get("body").type("{esc}");
+
+    // Wait for animations to complete
+    cy.wait(300);
 
     return this;
   }

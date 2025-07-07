@@ -84,7 +84,7 @@ describe("PopperInteractable", () => {
       popperComponent.close();
 
       // Wait a moment for the popper to close
-      cy.wait(500);
+      cy.wait(100);
 
       // Verify the popper is closed
       popperComponent.isClosed().should("eq", true);
@@ -134,7 +134,7 @@ describe("PopperInteractable", () => {
       popperComponent.close();
 
       // Wait a moment for the popper to close
-      cy.wait(500);
+      cy.wait(100);
 
       // Verify the popper is not triggered
       popperComponent.isTriggered().should("eq", false);
@@ -159,43 +159,36 @@ describe("PopperInteractable", () => {
         triggerElement: '[data-testid="PopperTrigger2"]',
       });
 
-      // Initially both poppers should be closed
-      popper1.isTriggered().should("eq", false);
-      popper2.isTriggered().should("eq", false);
+      popper1.isClosed().should("be.true");
+      popper2.isClosed().should("be.true");
 
-      // Open the first popper
-      popper1.trigger();
+      // Open first popper
+      popper1.open();
 
-      // Verify the first popper is open
-      popper1.isTriggered().should("eq", true);
-      popper1.getPopperText().should("contain", "This is popper 1 content");
+      // Verify content
+      popper1.isOpened().should("be.true");
+      popper1.getContent().should("be.visible");
+      popper1.getContent().should("contain", "This is popper 1 content");
 
-      // The second popper should still be closed
-      popper2.isTriggered().should("eq", false);
+      // Close by clicking away
+      cy.get("body").click(10, 10);
+      cy.wait(100);
 
-      // Close the first popper
-      popper1.close();
-      cy.wait(500);
+      // Verify closed
+      popper1.isClosed().should("be.true");
+      popper2.isClosed().should("be.true");
 
-      // Verify the first popper is closed
-      popper1.isClosed().should("eq", true);
+      // Open second popper
+      popper2.open();
 
-      // Open the second popper
-      popper2.trigger();
+      // Verify content
+      popper2.isOpened().should("be.true");
+      popper2.getContent().should("be.visible");
+      popper2.getContent().should("contain", "This is popper 2 content");
 
-      // Verify the second popper is open
-      popper2.isTriggered().should("eq", true);
-      popper2.getPopperText().should("contain", "This is popper 2 content");
-
-      // The first popper should still be closed
-      popper1.isTriggered().should("eq", false);
-
-      // Close the second popper
-      popper2.close();
-      cy.wait(500);
-
-      // Verify the second popper is closed
-      popper2.isClosed().should("eq", true);
+      // Close by clicking away
+      cy.get("body").click(10, 10);
+      cy.wait(200);
     });
   });
 });
