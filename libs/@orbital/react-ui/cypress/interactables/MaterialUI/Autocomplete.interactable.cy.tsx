@@ -16,65 +16,76 @@ const options = [
   "Last option",
 ];
 
-// Simple test component with a single autocomplete
-const TestAutocompleteComponent = () => {
-  const [value, setValue] = useState<string | null>(null);
+// Comprehensive test component with multiple autocomplete instances
+const TestAutocompletePageComponent = () => {
+  // Single selection autocomplete
+  const [singleValue, setSingleValue] = useState<string | null>(null);
+
+  // Multiple selection autocomplete
+  const [multipleValue, setMultipleValue] = useState<string[]>([]);
+
+  // Another single selection autocomplete
+  const [anotherValue, setAnotherValue] = useState<string | null>(null);
 
   return (
     <Box sx={{ p: 2 }}>
-      <Typography variant="h6">Test Autocomplete</Typography>
-      <Autocomplete
-        data-testid="test-autocomplete"
-        options={options}
-        value={value}
-        onChange={(_, newValue) => setValue(newValue)}
-        renderInput={(params) => (
-          <TextField {...params} label="Select an option" />
-        )}
-      />
-      <Box sx={{ mt: 2 }}>
-        <Typography>Selected value: {value || "None"}</Typography>
-      </Box>
-    </Box>
-  );
-};
+      <Typography variant="h5">Autocomplete Test Page</Typography>
 
-// Component with multiple autocompletes
-const TestMultipleAutocompletesComponent = () => {
-  const [value1, setValue1] = useState<string | null>(null);
-  const [value2, setValue2] = useState<string | null>(null);
-
-  return (
-    <Box sx={{ p: 2 }}>
-      <Typography variant="h6">Multiple Autocompletes</Typography>
-
-      <Box sx={{ mb: 2 }}>
+      {/* Single selection autocomplete */}
+      <Box sx={{ my: 2 }}>
+        <Typography variant="h6">Single Selection</Typography>
         <Autocomplete
-          data-testid="autocomplete-1"
+          data-testid="single-autocomplete"
           options={options}
-          value={value1}
-          onChange={(_, newValue) => setValue1(newValue)}
+          value={singleValue}
+          onChange={(_, newValue) => setSingleValue(newValue)}
           renderInput={(params) => (
-            <TextField {...params} label="First autocomplete" />
+            <TextField {...params} label="Select an option" />
           )}
         />
+        <Box sx={{ mt: 1 }}>
+          <Typography>Selected value: {singleValue || "None"}</Typography>
+        </Box>
       </Box>
 
-      <Box sx={{ mb: 2 }}>
+      {/* Multiple selection autocomplete */}
+      <Box sx={{ my: 2 }}>
+        <Typography variant="h6">Multiple Selection</Typography>
         <Autocomplete
-          data-testid="autocomplete-2"
+          data-testid="multiple-autocomplete"
+          multiple
           options={options}
-          value={value2}
-          onChange={(_, newValue) => setValue2(newValue)}
+          value={multipleValue}
+          onChange={(_, newValue) => setMultipleValue(newValue)}
           renderInput={(params) => (
-            <TextField {...params} label="Second autocomplete" />
+            <TextField {...params} label="Select multiple options" />
           )}
         />
+        <Box sx={{ mt: 1 }}>
+          <Typography>
+            Selected values:{" "}
+            {multipleValue.length ? multipleValue.join(", ") : "None"}
+          </Typography>
+        </Box>
       </Box>
 
-      <Box>
-        <Typography>First value: {value1 || "None"}</Typography>
-        <Typography>Second value: {value2 || "None"}</Typography>
+      {/* Another single selection autocomplete */}
+      <Box sx={{ my: 2 }}>
+        <Typography variant="h6">Another Single Selection</Typography>
+        <Autocomplete
+          data-testid="another-autocomplete"
+          options={options}
+          value={anotherValue}
+          onChange={(_, newValue) => setAnotherValue(newValue)}
+          renderInput={(params) => (
+            <TextField {...params} label="Select another option" />
+          )}
+        />
+        <Box sx={{ mt: 1 }}>
+          <Typography>
+            Another selected value: {anotherValue || "None"}
+          </Typography>
+        </Box>
       </Box>
     </Box>
   );
@@ -91,14 +102,15 @@ class TestAutocompleteInteractable extends AutocompleteInteractable {
 }
 
 describe("AutocompleteInteractable", () => {
-  describe("Basic functionality", () => {
-    beforeEach(() => {
-      mount(<TestAutocompleteComponent />);
-    });
+  beforeEach(() => {
+    // Mount the test page with multiple autocomplete instances for all tests
+    mount(<TestAutocompletePageComponent />);
+  });
 
+  describe("Basic functionality", () => {
     it("should open and close the autocomplete", () => {
       const autocomplete = new TestAutocompleteInteractable(
-        "test-autocomplete"
+        "single-autocomplete"
       );
 
       // Initially closed
@@ -118,7 +130,7 @@ describe("AutocompleteInteractable", () => {
 
     it("should list all options", () => {
       const autocomplete = new TestAutocompleteInteractable(
-        "test-autocomplete"
+        "another-autocomplete"
       );
 
       // Check that all options are listed
@@ -129,10 +141,12 @@ describe("AutocompleteInteractable", () => {
         autocomplete.item(option).should("exist");
       });
     });
+  });
 
+  describe("Single choice mode", () => {
     it("should select an option", () => {
       const autocomplete = new TestAutocompleteInteractable(
-        "test-autocomplete"
+        "single-autocomplete"
       );
       const optionToSelect = "Option 2";
 
@@ -147,34 +161,83 @@ describe("AutocompleteInteractable", () => {
       // Autocomplete should be closed after selection
       autocomplete.isClosed().should("be.true");
     });
+
+    it("should select an option in another autocomplete", () => {
+      const autocomplete = new TestAutocompleteInteractable(
+        "another-autocomplete"
+      );
+      const optionToSelect = "Another option";
+
+      autocomplete.open();
+      autocomplete.select(optionToSelect);
+
+      // Check that the option was selected
+      cy.contains(`Another selected value: ${optionToSelect}`).should("exist");
+
+      autocomplete.selected().should("eq", "Another option");
+
+      // Autocomplete should be closed after selection
+      autocomplete.isClosed().should("be.true");
+    });
   });
 
-  describe("Multiple autocompletes", () => {
-    beforeEach(() => {
-      mount(<TestMultipleAutocompletesComponent />);
+  describe("Multiple choice mode", () => {
+    it("should select multiple options", () => {
+      const autocomplete = new TestAutocompleteInteractable(
+        "multiple-autocomplete"
+      );
+      const optionsToSelect = ["Option 1", "Option 3", "Last option"];
+
+      // Select multiple options
+      autocomplete.select(optionsToSelect);
+
+      // Check that the options were selected in the UI
+      cy.contains(`Selected values: ${optionsToSelect.join(", ")}`).should(
+        "exist"
+      );
+
+      // Check that selected() returns the correct array of values
+      autocomplete.selected().should("deep.equal", optionsToSelect);
     });
+  });
 
+  describe("Multiple autocompletes interaction", () => {
     it("should handle multiple autocompletes independently", () => {
-      const autocomplete1 = new TestAutocompleteInteractable("autocomplete-1");
-      const autocomplete2 = new TestAutocompleteInteractable("autocomplete-2");
+      const singleAutocomplete = new TestAutocompleteInteractable(
+        "single-autocomplete"
+      );
+      const multipleAutocomplete = new TestAutocompleteInteractable(
+        "multiple-autocomplete"
+      );
+      const anotherAutocomplete = new TestAutocompleteInteractable(
+        "another-autocomplete"
+      );
 
-      // Open first autocomplete
-      autocomplete1.open();
-      autocomplete1.isOpened().should("be.true");
+      // Interact with the first autocomplete
+      singleAutocomplete.open();
+      singleAutocomplete.select("Option 1");
+      cy.contains("Selected value: Option 1").should("exist");
+      singleAutocomplete.selected().should("eq", "Option 1");
 
-      // Select from first autocomplete
-      autocomplete1.select("Option 1");
-      cy.contains("First value: Option 1").should("exist");
+      // Interact with the multiple selection autocomplete
+      multipleAutocomplete.select(["Option 2", "Option 3"]);
+      cy.contains("Selected values: Option 2, Option 3").should("exist");
+      multipleAutocomplete
+        .selected()
+        .should("deep.equal", ["Option 2", "Option 3"]);
 
-      autocomplete1.close();
+      // Interact with the third autocomplete
+      anotherAutocomplete.open();
+      anotherAutocomplete.select("Last option");
+      cy.contains("Another selected value: Last option").should("exist");
+      anotherAutocomplete.selected().should("eq", "Last option");
 
-      // Open second autocomplete
-      autocomplete2.open();
-      autocomplete2.isOpened().should("be.true");
-
-      // Select from second autocomplete
-      autocomplete2.select("Option 3");
-      cy.contains("Second value: Option 3").should("exist");
+      // Verify all selections are still correct
+      singleAutocomplete.selected().should("eq", "Option 1");
+      multipleAutocomplete
+        .selected()
+        .should("deep.equal", ["Option 2", "Option 3"]);
+      anotherAutocomplete.selected().should("eq", "Last option");
     });
   });
 });
