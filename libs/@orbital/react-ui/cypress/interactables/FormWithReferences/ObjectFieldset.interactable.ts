@@ -71,12 +71,24 @@ export class ObjectFieldsetInteractable extends CypressInteractable<string> {
    * @param fieldName The name of the field to get
    * @returns A FormInputInteractable for the field
    */
-  field(fieldName: string): FormInputInteractable<any> {
+  /**
+   * Get a field within the fieldset by name
+   * @param fieldName The name of the field to get
+   * @param customInteractable Optional custom interactable constructor to use
+   * @returns A FormInputInteractable for the field
+   */
+  field<T extends FormInputInteractable<any> = FormInputInteractable<any>>(
+    fieldName: string,
+    customInteractable?: new (
+      fieldName: string,
+      parentElement?: () => Cypress.Chainable<JQuery<HTMLElement>>
+    ) => T
+  ): T {
     // Create a parent element function that returns the fieldset element
     const parentElement = () => this.getElement();
 
     // Use the inputField factory to create the appropriate field interactable
-    return inputField(fieldName, parentElement);
+    return inputField<T>(fieldName, parentElement, customInteractable);
   }
 
   /**

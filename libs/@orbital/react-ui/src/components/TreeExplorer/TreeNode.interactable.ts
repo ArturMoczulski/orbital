@@ -207,7 +207,7 @@ export class TreeNodeInteractable<
     // Use the custom action button and click it
     if (!this.buttons.custom[actionName]) {
       throw new Error(
-        `Custom action "${String(actionName)}" does not exist on component ${this.componentType}`
+        `Custom action "${String(actionName)}" does not exist on component ${this.componentName}`
       );
     }
     this.buttons.custom[actionName]().click({ force: true });

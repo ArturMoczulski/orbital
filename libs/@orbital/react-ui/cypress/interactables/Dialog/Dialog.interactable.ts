@@ -45,7 +45,7 @@ export class DialogInteractable<
    */
   open(): this {
     // This is a base implementation that should be overridden
-    cy.log(`Opening dialog: ${this.componentType}`);
+    cy.log(`Opening dialog: ${this.componentName}`);
     return this;
   }
 
@@ -55,7 +55,7 @@ export class DialogInteractable<
    */
   close(): this {
     // This is a base implementation that should be overridden
-    cy.log(`Closing dialog: ${this.componentType}`);
+    cy.log(`Closing dialog: ${this.componentName}`);
     return this;
   }
 
@@ -69,14 +69,14 @@ export class DialogInteractable<
     this.isOpen().then((isOpen) => {
       if (isOpen) {
         // Only wait for it to close if it's currently open
-        cy.log(`Waiting for dialog to close: ${this.componentType}`);
+        cy.log(`Waiting for dialog to close: ${this.componentName}`);
         cy.get(this.selector(), { timeout }).should(
           "have.css",
           "display",
           "none"
         );
       } else {
-        cy.log(`Dialog ${this.componentType} is already closed`);
+        cy.log(`Dialog ${this.componentName} is already closed`);
       }
     });
 

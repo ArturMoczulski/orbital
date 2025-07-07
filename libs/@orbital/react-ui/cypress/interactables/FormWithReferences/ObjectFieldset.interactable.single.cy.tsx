@@ -4,9 +4,11 @@ import { mount } from "cypress/react";
 import React, { useState } from "react";
 import { ZodBridge } from "uniforms-bridge-zod";
 import { z } from "zod";
+import { FormWithReferences } from "../../../src/components/FormWithReferences/FormWithReferences";
 import { ObjectFieldset } from "../../../src/components/FormWithReferences/ObjectFieldset";
 import { ObjectProvider } from "../../../src/components/FormWithReferences/ObjectProvider";
 import { ZodReferencesBridge } from "../../../src/components/FormWithReferences/ZodReferencesBridge";
+import { ObjectSelectorInteractable } from "../ObjectSelector/ObjectSelector.interactable";
 import { objectFieldset } from "./ObjectFieldset.interactable";
 
 describe("ObjectFieldsetInteractable", () => {
@@ -567,5 +569,123 @@ describe("ObjectFieldsetInteractable", () => {
     // Use the new methods to verify data attributes
     customerFieldset.getObjectType().should("equal", "Customer");
     customerFieldset.getObjectId().should("equal", "customer-456");
+  });
+  it.only("works with references between different object types (area belongs to world)", () => {
+    // Create schemas with references
+    const worldSchema = z
+      .object({
+        id: z.string().uuid().describe("ID"),
+        name: z.string().describe("Name"),
+        description: z.string().optional().describe("Description"),
+      })
+      .describe("World");
+
+    const areaSchema = z
+      .object({
+        name: z.string().describe("Name"),
+        size: z.number().min(0).describe("Size"),
+        world: z
+          .string()
+          .uuid()
+          .reference({
+            type: RelationshipType.BELONGS_TO,
+            schema: worldSchema,
+            name: "world",
+          })
+          .describe("World"),
+      })
+      .describe("Area");
+
+    // Create a bridge with references
+    const refBridge = new ZodReferencesBridge({
+      schema: areaSchema,
+      dependencies: {
+        world: [
+          {
+            id: "123e4567-e89b-12d3-a456-426614174000",
+            name: "Fantasy World",
+            description: "A magical realm",
+          },
+          {
+            id: "223e4567-e89b-12d3-a456-426614174000",
+            name: "Sci-Fi World",
+            description: "A futuristic setting",
+          },
+          {
+            id: "323e4567-e89b-12d3-a456-426614174000",
+            name: "Historical World",
+            description: "Based on real history",
+          },
+        ],
+      },
+    });
+
+    const areaData = {
+      name: "Forest of Shadows",
+      size: 500,
+      world: "123e4567-e89b-12d3-a456-426614174000",
+    };
+
+    // Use FormWithReferences to provide the component detector
+    // This is necessary for reference fields to render properly
+    mount(
+      <FormWithReferences
+        schema={refBridge}
+        objectType="Area"
+        onSubmit={() => {}}
+      >
+        <ObjectProvider schema={refBridge} data={areaData} objectType="Area">
+          <ObjectFieldset />
+        </ObjectProvider>
+      </FormWithReferences>
+    );
+
+    const fieldset = objectFieldset("Area");
+
+    // Verify the fieldset exists
+    fieldset.should("exist");
+
+    // Verify it has the expected fields
+    fieldset.hasField("name").should("be.true");
+    fieldset.hasField("size").should("be.true");
+    fieldset.hasField("world").should("be.true");
+
+    // Verify field values
+    fieldset.getFieldValue("name").should("equal", "Forest of Shadows");
+    fieldset.getFieldValue("size").should("equal", "500");
+
+    // Use fieldset.field() to interact with the reference field, passing the ObjectSelectorInteractable constructor
+    const worldField = fieldset.field<ObjectSelectorInteractable>(
+      "world",
+      ObjectSelectorInteractable
+    );
+
+    // Check that the selected value is correct (ID)
+    worldField
+      .getValue()
+      .should("equal", "123e4567-e89b-12d3-a456-426614174000");
+
+    // Get the display text using getSelectedText() helper
+    worldField.getSelectedText().should("equal", "Fantasy World");
+
+    // Open the dropdown using the openDropdown() helper
+    worldField.openDropdown();
+
+    // Verify options are available using getItems() helper
+    worldField.getItems().should("have.length", 3);
+    worldField.getItems().then((items) => {
+      expect(items[0].getName()).to.include("Fantasy World");
+      expect(items[1].getName()).to.include("Sci-Fi World");
+      expect(items[2].getName()).to.include("Historical World");
+    });
+
+    // Select a different option using selectByText helper
+    worldField.selectByText("Sci-Fi World");
+
+    // Verify the selection changed using getValue() and getSelectedText() helpers
+    worldField
+      .getValue()
+      .should("equal", "223e4567-e89b-12d3-a456-426614174000");
+    worldField.getSelectedText().should("equal", "Sci-Fi World");
   });
 });

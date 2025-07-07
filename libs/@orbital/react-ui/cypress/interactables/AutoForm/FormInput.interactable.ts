@@ -11,10 +11,10 @@ import { CypressInteractable } from "../Cypress.interactable";
 export abstract class FormInputInteractable<
   T,
 > extends CypressInteractable<string> {
-  protected fieldName: string;
+  protected fieldName?: string;
 
   constructor(
-    fieldName: string,
+    fieldName?: string,
     parentElement?: () => Cypress.Chainable<JQuery<HTMLElement>>
   ) {
     super(fieldName, parentElement);
@@ -249,12 +249,24 @@ export class SelectInputInteractable extends FormInputInteractable<string> {
  * Factory function to create an input field interactable based on the input type
  * @param fieldName The name of the field
  * @param parentElement Optional parent element to scope the field within
+ * @param customInteractable Optional custom interactable constructor to use instead of auto-detection
  * @returns A specialized input field interactable based on the input type
  */
-export function inputField(
+export function inputField<
+  T extends FormInputInteractable<any> = FormInputInteractable<any>,
+>(
   fieldName: string,
-  parentElement?: () => Cypress.Chainable<JQuery<HTMLElement>>
-): FormInputInteractable<any> {
+  parentElement?: () => Cypress.Chainable<JQuery<HTMLElement>>,
+  customInteractable?: new (
+    fieldName: string,
+    parentElement?: () => Cypress.Chainable<JQuery<HTMLElement>>
+  ) => T
+): T {
+  // If a custom interactable constructor is provided, use it
+  if (customInteractable) {
+    return new customInteractable(fieldName, parentElement);
+  }
+
   // Create a temporary element to determine the input type
   const getElement = FormInputInteractable.prototype.getElement.bind({
     fieldName,
@@ -276,8 +288,35 @@ export function inputField(
   getElement().then(($el) => {
     const inputType = $el.attr("type")?.toLowerCase();
     const tagName = $el.prop("tagName")?.toLowerCase();
+    const dataTestId = $el.attr("data-testid");
 
-    // Create the appropriate interactable based on the input type
+    // First check if we can determine the interactable type based on data-testid
+    if (dataTestId) {
+      // Import necessary interactables dynamically to avoid circular dependencies
+      // This is a workaround since we can't directly import here due to potential circular dependencies
+      try {
+        if (dataTestId === "ObjectSelector") {
+          // Use require to dynamically import the ObjectSelectorInteractable
+          const objectSelectorModule = require("../ObjectSelector/ObjectSelector.interactable");
+          if (
+            objectSelectorModule &&
+            objectSelectorModule.ObjectSelectorInteractable
+          ) {
+            interactable = new objectSelectorModule.ObjectSelectorInteractable(
+              fieldName,
+              parentElement
+            );
+            return;
+          }
+        }
+        // Add more data-testid checks for other component types as needed
+      } catch (e) {
+        cy.log(`Error loading interactable for data-testid ${dataTestId}:`, e);
+      }
+    }
+
+    // If we couldn't determine the interactable type based on data-testid,
+    // fall back to the original logic based on input type
     if (inputType === "checkbox") {
       interactable = new CheckboxInputInteractable(fieldName, parentElement);
     } else if (inputType === "radio") {
@@ -290,7 +329,7 @@ export function inputField(
   });
   cy.log(`interactable: `, interactable);
 
-  return interactable;
+  return interactable as unknown as T;
 }
 
 // No need to export FormInputInteractable as a type since it's already exported as a class
