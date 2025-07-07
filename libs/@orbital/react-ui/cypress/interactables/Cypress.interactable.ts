@@ -44,6 +44,10 @@ export abstract class CypressInteractable {
     throw new Error("Not enough selectors to find components");
   }
 
+  exists() {
+    return Cypress.$(this.selector()).length > 0;
+  }
+
   /**
    * Get the DOM element for this component
    * Default implementation looks for an element with data-testid="${componentType}"

@@ -91,14 +91,11 @@ export class PopperInteractable
     // Simple approach: click in the top-left corner of the body
     cy.get("body").click(10, 10);
 
-    // Wait a moment for the click to register
-    cy.wait(100);
-
     // Press Escape key as a fallback
     cy.get("body").type("{esc}");
 
     // Wait for animations to complete
-    cy.wait(300);
+    cy.wait(100);
 
     return this;
   }
@@ -108,21 +105,7 @@ export class PopperInteractable
    * @returns Cypress.Chainable<boolean> - chainable that yields true if the popper is triggered
    */
   isTriggered(): Cypress.Chainable<boolean> {
-    // Use cy.document() to check if the element exists in the DOM
-    return cy.document().then((doc) => {
-      // Use vanilla JS to check if the element exists
-      const selector = this.selector();
-      const elements = doc.querySelectorAll(selector);
-
-      // If no elements found, return false
-      if (elements.length === 0) {
-        return false;
-      }
-
-      // If elements found, check visibility using jQuery
-      const $el = Cypress.$(elements);
-      return $el.length > 0 && $el.is(":visible");
-    });
+    return cy.wrap(null).then(() => this.exists());
   }
 
   /**

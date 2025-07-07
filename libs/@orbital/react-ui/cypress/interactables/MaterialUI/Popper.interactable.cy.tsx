@@ -55,9 +55,6 @@ describe("PopperInteractable", () => {
       // Close the popper
       popperComponent.close();
 
-      // Wait a moment for the popper to close
-      cy.wait(500);
-
       // Verify the popper is closed using the interactable's isClosed method
       popperComponent.isClosed().should("eq", true);
     });

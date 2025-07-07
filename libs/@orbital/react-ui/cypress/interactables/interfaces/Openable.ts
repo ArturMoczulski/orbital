@@ -16,13 +16,13 @@ export interface Openable extends Triggerable {
    * Opens the component
    * @returns this - for method chaining
    */
-  open(): this;
+  open(): Cypress.Chainable<void>;
 
   /**
    * Closes the component
    * @returns this - for method chaining
    */
-  close(): this;
+  close(): Cypress.Chainable<void>;
 
   /**
    * Checks if the component is currently open
