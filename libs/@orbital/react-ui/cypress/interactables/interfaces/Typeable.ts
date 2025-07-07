@@ -9,4 +9,10 @@ export interface Typeable {
    * @returns this - for method chaining
    */
   type(text: string): this;
+
+  /**
+   * Clears the text input field
+   * @returns this - for method chaining
+   */
+  clearTextInput(): this;
 }

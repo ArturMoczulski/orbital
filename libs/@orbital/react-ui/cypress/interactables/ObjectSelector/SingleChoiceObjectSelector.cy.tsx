@@ -165,11 +165,8 @@ describe("SingleChoiceObjectSelector", () => {
     // Verify initial selection
     autocomplete.selected().should("eq", "Option 1");
 
-    // Clear the selection by opening and selecting null
-    autocomplete.open();
-
-    // In Material UI Autocomplete, we can clear by clicking the clear button
-    autocomplete.get().find(".MuiAutocomplete-clearIndicator").click();
+    // Clear the selection using the clearSelection method
+    autocomplete.clearSelection();
 
     // Verify the onChange was called with null
     cy.get("@onChange").should("have.been.calledWith", null);

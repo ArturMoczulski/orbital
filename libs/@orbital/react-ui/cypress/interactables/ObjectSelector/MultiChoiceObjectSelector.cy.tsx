@@ -174,8 +174,8 @@ describe("MultiChoiceObjectSelector", () => {
     // Verify initial selections
     autocomplete.selected().should("deep.equal", ["Option 1", "Option 2"]);
 
-    // Clear the selections by clicking the clear button
-    autocomplete.get().find(".MuiAutocomplete-clearIndicator").click();
+    // Clear the selections using the clearSelection method
+    autocomplete.clearSelection();
 
     // Verify the onChange was called with an empty array
     cy.get("@onChange").should("have.been.calledWith", []);
@@ -199,16 +199,11 @@ describe("MultiChoiceObjectSelector", () => {
     // Verify initial selections
     autocomplete.selected().should("deep.equal", ["Option 1", "Option 2"]);
 
-    // Remove one selection by clicking its delete icon
-    autocomplete.get().find(".MuiChip-deleteIcon").first().click();
+    // Remove one selection using the deselect method
+    autocomplete.deselect("Option 1");
 
-    // Verify only one option remains selected
-    // The exact remaining option depends on which chip was removed first
-    autocomplete.selected().then((selected) => {
-      expect(selected).to.be.an("array");
-      expect(selected.length).to.equal(1);
-      expect(["Option 1", "Option 2"]).to.include(selected[0]);
-    });
+    // Verify only Option 2 remains selected
+    autocomplete.selected().should("deep.equal", ["Option 2"]);
   });
 
   it("should handle error state", () => {
@@ -216,14 +211,11 @@ describe("MultiChoiceObjectSelector", () => {
 
     const autocomplete = getAutocomplete();
 
-    // Verify the component has error state
-    autocomplete.get().should("have.class", "Mui-error");
+    // Verify the component has error state using the Validatable interface
+    autocomplete.hasError().should("be.true");
 
-    // Verify the error message is displayed
-    autocomplete
-      .get()
-      .find(".MuiFormHelperText-root")
-      .should("contain.text", "Invalid selections");
+    // Verify the error message is displayed using the Validatable interface
+    autocomplete.getError().should("eq", "Invalid selections");
   });
 
   it("should display placeholder text", () => {

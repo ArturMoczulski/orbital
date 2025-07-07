@@ -198,35 +198,35 @@ export class AutocompleteInteractable
    * @returns Cypress.Chainable<string | string[]> - chainable that resolves to the selected text or array of selected texts
    */
   selected(): Cypress.Chainable<string | string[]> {
-    // Use a completely different approach to avoid TypeScript errors
-    // First check for single selection (input value)
+    // Use a simpler approach to avoid nested chainables
     return cy.then(() => {
-      return this.get()
-        .find("input")
-        .invoke("val")
-        .then((value) => {
-          if (value) {
-            // If we have an input value, return it as a string
-            return value as string;
-          } else {
-            // Otherwise, check for chips (multiple selection)
-            return this.get()
-              .find(".MuiChip-label")
-              .then(($chips) => {
-                if ($chips.length > 0) {
-                  // Multiple selection - collect chip texts
-                  const chipTexts: string[] = [];
-                  $chips.each((_, chip) => {
-                    chipTexts.push(Cypress.$(chip).text());
-                  });
-                  return chipTexts;
-                } else {
-                  // Fallback - return empty string
-                  return "";
-                }
-              });
+      // First get the autocomplete element
+      return this.get().then(($el) => {
+        // Check if this is a multiple selection autocomplete
+        const isMultiple = $el.find(".MuiChip-root").length > 0;
+
+        if (isMultiple) {
+          // For multiple selection, collect all chip texts
+          const $chips = $el.find(".MuiChip-label");
+
+          // If no chips found, return empty array
+          if ($chips.length === 0) {
+            return [] as string[];
           }
-        });
+
+          // Extract text from each chip
+          const chipTexts: string[] = [];
+          $chips.each((_, chip) => {
+            chipTexts.push(Cypress.$(chip).text());
+          });
+
+          return chipTexts;
+        } else {
+          // For single selection, get the input value
+          const inputValue = $el.find("input").val();
+          return inputValue ? (inputValue as string) : "";
+        }
+      });
     }) as unknown as Cypress.Chainable<string | string[]>;
   }
 
@@ -239,6 +239,80 @@ export class AutocompleteInteractable
     // Get the input field and type the text
     this.getTriggerElement().clear().type(text);
     cy.wait(100); // Wait for the typing to be processed
+    return this;
+  }
+
+  /**
+   * Clears the text input field without affecting selections
+   * @returns this - for method chaining
+   */
+  clearTextInput(): this {
+    this.getTriggerElement().clear();
+    cy.wait(100); // Wait for the clearing to be processed
+    return this;
+  }
+
+  /**
+   * Deselects a specific item by its text content
+   * For multiple selection, it finds and clicks the remove button (X) for the specific chip
+   * For single selection, it clears the selection if it matches the provided text
+   * @param text - The text content of the item to deselect
+   * @returns this - for method chaining
+   */
+  deselect(text: string): this {
+    // First check if we're in multiple selection mode by looking for chips
+    this.get()
+      .find(".MuiChip-label")
+      .then(($chips) => {
+        if ($chips.length > 0) {
+          // Multiple selection mode - find the specific chip and click its delete icon
+          $chips.each((index, chip) => {
+            if (Cypress.$(chip).text() === text) {
+              // Find the delete icon for this chip and click it
+              this.get()
+                .find(".MuiChip-deleteIcon")
+                .eq(index)
+                .click({ force: true });
+            }
+          });
+        } else {
+          // Single selection mode - check if current value matches text
+          this.selected().then((selectedValue) => {
+            if (selectedValue === text) {
+              // Clear the selection by clicking the clear indicator
+              this.get()
+                .find(".MuiAutocomplete-clearIndicator")
+                .click({ force: true });
+            }
+          });
+        }
+      });
+
+    cy.wait(100); // Wait for the deselection to be processed
+    return this;
+  }
+
+  /**
+   * Clears all selections by clicking the clear indicator
+   * @returns this - for method chaining
+   */
+  clearSelection(): this {
+    // Check if there's anything selected before trying to clear
+    this.selected().then((selected) => {
+      const hasSelection = Array.isArray(selected)
+        ? selected.length > 0
+        : selected !== "";
+
+      if (hasSelection) {
+        // Find and click the clear indicator
+        this.get()
+          .find(".MuiAutocomplete-clearIndicator")
+          .click({ force: true });
+
+        cy.wait(100); // Wait for the clearing to be processed
+      }
+    });
+
     return this;
   }
 

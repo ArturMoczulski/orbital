@@ -34,4 +34,17 @@ export interface Selectable {
    * @returns Cypress.Chainable<string | string[]> - chainable that resolves to the selected text or array of selected texts
    */
   selected(): Cypress.Chainable<string | string[]>;
+
+  /**
+   * Deselects a specific item by its text content
+   * @param text - The text content of the item to deselect
+   * @returns this - for method chaining
+   */
+  deselect(text: string): this;
+
+  /**
+   * Clears all selections
+   * @returns this - for method chaining
+   */
+  clearSelection(): this;
 }

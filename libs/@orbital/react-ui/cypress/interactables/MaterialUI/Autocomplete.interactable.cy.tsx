@@ -628,4 +628,122 @@ describe("AutocompleteInteractable", () => {
       regularAutocomplete.getError().should("eq", "");
     });
   });
+
+  describe("Selection management functionality", () => {
+    it("should deselect a specific item in single selection mode", () => {
+      const autocomplete = new TestAutocompleteInteractable(
+        "single-autocomplete"
+      );
+      const optionToSelect = "Option 2";
+
+      // First select an option
+      autocomplete.select(optionToSelect);
+      autocomplete.selected().should("eq", optionToSelect);
+
+      // Then deselect it
+      autocomplete.deselect(optionToSelect);
+
+      // Verify the selection is cleared
+      autocomplete.selected().should("eq", "");
+      cy.contains("Selected value: None").should("exist");
+    });
+
+    it("should deselect a specific item in multiple selection mode", () => {
+      const autocomplete = new TestAutocompleteInteractable(
+        "multiple-autocomplete"
+      );
+      const optionsToSelect = ["Option 1", "Option 3", "Last option"];
+
+      // First select multiple options
+      autocomplete.select(optionsToSelect);
+      autocomplete.selected().should("deep.equal", optionsToSelect);
+
+      // Then deselect one of them
+      autocomplete.deselect("Option 3");
+
+      // Verify the specific option was removed
+      const expectedRemaining = ["Option 1", "Last option"];
+      autocomplete.selected().should("deep.equal", expectedRemaining);
+      cy.contains(`Selected values: ${expectedRemaining.join(", ")}`).should(
+        "exist"
+      );
+    });
+
+    it("should clear all selections in single selection mode", () => {
+      const autocomplete = new TestAutocompleteInteractable(
+        "single-autocomplete"
+      );
+      const optionToSelect = "Option 2";
+
+      // First select an option
+      autocomplete.select(optionToSelect);
+      autocomplete.selected().should("eq", optionToSelect);
+
+      // Then clear all selections
+      autocomplete.clearSelection();
+
+      // Verify the selection is cleared
+      autocomplete.selected().should("eq", "");
+      cy.contains("Selected value: None").should("exist");
+    });
+
+    it("should clear all selections in multiple selection mode", () => {
+      const autocomplete = new TestAutocompleteInteractable(
+        "multiple-autocomplete"
+      );
+      const optionsToSelect = ["Option 1", "Option 3", "Last option"];
+
+      // First select multiple options
+      autocomplete.select(optionsToSelect);
+      autocomplete.selected().should("deep.equal", optionsToSelect);
+
+      // Then clear all selections
+      autocomplete.clearSelection();
+
+      // Verify all selections are cleared
+      autocomplete.selected().should("deep.equal", []);
+      cy.contains("Selected values: None").should("exist");
+    });
+
+    it("should clear text input without affecting selections", () => {
+      const autocomplete = new TestAutocompleteInteractable(
+        "large-autocomplete"
+      );
+      const optionToSelect = "Option 10";
+
+      // First select an option
+      autocomplete.select(optionToSelect);
+      autocomplete.selected().should("eq", optionToSelect);
+
+      // Then type something in the input
+      autocomplete.type("search text");
+
+      // Clear just the text input
+      autocomplete.clearTextInput();
+
+      // Verify the text is cleared but selection remains
+      autocomplete
+        .getTriggerElement()
+        .invoke("val")
+        .should("eq", optionToSelect);
+      autocomplete.selected().should("eq", optionToSelect);
+      cy.contains("Large selected value: Option 10").should("exist");
+    });
+
+    it("should not attempt to clear when nothing is selected", () => {
+      const autocomplete = new TestAutocompleteInteractable(
+        "single-autocomplete"
+      );
+
+      // Verify nothing is selected initially
+      autocomplete.selected().should("eq", "");
+
+      // Call clearSelection (should not cause errors)
+      autocomplete.clearSelection();
+
+      // Verify still nothing is selected
+      autocomplete.selected().should("eq", "");
+      cy.contains("Selected value: None").should("exist");
+    });
+  });
 });
