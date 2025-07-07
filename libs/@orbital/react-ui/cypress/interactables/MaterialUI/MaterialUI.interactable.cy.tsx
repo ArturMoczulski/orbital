@@ -557,4 +557,315 @@ describe("MaterialUIInteractable", () => {
       toggleElement.get().should("not.be.visible");
     });
   });
+
+  describe("Dense UI Scenarios", () => {
+    describe("Many Buttons in a Row", () => {
+      beforeEach(() => {
+        // Mount a component with many buttons in a row
+        mount(
+          <div data-testid="ButtonRowContainer">
+            <div className="button-row" style={{ display: "flex", gap: "8px" }}>
+              {/* Create 10 buttons in a row */}
+              {Array.from({ length: 10 }, (_, i) => (
+                <Button
+                  key={i}
+                  data-testid={`RowButton-${i}`}
+                  variant={i % 2 === 0 ? "contained" : "outlined"}
+                  color={
+                    i % 3 === 0
+                      ? "primary"
+                      : i % 3 === 1
+                        ? "secondary"
+                        : "error"
+                  }
+                  size={i % 2 === 0 ? "small" : "medium"}
+                >
+                  Button {i + 1}
+                </Button>
+              ))}
+            </div>
+          </div>
+        );
+      });
+
+      it("should target a specific button by index in a dense UI", () => {
+        // Target the third button (index 2) in the row
+        const thirdButton = materialUI({
+          componentName: "Button",
+          index: 2,
+        });
+
+        // Verify it's the correct button
+        thirdButton.getText().should("eq", "Button 3");
+        thirdButton.get().should("have.attr", "data-testid", "RowButton-2");
+      });
+
+      it("should target a specific button by test ID in a dense UI", () => {
+        // Target a specific button by its test ID
+        const fifthButton = materialUI({
+          dataTestId: "RowButton-4",
+        });
+
+        // Verify it's the correct button
+        fifthButton.getText().should("eq", "Button 5");
+      });
+
+      it("should target buttons with specific attributes in a dense UI", () => {
+        // Create a parent element to scope the search
+        const buttonRow = () => cy.get(".button-row");
+
+        // Target all primary color buttons (should be buttons 0, 3, 6, 9)
+        const primaryButtons = materialUI({
+          componentName: "Button",
+          parentElement: buttonRow,
+        });
+
+        // We expect to get an error because multiple elements match
+        cy.on("fail", (err) => {
+          expect(err.message).to.include("Multiple elements");
+          return false; // Prevent the error from failing the test
+        });
+
+        // This should fail because multiple elements match
+        primaryButtons.get();
+      });
+
+      it("should target a specific button by combining index and attributes", () => {
+        // First, let's identify all the buttons that have primary color
+        cy.get(".button-row button").then(($allButtons) => {
+          // Filter to find buttons with primary color (indices 0, 3, 6, 9)
+          const primaryButtons = Array.from($allButtons).filter(
+            (button, i) => i % 3 === 0
+          );
+
+          // Verify we have at least 2 primary buttons
+          expect(primaryButtons.length).to.be.greaterThan(1);
+
+          // Get the data-testid of the second primary button (index 1, which is button at index 3)
+          const secondPrimaryButtonTestId =
+            primaryButtons[1].getAttribute("data-testid") || "";
+
+          // Ensure we have a valid test ID
+          expect(secondPrimaryButtonTestId).to.not.be.empty;
+
+          // Target the button with the specific data-testid
+          const secondPrimaryButton = materialUI({
+            componentName: "Button",
+            dataTestId: secondPrimaryButtonTestId,
+          });
+
+          // Verify it's the correct button (should be Button 4)
+          secondPrimaryButton.click();
+          secondPrimaryButton.getText().should("eq", "Button 4");
+          secondPrimaryButton
+            .get()
+            .should("have.attr", "data-testid", secondPrimaryButtonTestId);
+        });
+      });
+    });
+
+    describe("Card Selection Scenarios", () => {
+      beforeEach(() => {
+        // Mount a component with multiple cards
+        mount(
+          <div data-testid="CardContainer">
+            {/* Create 5 "cards" using Paper components */}
+            {Array.from({ length: 5 }, (_, i) => (
+              <div
+                key={i}
+                className="MuiPaper-root MuiPaper-elevation MuiPaper-rounded MuiPaper-elevation1 card"
+                data-testid={`Card-${i}`}
+                style={{
+                  padding: "16px",
+                  margin: "8px",
+                  backgroundColor: i % 2 === 0 ? "#f5f5f5" : "#ffffff",
+                }}
+              >
+                <div className="card-header">
+                  <h3>Card {i + 1}</h3>
+                </div>
+                <div className="card-content">
+                  <p>This is card number {i + 1}</p>
+                  <Button
+                    data-testid={`CardButton-${i}`}
+                    variant="contained"
+                    color="primary"
+                  >
+                    Card {i + 1} Action
+                  </Button>
+                </div>
+              </div>
+            ))}
+          </div>
+        );
+      });
+
+      it("should target a specific card by index", () => {
+        // Target the fourth card (index 3)
+        const fourthCard = materialUI({
+          componentName: "Paper",
+          index: 3,
+        });
+
+        // Verify it's the correct card
+        fourthCard.get().should("contain.text", "Card 4");
+        fourthCard.get().should("have.attr", "data-testid", "Card-3");
+      });
+
+      it("should target a button within a specific card", () => {
+        // Create a parent element for the fourth card
+        const fourthCard = () => cy.get('[data-testid="Card-3"]');
+
+        // Target the button within the fourth card
+        const fourthCardButton = materialUI({
+          componentName: "Button",
+          dataTestId: "CardButton-3",
+          parentElement: fourthCard,
+        });
+
+        // Verify it's the correct button
+        fourthCardButton.getText().should("eq", "Card 4 Action");
+      });
+
+      it("should handle targeting elements when there are many similar elements", () => {
+        // Target all card buttons
+        const allCardButtons = () => cy.get(".card .MuiButton-root");
+
+        // Verify we have 5 card buttons
+        allCardButtons().should("have.length", 5);
+
+        // Target a specific card button using the MaterialUIInteractable
+        const lastCardButton = materialUI({
+          componentName: "Button",
+          dataTestId: "CardButton-4", // The last card button
+        });
+
+        // Verify it's the correct button
+        lastCardButton.getText().should("eq", "Card 5 Action");
+      });
+    });
+
+    describe("Mixed Component Types", () => {
+      beforeEach(() => {
+        // Mount a component with a mix of different Material UI components
+        mount(
+          <div data-testid="MixedComponentsContainer">
+            <div className="form-section">
+              <h3>Form Section</h3>
+              {/* Create 3 text fields */}
+              {Array.from({ length: 3 }, (_, i) => (
+                <TextField
+                  key={`text-${i}`}
+                  data-testid={`TextField-${i}`}
+                  label={`Field ${i + 1}`}
+                  variant="outlined"
+                  style={{ margin: "8px" }}
+                />
+              ))}
+
+              {/* Create 3 selects */}
+              {Array.from({ length: 3 }, (_, i) => (
+                <FormControl key={`select-${i}`} style={{ margin: "8px" }}>
+                  <InputLabel id={`select-label-${i}`}>
+                    Select {i + 1}
+                  </InputLabel>
+                  <Select
+                    labelId={`select-label-${i}`}
+                    data-testid={`Select-${i}`}
+                    value=""
+                    label={`Select ${i + 1}`}
+                  >
+                    <MenuItem value={`option-${i}-1`}>
+                      Option {i + 1}.1
+                    </MenuItem>
+                    <MenuItem value={`option-${i}-2`}>
+                      Option {i + 1}.2
+                    </MenuItem>
+                  </Select>
+                </FormControl>
+              ))}
+
+              {/* Create 3 checkboxes */}
+              {Array.from({ length: 3 }, (_, i) => (
+                <FormControlLabel
+                  key={`checkbox-${i}`}
+                  control={<Checkbox data-testid={`Checkbox-${i}`} />}
+                  label={`Checkbox ${i + 1}`}
+                  style={{ margin: "8px" }}
+                />
+              ))}
+            </div>
+          </div>
+        );
+      });
+
+      it("should target specific components by type and index in a mixed UI", () => {
+        // Target the second text field
+        const secondTextField = materialUI({
+          componentName: "TextField",
+          index: 1,
+        });
+
+        // Target the third select
+        const thirdSelect = materialUI({
+          componentName: "Select",
+          index: 2,
+        });
+
+        // Target the first checkbox
+        const firstCheckbox = materialUI({
+          componentName: "Checkbox",
+          index: 0,
+        });
+
+        // Verify they're the correct components
+        secondTextField.get().should("have.attr", "data-testid", "TextField-1");
+        thirdSelect.get().should("have.attr", "data-testid", "Select-2");
+        firstCheckbox.get().should("have.attr", "data-testid", "Checkbox-0");
+      });
+
+      it("should target components by test ID when there are many similar components", () => {
+        // Target specific components by their test IDs
+        const lastTextField = materialUI({
+          dataTestId: "TextField-2",
+        });
+
+        const firstSelect = materialUI({
+          dataTestId: "Select-0",
+        });
+
+        const secondCheckbox = materialUI({
+          dataTestId: "Checkbox-1",
+        });
+
+        // Verify they're the correct components
+        lastTextField.get().should("have.class", "MuiTextField-root");
+        firstSelect.get().should("have.class", "MuiSelect-root");
+        secondCheckbox.get().should("have.class", "MuiCheckbox-root");
+      });
+
+      it("should handle complex targeting with parent elements", () => {
+        // Create a parent element for the form section
+        const formSection = () => cy.get(".form-section");
+
+        // Target the second text field within the form section
+        const secondTextField = materialUI({
+          componentName: "TextField",
+          index: 1,
+          parentElement: formSection,
+        });
+
+        // Target the third select within the form section
+        const thirdSelect = materialUI({
+          componentName: "Select",
+          index: 2,
+          parentElement: formSection,
+        });
+
+        // Verify they're the correct components
+        secondTextField.get().should("have.attr", "data-testid", "TextField-1");
+        thirdSelect.get().should("have.attr", "data-testid", "Select-2");
+      });
+    });
+  });
 });
