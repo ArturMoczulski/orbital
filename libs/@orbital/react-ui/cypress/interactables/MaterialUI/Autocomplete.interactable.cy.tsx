@@ -142,6 +142,8 @@ describe("AutocompleteInteractable", () => {
       // Check that the option was selected
       cy.contains(`Selected value: ${optionToSelect}`).should("exist");
 
+      autocomplete.selected().should("eq", "Option 2");
+
       // Autocomplete should be closed after selection
       autocomplete.isClosed().should("be.true");
     });

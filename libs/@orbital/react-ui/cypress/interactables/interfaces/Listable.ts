@@ -16,3 +16,22 @@ export interface Listable {
    */
   items(): Cypress.Chainable<JQuery<HTMLElement>>;
 }
+
+/**
+ * Interface for components that support selection of items
+ * This interface defines methods for selecting and getting selected items
+ */
+export interface Selectable {
+  /**
+   * Selects an item by its text content
+   * @param text - The text content of the item to select
+   * @returns this - for method chaining
+   */
+  select(text: string): this;
+
+  /**
+   * Gets the currently selected item(s)
+   * @returns Cypress.Chainable<string | string[]> - chainable that resolves to the selected text or array of selected texts
+   */
+  selected(): Cypress.Chainable<string | string[]>;
+}

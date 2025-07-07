@@ -1,4 +1,4 @@
-import { Listable } from "../interfaces/Listable";
+import { Listable, Selectable } from "../interfaces/Listable";
 import { Openable } from "../interfaces/Openable";
 import {
   MaterialUIInteractable,
@@ -25,7 +25,7 @@ export interface AutocompleteInteractableOptions
  */
 export class AutocompleteInteractable
   extends MaterialUIInteractable
-  implements Openable, Listable
+  implements Openable, Listable, Selectable
 {
   /**
    * Internal PopperInteractable instance for delegating Openable methods
@@ -176,19 +176,63 @@ export class AutocompleteInteractable
   }
 
   /**
-   * Selects an option from the autocomplete by its text content
-   * @param text - The text content of the option to select
+   * Selects an option or multiple options from the autocomplete by text content
+   * @param text - The text content of the option(s) to select (string or array of strings)
    * @returns this - for method chaining
    */
-  select(text: string): this {
-    // Click the item
-    this.item(text).click();
-
-    // After selecting an item, the autocomplete should close automatically
-    // but we'll wait a moment to ensure it's processed
-    cy.wait(100);
+  select(text: string | string[]): this {
+    if (Array.isArray(text)) {
+      // Handle multiple selections
+      text.forEach((item) => {
+        this.open(); // Make sure the dropdown is open for each selection
+        this.item(item).click();
+        cy.wait(100); // Wait for the selection to be processed
+      });
+    } else {
+      // Handle single selection
+      this.open(); // Make sure the dropdown is open
+      this.item(text).click();
+      cy.wait(100); // Wait for the selection to be processed
+    }
 
     return this;
+  }
+
+  /**
+   * Gets the currently selected item(s) from the autocomplete
+   * @returns Cypress.Chainable<string | string[]> - chainable that resolves to the selected text or array of selected texts
+   */
+  selected(): Cypress.Chainable<string | string[]> {
+    // Use a completely different approach to avoid TypeScript errors
+    // First check for single selection (input value)
+    return cy.then(() => {
+      return this.get()
+        .find("input")
+        .invoke("val")
+        .then((value) => {
+          if (value) {
+            // If we have an input value, return it as a string
+            return value as string;
+          } else {
+            // Otherwise, check for chips (multiple selection)
+            return this.get()
+              .find(".MuiChip-label")
+              .then(($chips) => {
+                if ($chips.length > 0) {
+                  // Multiple selection - collect chip texts
+                  const chipTexts: string[] = [];
+                  $chips.each((_, chip) => {
+                    chipTexts.push(Cypress.$(chip).text());
+                  });
+                  return chipTexts;
+                } else {
+                  // Fallback - return empty string
+                  return "";
+                }
+              });
+          }
+        });
+    }) as unknown as Cypress.Chainable<string | string[]>;
   }
 }
 
