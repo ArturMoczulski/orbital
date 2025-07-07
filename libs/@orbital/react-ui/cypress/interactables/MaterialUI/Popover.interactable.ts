@@ -1,4 +1,5 @@
 import { Openable } from "../interfaces/Openable";
+import { Triggerable } from "../interfaces/Triggerable";
 import {
   MaterialUIInteractable,
   MaterialUIInteractableOptions,
@@ -23,7 +24,7 @@ export interface PopoverInteractableOptions
  */
 export class PopoverInteractable
   extends MaterialUIInteractable
-  implements Openable
+  implements Openable, Triggerable
 {
   protected triggerElement?:
     | string
@@ -38,9 +39,10 @@ export class PopoverInteractable
   }
 
   /**
-   * Get the trigger element that opens the popover
+   * Gets the trigger element that opens the popover
+   * @returns Cypress.Chainable<JQuery<HTMLElement>> - chainable that resolves to the trigger element
    */
-  protected getTriggerElement(): Cypress.Chainable<JQuery<HTMLElement>> {
+  getTriggerElement(): Cypress.Chainable<JQuery<HTMLElement>> {
     if (!this.triggerElement) {
       throw new Error("No trigger element provided for PopoverInteractable");
     }
@@ -53,10 +55,10 @@ export class PopoverInteractable
   }
 
   /**
-   * Opens the popover by clicking the trigger element
+   * Triggers the popover by clicking the trigger element
    * @returns this - for method chaining
    */
-  open(): this {
+  trigger(): this {
     // Click the trigger element to open the popover
     this.getTriggerElement().click();
 
@@ -64,6 +66,15 @@ export class PopoverInteractable
     this.should("be.visible", { timeout: 5000 });
 
     return this;
+  }
+
+  /**
+   * Opens the popover by triggering it
+   * This is a shortcut to the trigger method
+   * @returns this - for method chaining
+   */
+  open(): this {
+    return this.trigger();
   }
 
   /**
@@ -107,10 +118,10 @@ export class PopoverInteractable
   }
 
   /**
-   * Checks if the popover is currently open
-   * @returns Cypress.Chainable<boolean> - chainable that yields true if the popover is open
+   * Checks if the popover is currently triggered
+   * @returns Cypress.Chainable<boolean> - chainable that yields true if the popover is triggered
    */
-  isOpened(): Cypress.Chainable<boolean> {
+  isTriggered(): Cypress.Chainable<boolean> {
     // For Material UI popovers, we check if the element exists in the DOM
     // since they are completely removed when closed
     return cy.document().then((doc) => {
@@ -141,6 +152,15 @@ export class PopoverInteractable
 
       return false;
     });
+  }
+
+  /**
+   * Checks if the popover is currently open
+   * This is a shortcut to isTriggered
+   * @returns Cypress.Chainable<boolean> - chainable that yields true if the popover is open
+   */
+  isOpened(): Cypress.Chainable<boolean> {
+    return this.isTriggered();
   }
 
   /**

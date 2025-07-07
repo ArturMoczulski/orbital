@@ -1,8 +1,17 @@
+import { Triggerable } from "./Triggerable";
+
 /**
  * Interface for components that can be opened and closed
- * This interface defines methods for opening, closing, and checking the state of openable components
+ * This interface extends Triggerable and defines methods for opening, closing,
+ * and checking the state of openable components
  */
-export interface Openable {
+export interface Openable extends Triggerable {
+  /**
+   * Gets the trigger element that can be interacted with
+   * @returns Cypress.Chainable<JQuery<HTMLElement>> - chainable that resolves to the trigger element
+   */
+  getTriggerElement(): Cypress.Chainable<JQuery<HTMLElement>>;
+
   /**
    * Opens the component
    * @returns this - for method chaining

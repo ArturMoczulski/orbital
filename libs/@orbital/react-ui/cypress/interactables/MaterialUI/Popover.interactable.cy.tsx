@@ -62,6 +62,34 @@ describe("PopoverInteractable", () => {
       popoverComponent.isClosed().should("eq", true);
     });
 
+    it("should trigger the popover using the trigger method", () => {
+      // Create a PopoverInteractable instance using componentName
+      const popoverComponent = popover({
+        componentName: "Popover",
+        triggerElement: '[data-testid="PopoverTrigger"]',
+      });
+
+      // Trigger the popover
+      popoverComponent.trigger();
+
+      // Verify the popover is open
+      popoverComponent.isOpened().should("eq", true);
+
+      // Check the content
+      popoverComponent
+        .getPopoverText()
+        .should("contain", "This is the popover content");
+
+      // Close the popover
+      popoverComponent.close();
+
+      // Wait a moment for the popover to close
+      cy.wait(500);
+
+      // Verify the popover is closed
+      popoverComponent.isClosed().should("eq", true);
+    });
+
     it("should click on elements within the popover", () => {
       // Create a PopoverInteractable instance using componentName
       const popoverComponent = popover({
@@ -81,6 +109,35 @@ describe("PopoverInteractable", () => {
         .getContent()
         .find('[data-testid="PopoverContent"]')
         .should("contain.text", "This is the popover content");
+    });
+
+    it("should check if the popover is triggered", () => {
+      // Create a PopoverInteractable instance using componentName
+      const popoverComponent = popover({
+        componentName: "Popover",
+        triggerElement: '[data-testid="PopoverTrigger"]',
+      });
+
+      // Initially the popover should not be triggered
+      popoverComponent.isTriggered().should("eq", false);
+
+      // Trigger the popover
+      popoverComponent.trigger();
+
+      // Verify the popover is triggered
+      popoverComponent.isTriggered().should("eq", true);
+
+      // Verify isOpened is a shortcut to isTriggered
+      popoverComponent.isOpened().should("eq", true);
+
+      // Close the popover
+      popoverComponent.close();
+
+      // Wait a moment for the popover to close
+      cy.wait(500);
+
+      // Verify the popover is not triggered
+      popoverComponent.isTriggered().should("eq", false);
     });
   });
 
