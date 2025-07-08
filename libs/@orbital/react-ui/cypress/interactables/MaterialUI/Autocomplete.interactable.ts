@@ -529,6 +529,49 @@ export class AutocompleteInteractable
   }
 
   /**
+   * Checks if the autocomplete is currently disabled
+   * @returns Cypress.Chainable<boolean> - chainable that resolves to true if the autocomplete is disabled
+   */
+  isDisabled(): Cypress.Chainable<boolean> {
+    return cy.then(() => {
+      return this.get().then(($el) => {
+        // Primary check: Check for the disabled attribute on the input element
+        // This is the most reliable indicator
+        const hasDisabledInput = $el.find("input").prop("disabled") === true;
+
+        if (hasDisabledInput) {
+          return true;
+        }
+
+        // Secondary checks if the input check didn't find it
+        // 1. Check for the Mui-disabled class on various elements
+        const hasRootDisabledClass = $el.hasClass("Mui-disabled");
+        const hasInputBaseDisabledClass = $el
+          .find(".MuiInputBase-root")
+          .hasClass("Mui-disabled");
+        const hasInputDisabledClass = $el
+          .find("input")
+          .hasClass("Mui-disabled");
+
+        // 2. Check for the aria-disabled attribute
+        const hasRootAriaDisabled = $el.attr("aria-disabled") === "true";
+        const hasInputAriaDisabled =
+          $el.find("input").attr("aria-disabled") === "true";
+
+        // Return true if any of the disabled indicators are found
+        return (
+          hasDisabledInput ||
+          hasRootDisabledClass ||
+          hasInputBaseDisabledClass ||
+          hasInputDisabledClass ||
+          hasRootAriaDisabled ||
+          hasInputAriaDisabled
+        );
+      });
+    });
+  }
+
+  /**
    * Gets the error message displayed by the autocomplete
    * @returns Cypress.Chainable<string> - chainable that resolves to the error message text
    */

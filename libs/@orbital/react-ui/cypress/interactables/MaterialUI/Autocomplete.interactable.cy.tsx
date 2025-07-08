@@ -98,6 +98,21 @@ const TestAutocompletePageComponent = () => {
         />
       </Box>
 
+      {/* Disabled autocomplete */}
+      <Box sx={{ my: 2 }}>
+        <Typography variant="h6">Disabled State</Typography>
+        <Autocomplete
+          data-testid="disabled-autocomplete"
+          options={options}
+          value={singleValue}
+          onChange={(_, newValue) => setSingleValue(newValue)}
+          disabled={true}
+          renderInput={(params) => (
+            <TextField {...params} label="Disabled autocomplete" />
+          )}
+        />
+      </Box>
+
       {/* Single selection autocomplete */}
       <Box sx={{ my: 2 }}>
         <Typography variant="h6">Single Selection</Typography>
@@ -626,6 +641,29 @@ describe("AutocompleteInteractable", () => {
         "single-autocomplete"
       );
       regularAutocomplete.getError().should("eq", "");
+    });
+
+    it("should detect disabled state", () => {
+      const disabledAutocomplete = new TestAutocompleteInteractable(
+        "disabled-autocomplete"
+      );
+
+      // Check that isDisabled returns true for a disabled autocomplete
+      disabledAutocomplete.isDisabled().should("be.true");
+
+      // Check that a regular autocomplete isn't disabled
+      const regularAutocomplete = new TestAutocompleteInteractable(
+        "single-autocomplete"
+      );
+      regularAutocomplete.isDisabled().should("be.false");
+
+      // Verify that the disabled autocomplete has the expected attributes
+      // The input element should have the disabled attribute
+      disabledAutocomplete.textField().should("have.attr", "disabled");
+
+      // Verify that clicking doesn't open the dropdown when disabled
+      disabledAutocomplete.getTriggerElement().click({ force: true });
+      cy.get('[role="presentation"]').should("not.exist");
     });
   });
 

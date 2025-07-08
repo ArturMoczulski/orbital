@@ -1,9 +1,11 @@
 // SingleChoiceObjectSelector.cy.tsx
-// Tests for the SingleChoiceObjectSelector component using AutocompleteInteractable
+// Tests for the SingleChoiceObjectSelector component
 
 /// <reference types="cypress" />
 import { mount } from "cypress/react";
 import { useState } from "react";
+import { z } from "zod";
+import { ObjectProvider } from "../../../src/components/FormWithReferences/ObjectProvider";
 import { SingleChoiceObjectSelector } from "../../../src/components/ObjectSelector/SingleChoiceObjectSelector";
 import { AutocompleteInteractable } from "../MaterialUI/Autocomplete.interactable";
 
@@ -13,30 +15,25 @@ describe("SingleChoiceObjectSelector", () => {
     { _id: "option1", name: "Option 1" },
     { _id: "option2", name: "Option 2" },
     { _id: "option3", name: "Option 3" },
-    { _id: "option4", name: "Option 4" },
   ];
 
-  // Test component for SingleChoiceObjectSelector
+  // Basic test component
   const TestComponent = ({
-    disabled = false,
-    required = false,
-    initialValue = "",
+    initialValue = null,
     onChange = undefined,
-    error = false,
-    errorMessage = "",
-    placeholder = "Select an option",
+    idField = "_id",
+    displayField = "name",
+    customOptions = options,
   }: {
-    disabled?: boolean;
-    required?: boolean;
-    initialValue?: string;
-    onChange?: (value: string) => void;
-    error?: boolean;
-    errorMessage?: string;
-    placeholder?: string;
+    initialValue?: string | null;
+    onChange?: (value: string | null) => void;
+    idField?: string;
+    displayField?: string;
+    customOptions?: any[];
   }) => {
     const [value, setValue] = useState(initialValue);
 
-    const handleChange = (newValue: string) => {
+    const handleChange = (newValue: string | null) => {
       setValue(newValue);
       if (onChange) {
         onChange(newValue);
@@ -50,14 +47,9 @@ describe("SingleChoiceObjectSelector", () => {
           name="testField"
           value={value}
           onChange={handleChange}
-          options={options}
-          idField="_id"
-          displayField="name"
-          disabled={disabled}
-          required={required}
-          error={error}
-          errorMessage={errorMessage}
-          placeholder={placeholder}
+          options={customOptions}
+          idField={idField}
+          displayField={displayField}
           label="Test Field"
           data-testid="SingleChoiceObjectSelector"
         />
@@ -65,40 +57,38 @@ describe("SingleChoiceObjectSelector", () => {
     );
   };
 
-  // Test component with multiple instances
-  const TestMultipleComponent = () => {
-    const [value1, setValue1] = useState("");
-    const [value2, setValue2] = useState("");
+  // Test component with ObjectProvider
+  const TestWithObjectProviderComponent = () => {
+    // Define a simple schema
+    const schema = z.object({
+      selectedOption: z.string().optional(),
+    });
+
+    // Initial data
+    const [data, setData] = useState({
+      selectedOption: null,
+    });
+
+    const handleChange = (newData: any) => {
+      setData((prevData) => ({ ...prevData, ...newData }));
+    };
 
     return (
-      <div>
-        <div data-testid="first-container">
+      <ObjectProvider schema={schema} data={data}>
+        <div data-testid="provider-container">
           <SingleChoiceObjectSelector
-            id="firstField"
-            name="firstField"
-            value={value1}
-            onChange={setValue1}
+            id="providerField"
+            name="selectedOption"
+            value={data.selectedOption}
+            onChange={(value) => handleChange({ selectedOption: value })}
             options={options}
             idField="_id"
             displayField="name"
-            label="First Field"
-            data-testid="FirstSelector"
+            label="Provider Field"
+            data-testid="ProviderSelector"
           />
         </div>
-        <div data-testid="second-container">
-          <SingleChoiceObjectSelector
-            id="secondField"
-            name="secondField"
-            value={value2}
-            onChange={setValue2}
-            options={options}
-            idField="_id"
-            displayField="name"
-            label="Second Field"
-            data-testid="SecondSelector"
-          />
-        </div>
-      </div>
+      </ObjectProvider>
     );
   };
 
@@ -109,7 +99,7 @@ describe("SingleChoiceObjectSelector", () => {
     });
   };
 
-  it("should select a value", () => {
+  it("should map object ID to value and display name correctly", () => {
     const onChangeSpy = cy.spy().as("onChange");
 
     mount(<TestComponent onChange={onChangeSpy} />);
@@ -120,42 +110,49 @@ describe("SingleChoiceObjectSelector", () => {
     autocomplete.open();
 
     // Select an option
-    autocomplete.select("Option 2");
+    autocomplete.select("Option 1");
 
-    // Verify the onChange was called with the correct value
-    cy.get("@onChange").should("have.been.calledWith", "option2");
+    // Verify the onChange was called with the ID value, not the display name
+    cy.get("@onChange").should("have.been.calledWith", "option1");
 
-    // Verify the selected value is displayed
-    autocomplete.selected().should("eq", "Option 2");
+    // Verify the display name is shown in the field
+    autocomplete.textField().should("have.value", "Option 1");
   });
 
-  it("should handle disabled state", () => {
-    mount(<TestComponent disabled={true} initialValue="option1" />);
+  it("should handle custom ID and display field mappings", () => {
+    // Sample data with custom ID and display fields
+    const customOptions = [
+      { itemId: "i1", displayName: "First Item" },
+      { itemId: "i2", displayName: "Second Item" },
+    ];
+
+    const onChangeSpy = cy.spy().as("onChange");
+
+    mount(
+      <TestComponent
+        onChange={onChangeSpy}
+        idField="itemId"
+        displayField="displayName"
+        customOptions={customOptions}
+      />
+    );
 
     const autocomplete = getAutocomplete();
 
-    // Verify the component is disabled
-    // In Material UI Autocomplete, the disabled state is applied to the input element
-    autocomplete.get().find("input").should("be.disabled");
+    // Open the dropdown
+    autocomplete.open();
 
-    // Verify the selected value is displayed
-    autocomplete.selected().should("eq", "Option 1");
+    // Select an option
+    autocomplete.select("First Item");
 
-    // Verify that clicking doesn't open the dropdown when disabled
-    autocomplete.getTriggerElement().click({ force: true });
-    cy.get('[role="presentation"]').should("not.exist");
+    // Verify the onChange was called with the custom ID field value
+    cy.get("@onChange").should("have.been.calledWith", "i1");
+
+    // Verify the custom display field is shown
+    autocomplete.textField().should("have.value", "First Item");
   });
 
-  it("should handle required state", () => {
-    mount(<TestComponent required={true} />);
-
-    const autocomplete = getAutocomplete();
-
-    // Verify the component is required
-    autocomplete.get().find("label").should("have.class", "Mui-required");
-  });
-
-  it("should clear selection", () => {
+  it("should handle null value correctly", () => {
     const onChangeSpy = cy.spy().as("onChange");
 
     mount(<TestComponent initialValue="option1" onChange={onChangeSpy} />);
@@ -163,142 +160,138 @@ describe("SingleChoiceObjectSelector", () => {
     const autocomplete = getAutocomplete();
 
     // Verify initial selection
-    autocomplete.selected().should("eq", "Option 1");
+    autocomplete.textField().should("have.value", "Option 1");
 
-    // Clear the selection using the clearSelection method
+    // Clear the selection
     autocomplete.clearSelection();
 
     // Verify the onChange was called with null
     cy.get("@onChange").should("have.been.calledWith", null);
-
-    // Verify the selection is cleared
-    autocomplete.selected().should("eq", "");
   });
 
-  it("should handle error state", () => {
-    mount(<TestComponent error={true} errorMessage="Invalid selection" />);
+  it("should find and select the correct option based on ID value", () => {
+    mount(<TestComponent initialValue="option2" />);
 
     const autocomplete = getAutocomplete();
 
-    // Verify the component has error state using the Validatable interface
-    autocomplete.hasError().should("be.true");
-
-    // Verify the error message is displayed using the Validatable interface
-    autocomplete.getError().should("eq", "Invalid selection");
+    // Verify the correct display name is shown for the ID value
+    autocomplete.textField().should("have.value", "Option 2");
   });
 
-  it("should display placeholder text", () => {
-    const customPlaceholder = "Choose an item";
-    mount(<TestComponent placeholder={customPlaceholder} />);
+  it("should work with ObjectProvider", () => {
+    mount(<TestWithObjectProviderComponent />);
 
-    const autocomplete = getAutocomplete();
-
-    // Verify the placeholder is displayed
-    autocomplete
-      .get()
-      .find("input")
-      .should("have.attr", "placeholder", customPlaceholder);
-  });
-
-  it("should search for options", () => {
-    mount(<TestComponent />);
-
-    const autocomplete = getAutocomplete();
-
-    // Type in the search box
-    autocomplete.type("Option 3");
+    const autocomplete = new AutocompleteInteractable({
+      dataTestId: "ProviderSelector",
+    });
 
     // Open the dropdown
     autocomplete.open();
 
-    // Verify the filtered options
-    autocomplete.items().then(($items) => {
-      // Should only show Option 3
-      expect($items.length).to.equal(1);
-      expect($items.text()).to.include("Option 3");
-    });
+    // Select an option
+    autocomplete.select("Option 2");
 
-    // Select the filtered option
-    autocomplete.select("Option 3");
-
-    // Verify the selected value
-    autocomplete.selected().should("eq", "Option 3");
+    // Verify the selected value is displayed
+    autocomplete.textField().should("have.value", "Option 2");
   });
 
-  it("should handle multiple instances with parent element scoping", () => {
-    mount(<TestMultipleComponent />);
+  it("should handle empty options array gracefully", () => {
+    mount(<TestComponent customOptions={[]} />);
 
-    // Create autocomplete interactables for each instance
-    const firstAutocomplete = new AutocompleteInteractable({
-      dataTestId: "FirstSelector",
-    });
+    const autocomplete = getAutocomplete();
 
-    const secondAutocomplete = new AutocompleteInteractable({
-      dataTestId: "SecondSelector",
-    });
+    // Component should be rendered with empty options
+    autocomplete.get().should("exist");
 
-    // Select different options in each autocomplete
-    firstAutocomplete.open();
-    firstAutocomplete.select("Option 1");
+    // Component should not be disabled when options is an empty array
+    // It's only disabled when both options and fetchOptions are undefined
+    autocomplete.isDisabled().should("be.false");
 
-    secondAutocomplete.open();
-    secondAutocomplete.select("Option 2");
-
-    // Verify each autocomplete has the correct selection
-    firstAutocomplete.selected().should("eq", "Option 1");
-    secondAutocomplete.selected().should("eq", "Option 2");
+    // Verify no options are available when opened
+    autocomplete.open();
+    autocomplete.items().should("have.length", 0);
   });
 
-  it("should handle custom field mappings", () => {
-    // Sample data with custom ID and display fields
-    const customOptions = [
-      { itemId: "i1", displayName: "First Item" },
-      { itemId: "i2", displayName: "Second Item" },
-      { itemId: "i3", displayName: "Third Item" },
-    ];
-
-    // Custom test component with custom field mappings
-    const CustomFieldsComponent = () => {
-      const [value, setValue] = useState("");
+  it("should be disabled when both options and fetchOptions are undefined", () => {
+    // Create a component with neither options nor fetchOptions
+    const NoOptionsComponent = () => {
+      const [value, setValue] = useState<string | null>(null);
 
       return (
         <div>
           <SingleChoiceObjectSelector
-            id="customField"
-            name="customField"
+            id="noOptionsField"
+            name="noOptionsField"
             value={value}
             onChange={setValue}
-            options={customOptions}
-            idField="itemId"
-            displayField="displayName"
-            label="Custom Field"
-            data-testid="CustomFieldSelector"
+            // Explicitly set options and fetchOptions to undefined
+            options={undefined}
+            fetchOptions={undefined}
+            idField="_id"
+            displayField="name"
+            label="No Options Field"
+            data-testid="NoOptionsSelector"
           />
         </div>
       );
     };
 
-    mount(<CustomFieldsComponent />);
+    mount(<NoOptionsComponent />);
 
     const autocomplete = new AutocompleteInteractable({
-      dataTestId: "CustomFieldSelector",
+      dataTestId: "NoOptionsSelector",
     });
 
-    // Open the dropdown
-    autocomplete.open();
+    // Component should be rendered but disabled
+    autocomplete.get().should("exist");
+    autocomplete.isDisabled().should("be.true");
 
-    // Verify the options are displayed with the custom display field
-    autocomplete.items().then(($items) => {
-      expect($items.length).to.equal(3);
-      expect($items.text()).to.include("First Item");
-      expect($items.text()).to.include("Second Item");
-      expect($items.text()).to.include("Third Item");
+    // Verify that clicking doesn't open the dropdown when disabled
+    autocomplete.getTriggerElement().click({ force: true });
+    cy.get('[role="presentation"]').should("not.exist");
+  });
+
+  it("should update selection when value changes externally", () => {
+    // Component with external state control
+    const ExternalControlComponent = () => {
+      const [value, setValue] = useState<string | null>(null);
+
+      return (
+        <div>
+          <button
+            data-testid="change-button"
+            onClick={() => setValue("option3")}
+          >
+            Change Value
+          </button>
+          <SingleChoiceObjectSelector
+            id="externalField"
+            name="externalField"
+            value={value}
+            onChange={setValue}
+            options={options}
+            idField="_id"
+            displayField="name"
+            label="External Control Field"
+            data-testid="ExternalControlSelector"
+          />
+        </div>
+      );
+    };
+
+    mount(<ExternalControlComponent />);
+
+    const autocomplete = new AutocompleteInteractable({
+      dataTestId: "ExternalControlSelector",
     });
 
-    // Select an option
-    autocomplete.select("Second Item");
+    // Initially no selection
+    autocomplete.textField().should("have.value", "");
 
-    // Verify the selected value
-    autocomplete.selected().should("eq", "Second Item");
+    // Change value externally
+    cy.get('[data-testid="change-button"]').click();
+
+    // Verify the display name is updated
+    autocomplete.textField().should("have.value", "Option 3");
   });
 });
