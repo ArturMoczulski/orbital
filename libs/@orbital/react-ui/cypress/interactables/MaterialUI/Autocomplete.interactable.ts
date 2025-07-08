@@ -1,4 +1,5 @@
 import { Listable, Selectable } from "../interfaces/Listable";
+import { Loadable } from "../interfaces/Loadable";
 import { Openable } from "../interfaces/Openable";
 import { Typeable } from "../interfaces/Typeable";
 import { Validatable } from "../interfaces/Validatable";
@@ -28,7 +29,7 @@ export interface AutocompleteInteractableOptions
  */
 export class AutocompleteInteractable
   extends MaterialUIInteractable
-  implements Openable, Listable, Selectable, Typeable, Validatable
+  implements Openable, Listable, Selectable, Typeable, Validatable, Loadable
 {
   /**
    * Internal PopperInteractable instance for delegating Openable methods
@@ -567,6 +568,31 @@ export class AutocompleteInteractable
           hasRootAriaDisabled ||
           hasInputAriaDisabled
         );
+      });
+    });
+  }
+
+  /**
+   * Checks if the autocomplete is currently in a loading state
+   * @returns Cypress.Chainable<boolean> - chainable that resolves to true if the autocomplete is loading
+   */
+  isLoading(): Cypress.Chainable<boolean> {
+    return cy.then(() => {
+      return this.get().then(($el) => {
+        // Check for the CircularProgress component anywhere within the Autocomplete
+        // This is more reliable than looking for a specific DOM structure
+        const hasCircularProgress =
+          $el.find(".MuiCircularProgress-root").length > 0;
+
+        // Alternative check for SVG circle which is part of CircularProgress
+        // This is needed because the CircularProgress component renders an SVG with circles
+        const hasCircle = $el.find("svg circle").length > 0;
+
+        // Check for the loading attribute on the Autocomplete component
+        // This is a more direct way to check if the component is in loading state
+        const hasLoadingAttribute = $el.attr("aria-busy") === "true";
+
+        return hasCircularProgress || hasCircle || hasLoadingAttribute;
       });
     });
   }

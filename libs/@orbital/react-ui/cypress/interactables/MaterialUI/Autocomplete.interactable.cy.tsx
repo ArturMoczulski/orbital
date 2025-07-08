@@ -444,6 +444,50 @@ describe("AutocompleteInteractable", () => {
       asyncAutocomplete.selected().should("eq", "Async Option 2");
     });
 
+    it("should detect loading state with isLoading method", () => {
+      const asyncAutocomplete = new TestAutocompleteInteractable(
+        "async-autocomplete"
+      );
+
+      // Initially closed with no loading
+      asyncAutocomplete.isLoading().should("be.false");
+
+      // Open the autocomplete to trigger loading
+      asyncAutocomplete.open();
+
+      // Should be in loading state
+      asyncAutocomplete.isLoading().should("be.true");
+
+      // After loading completes, should no longer be in loading state
+      cy.get('[data-testid="async-autocomplete"]')
+        .find("circle")
+        .should("not.exist", { timeout: 2000 });
+
+      asyncAutocomplete.isLoading().should("be.false");
+    });
+
+    it("should detect loading state with isLoading method in multiple selection mode", () => {
+      const asyncMultipleAutocomplete = new TestAutocompleteInteractable(
+        "async-multiple-autocomplete"
+      );
+
+      // Initially closed with no loading
+      asyncMultipleAutocomplete.isLoading().should("be.false");
+
+      // Open the autocomplete to trigger loading
+      asyncMultipleAutocomplete.open();
+
+      // Should be in loading state
+      asyncMultipleAutocomplete.isLoading().should("be.true");
+
+      // After loading completes, should no longer be in loading state
+      cy.get('[data-testid="async-multiple-autocomplete"]')
+        .find("circle")
+        .should("not.exist", { timeout: 2000 });
+
+      asyncMultipleAutocomplete.isLoading().should("be.false");
+    });
+
     it("should handle async multiple selection", () => {
       const asyncMultipleAutocomplete = new TestAutocompleteInteractable(
         "async-multiple-autocomplete"
