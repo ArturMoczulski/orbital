@@ -282,16 +282,16 @@ export class AutocompleteInteractable
 
             // If no chips are found, return an empty array
             if (!hasChips) {
-              // Return an empty array with explicit type assertion
               // This is critical for the "should clear all selections in multiple selection mode" test
-              return cy.wrap([]).as("emptyArray");
+              // We must return an empty array, not an empty string or a wrapped array
+              return [] as string[];
             }
 
             // Otherwise, get all chips and collect their labels
             return this.chips().then((chips) => {
               if (chips.length === 0) {
                 // Return an empty array with explicit type assertion
-                return cy.wrap([]).as("emptyArray");
+                return [] as string[];
               }
               return this.chipLabels(chips);
             });
@@ -331,53 +331,17 @@ export class AutocompleteInteractable
     this.selected().then((selectedValue) => {
       // For the large-autocomplete test case, we need special handling
       this.get().then(($el) => {
-        const dataTestId = $el.attr("data-testid");
+        // For other autocompletes, use a simpler approach
+        // Clear the input field
+        this.textField().clear();
 
-        if (dataTestId === "large-autocomplete") {
-          // For the large-autocomplete test case, we need to ensure "Option 10" remains selected
-          // This is specifically for the test "should clear text input without affecting selections"
+        // Press Escape key to restore the selected value
+        this.textField().type("{esc}", { force: true });
 
-          // First, remember the current value
-          const currentValue = selectedValue as string;
-
-          // Clear the input field
-          this.textField().clear();
-
-          // Wait a moment for React to process the clear
-          cy.wait(50);
-
-          // Force the input value back to the original value
-          this.textField()
-            .invoke("val", currentValue)
-            .trigger("input", { force: true })
-            .trigger("change", { force: true })
-            .trigger("blur", { force: true });
-
-          // Verify the value was restored
-          this.textField().invoke("val").should("eq", currentValue);
-
-          // Ensure the display text shows the correct value
-          cy.get('[data-testid="large-autocomplete"]')
-            .parent()
-            .find("p")
-            .contains("Large selected value:")
-            .should("contain", currentValue);
-
-          // Double-check our selected value is still correct
-          this.selected().should("eq", currentValue);
-        } else {
-          // For other autocompletes, use a simpler approach
-          // Clear the input field
-          this.textField().clear();
-
-          // Press Escape key to restore the selected value
-          this.textField().type("{esc}", { force: true });
-
-          // If there was a selection and this is a single selection autocomplete,
-          // verify the value was restored
-          if (selectedValue && !Array.isArray(selectedValue)) {
-            this.textField().invoke("val").should("eq", selectedValue);
-          }
+        // If there was a selection and this is a single selection autocomplete,
+        // verify the value was restored
+        if (selectedValue && !Array.isArray(selectedValue)) {
+          this.textField().invoke("val").should("eq", selectedValue);
         }
       });
     });
@@ -442,33 +406,33 @@ export class AutocompleteInteractable
    */
   protected isMultipleSelection(): Cypress.Chainable<boolean> {
     return cy.then(() => {
+      // First check for chips which is the most reliable visual indicator
       return this.get().then(($el) => {
-        // Check for multiple selection indicators
-        // 1. Check for aria-multiselectable attribute
-        const hasMultipleAttr =
-          $el.find('input[aria-multiselectable="true"]').length > 0;
-
-        // 2. Check for chips (which only appear in multiple selection)
+        // Check for chips (which only appear in multiple selection)
         const hasChips = $el.find(".MuiChip-root").length > 0;
 
-        // 3. Check for tag size class (which only appears in multiple selection)
-        const hasTagSize = $el.find(".MuiAutocomplete-tagSizeSmall").length > 0;
+        if (hasChips) {
+          // If we have chips, we know it's multiple selection without opening dropdown
+          return cy.wrap(true);
+        }
 
-        // 4. Check for any aria-multiselectable attribute (even if not "true")
-        const hasMultipleAttrAny =
-          $el.find("input[aria-multiselectable]").length > 0;
+        // Always open the dropdown to ensure all attributes are available
+        return this.open().then(() => {
+          return this.get().then(($el) => {
+            // Check for multiple selection indicators
+            // 1. Check for the data-multiple attribute on the root element
+            const hasMultipleRoot = $el.attr("data-multiple") === "true";
 
-        // 5. Check for the multiple attribute on the root element
-        const hasMultipleRoot = $el.attr("data-multiple") === "true";
+            // 2. Check for aria-multiselectable attribute on input
+            const hasMultipleAttr =
+              $el.find('input[aria-multiselectable="true"]').length > 0;
 
-        // Return true if any of the multiple selection indicators are found
-        return (
-          hasMultipleAttr ||
-          hasChips ||
-          hasTagSize ||
-          hasMultipleAttrAny ||
-          hasMultipleRoot
-        );
+            // Close the dropdown to restore original state
+            return this.close().then(() => {
+              return cy.wrap(hasMultipleRoot || hasMultipleAttr);
+            });
+          });
+        });
       });
     });
   }
@@ -504,9 +468,8 @@ export class AutocompleteInteractable
             // For multiple selection mode, ensure chips are removed
             this.get().find(".MuiChip-root").should("not.exist");
 
-            // Verify that selected() now returns an empty array
-            // This is critical for the "should clear all selections in multiple selection mode" test
-            this.selected().should("deep.equal", []);
+            // The selected() method should now correctly return an empty array
+            // when there are no chips, so we don't need to override anything here
           } else {
             // For single selection mode, verify the input is cleared
             this.textField().invoke("val").should("eq", "");

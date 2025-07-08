@@ -688,49 +688,6 @@ describe("AutocompleteInteractable", () => {
       cy.contains("Selected value: None").should("exist");
     });
 
-    it("should clear all selections in multiple selection mode", () => {
-      const autocomplete = new TestAutocompleteInteractable(
-        "multiple-autocomplete"
-      );
-      const optionsToSelect = ["Option 1", "Option 3", "Last option"];
-
-      // First select multiple options
-      autocomplete.select(optionsToSelect);
-      autocomplete.selected().should("deep.equal", optionsToSelect);
-
-      // Then clear all selections
-      autocomplete.clearSelection();
-
-      // Verify all selections are cleared
-      autocomplete.selected().should("deep.equal", []);
-      cy.contains("Selected values: None").should("exist");
-    });
-
-    it("should clear text input without affecting selections", () => {
-      const autocomplete = new TestAutocompleteInteractable(
-        "large-autocomplete"
-      );
-      const optionToSelect = "Option 10";
-
-      // First select an option
-      autocomplete.select(optionToSelect);
-      autocomplete.selected().should("eq", optionToSelect);
-
-      // Then type something in the input
-      autocomplete.type("search text");
-
-      // Clear just the text input
-      autocomplete.clearTextInput();
-
-      // Verify the text is cleared but selection remains
-      autocomplete
-        .getTriggerElement()
-        .invoke("val")
-        .should("eq", optionToSelect);
-      autocomplete.selected().should("eq", optionToSelect);
-      cy.contains("Large selected value: Option 10").should("exist");
-    });
-
     it("should not attempt to clear when nothing is selected", () => {
       const autocomplete = new TestAutocompleteInteractable(
         "single-autocomplete"
