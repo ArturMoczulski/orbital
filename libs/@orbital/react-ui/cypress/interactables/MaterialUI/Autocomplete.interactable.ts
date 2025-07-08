@@ -61,12 +61,22 @@ export class AutocompleteInteractable
   }
 
   /**
+   * Gets the text field element of the autocomplete
+   * @returns Cypress.Chainable<JQuery<HTMLElement>> - chainable that resolves to the text field element
+   */
+  textField(): Cypress.Chainable<JQuery<HTMLElement>> {
+    return this.get().find("input") as unknown as Cypress.Chainable<
+      JQuery<HTMLElement>
+    >;
+  }
+
+  /**
    * Gets the trigger element that opens the autocomplete
-   * Delegates to the internal popper instance
+   * Uses the textField method for consistency
    * @returns Cypress.Chainable<JQuery<HTMLElement>> - chainable that resolves to the trigger element
    */
   getTriggerElement(): Cypress.Chainable<JQuery<HTMLElement>> {
-    return this.popper.getTriggerElement();
+    return this.textField();
   }
 
   /**
@@ -279,7 +289,7 @@ export class AutocompleteInteractable
    */
   type(text: string): this {
     // Get the input field and type the text
-    this.getTriggerElement().clear().type(text);
+    this.textField().clear().type(text);
     cy.wait(100); // Wait for the typing to be processed
     return this;
   }
@@ -297,11 +307,11 @@ export class AutocompleteInteractable
 
         if (dataTestId === "large-autocomplete") {
           // First, clear the input
-          this.getTriggerElement().clear();
+          this.textField().clear();
 
           // Press Escape key to cancel any filtering/search
           // This should restore the component to its previous state
-          this.getTriggerElement().type("{esc}", { force: true });
+          this.textField().type("{esc}", { force: true });
 
           // If Escape didn't work, try clicking outside the component to blur it
           cy.get("body").click(0, 0);
@@ -310,7 +320,7 @@ export class AutocompleteInteractable
           cy.wait(100);
 
           // Check if the input value is now correct
-          this.getTriggerElement()
+          this.textField()
             .invoke("val")
             .then((currentValue) => {
               // If the input is still empty or doesn't match the selected value, we need to force it
@@ -333,15 +343,15 @@ export class AutocompleteInteractable
         } else {
           // For other autocompletes, use a simpler approach
           // Clear the input field
-          this.getTriggerElement().clear();
+          this.textField().clear();
 
           // Press Escape key to restore the selected value
-          this.getTriggerElement().type("{esc}", { force: true });
+          this.textField().type("{esc}", { force: true });
 
           // If there was a selection and this is a single selection autocomplete,
           // verify the value was restored
           if (selectedValue && !Array.isArray(selectedValue)) {
-            this.getTriggerElement().invoke("val").should("eq", selectedValue);
+            this.textField().invoke("val").should("eq", selectedValue);
           }
         }
       });
@@ -363,14 +373,29 @@ export class AutocompleteInteractable
       if (isMultiple) {
         // Multiple selection mode - use the chips() method directly to get chip interactables
         this.chips().then((chipInteractables) => {
-          // For each chip interactable, check if it matches the text and delete it
-          chipInteractables.forEach((chip) => {
-            chip.label().then((chipText) => {
+          // Use a recursive approach to process chips one by one
+          const processChips = (index: number): Cypress.Chainable<void> => {
+            // Base case: we've processed all chips
+            if (index >= chipInteractables.length) {
+              return cy.wrap(undefined) as Cypress.Chainable<void>;
+            }
+
+            // Get the current chip's label
+            return chipInteractables[index].label().then((chipText) => {
+              // If this chip matches the text, delete it
               if (chipText === text) {
-                chip.delete();
+                // Delete the chip and then return a void chainable
+                chipInteractables[index].delete();
+                return cy.wrap(undefined) as Cypress.Chainable<void>;
+              } else {
+                // Otherwise, process the next chip
+                return processChips(index + 1);
               }
             });
-          });
+          };
+
+          // Start processing with the first chip
+          processChips(0);
         });
       } else {
         // Single selection mode - check if current value matches text
@@ -382,7 +407,7 @@ export class AutocompleteInteractable
       }
     });
 
-    cy.wait(100); // Wait for the deselection to be processed
+    cy.wait(200); // Wait longer for the deselection to be processed
     return this;
   }
 
@@ -424,6 +449,14 @@ export class AutocompleteInteractable
   }
 
   /**
+   * Gets the clear indicator element of the autocomplete
+   * @returns Cypress.Chainable<JQuery<HTMLElement>> - chainable that resolves to the clear indicator element
+   */
+  clearIndicator(): Cypress.Chainable<JQuery<HTMLElement>> {
+    return this.get().find(".MuiAutocomplete-clearIndicator");
+  }
+
+  /**
    * Clears all selections by clicking the clear indicator
    * @returns this - for method chaining
    */
@@ -436,9 +469,7 @@ export class AutocompleteInteractable
 
       if (hasSelection) {
         // Find and click the clear indicator
-        this.get()
-          .find(".MuiAutocomplete-clearIndicator")
-          .click({ force: true });
+        this.clearIndicator().click({ force: true });
 
         cy.wait(100); // Wait for the clearing to be processed
       }
