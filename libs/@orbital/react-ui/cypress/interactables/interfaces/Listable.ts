@@ -31,9 +31,9 @@ export interface Selectable {
 
   /**
    * Gets the currently selected item(s)
-   * @returns Cypress.Chainable<string | string[]> - chainable that resolves to the selected text or array of selected texts
+   * @returns Cypress.Chainable<string | string[] | any[]> - chainable that resolves to the selected text, array of selected texts, or array of interactable components
    */
-  selected(): Cypress.Chainable<string | string[]>;
+  selected(): Cypress.Chainable<string | string[] | any[]>;
 
   /**
    * Deselects a specific item by its text content

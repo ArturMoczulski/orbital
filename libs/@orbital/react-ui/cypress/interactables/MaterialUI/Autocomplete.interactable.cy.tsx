@@ -683,16 +683,7 @@ describe("AutocompleteInteractable", () => {
       autocomplete.clearSelection();
 
       // Verify the selection is cleared
-      // Handle both possible return types (empty string or empty array)
-      autocomplete.selected().then((selected) => {
-        // Check if it's an empty array or empty string
-        const isEmpty = Array.isArray(selected)
-          ? selected.length === 0
-          : selected === "";
-
-        expect(isEmpty).to.be.true;
-      });
-
+      autocomplete.selected().should("eq", "");
       cy.contains("Selected value: None").should("exist");
     });
 
