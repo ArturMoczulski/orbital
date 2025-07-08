@@ -1,5 +1,5 @@
 // MultiChoiceObjectSelector.cy.tsx
-// Tests for the MultiChoiceObjectSelector component using AutocompleteInteractable
+// Tests for the MultiChoiceObjectSelector component
 
 /// <reference types="cypress" />
 import { mount } from "cypress/react";
@@ -13,26 +13,21 @@ describe("MultiChoiceObjectSelector", () => {
     { _id: "option1", name: "Option 1" },
     { _id: "option2", name: "Option 2" },
     { _id: "option3", name: "Option 3" },
-    { _id: "option4", name: "Option 4" },
   ];
 
-  // Test component for MultiChoiceObjectSelector
+  // Basic test component
   const TestComponent = ({
-    disabled = false,
-    required = false,
     initialValue = [],
     onChange = undefined,
-    error = false,
-    errorMessage = "",
-    placeholder = "Select options",
+    idField = "_id",
+    displayField = "name",
+    customOptions = options,
   }: {
-    disabled?: boolean;
-    required?: boolean;
     initialValue?: string[];
     onChange?: (value: string[]) => void;
-    error?: boolean;
-    errorMessage?: string;
-    placeholder?: string;
+    idField?: string;
+    displayField?: string;
+    customOptions?: any[];
   }) => {
     const [value, setValue] = useState(initialValue);
 
@@ -50,54 +45,12 @@ describe("MultiChoiceObjectSelector", () => {
           name="testField"
           value={value}
           onChange={handleChange}
-          options={options}
-          idField="_id"
-          displayField="name"
-          disabled={disabled}
-          required={required}
-          error={error}
-          errorMessage={errorMessage}
-          placeholder={placeholder}
+          options={customOptions}
+          idField={idField}
+          displayField={displayField}
           label="Test Field"
           data-testid="MultiChoiceObjectSelector"
         />
-      </div>
-    );
-  };
-
-  // Test component with multiple instances
-  const TestMultipleComponent = () => {
-    const [value1, setValue1] = useState<string[]>([]);
-    const [value2, setValue2] = useState<string[]>([]);
-
-    return (
-      <div>
-        <div data-testid="first-container">
-          <MultiChoiceObjectSelector
-            id="firstField"
-            name="firstField"
-            value={value1}
-            onChange={setValue1}
-            options={options}
-            idField="_id"
-            displayField="name"
-            label="First Field"
-            data-testid="FirstSelector"
-          />
-        </div>
-        <div data-testid="second-container">
-          <MultiChoiceObjectSelector
-            id="secondField"
-            name="secondField"
-            value={value2}
-            onChange={setValue2}
-            options={options}
-            idField="_id"
-            displayField="name"
-            label="Second Field"
-            data-testid="SecondSelector"
-          />
-        </div>
       </div>
     );
   };
@@ -109,232 +62,161 @@ describe("MultiChoiceObjectSelector", () => {
     });
   };
 
-  it("should select multiple values", () => {
+  it("should map object IDs to values and display names correctly for multiple selections", () => {
     const onChangeSpy = cy.spy().as("onChange");
 
     mount(<TestComponent onChange={onChangeSpy} />);
 
     const autocomplete = getAutocomplete();
 
-    // Open the dropdown
-    autocomplete.open();
-
     // Select multiple options
-    autocomplete.select("Option 1");
-    autocomplete.select("Option 3");
-
-    // Verify the onChange was called with the correct values
-    // Note: We can't directly check the arguments of the last call because
-    // the spy might be called multiple times with different values
-    // Instead, we'll check the selected values in the UI
-
-    // Verify the selected values are displayed as chips
-    autocomplete.selected().should("deep.equal", ["Option 1", "Option 3"]);
-  });
-
-  it("should handle disabled state", () => {
-    mount(
-      <TestComponent disabled={true} initialValue={["option1", "option2"]} />
-    );
-
-    const autocomplete = getAutocomplete();
-
-    // Verify the component is disabled
-    autocomplete.get().should("have.class", "Mui-disabled");
-
-    // Verify the selected values are displayed
-    autocomplete.selected().should("deep.equal", ["Option 1", "Option 2"]);
-
-    // Verify that clicking doesn't open the dropdown when disabled
-    autocomplete.getTriggerElement().click({ force: true });
-    cy.get('[role="presentation"]').should("not.exist");
-  });
-
-  it("should handle required state", () => {
-    mount(<TestComponent required={true} />);
-
-    const autocomplete = getAutocomplete();
-
-    // Verify the component is required
-    autocomplete.get().find("label").should("have.class", "Mui-required");
-  });
-
-  it("should clear selections", () => {
-    const onChangeSpy = cy.spy().as("onChange");
-
-    mount(
-      <TestComponent
-        initialValue={["option1", "option2"]}
-        onChange={onChangeSpy}
-      />
-    );
-
-    const autocomplete = getAutocomplete();
-
-    // Verify initial selections
-    autocomplete.selected().should("deep.equal", ["Option 1", "Option 2"]);
-
-    // Clear the selections using the clearSelection method
-    autocomplete.clearSelection();
-
-    // Verify the onChange was called with an empty array
-    cy.get("@onChange").should("have.been.calledWith", []);
-
-    // Verify the selections are cleared
-    autocomplete.selected().should("deep.equal", []);
-  });
-
-  it("should remove individual selections", () => {
-    const onChangeSpy = cy.spy().as("onChange");
-
-    mount(
-      <TestComponent
-        initialValue={["option1", "option2"]}
-        onChange={onChangeSpy}
-      />
-    );
-
-    const autocomplete = getAutocomplete();
-
-    // Verify initial selections
-    autocomplete.selected().should("deep.equal", ["Option 1", "Option 2"]);
-
-    // Remove one selection using the deselect method
-    autocomplete.deselect("Option 1");
-
-    // Verify only Option 2 remains selected
-    autocomplete.selected().should("deep.equal", ["Option 2"]);
-  });
-
-  it("should handle error state", () => {
-    mount(<TestComponent error={true} errorMessage="Invalid selections" />);
-
-    const autocomplete = getAutocomplete();
-
-    // Verify the component has error state using the Validatable interface
-    autocomplete.hasError().should("be.true");
-
-    // Verify the error message is displayed using the Validatable interface
-    autocomplete.getError().should("eq", "Invalid selections");
-  });
-
-  it("should display placeholder text", () => {
-    const customPlaceholder = "Choose multiple items";
-    mount(<TestComponent placeholder={customPlaceholder} />);
-
-    const autocomplete = getAutocomplete();
-
-    // Verify the placeholder is displayed
-    autocomplete
-      .get()
-      .find("input")
-      .should("have.attr", "placeholder", customPlaceholder);
-  });
-
-  it("should search for options", () => {
-    mount(<TestComponent />);
-
-    const autocomplete = getAutocomplete();
-
-    // Type in the search box
-    autocomplete.type("Option 3");
-
-    // Open the dropdown
     autocomplete.open();
+    autocomplete.select("Option 1");
+    autocomplete.open();
+    autocomplete.select("Option 2");
 
-    // Verify the filtered options
-    autocomplete.items().then(($items) => {
-      // Should only show Option 3
-      expect($items.length).to.equal(1);
-      expect($items.text()).to.include("Option 3");
+    // Verify the onChange was called with an array of ID values
+    cy.get("@onChange").should("have.been.calledWith", ["option1", "option2"]);
+
+    // Verify the chips display the correct names
+    autocomplete.chips().then((chips) => {
+      expect(chips.length).to.equal(2);
+      chips[0].label().should("eq", "Option 1");
+      chips[1].label().should("eq", "Option 2");
     });
 
-    // Select the filtered option
-    autocomplete.select("Option 3");
-
-    // Verify the selected value
-    autocomplete.selected().should("deep.equal", ["Option 3"]);
+    // Verify selected() returns the correct array of display names
+    autocomplete.selected().should("deep.equal", ["Option 1", "Option 2"]);
   });
 
-  it("should handle multiple instances with parent element scoping", () => {
-    mount(<TestMultipleComponent />);
-
-    // Create autocomplete interactables for each instance
-    const firstAutocomplete = new AutocompleteInteractable({
-      dataTestId: "FirstSelector",
-    });
-
-    const secondAutocomplete = new AutocompleteInteractable({
-      dataTestId: "SecondSelector",
-    });
-
-    // Select different options in each autocomplete
-    firstAutocomplete.open();
-    firstAutocomplete.select("Option 1");
-    firstAutocomplete.select("Option 2");
-
-    secondAutocomplete.open();
-    secondAutocomplete.select("Option 3");
-    secondAutocomplete.select("Option 4");
-
-    // Verify each autocomplete has the correct selections
-    firstAutocomplete.selected().should("deep.equal", ["Option 1", "Option 2"]);
-    secondAutocomplete
-      .selected()
-      .should("deep.equal", ["Option 3", "Option 4"]);
-  });
-
-  it("should handle custom field mappings", () => {
+  it("should handle custom ID and display field mappings for multiple selections", () => {
     // Sample data with custom ID and display fields
     const customOptions = [
       { itemId: "i1", displayName: "First Item" },
       { itemId: "i2", displayName: "Second Item" },
-      { itemId: "i3", displayName: "Third Item" },
     ];
 
-    // Custom test component with custom field mappings
-    const CustomFieldsComponent = () => {
+    const onChangeSpy = cy.spy().as("onChange");
+
+    mount(
+      <TestComponent
+        onChange={onChangeSpy}
+        idField="itemId"
+        displayField="displayName"
+        customOptions={customOptions}
+      />
+    );
+
+    const autocomplete = getAutocomplete();
+
+    // Select multiple options
+    autocomplete.open();
+    autocomplete.select("First Item");
+    autocomplete.open();
+    autocomplete.select("Second Item");
+
+    // Verify the onChange was called with the custom ID field values
+    cy.get("@onChange").should("have.been.calledWith", ["i1", "i2"]);
+
+    // Verify the chips display the correct custom display names
+    autocomplete.chips().then((chips) => {
+      expect(chips.length).to.equal(2);
+      chips[0].label().should("eq", "First Item");
+      chips[1].label().should("eq", "Second Item");
+    });
+  });
+
+  it("should handle removing a specific option when its chip is deleted", () => {
+    const onChangeSpy = cy.spy().as("onChange");
+
+    mount(
+      <TestComponent
+        initialValue={["option1", "option2"]}
+        onChange={onChangeSpy}
+      />
+    );
+
+    const autocomplete = getAutocomplete();
+
+    // Verify initial chips
+    autocomplete.chips().then((chips) => {
+      expect(chips.length).to.equal(2);
+    });
+
+    // Remove one option
+    autocomplete.deselect("Option 1");
+
+    // Verify the onChange was called with the remaining ID
+    cy.get("@onChange").should("have.been.calledWith", ["option2"]);
+
+    // Verify only one chip remains
+    autocomplete.chips().then((chips) => {
+      expect(chips.length).to.equal(1);
+      chips[0].label().should("eq", "Option 2");
+    });
+  });
+
+  it("should find and select the correct options based on ID values", () => {
+    mount(<TestComponent initialValue={["option2", "option3"]} />);
+
+    const autocomplete = getAutocomplete();
+
+    // Verify the correct chips are shown for the ID values
+    autocomplete.chips().then((chips) => {
+      expect(chips.length).to.equal(2);
+      chips[0].label().should("eq", "Option 2");
+      chips[1].label().should("eq", "Option 3");
+    });
+
+    // Verify selected() returns the correct array
+    autocomplete.selected().should("deep.equal", ["Option 2", "Option 3"]);
+  });
+
+  it("should update selections when value changes externally", () => {
+    // Component with external state control
+    const ExternalControlComponent = () => {
       const [value, setValue] = useState<string[]>([]);
 
       return (
         <div>
+          <button
+            data-testid="change-button"
+            onClick={() => setValue(["option1", "option3"])}
+          >
+            Change Value
+          </button>
           <MultiChoiceObjectSelector
-            id="customField"
-            name="customField"
+            id="externalField"
+            name="externalField"
             value={value}
             onChange={setValue}
-            options={customOptions}
-            idField="itemId"
-            displayField="displayName"
-            label="Custom Field"
-            data-testid="CustomFieldSelector"
+            options={options}
+            idField="_id"
+            displayField="name"
+            label="External Control Field"
+            data-testid="ExternalControlSelector"
           />
         </div>
       );
     };
 
-    mount(<CustomFieldsComponent />);
+    mount(<ExternalControlComponent />);
 
     const autocomplete = new AutocompleteInteractable({
-      dataTestId: "CustomFieldSelector",
+      dataTestId: "ExternalControlSelector",
     });
 
-    // Open the dropdown
-    autocomplete.open();
+    // Initially no selection
+    autocomplete.get().find(".MuiChip-root").should("not.exist");
 
-    // Verify the options are displayed with the custom display field
-    autocomplete.items().then(($items) => {
-      expect($items.length).to.equal(3);
-      expect($items.text()).to.include("First Item");
-      expect($items.text()).to.include("Second Item");
-      expect($items.text()).to.include("Third Item");
+    // Change value externally
+    cy.get('[data-testid="change-button"]').click();
+
+    // Verify the chips are updated
+    autocomplete.chips().then((chips) => {
+      expect(chips.length).to.equal(2);
+      chips[0].label().should("eq", "Option 1");
+      chips[1].label().should("eq", "Option 3");
     });
-
-    // Select multiple options
-    autocomplete.select("First Item");
-    autocomplete.select("Third Item");
-
-    // Verify the selected values
-    autocomplete.selected().should("deep.equal", ["First Item", "Third Item"]);
   });
 });

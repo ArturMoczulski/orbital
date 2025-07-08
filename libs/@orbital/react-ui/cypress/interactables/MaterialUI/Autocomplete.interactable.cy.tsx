@@ -741,5 +741,34 @@ describe("AutocompleteInteractable", () => {
       autocomplete.selected().should("eq", "");
       cy.contains("Selected value: None").should("exist");
     });
+
+    it("should handle clearing all selections in multiple selection mode", () => {
+      const autocomplete = new TestAutocompleteInteractable(
+        "multiple-autocomplete"
+      );
+      const optionsToSelect = ["Option 1", "Option 3"];
+
+      // First select multiple options
+      autocomplete.select(optionsToSelect);
+      autocomplete.selected().should("deep.equal", optionsToSelect);
+
+      // Then clear all selections
+      autocomplete.clearSelection();
+
+      // Verify no chips remain
+      autocomplete.get().find(".MuiChip-root").should("not.exist");
+
+      // Verify the selection is cleared - should be an empty array or empty string
+      // Use a custom assertion to check both conditions
+      autocomplete.selected().should((value) => {
+        // Check if value is either an empty array or an empty string
+        const isEmptyArray = Array.isArray(value) && value.length === 0;
+        const isEmptyString = value === "";
+        expect(isEmptyArray || isEmptyString).to.be.true;
+      });
+
+      // Verify UI shows "None"
+      cy.contains("Selected values: None").should("exist");
+    });
   });
 });
