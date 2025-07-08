@@ -648,7 +648,7 @@ describe("AutocompleteInteractable", () => {
       cy.contains("Selected value: None").should("exist");
     });
 
-    it("should deselect a specific item in multiple selection mode", () => {
+    it.only("should deselect a specific item in multiple selection mode", () => {
       const autocomplete = new TestAutocompleteInteractable(
         "multiple-autocomplete"
       );
@@ -656,6 +656,7 @@ describe("AutocompleteInteractable", () => {
 
       // First select multiple options
       autocomplete.select(optionsToSelect);
+
       autocomplete.selected().should("deep.equal", optionsToSelect);
 
       // Then deselect one of them

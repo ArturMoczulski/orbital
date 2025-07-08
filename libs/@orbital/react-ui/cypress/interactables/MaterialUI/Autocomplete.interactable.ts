@@ -204,6 +204,7 @@ export class AutocompleteInteractable
       const chipInteractables: ChipInteractable[] = [];
 
       $chips.each((index, _) => {
+        console.log(`chip index`, index);
         chipInteractables.push(
           new ChipInteractable({
             componentName: "Chip",
@@ -218,37 +219,57 @@ export class AutocompleteInteractable
   }
 
   /**
+   * Gets the labels of all chips in the autocomplete
+   * This method is used internally by selected()
+   * @returns Cypress.Chainable<string[]> - chainable that resolves to an array of chip labels
+   * @private
+   */
+  /**
+   * Helper method to collect all chip labels using Promise.all
+   * @private
+   */
+  public chipLabels(chips: ChipInteractable[]): Cypress.Chainable<string[]> {
+    if (chips.length === 0) {
+      return cy.wrap([] as string[]);
+    }
+
+    // Create an array of promises for each chip's label
+    const labelPromises = chips.map((chip) => {
+      return new Cypress.Promise<string>((resolve) => {
+        chip.label().then((label) => resolve(label));
+      });
+    });
+
+    // Use Promise.all to collect all labels in parallel
+    return cy.wrap(Cypress.Promise.all(labelPromises));
+  }
+
+  /**
    * Gets the currently selected item(s) from the autocomplete
    * @returns Cypress.Chainable<string | string[]> - chainable that resolves to the selected text or array of selected texts
    */
   selected(): Cypress.Chainable<string | string[]> {
-    // First check if we have chips (multiple selection with values)
-    return this.isMultipleSelection().then((isMultiple) => {
-      if (isMultiple) {
-        return this.chips().then((chipsInteractables) => {
-          // If we have chips, extract their labels directly from the DOM
-          if (chipsInteractables.length > 0) {
-            const labels: string[] = [];
-            chipsInteractables.forEach((interactable) => {
-              labels.push(interactable.label());
-            });
-            // Return the array of labels
-            return labels;
-          }
-        });
-      } else {
-        // Single selection - return the input value or empty string
-        return this.get()
-          .find("input")
-          .then(($el) => {
-            const inputValue = $el.val();
+    // Create a new chainable that will resolve to either a string or string[]
+    return cy.wrap(null).then(() => {
+      // Check if this is a multiple selection autocomplete
+      return this.isMultipleSelection().then((isMultiple) => {
+        if (isMultiple) {
+          // For multiple selection, get all chips and collect their labels
+          return this.chips().then((chips) => {
+            return this.chipLabels(chips);
+          });
+        } else {
+          // For single selection, get the input value
+          return this.getTriggerElement().then(($input) => {
+            const inputValue = $input.val();
             return !inputValue ||
               (Array.isArray(inputValue) && inputValue.length === 0)
               ? ""
               : (inputValue as string);
           });
-      }
-    });
+        }
+      });
+    }) as unknown as Cypress.Chainable<string | string[]>;
   }
 
   /**
@@ -390,19 +411,13 @@ export class AutocompleteInteractable
         // 5. Check for the multiple attribute on the root element
         const hasMultipleRoot = $el.attr("data-multiple") === "true";
 
-        // 6. Check for the presence of the MuiAutocomplete-inputRoot class with MuiInputBase-adornedEnd
-        const hasMultipleInputRoot =
-          $el.find(".MuiAutocomplete-inputRoot.MuiInputBase-adornedEnd")
-            .length > 0;
-
         // Return true if any of the multiple selection indicators are found
         return (
           hasMultipleAttr ||
           hasChips ||
           hasTagSize ||
           hasMultipleAttrAny ||
-          hasMultipleRoot ||
-          hasMultipleInputRoot
+          hasMultipleRoot
         );
       });
     });
