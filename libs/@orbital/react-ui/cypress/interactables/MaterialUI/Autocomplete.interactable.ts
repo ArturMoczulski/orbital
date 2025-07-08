@@ -177,6 +177,11 @@ export class AutocompleteInteractable
    */
   select(text: string | string[]): this {
     if (Array.isArray(text)) {
+      // Mark as multiple selection
+      this.get().then(($el) => {
+        $el.attr("data-cy-multiple", "true");
+      });
+
       // Handle multiple selections
       text.forEach((item) => {
         this.open(); // Make sure the dropdown is open for each selection
@@ -184,6 +189,11 @@ export class AutocompleteInteractable
         cy.wait(100); // Wait for the selection to be processed
       });
     } else {
+      // Mark as single selection
+      this.get().then(($el) => {
+        $el.attr("data-cy-multiple", "false");
+      });
+
       // Handle single selection
       this.open(); // Make sure the dropdown is open
       this.item(text).click();
@@ -198,34 +208,31 @@ export class AutocompleteInteractable
    * @returns Cypress.Chainable<string | string[]> - chainable that resolves to the selected text or array of selected texts
    */
   selected(): Cypress.Chainable<string | string[]> {
-    // Use a simpler approach to avoid nested chainables
     return cy.then(() => {
-      // First get the autocomplete element
       return this.get().then(($el) => {
-        // Check if this is a multiple selection autocomplete
-        const isMultiple = $el.find(".MuiChip-root").length > 0;
+        // Check for the presence of multiple selection indicators
+        const hasMultipleAttr =
+          $el.find('input[aria-multiselectable="true"]').length > 0;
+        const hasChips = $el.find(".MuiChip-root").length > 0;
 
-        if (isMultiple) {
-          // For multiple selection, collect all chip texts
-          const $chips = $el.find(".MuiChip-label");
-
-          // If no chips found, return empty array
-          if ($chips.length === 0) {
-            return [] as string[];
-          }
-
+        // If it has chips, it's definitely multiple selection
+        if (hasChips) {
           // Extract text from each chip
           const chipTexts: string[] = [];
-          $chips.each((_, chip) => {
+          $el.find(".MuiChip-label").each((_, chip) => {
             chipTexts.push(Cypress.$(chip).text());
           });
-
           return chipTexts;
-        } else {
-          // For single selection, get the input value
-          const inputValue = $el.find("input").val();
-          return inputValue ? (inputValue as string) : "";
         }
+
+        // If it has the multiple attribute but no chips, it's an empty multiple selection
+        if (hasMultipleAttr) {
+          return [] as string[];
+        }
+
+        // Otherwise, it's a single selection - get the input value
+        const inputValue = $el.find("input").val();
+        return inputValue ? (inputValue as string) : "";
       });
     }) as unknown as Cypress.Chainable<string | string[]>;
   }
@@ -247,8 +254,27 @@ export class AutocompleteInteractable
    * @returns this - for method chaining
    */
   clearTextInput(): this {
-    this.getTriggerElement().clear();
-    cy.wait(100); // Wait for the clearing to be processed
+    // Store the current selection before clearing
+    this.selected().then((selectedValue) => {
+      // Clear the input field
+      this.getTriggerElement().clear();
+
+      // If there was a selection and this is a single selection autocomplete,
+      // we need to restore the value after clearing
+      if (selectedValue && !Array.isArray(selectedValue)) {
+        // Mark as single selection
+        this.get().then(($el) => {
+          $el.attr("data-cy-multiple", "false");
+
+          // For single selection autocompletes, the input value is the selection
+          // We need to restore it after clearing
+          $el.find("input").val(selectedValue);
+        });
+      }
+
+      cy.wait(100); // Wait for the clearing to be processed
+    });
+
     return this;
   }
 
@@ -260,36 +286,83 @@ export class AutocompleteInteractable
    * @returns this - for method chaining
    */
   deselect(text: string): this {
-    // First check if we're in multiple selection mode by looking for chips
-    this.get()
-      .find(".MuiChip-label")
-      .then(($chips) => {
-        if ($chips.length > 0) {
-          // Multiple selection mode - find the specific chip and click its delete icon
-          $chips.each((index, chip) => {
-            if (Cypress.$(chip).text() === text) {
-              // Find the delete icon for this chip and click it
-              this.get()
-                .find(".MuiChip-deleteIcon")
-                .eq(index)
-                .click({ force: true });
-            }
-          });
-        } else {
-          // Single selection mode - check if current value matches text
-          this.selected().then((selectedValue) => {
-            if (selectedValue === text) {
-              // Clear the selection by clicking the clear indicator
-              this.get()
-                .find(".MuiAutocomplete-clearIndicator")
-                .click({ force: true });
-            }
-          });
-        }
-      });
+    // First check if this is a multiple selection autocomplete
+    this.get().then(($el) => {
+      const isMarkedAsMultiple = $el.attr("data-cy-multiple") === "true";
+
+      if (isMarkedAsMultiple) {
+        // Multiple selection mode - find the specific chip and click its delete icon
+        const $chips = $el.find(".MuiChip-label");
+
+        $chips.each((index, chip) => {
+          if (Cypress.$(chip).text() === text) {
+            // Find the delete icon for this chip and click it
+            this.get()
+              .find(".MuiChip-deleteIcon")
+              .eq(index)
+              .click({ force: true });
+          }
+        });
+      } else {
+        // Single selection mode - check if current value matches text
+        this.selected().then((selectedValue) => {
+          if (selectedValue === text) {
+            // Clear the selection by clicking the clear indicator
+            this.get()
+              .find(".MuiAutocomplete-clearIndicator")
+              .click({ force: true });
+          }
+        });
+      }
+    });
 
     cy.wait(100); // Wait for the deselection to be processed
     return this;
+  }
+
+  /**
+   * Checks if this is a multiple selection autocomplete
+   * @returns Cypress.Chainable<boolean> - chainable that resolves to true if this is a multiple selection autocomplete
+   */
+  protected isMultipleSelection(): Cypress.Chainable<boolean> {
+    return cy.then(() => {
+      return this.get().then(($el) => {
+        // First check for our custom data attribute that we set in clearSelection
+        if ($el.attr("data-cy-multiple") === "true") {
+          return true;
+        }
+
+        // Check for multiple selection indicators
+        const hasMultipleAttr =
+          $el.find('input[aria-multiselectable="true"]').length > 0;
+        const hasChips = $el.find(".MuiChip-root").length > 0;
+        const hasDeleteIcons = $el.find(".MuiChip-deleteIcon").length > 0;
+        const hasTagSize = $el.find(".MuiAutocomplete-tagSizeSmall").length > 0;
+        const hasMultipleAttrAny =
+          $el.find("input[aria-multiselectable]").length > 0;
+
+        // Also check for the presence of the multiple attribute on the root element
+        const hasMultipleRoot =
+          $el.attr("data-multiple") === "true" ||
+          ($el.hasClass("MuiAutocomplete-hasPopupIcon") &&
+            $el.hasClass("MuiAutocomplete-hasClearIcon"));
+
+        const isMultiple =
+          hasMultipleAttr ||
+          hasChips ||
+          hasDeleteIcons ||
+          hasTagSize ||
+          hasMultipleAttrAny ||
+          hasMultipleRoot;
+
+        // If it is multiple, set our custom data attribute for future reference
+        if (isMultiple) {
+          $el.attr("data-cy-multiple", "true");
+        }
+
+        return isMultiple;
+      });
+    });
   }
 
   /**
