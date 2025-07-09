@@ -1,3 +1,6 @@
+import Autocomplete from "@mui/material/Autocomplete";
+import CircularProgress from "@mui/material/CircularProgress";
+import TextField from "@mui/material/TextField";
 import React from "react";
 import AsyncOptionsProvider from "./providers/AsyncOptionsProvider";
 import { OptionsProviderProps } from "./providers/OptionsProvider";
@@ -28,9 +31,8 @@ export type ObjectSelectorProps = {
   onSearch?: (query: string) => void; // Optional callback for search events
   debounceTime?: number; // Debounce time for async search in ms
 
-  // Component selection props
-  OptionsProviderComponent?: React.ComponentType<OptionsProviderProps>; // Custom provider
-  UIComponent: React.ComponentType<any>; // UI component to render (required)
+  // Selection mode
+  multiple?: boolean; // Whether to allow multiple selections
 
   // Additional props
   className?: string;
@@ -38,11 +40,15 @@ export type ObjectSelectorProps = {
   objectType?: string;
   objectId?: string;
   componentName?: string;
+
+  // For backward compatibility - will be ignored
+  UIComponent?: React.ComponentType<any>;
+  OptionsProviderComponent?: React.ComponentType<OptionsProviderProps>;
 };
 
 /**
  * ObjectSelector component
- * A composable selector that combines an options provider with a UI component
+ * A selector component that supports both single and multiple choice modes
  */
 export function ObjectSelector({
   // Common props
@@ -66,9 +72,8 @@ export function ObjectSelector({
   onSearch,
   debounceTime,
 
-  // Component selection props
-  OptionsProviderComponent,
-  UIComponent,
+  // Selection mode
+  multiple = false,
 
   // Additional props
   className,
@@ -76,9 +81,157 @@ export function ObjectSelector({
   objectType,
   objectId,
   componentName = "ObjectSelector",
+
+  // Ignored props for backward compatibility
+  UIComponent,
+  OptionsProviderComponent,
 }: ObjectSelectorProps) {
   // Generate the data-testid
   const testId = dataTestId || componentName;
+
+  // Override debounceTime for async loading indicator to show immediately if not specified
+  const effectiveDebounceTime =
+    fetchOptions && debounceTime === undefined ? 0 : debounceTime;
+
+  // Create an adapter component that maps provider state to Autocomplete props
+  const AutocompleteAdapter = React.useCallback(
+    (adapterProps: any) => {
+      const {
+        disabled,
+        error,
+        errorMessage,
+        id,
+        label,
+        name,
+        onChange,
+        placeholder,
+        readOnly,
+        required,
+        value,
+        providerState,
+        className,
+        "data-testid": dataTestId,
+      } = adapterProps;
+
+      const {
+        options,
+        filteredOptions,
+        isLoading,
+        getOptionLabel,
+        getOptionValue,
+        setSearchQuery,
+        searchOptions,
+      } = providerState;
+
+      // Ensure getOptionValue is a function
+      const safeGetOptionValue = (option: any) => {
+        if (typeof getOptionValue !== "function") {
+          // Fallback to using the idField directly
+          return option[providerState.idField];
+        }
+        return getOptionValue(option);
+      };
+
+      // Handle option selection based on multiple mode
+      const handleChange = (_: any, newValue: any) => {
+        if (multiple) {
+          // For multiple choice, map the selected option objects to their values
+          const selectedValues = newValue.map((option: any) =>
+            safeGetOptionValue(option)
+          );
+          onChange(selectedValues);
+        } else {
+          // For single choice, map the selected option object to its value
+          onChange(newValue ? safeGetOptionValue(newValue) : null);
+        }
+      };
+
+      // Find the selected option object(s) based on value
+      const selectedOption = React.useMemo(() => {
+        if (!value || !options.length) {
+          return multiple ? [] : null;
+        }
+
+        if (multiple) {
+          // For multiple choice, map each value to its corresponding option object
+          if (!Array.isArray(value)) {
+            return [];
+          }
+
+          return value
+            .map((val) =>
+              options.find((option: any) => safeGetOptionValue(option) === val)
+            )
+            .filter(Boolean); // Remove any undefined values
+        } else {
+          // For single choice, find the option object that matches the value
+          return (
+            options.find(
+              (option: any) => safeGetOptionValue(option) === value
+            ) || null
+          );
+        }
+      }, [value, options, safeGetOptionValue, multiple]);
+
+      return (
+        <Autocomplete
+          id={id}
+          multiple={multiple}
+          options={filteredOptions || options}
+          value={selectedOption}
+          onChange={handleChange}
+          getOptionLabel={(option) => {
+            // Handle both string and object options
+            if (!option) return "";
+
+            // Ensure getOptionLabel is a function
+            if (typeof getOptionLabel !== "function") {
+              // Fallback to using the displayField directly
+              return typeof option === "string"
+                ? option
+                : String(option[providerState.displayField] || "");
+            }
+
+            return typeof option === "string" ? option : getOptionLabel(option);
+          }}
+          onOpen={() => setSearchQuery && setSearchQuery("")}
+          loading={isLoading}
+          disabled={disabled || readOnly}
+          renderInput={(params) => (
+            <TextField
+              {...params}
+              label={label}
+              placeholder={placeholder}
+              error={error}
+              helperText={errorMessage}
+              required={required}
+              InputProps={{
+                ...params.InputProps,
+                endAdornment: (
+                  <>
+                    {isLoading ? (
+                      <CircularProgress color="inherit" size={20} />
+                    ) : null}
+                    {params.InputProps.endAdornment}
+                  </>
+                ),
+              }}
+            />
+          )}
+          className={className}
+          data-testid={dataTestId}
+          onInputChange={(_, value) => {
+            if (setSearchQuery) {
+              setSearchQuery(value);
+            } else if (searchOptions) {
+              searchOptions(value);
+            }
+          }}
+        />
+      );
+    },
+    [multiple]
+  );
 
   // If no options or fetchOptions are provided, handle empty state
   if (!options && !fetchOptions) {
@@ -89,7 +242,7 @@ export function ObjectSelector({
         options={[]}
       >
         {(providerState) => (
-          <UIComponent
+          <AutocompleteAdapter
             disabled={true}
             error={error}
             errorMessage={errorMessage || "No options available"}
@@ -112,7 +265,7 @@ export function ObjectSelector({
     );
   }
 
-  // Render with the appropriate provider and UI component
+  // Render with the appropriate provider
   if (fetchOptions) {
     // Async options
     return (
@@ -120,11 +273,11 @@ export function ObjectSelector({
         fetchOptions={fetchOptions}
         idField={idField}
         displayField={displayField}
-        debounceTime={debounceTime}
+        debounceTime={effectiveDebounceTime}
         initialOptions={options}
       >
         {(providerState) => (
-          <UIComponent
+          <AutocompleteAdapter
             disabled={disabled}
             error={error}
             errorMessage={errorMessage}
@@ -155,7 +308,7 @@ export function ObjectSelector({
         onSearch={onSearch}
       >
         {(providerState) => (
-          <UIComponent
+          <AutocompleteAdapter
             disabled={disabled}
             error={error}
             errorMessage={errorMessage}
