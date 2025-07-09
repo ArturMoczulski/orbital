@@ -579,20 +579,31 @@ export class AutocompleteInteractable
   isLoading(): Cypress.Chainable<boolean> {
     return cy.then(() => {
       return this.get().then(($el) => {
-        // Check for the CircularProgress component anywhere within the Autocomplete
-        // This is more reliable than looking for a specific DOM structure
+        // Primary check: Look for CircularProgress component
+        // MUI CircularProgress has specific class names we can target
         const hasCircularProgress =
           $el.find(".MuiCircularProgress-root").length > 0;
 
-        // Alternative check for SVG circle which is part of CircularProgress
-        // This is needed because the CircularProgress component renders an SVG with circles
+        // Secondary check: Look for SVG circles which are part of CircularProgress
+        // CircularProgress renders an SVG with circles
         const hasCircle = $el.find("svg circle").length > 0;
 
-        // Check for the loading attribute on the Autocomplete component
-        // This is a more direct way to check if the component is in loading state
+        // Tertiary check: Look for the loading attribute on the Autocomplete component
+        // MUI Autocomplete sets aria-busy="true" when loading
         const hasLoadingAttribute = $el.attr("aria-busy") === "true";
 
-        return hasCircularProgress || hasCircle || hasLoadingAttribute;
+        // Additional check: Look for the endAdornment section with a CircularProgress
+        // This is where loading indicators are typically placed in Autocomplete
+        const hasEndAdornmentLoading =
+          $el.find(".MuiAutocomplete-endAdornment .MuiCircularProgress-root")
+            .length > 0;
+
+        return (
+          hasCircularProgress ||
+          hasCircle ||
+          hasLoadingAttribute ||
+          hasEndAdornmentLoading
+        );
       });
     });
   }

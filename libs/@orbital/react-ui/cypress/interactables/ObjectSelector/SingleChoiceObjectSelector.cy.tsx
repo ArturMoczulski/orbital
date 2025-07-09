@@ -299,4 +299,69 @@ describe("SingleChoiceObjectSelector", () => {
     // Verify the display name is updated
     autocomplete.textField().should("have.value", "Option 3");
   });
+
+  it("should display loading indicator when fetching options asynchronously", () => {
+    // Component with async loading
+    const AsyncLoadingComponent = () => {
+      const [value, setValue] = useState<string | null>(null);
+
+      // Simulated async fetch function that shows loading state immediately
+      const fetchAsyncOptions = (query?: string) => {
+        // Return a promise that resolves after a short delay
+        // The AsyncOptionsProvider will set loading=true internally when this function is called
+        return new Promise<any[]>((resolve) => {
+          // Use a timeout to simulate network delay
+          setTimeout(() => {
+            resolve(options);
+          }, 500); // Use a consistent short delay for testing
+        });
+      };
+
+      return (
+        <div>
+          <SingleChoiceObjectSelector
+            id="asyncField"
+            name="asyncField"
+            value={value}
+            onChange={setValue}
+            fetchOptions={fetchAsyncOptions}
+            idField="_id"
+            displayField="name"
+            label="Async Loading Field"
+            data-testid="AsyncLoadingSelector"
+          />
+        </div>
+      );
+    };
+
+    mount(<AsyncLoadingComponent />);
+
+    const autocomplete = new AutocompleteInteractable({
+      dataTestId: "AsyncLoadingSelector",
+    });
+
+    // Open the selector - this should trigger fetchOptions and show loading
+    autocomplete.open();
+
+    // Verify loading state using the isLoading method
+    autocomplete.isLoading().should("be.true");
+
+    // Check for the loading indicator directly
+    cy.get('.MuiAutocomplete-root[data-testid="AsyncLoadingSelector"]')
+      .should("exist")
+      .within(() => {
+        cy.get(".MuiCircularProgress-root").should("exist");
+      });
+
+    // Wait for loading to complete
+    cy.wait(600);
+
+    // Verify loading state is removed after fetch completes
+    autocomplete.isLoading().should("be.false");
+
+    // Verify options are loaded and can be selected
+    autocomplete.items().should("have.length", options.length);
+    autocomplete.select("Option 2");
+    autocomplete.textField().should("have.value", "Option 2");
+  });
 });

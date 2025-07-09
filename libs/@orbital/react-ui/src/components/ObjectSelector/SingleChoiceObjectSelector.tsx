@@ -22,6 +22,11 @@ export type SingleChoiceObjectSelectorProps = Omit<
 export function SingleChoiceObjectSelector(
   props: SingleChoiceObjectSelectorProps
 ) {
+  // Override debounceTime for async loading indicator to show immediately
+  const { fetchOptions, debounceTime, ...restProps } = props;
+  const effectiveDebounceTime =
+    fetchOptions && debounceTime === undefined ? 0 : debounceTime;
+
   // Create an adapter component that maps ObjectSelector props to Autocomplete props
   const AutocompleteAdapter = React.useCallback((adapterProps: any) => {
     const {
@@ -41,8 +46,14 @@ export function SingleChoiceObjectSelector(
       "data-testid": dataTestId,
     } = adapterProps;
 
-    const { options, loading, getOptionLabel, getOptionValue, searchOptions } =
-      providerState;
+    const {
+      options,
+      filteredOptions,
+      isLoading,
+      getOptionLabel,
+      getOptionValue,
+      setSearchQuery,
+    } = providerState;
 
     // Handle option selection
     // Ensure getOptionValue is a function
@@ -70,7 +81,7 @@ export function SingleChoiceObjectSelector(
     return (
       <Autocomplete
         id={id}
-        options={options}
+        options={filteredOptions}
         value={selectedOption}
         onChange={handleChange}
         getOptionLabel={(option) => {
@@ -87,7 +98,8 @@ export function SingleChoiceObjectSelector(
 
           return typeof option === "string" ? option : getOptionLabel(option);
         }}
-        loading={loading}
+        onOpen={() => setSearchQuery("")}
+        loading={isLoading}
         disabled={disabled || readOnly}
         renderInput={(params) => (
           <TextField
@@ -101,7 +113,7 @@ export function SingleChoiceObjectSelector(
               ...params.InputProps,
               endAdornment: (
                 <>
-                  {loading ? (
+                  {isLoading ? (
                     <CircularProgress color="inherit" size={20} />
                   ) : null}
                   {params.InputProps.endAdornment}
@@ -113,15 +125,20 @@ export function SingleChoiceObjectSelector(
         className={className}
         data-testid={dataTestId}
         onInputChange={(_, value) => {
-          if (searchOptions) {
-            searchOptions(value);
-          }
+          setSearchQuery(value);
         }}
       />
     );
   }, []);
 
-  return <ObjectSelector {...props} UIComponent={AutocompleteAdapter} />;
+  return (
+    <ObjectSelector
+      {...restProps}
+      fetchOptions={fetchOptions}
+      debounceTime={effectiveDebounceTime}
+      UIComponent={AutocompleteAdapter}
+    />
+  );
 }
 
 export default SingleChoiceObjectSelector;

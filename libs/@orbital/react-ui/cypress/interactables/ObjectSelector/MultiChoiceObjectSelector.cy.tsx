@@ -19,29 +19,17 @@ describe("MultiChoiceObjectSelector", () => {
     const [selector2Value, setSelector2Value] = useState<string[]>([]);
     const [selector3Value, setSelector3Value] = useState<string[]>([]);
     const [selector4Value, setSelector4Value] = useState<string[]>([]);
-    const [isLoading, setIsLoading] = useState(false);
 
-    // Simulated async fetch function that shows loading state
+    // Simulated async fetch function that shows loading state immediately
     const fetchAsyncOptions = (query?: string) => {
-      // Set loading state to true when fetch starts
-      setIsLoading(true);
-
-      // Return a promise that resolves after a delay
+      // Return a promise that resolves after a short delay
+      // The AsyncOptionsProvider will set loading=true internally when this function is called
       return new Promise<any[]>((resolve) => {
         // Use a timeout to simulate network delay
-        setTimeout(
-          () => {
-            setIsLoading(false);
-            resolve(basicOptions);
-          },
-          isLoading ? 5000 : 100
-        ); // Long delay when isLoading is true, short when false
+        setTimeout(() => {
+          resolve(basicOptions);
+        }, 500); // Use a consistent short delay for testing
       });
-    };
-
-    // Function to toggle between fast and slow loading
-    const toggleLoading = () => {
-      setIsLoading(!isLoading);
     };
 
     return (
@@ -84,9 +72,6 @@ describe("MultiChoiceObjectSelector", () => {
 
         <div>
           <h3>Selector 3 (Async Loading)</h3>
-          <button data-testid="toggle-loading" onClick={toggleLoading}>
-            {isLoading ? "Fast Loading" : "Slow Loading"}
-          </button>
           <MultiChoiceObjectSelector
             id="selector3"
             name="selector3"
@@ -226,17 +211,24 @@ describe("MultiChoiceObjectSelector", () => {
     it("should display loading indicator when fetching options asynchronously", () => {
       const loadingSelector = getAutocomplete("selector3");
 
-      // Set to slow loading
-      cy.get('[data-testid="toggle-loading"]').click();
-
       // Open the selector - this should trigger fetchOptions and show loading
       loadingSelector.open();
+
+      // Add a longer wait to ensure the loading state is set
+      cy.wait(100);
 
       // Verify loading state using the isLoading method
       loadingSelector.isLoading().should("be.true");
 
-      // Wait for loading to complete (the timeout in fetchAsyncOptions)
-      cy.wait(5500);
+      // Also verify the CircularProgress component is visible
+      cy.get('.MuiAutocomplete-root[data-testid="selector3"]')
+        .should("exist")
+        .within(() => {
+          cy.get(".MuiCircularProgress-root").should("exist");
+        });
+
+      // Wait for loading to complete (using a consistent short delay)
+      cy.wait(600);
 
       // Verify loading state is removed after fetch completes
       loadingSelector.isLoading().should("be.false");

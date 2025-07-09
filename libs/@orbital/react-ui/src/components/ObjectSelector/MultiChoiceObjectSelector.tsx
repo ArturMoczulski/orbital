@@ -41,8 +41,13 @@ export function MultiChoiceObjectSelector(
       "data-testid": dataTestId,
     } = adapterProps;
 
-    const { options, loading, getOptionLabel, getOptionValue, searchOptions } =
-      providerState;
+    const {
+      options,
+      isLoading,
+      getOptionLabel,
+      getOptionValue,
+      searchOptions,
+    } = providerState;
 
     // Ensure getOptionValue is a function
     const safeGetOptionValue = (option: any) => {
@@ -95,7 +100,7 @@ export function MultiChoiceObjectSelector(
 
           return typeof option === "string" ? option : getOptionLabel(option);
         }}
-        loading={loading}
+        loading={isLoading}
         disabled={disabled || readOnly}
         renderInput={(params) => (
           <TextField
@@ -109,7 +114,7 @@ export function MultiChoiceObjectSelector(
               ...params.InputProps,
               endAdornment: (
                 <>
-                  {loading ? (
+                  {isLoading ? (
                     <CircularProgress color="inherit" size={20} />
                   ) : null}
                   {params.InputProps.endAdornment}
