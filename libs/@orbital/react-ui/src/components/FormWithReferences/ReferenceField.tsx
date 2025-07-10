@@ -2,6 +2,7 @@ import { ReferenceMetadata } from "@orbital/core/src/zod/reference/reference";
 import { camelCase, startCase } from "lodash";
 import { ZodBridge } from "uniforms-bridge-zod";
 import { z } from "zod";
+import { ObjectSelector } from "../ObjectSelector/ObjectSelector";
 import { useObject } from "./ObjectProvider";
 import { useObjectSchema } from "./ObjectSchemaContext";
 import {
@@ -178,27 +179,26 @@ export function ReferenceField({
   // If no reference options are provided, fall back to a disabled field
   if (!reference || referenceOptions.length === 0) {
     return (
-      <></>
-      //   <ObjectSelector
-      //     multiple={multiple}
-      //     disabled={true}
-      //     error={error}
-      //     errorMessage={errorMessage || "No options available"}
-      //     id={id}
-      //     label={getLabel()}
-      //     name={name}
-      //     onChange={handleChange}
-      //     placeholder={placeholder}
-      //     readOnly={readOnly}
-      //     required={required}
-      //     value={value}
-      //     options={[]}
-      //     data-testid={
-      //       dataTestId || `${multiple ? "ChildrenField" : "ParentField"}`
-      //     }
-      //     objectType={objectType}
-      //     objectId={objectId !== undefined ? objectId : contextObjectId}
-      //   />
+      <ObjectSelector
+        multiple={multiple}
+        disabled={true}
+        error={error}
+        errorMessage={errorMessage || "No options available"}
+        id={id}
+        label={getLabel()}
+        name={name}
+        onChange={handleChange}
+        placeholder={placeholder}
+        readOnly={readOnly}
+        required={required}
+        value={value}
+        options={[]}
+        data-testid={
+          dataTestId || `${multiple ? "ChildrenField" : "ParentField"}`
+        }
+        objectType={objectType}
+        objectId={objectId !== undefined ? objectId : contextObjectId}
+      />
     );
   }
 
@@ -207,29 +207,28 @@ export function ReferenceField({
   const displayField = customDisplayField || "name"; // Assuming all referenced objects have a name field
 
   return (
-    <></>
-    // <ObjectSelector
-    //   multiple={multiple}
-    //   disabled={disabled}
-    //   error={error}
-    //   errorMessage={errorMessage}
-    //   id={id}
-    //   label={getLabel()}
-    //   name={name}
-    //   onChange={handleChange}
-    //   placeholder={placeholder}
-    //   readOnly={readOnly}
-    //   required={required}
-    //   value={value}
-    //   options={referenceOptions}
-    //   idField={idField}
-    //   displayField={displayField}
-    //   data-testid={
-    //     dataTestId || `${multiple ? "ChildrenField" : "ParentField"}`
-    //   }
-    //   objectType={objectType}
-    //   objectId={objectId !== undefined ? objectId : contextObjectId}
-    // />
+    <ObjectSelector
+      multiple={multiple}
+      disabled={disabled}
+      error={error}
+      errorMessage={errorMessage}
+      id={id}
+      label={getLabel()}
+      name={name}
+      onChange={handleChange}
+      placeholder={placeholder}
+      readOnly={readOnly}
+      required={required}
+      value={value}
+      options={referenceOptions}
+      idField={idField}
+      displayField={displayField}
+      data-testid={
+        dataTestId || `${multiple ? "ChildrenField" : "ParentField"}`
+      }
+      objectType={objectType}
+      objectId={objectId !== undefined ? objectId : contextObjectId}
+    />
   );
 }
 

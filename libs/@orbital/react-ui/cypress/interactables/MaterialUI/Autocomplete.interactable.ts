@@ -628,6 +628,65 @@ export class AutocompleteInteractable
       });
     });
   }
+
+  /**
+   * Gets the label text for this autocomplete
+   * @returns Cypress.Chainable<string> - chainable that resolves to the label text
+   */
+  label(): Cypress.Chainable<string> {
+    return cy.then(() => {
+      return this.get().then(($el) => {
+        // Try to find the label using the 'for' attribute matching the input id
+        const inputId = $el.find("input").attr("id");
+        if (inputId) {
+          const $labelByFor = Cypress.$(`label[for="${inputId}"]`);
+          if ($labelByFor.length > 0) {
+            return $labelByFor.text();
+          }
+        }
+
+        // Try to find the label within the form control
+        const $formControl = $el.closest(
+          ".MuiFormControl-root, .MuiTextField-root"
+        );
+        if ($formControl.length > 0) {
+          const $label = $formControl.find("label");
+          if ($label.length > 0) {
+            return $label.text();
+          }
+        }
+
+        // Fallback: try to find any label that might be associated with this component
+        const $nearestLabel = $el.prev("label");
+        if ($nearestLabel.length > 0) {
+          return $nearestLabel.text();
+        }
+
+        // If no label is found, return empty string
+        return "";
+      });
+    });
+  }
+}
+
+/**
+ * Factory function to create an AutocompleteInteractable
+ * @param dataTestId The data-testid of the autocomplete
+ * @param parentElement Optional parent element to scope the autocomplete within
+ * @param index Optional index for when multiple autocompletes with the same data-testid exist
+ * @returns An AutocompleteInteractable
+ */
+export function autocomplete(
+  dataTestId: string,
+  parentElement?: () => Cypress.Chainable<JQuery<HTMLElement>>,
+  index?: number
+): AutocompleteInteractable {
+  return new AutocompleteInteractable({
+    componentName: "Autocomplete",
+    dataTestId,
+    parentElement,
+    index,
+  });
 }
 
 export default AutocompleteInteractable;

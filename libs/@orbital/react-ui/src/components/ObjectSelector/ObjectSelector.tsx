@@ -219,7 +219,7 @@ export function ObjectSelector({
             />
           )}
           className={className}
-          data-testid={dataTestId}
+          data-testid={testId}
           onInputChange={(_, value) => {
             if (setSearchQuery) {
               setSearchQuery(value);

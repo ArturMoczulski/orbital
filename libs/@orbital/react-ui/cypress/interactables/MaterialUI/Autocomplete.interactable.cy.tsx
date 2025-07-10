@@ -815,4 +815,56 @@ describe("AutocompleteInteractable", () => {
       cy.contains("Selected values: None").should("exist");
     });
   });
+
+  describe("Label functionality", () => {
+    it("should get the label text from the autocomplete", () => {
+      // Test with single selection autocomplete
+      const singleAutocomplete = new TestAutocompleteInteractable(
+        "single-autocomplete"
+      );
+
+      // The label should be "Select an option" based on the test component
+      singleAutocomplete.label().should("eq", "Select an option");
+
+      // Test with multiple selection autocomplete
+      const multipleAutocomplete = new TestAutocompleteInteractable(
+        "multiple-autocomplete"
+      );
+
+      // The label should be "Select multiple options" based on the test component
+      multipleAutocomplete.label().should("eq", "Select multiple options");
+
+      // Test with error state autocomplete
+      const errorAutocomplete = new TestAutocompleteInteractable(
+        "error-autocomplete"
+      );
+
+      // The label should be "Error state example" based on the test component
+      errorAutocomplete.label().should("eq", "Error state example");
+    });
+
+    it("should handle autocompletes with no label", () => {
+      // Create a test component with no label
+      const NoLabelAutocomplete = () => (
+        <Autocomplete
+          data-testid="no-label-autocomplete"
+          options={options}
+          renderInput={(params) => (
+            <TextField {...params} placeholder="No label autocomplete" />
+          )}
+        />
+      );
+
+      // Mount the component
+      mount(<NoLabelAutocomplete />);
+
+      // Create an interactable for the no-label autocomplete
+      const noLabelAutocomplete = new TestAutocompleteInteractable(
+        "no-label-autocomplete"
+      );
+
+      // The label should be empty string since there's no label
+      noLabelAutocomplete.label().should("eq", "");
+    });
+  });
 });
