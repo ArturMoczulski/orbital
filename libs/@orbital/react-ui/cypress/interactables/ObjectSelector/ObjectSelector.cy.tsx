@@ -203,6 +203,22 @@ describe("ObjectSelector", () => {
       autocomplete.select("Option 2");
       autocomplete.textField().should("have.value", "Option 2");
     });
+
+    it("should correctly display pre-existing selection when hydrated in single choice mode", () => {
+      // Mount component with an initial value
+      mount(<SingleChoiceTestComponent initialValue="option2" />);
+
+      const autocomplete = getSingleChoiceAutocomplete();
+
+      // Verify the correct option is displayed without any user interaction
+      autocomplete.textField().should("have.value", "Option 2");
+
+      // Verify the component is properly hydrated by checking the internal state
+      cy.get('[data-testid="SingleChoiceSelector"]')
+        .should("exist")
+        .find("input")
+        .should("have.value", "Option 2");
+    });
   });
 
   describe("Multiple Choice Mode", () => {
@@ -441,6 +457,48 @@ describe("ObjectSelector", () => {
 
       // Verify error message is displayed
       errorSelector.getError().should("eq", "This field has an error");
+    });
+
+    it("should correctly display pre-existing selections when hydrated in multiple choice mode", () => {
+      // Create a component with initial values
+      const HydratedMultiChoiceComponent = () => {
+        const [value, setValue] = useState<string[]>(["option1", "option3"]);
+
+        return (
+          <div>
+            <ObjectSelector
+              id="hydratedSelector"
+              name="hydratedSelector"
+              value={value}
+              onChange={setValue}
+              options={options}
+              idField="_id"
+              displayField="name"
+              label="Hydrated Selector"
+              data-testid="hydratedSelector"
+              multiple={true}
+            />
+            <div data-testid="hydrated-value">{JSON.stringify(value)}</div>
+          </div>
+        );
+      };
+
+      mount(<HydratedMultiChoiceComponent />);
+
+      const selector = getMultiChoiceAutocomplete("hydratedSelector");
+
+      // Verify the correct options are displayed without any user interaction
+      cy.get('[data-testid="hydrated-value"]').should(
+        "contain",
+        '["option1","option3"]'
+      );
+
+      // Verify chips display the correct names
+      selector.chips().then((chips) => {
+        expect(chips.length).to.equal(2);
+        chips[0].label().should("eq", "Option 1");
+        chips[1].label().should("eq", "Option 3");
+      });
     });
   });
 });
