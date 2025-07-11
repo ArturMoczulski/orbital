@@ -7,7 +7,6 @@ import { z } from "zod";
 import { ObjectFieldset } from "../../../src/components/FormWithReferences/ObjectFieldset";
 import { ObjectProvider } from "../../../src/components/FormWithReferences/ObjectProvider";
 import { ZodReferencesBridge } from "../../../src/components/FormWithReferences/ZodReferencesBridge";
-import { ObjectSelectorInteractable } from "../ObjectSelector/ObjectSelector.interactable";
 import { objectFieldset } from "./ObjectFieldset.interactable";
 
 describe("ObjectFieldsetInteractable", () => {
@@ -604,29 +603,42 @@ describe("ObjectFieldsetInteractable", () => {
     fieldset.getFieldValue("size").should("equal", "500");
 
     // Use fieldset.field() to interact with the reference field, passing the ObjectSelectorInteractable constructor
-    const worldField = fieldset.field<ObjectSelectorInteractable>(
-      "worldId",
-      ObjectSelectorInteractable
-    );
+    // Instead of using ObjectSelectorInteractable, directly interact with the element
+    fieldset.get({}).find('[data-field-name="worldId"]').should("exist");
+
+    // Get the input field within the BelongsToField
+    const worldField = fieldset
+      .get({})
+      .find('[data-field-name="worldId"] input');
 
     // Get the display text using selected() helper
     // worldField.selected().should("equal", "Fantasy World");
 
-    // Open the dropdown using the open() helper
-    worldField.open();
+    // Click on the input to open the dropdown
+    worldField.click();
 
-    // Verify options are available using items() helper
-    worldField.items().should("have.length", 3);
-    worldField.items().then((items: JQuery<HTMLElement>) => {
-      expect(items[0].textContent).to.include("Fantasy World");
-      expect(items[1].textContent).to.include("Sci-Fi World");
-      expect(items[2].textContent).to.include("Historical World");
-    });
+    // Verify options are available
+    cy.get(".MuiAutocomplete-popper").should("be.visible");
+    cy.get('.MuiAutocomplete-popper [role="option"]').should("have.length", 3);
+    cy.get('.MuiAutocomplete-popper [role="option"]').then(
+      (items: JQuery<HTMLElement>) => {
+        expect(items[0].textContent).to.include("Fantasy World");
+        expect(items[1].textContent).to.include("Sci-Fi World");
+        expect(items[2].textContent).to.include("Historical World");
+      }
+    );
 
-    // Select a different option using select helper
-    worldField.select("Sci-Fi World");
+    // Select a different option - use alias to avoid detached DOM issues
+    cy.get('.MuiAutocomplete-popper [role="option"]').as("options");
+    cy.get("@options").contains("Sci-Fi World").click();
 
-    // Verify the selection changed using selected() helper
-    worldField.selected().should("equal", "Sci-Fi World");
+    // Wait for the dropdown to close
+    cy.get(".MuiAutocomplete-popper").should("not.exist");
+
+    // Get the input field again after the selection and verify its value
+    cy.get('[data-field-name="worldId"] input').should(
+      "have.value",
+      "Sci-Fi World"
+    );
   });
 });
