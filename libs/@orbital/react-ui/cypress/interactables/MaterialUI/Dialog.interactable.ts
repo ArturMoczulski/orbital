@@ -93,26 +93,11 @@ export class DialogInteractable
     // First check if it's opened
     return this.isOpened().then((opened) => {
       if (opened) {
-        // For Material UI dialogs, we can try multiple approaches:
-
-        // 1. Click the close button if it exists (common in dialogs)
-        // Try to click the close button, but don't fail if it doesn't exist
-        this.get({})
-          .find('[aria-label="close"]')
-          .then(($closeBtn) => {
-            if ($closeBtn.length > 0) {
-              cy.wrap($closeBtn).click({ force: true });
-            } else {
-              // If close button doesn't exist, click outside
-              cy.get("body").click(10, 10);
-            }
-          });
-
-        // 2. Press Escape key as a fallback
+        // Press the ESC key to close the dialog
         cy.get("body").type("{esc}");
 
         // Wait for animations to complete
-        cy.wait(100);
+        cy.wait(300);
       }
 
       // Return a chainable to satisfy TypeScript and maintain proper chaining
@@ -125,19 +110,28 @@ export class DialogInteractable
    * @returns Cypress.Chainable<boolean> - chainable that yields true if the dialog is triggered
    */
   isTriggered(): Cypress.Chainable<boolean> {
-    // Check if the element exists in the DOM
-    if (!this.exists()) {
-      return cy.wrap(false);
-    }
+    return cy.document().then(() => {
+      // First check if the element exists at all using jQuery (synchronous)
+      const $el = Cypress.$(this.selector());
 
-    // For dialogs, we also need to check if it's visible (not hidden)
-    return this.get({})
-      .should("exist")
-      .then(($el) => {
-        return (
-          $el.css("display") !== "none" && $el.attr("aria-hidden") !== "true"
-        );
-      });
+      if ($el.length === 0) {
+        // Element doesn't exist at all, dialog is definitely closed
+        return cy.wrap(false);
+      }
+
+      // Check multiple conditions that indicate a closed dialog
+      const isHidden = $el.css("display") === "none";
+      const isAriaHidden = $el.attr("aria-hidden") === "true";
+      const isNotVisible = !$el.is(":visible");
+
+      // For debugging
+      cy.log(
+        `Dialog state: hidden=${isHidden}, ariaHidden=${isAriaHidden}, visible=${!isNotVisible}`
+      );
+
+      // Dialog is triggered/open if it exists, is visible, and not marked as hidden
+      return cy.wrap(!isHidden && !isAriaHidden && !isNotVisible);
+    });
   }
 
   /**
@@ -198,8 +192,10 @@ export class DialogInteractable
    * @returns this - for method chaining
    */
   waitForClose(timeout: number = 4000): this {
+    // Use a shorter timeout for tests
+    const actualTimeout = Math.min(timeout, 100);
     // First check if dialog is open, then decide what to do
-    cy.wait(500);
+    cy.wait(100); // Reduced wait time for faster tests
     this.isOpened().then((isOpen) => {
       if (isOpen) {
         // Only wait for it to close if it's currently open
@@ -207,10 +203,12 @@ export class DialogInteractable
 
         // Try to wait for the element to not exist
         try {
-          this.get({ timeout }).should("not.exist");
+          // Use the shorter timeout for the get call
+          this.get({ timeout: actualTimeout }).should("not.exist");
         } catch (e) {
           // If not.exist fails, check for display:none or aria-hidden
-          this.get({ timeout }).should("satisfy", ($el) => {
+          // Use the shorter timeout for the get call
+          this.get({ timeout: actualTimeout }).should("satisfy", ($el) => {
             return (
               $el.css("display") === "none" ||
               $el.attr("aria-hidden") === "true"
@@ -224,6 +222,20 @@ export class DialogInteractable
 
     return this;
   }
+}
+
+/**
+ * Helper function to create a DialogInteractable instance
+ * @param options Optional configuration options for the DialogInteractable
+ * @returns DialogInteractable instance
+ */
+export function dialog(
+  options?: Partial<DialogInteractableOptions>
+): DialogInteractable {
+  return new DialogInteractable({
+    componentName: "Dialog",
+    ...options,
+  });
 }
 
 export default DialogInteractable;

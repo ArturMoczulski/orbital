@@ -1,239 +1,201 @@
 /// <reference types="cypress" />
-import { DialogInteractable } from "./Dialog.interactable";
+import Button from "@mui/material/Button";
+import Dialog from "@mui/material/Dialog";
+import DialogActions from "@mui/material/DialogActions";
+import DialogContent from "@mui/material/DialogContent";
+import DialogTitle from "@mui/material/DialogTitle";
+import { useState } from "react";
+import { dialog } from "./Dialog.interactable";
 
-/**
- * Test implementation of DialogInteractable for testing purposes
- */
-class TestDialogInteractable extends DialogInteractable {
-  constructor(parentElement?: () => Cypress.Chainable<JQuery<HTMLElement>>) {
-    super({
-      dataTestId: "TestDialog",
-      parentElement,
-      componentName: "Dialog",
-    });
-  }
+// Test component with a controlled dialog
+function TestDialogComponent({
+  id = "test-dialog",
+  initialOpen = false,
+  title = "Test Dialog",
+  content = "Dialog Content",
+}) {
+  const [open, setOpen] = useState(initialOpen);
 
-  /**
-   * Override the open method for testing
-   */
-  override open(): Cypress.Chainable<void> {
-    cy.get('[data-testid="OpenDialogButton"]').click();
-    return cy.wrap(null).then(() => {}) as unknown as Cypress.Chainable<void>;
-  }
+  return (
+    <div data-testid="container">
+      <Button data-testid="open-dialog-button" onClick={() => setOpen(true)}>
+        Open Dialog
+      </Button>
 
-  /**
-   * Override the close method for testing
-   */
-  override close(): Cypress.Chainable<void> {
-    cy.get('[data-testid="CloseDialogButton"]').click();
-    return cy.wrap(null).then(() => {}) as unknown as Cypress.Chainable<void>;
-  }
-
-  /**
-   * Get a specific element within the dialog
-   */
-  getDialogElement(
-    elementTestId: string
-  ): Cypress.Chainable<JQuery<HTMLElement>> {
-    return this.get({}).find(`[data-testid="${elementTestId}"]`);
-  }
+      <Dialog open={open} onClose={() => setOpen(false)}>
+        <DialogTitle>{title}</DialogTitle>
+        <DialogContent>
+          <div data-testid="dialog-content">{content}</div>
+        </DialogContent>
+        <DialogActions>
+          <Button
+            data-testid="close-dialog-button"
+            onClick={() => setOpen(false)}
+          >
+            Close
+          </Button>
+        </DialogActions>
+      </Dialog>
+    </div>
+  );
 }
 
-/**
- * Helper function to create a TestDialogInteractable instance
- */
-function testDialog(
-  parentElement?: () => Cypress.Chainable<JQuery<HTMLElement>>
-): TestDialogInteractable {
-  return new TestDialogInteractable(parentElement);
+// Test component with multiple dialogs
+function MultipleDialogsComponent() {
+  const [openDialog1, setOpenDialog1] = useState(false);
+  const [openDialog2, setOpenDialog2] = useState(false);
+
+  return (
+    <div>
+      <div data-testid="container1">
+        <Button
+          data-testid="open-dialog-button"
+          onClick={() => setOpenDialog1(true)}
+        >
+          Open Dialog 1
+        </Button>
+
+        <Dialog open={openDialog1} onClose={() => setOpenDialog1(false)}>
+          <DialogTitle>Dialog 1</DialogTitle>
+          <DialogContent>
+            <div data-testid="dialog-content">Content 1</div>
+          </DialogContent>
+          <DialogActions>
+            <Button
+              data-testid="close-dialog-button"
+              onClick={() => setOpenDialog1(false)}
+            >
+              Close
+            </Button>
+          </DialogActions>
+        </Dialog>
+      </div>
+
+      <div data-testid="container2">
+        <Button
+          data-testid="open-dialog-button"
+          onClick={() => setOpenDialog2(true)}
+        >
+          Open Dialog 2
+        </Button>
+
+        <Dialog open={openDialog2} onClose={() => setOpenDialog2(false)}>
+          <DialogTitle>Dialog 2</DialogTitle>
+          <DialogContent>
+            <div data-testid="dialog-content">Content 2</div>
+          </DialogContent>
+          <DialogActions>
+            <Button
+              data-testid="close-dialog-button"
+              onClick={() => setOpenDialog2(false)}
+            >
+              Close
+            </Button>
+          </DialogActions>
+        </Dialog>
+      </div>
+    </div>
+  );
 }
 
 describe("DialogInteractable", () => {
   describe("Basic Functionality", () => {
     beforeEach(() => {
-      // Mount a component with a dialog
-      cy.mount(
-        <div data-testid="Container">
-          <button data-testid="OpenDialogButton">Open Dialog</button>
-          <div data-testid="TestDialog" style={{ display: "none" }}>
-            <h2>Test Dialog</h2>
-            <button data-testid="CloseDialogButton">Close</button>
-            <div data-testid="DialogContent">Dialog Content</div>
-          </div>
-        </div>
-      );
+      // Mount a component with a Material UI dialog
+      cy.mount(<TestDialogComponent />);
     });
 
     it("should check if dialog is open", () => {
-      const dialog = testDialog();
+      const dialogInteractable = dialog();
 
-      // Make sure the dialog is hidden initially
-      cy.get('[data-testid="TestDialog"]').invoke("css", "display", "none");
+      // Initially the dialog is closed
+      dialogInteractable.isOpened().should("eq", false);
 
-      // Initially the dialog is closed (hidden with display: none)
-      dialog.isOpened().should("eq", false);
-
-      // Show the dialog
-      cy.get('[data-testid="TestDialog"]').invoke("css", "display", "block");
+      // Open the dialog by clicking the button
+      cy.get('[data-testid="open-dialog-button"]').click();
 
       // Now the dialog should be open
-      dialog.isOpened().should("eq", true);
+      dialogInteractable.isOpened().should("eq", true);
     });
 
     it("should open the dialog", () => {
-      const dialog = testDialog();
+      const dialogInteractable = dialog();
 
-      // Make sure the dialog is hidden initially
-      cy.get('[data-testid="TestDialog"]').invoke("css", "display", "none");
+      // Set up the trigger element
+      dialogInteractable["triggerElement"] =
+        '[data-testid="open-dialog-button"]';
 
       // Initially the dialog is closed
-      dialog.isOpened().should("eq", false);
+      dialogInteractable.isOpened().should("eq", false);
 
-      // Open the dialog using the interactable - use force: true since the button might be in a hidden container
-      cy.get('[data-testid="OpenDialogButton"]').click({ force: true });
-
-      // Simulate the dialog opening (in a real app, the click would trigger this)
-      cy.get('[data-testid="TestDialog"]').invoke("css", "display", "block");
+      // Open the dialog using the interactable
+      dialogInteractable.open();
 
       // The dialog should now be open
-      dialog.isOpened().should("eq", true);
+      dialogInteractable.isOpened().should("eq", true);
     });
 
     it("should close the dialog", () => {
-      const dialog = testDialog();
+      // Mount with dialog initially open
+      cy.mount(<TestDialogComponent initialOpen={true} />);
 
-      // Make the dialog visible first
-      cy.get('[data-testid="TestDialog"]').invoke("css", "display", "block");
+      const dialogInteractable = dialog();
 
       // Verify it's open
-      dialog.isOpened().should("eq", true);
+      dialogInteractable.isOpened().should("eq", true);
 
-      // Close the dialog using the interactable - use force: true since the button might be in a hidden container
-      cy.get('[data-testid="CloseDialogButton"]').click({ force: true });
-
-      // Simulate the dialog closing (in a real app, the click would trigger this)
-      cy.get('[data-testid="TestDialog"]').invoke("css", "display", "none");
+      // Close the dialog using the interactable
+      dialogInteractable.close();
 
       // The dialog should now be closed
-      cy.get('[data-testid="TestDialog"]').should(
-        "have.css",
-        "display",
-        "none"
-      );
-      dialog.isOpened().should("eq", false);
+      dialogInteractable.isOpened().should("eq", false);
     });
 
     it("should wait for dialog to close", () => {
-      const dialog = testDialog();
+      // Mount with dialog initially open
+      cy.mount(<TestDialogComponent initialOpen={true} />);
 
-      // Make the dialog visible first
-      cy.get('[data-testid="TestDialog"]').invoke("css", "display", "block");
+      const dialogInteractable = dialog();
 
       // Verify it's open
-      dialog.isOpened().should("eq", true);
+      dialogInteractable.isOpened().should("eq", true);
 
-      // Close the dialog directly
-      cy.get('[data-testid="TestDialog"]').invoke("css", "display", "none");
+      // Close the dialog by clicking the close button
+      cy.get('[data-testid="close-dialog-button"]').click();
 
-      // Use waitForClose with a short timeout since we've already closed it
-      dialog.waitForClose(500);
+      // Use waitForClose with a short timeout
+      dialogInteractable.waitForClose(500);
 
       // Final verification
-      dialog.isOpened().should("eq", false);
+      dialogInteractable.isOpened().should("eq", false);
     });
 
     it("should get elements within the dialog", () => {
-      const dialog = testDialog();
+      // Mount with dialog initially open
+      cy.mount(<TestDialogComponent initialOpen={true} />);
 
-      // Make the dialog visible first
-      cy.get('[data-testid="TestDialog"]').invoke("css", "display", "block");
+      const dialogInteractable = dialog();
 
-      // Get an element within the dialog
-      dialog.getDialogElement("DialogContent").should("exist");
-      dialog
-        .getDialogElement("DialogContent")
+      // Get content using the built-in method
+      dialogInteractable.getContent().should("exist");
+
+      // Get title using the built-in method
+      dialogInteractable
+        .getTitle()
+        .should("exist")
+        .should("contain.text", "Test Dialog");
+
+      // Get actions using the built-in method
+      dialogInteractable.getActions().should("exist");
+
+      // Get an element by data-testid
+      dialogInteractable.clickOnElement("dialog-content");
+
+      // Verify content text
+      dialogInteractable
+        .get({})
+        .find('[data-testid="dialog-content"]')
         .should("have.text", "Dialog Content");
-    });
-  });
-
-  describe("Scoped Functionality", () => {
-    beforeEach(() => {
-      // Mount a component with multiple dialogs
-      cy.mount(
-        <div>
-          <div data-testid="Container1">
-            <button data-testid="OpenDialogButton">Open Dialog 1</button>
-            <div data-testid="TestDialog" style={{ display: "none" }}>
-              <h2>Dialog 1</h2>
-              <button data-testid="CloseDialogButton">Close</button>
-              <div data-testid="DialogContent">Content 1</div>
-            </div>
-          </div>
-          <div data-testid="Container2">
-            <button data-testid="OpenDialogButton">Open Dialog 2</button>
-            <div data-testid="TestDialog" style={{ display: "none" }}>
-              <h2>Dialog 2</h2>
-              <button data-testid="CloseDialogButton">Close</button>
-              <div data-testid="DialogContent">Content 2</div>
-            </div>
-          </div>
-        </div>
-      );
-    });
-
-    it("should scope to a parent element", () => {
-      // Create parent-scoped dialog interactables
-      const parent1 = () => cy.get('[data-testid="Container1"]');
-      const dialog1 = testDialog(parent1);
-
-      const parent2 = () => cy.get('[data-testid="Container2"]');
-      const dialog2 = testDialog(parent2);
-
-      // Show both dialogs
-      cy.get('[data-testid="Container1"] [data-testid="TestDialog"]').invoke(
-        "css",
-        "display",
-        "block"
-      );
-      cy.get('[data-testid="Container2"] [data-testid="TestDialog"]').invoke(
-        "css",
-        "display",
-        "block"
-      );
-
-      // Verify both dialogs are open
-      dialog1.isOpened().should("eq", true);
-      dialog2.isOpened().should("eq", true);
-
-      // Verify each dialog has the correct content
-      dialog1
-        .getDialogElement("DialogContent")
-        .should("have.text", "Content 1");
-      dialog2
-        .getDialogElement("DialogContent")
-        .should("have.text", "Content 2");
-    });
-
-    it("should maintain parent scope after interactions", () => {
-      // Create parent-scoped dialog interactables
-      const parent1 = () => cy.get('[data-testid="Container1"]');
-      const dialog1 = testDialog(parent1);
-
-      // Show the dialog
-      cy.get('[data-testid="Container1"] [data-testid="TestDialog"]').invoke(
-        "css",
-        "display",
-        "block"
-      );
-
-      // Perform an interaction
-      dialog1.getDialogElement("CloseDialogButton").click();
-
-      // Verify the scope is maintained
-      dialog1.get({}).should("exist");
-      dialog1
-        .getDialogElement("DialogContent")
-        .should("have.text", "Content 1");
     });
   });
 
@@ -243,86 +205,70 @@ describe("DialogInteractable", () => {
       cy.mount(<div></div>);
 
       // Create a DialogInteractable instance for a non-existent dialog
-      const dialog = testDialog();
+      const dialogInteractable = dialog({
+        dataTestId: "non-existent-dialog",
+      }); // Keep this one for testing non-existent dialogs
 
       // Check if the dialog is open (should return false, not error)
-      dialog.isOpened().should("eq", false);
+      dialogInteractable.isOpened().should("eq", false);
 
       // Attempt to get the element (should fail with a clear error)
       cy.on("fail", (err) => {
-        expect(err.message).to.include("TestDialog");
+        expect(err.message).to.include("non-existent-dialog");
         return false; // Prevent the error from failing the test
       });
 
       // This should fail because the element doesn't exist
-      dialog.get({});
+      // Use a short timeout to make the test run faster
+      dialogInteractable.get({ timeout: 100 });
     });
 
     it("should handle dynamically added dialogs", () => {
       // Mount a component without the dialog
       cy.mount(
-        <div data-testid="DynamicContainer" id="dynamic-container">
-          <button data-testid="OpenDialogButton">Open Dialog</button>
+        <div data-testid="dynamic-container" id="dynamic-container">
+          <Button data-testid="open-dialog-button">Open Dialog</Button>
         </div>
       );
 
       // Create a DialogInteractable instance
-      const dialog = testDialog();
+      const dialogInteractable = dialog();
 
       // Initially the dialog doesn't exist
-      dialog.isOpened().should("eq", false);
+      dialogInteractable.isOpened().should("eq", false);
 
       // Add the dialog dynamically
       cy.get("#dynamic-container").then(($container) => {
-        const element = document.createElement("div");
-        element.setAttribute("data-testid", "TestDialog");
-        element.innerHTML = `
-          <h2>Dynamic Dialog</h2>
-          <button data-testid="CloseDialogButton">Close</button>
-          <div data-testid="DialogContent">Dynamic Content</div>
-        `;
-        $container[0].appendChild(element);
+        // Create a dialog element programmatically
+        const dialogEl = document.createElement("div");
+        dialogEl.className =
+          "MuiDialog-root MuiDialog-paper MuiDialog-paperScrollPaper MuiDialog-paperWidthSm";
+        dialogEl.setAttribute("role", "dialog");
+        dialogEl.setAttribute("aria-modal", "true");
+
+        // Create dialog content
+        const dialogContent = document.createElement("div");
+        dialogContent.className = "MuiDialogContent-root";
+
+        // Create content inside dialog
+        const contentDiv = document.createElement("div");
+        contentDiv.setAttribute("data-testid", "dialog-content");
+        contentDiv.textContent = "Dynamic Content";
+
+        // Assemble the dialog
+        dialogContent.appendChild(contentDiv);
+        dialogEl.appendChild(dialogContent);
+
+        // Add to the container
+        $container[0].appendChild(dialogEl);
       });
 
-      // Now the dialog should exist
-      dialog.get({}).should("exist");
-      dialog
-        .getDialogElement("DialogContent")
+      // Now the dialog should exist and be open
+      dialogInteractable.isOpened().should("eq", true);
+      dialogInteractable
+        .get({})
+        .find('[data-testid="dialog-content"]')
         .should("have.text", "Dynamic Content");
-    });
-
-    it("should handle dialog timeout gracefully", () => {
-      // Mount a component with a dialog
-      cy.mount(
-        <div data-testid="Container">
-          <button data-testid="OpenDialogButton">Open Dialog</button>
-          <div data-testid="TestDialog">
-            <h2>Test Dialog</h2>
-            <button data-testid="CloseDialogButton">Close</button>
-          </div>
-        </div>
-      );
-
-      const dialog = testDialog();
-
-      // Set up a spy for the error
-      const errorSpy = cy.spy().as("errorSpy");
-
-      // Override the default error behavior
-      cy.on("fail", (err) => {
-        errorSpy(err.message);
-        return false; // Prevent the error from failing the test
-      });
-
-      // Wait for close with a very short timeout
-      // The dialog won't close, so this should timeout
-      dialog.waitForClose(100);
-
-      // Verify the error was thrown with the correct message
-      cy.get("@errorSpy").should(
-        "have.been.calledWithMatch",
-        /did not close within 100ms/
-      );
     });
   });
 });

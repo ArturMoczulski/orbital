@@ -12,9 +12,9 @@
     "test:unit": "NODE_NO_WARNINGS=1 jest --config jest.config.cjs --passWithNoTests"
   },
   "peerDependencies": {
+    "@orbital/core": "workspace:*",
     "phaser": "^3.70.0",
-    "phaser3-rex-plugins": "^1.80.16",
-    "@orbital/core": "workspace:*"
+    "phaser3-rex-plugins": "^1.80.16"
   },
   "devDependencies": {
     "@types/jest": "^29.5.14",

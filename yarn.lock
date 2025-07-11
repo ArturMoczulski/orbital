@@ -6734,6 +6734,7 @@ __metadata:
     ts-jest: "npm:^29.1.0"
     typescript: "npm:^5.8.3"
   peerDependencies:
+    "@orbital/core": "workspace:*"
     phaser: ^3.70.0
     phaser3-rex-plugins: ^1.80.16
   dependenciesMeta:
@@ -6778,6 +6779,7 @@ __metadata:
   dependencies:
     "@cypress/grep": "npm:^4.1.0"
     "@hookform/resolvers": "npm:^5.1.1"
+    "@orbital/core": "npm:^1.0.0"
     "@types/jest": "npm:^29.5.14"
     "@types/lodash": "npm:^4.17.18"
     "@types/node": "npm:^18.16.3"
