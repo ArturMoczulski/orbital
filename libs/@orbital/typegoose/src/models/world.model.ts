@@ -3,7 +3,7 @@ import { modelOptions, prop } from "@typegoose/typegoose";
 
 @modelOptions({
   schemaOptions: {
-    collection: "worlds",
+    collection: World.name,
     timestamps: true,
     _id: true, // Allow MongoDB to override the _id
   },
@@ -29,4 +29,7 @@ export class WorldModel extends World {
 
   @prop()
   updatedAt!: Date;
+
+  @prop({ type: () => [String], default: [] })
+  override tags?: string[];
 }

@@ -1,26 +1,27 @@
+import { Memory } from "@orbital/characters";
 import { prop } from "@typegoose/typegoose";
-import { Memory as BaseMemory } from "@orbital/characters";
-import type { Position } from "@orbital/core";
+import { PositionModel } from "./position.model";
 
 /**
  * TypeGoose model for embedded Memory sub-document.
+ * Extends Memory from @orbital/characters to inherit methods.
  */
-export class MemoryModel implements BaseMemory {
+export class MemoryModel extends Memory {
   @prop({ required: true })
-  timestamp!: Date;
+  override timestamp!: Date;
 
   @prop({ required: true })
-  description!: string;
+  override description!: string;
 
   @prop({ required: true })
-  valence!: number;
+  override valence!: number;
 
   @prop()
-  locationId?: string;
+  override locationId?: string;
 
-  @prop({ type: () => Object, _id: false })
-  coordinates?: Position;
+  @prop({ type: () => PositionModel, _id: false })
+  override coordinates?: PositionModel;
 
   @prop({ type: () => [String] })
-  tags?: string[];
+  override tags?: string[];
 }

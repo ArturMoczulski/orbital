@@ -1,43 +1,42 @@
+import { PsychologicalProfile } from "@orbital/characters";
 import { prop } from "@typegoose/typegoose";
-import {
-  PsychologicalProfile as BasePsychologicalProfile,
-  RomanticAttractionTriggers,
-} from "@orbital/characters";
+import { RomanticAttractionTriggersModel } from "./romantic-attraction-triggers.model";
 
 /**
  * Typegoose model for embedded PsychologicalProfile sub-document.
+ * Extends PsychologicalProfile from @orbital/characters to inherit methods.
  */
-export class PsychologicalProfileModel implements BasePsychologicalProfile {
+export class PsychologicalProfileModel extends PsychologicalProfile {
   @prop({ required: true })
-  normAdherence!: number;
+  override normAdherence!: number;
 
   @prop({ required: true })
-  altruism!: number;
+  override altruism!: number;
 
   @prop({ required: true })
-  selfCenteredness!: number;
+  override selfCenteredness!: number;
 
   @prop({ required: true })
-  ambition!: number;
+  override ambition!: number;
 
   @prop({ required: true })
-  happiness!: number;
+  override happiness!: number;
 
   @prop({ required: true })
-  selfDrive!: number;
+  override selfDrive!: number;
 
   @prop({ required: true })
-  authorityNeed!: number;
+  override authorityNeed!: number;
 
   @prop({ required: true })
-  authorityObedience!: number;
+  override authorityObedience!: number;
 
   @prop({ required: true })
-  entrepreneurialTendency!: number;
+  override entrepreneurialTendency!: number;
 
   @prop({ required: true })
-  sociability!: number;
+  override sociability!: number;
 
-  @prop({ type: () => Object, _id: false })
-  romanticAttractionTriggers?: RomanticAttractionTriggers;
+  @prop({ type: () => RomanticAttractionTriggersModel, _id: false })
+  override romanticAttractionTriggers?: RomanticAttractionTriggersModel;
 }

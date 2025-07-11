@@ -19,8 +19,12 @@ export const IdentifiableObjectSchema = z
       .date()
       .optional()
       .describe("Timestamp when the object was last updated"),
+    tags: z
+      .array(z.string())
+      .optional()
+      .describe("Array of tags associated with the object"),
   })
-  .describe("An object with a unique identifier and timestamps");
+  .describe("An object with a unique identifier, timestamps, and tags");
 
 /**
  * IdentifiableObject provides id generation and assignment on top of BaseObject.
@@ -39,6 +43,9 @@ export class IdentifiableObject
   /** Timestamp when the object was last updated */
   public updatedAt!: Date;
 
+  /** Array of tags associated with the object */
+  public tags?: string[];
+
   constructor(data?: OptionalId<IdentifiableObjectProps>) {
     // Generate a new UUID if none is provided
     const uuid = data?._id ?? generateUUID();
@@ -52,6 +59,11 @@ export class IdentifiableObject
     // Set timestamps with defaults if not provided
     this.createdAt = data?.createdAt || new Date();
     this.updatedAt = data?.updatedAt || new Date();
+
+    // Set tags if provided
+    if (data?.tags) {
+      this.tags = data.tags;
+    }
   }
 
   /** Provide default values for mocking an IdentifiableObject */
@@ -62,6 +74,7 @@ export class IdentifiableObject
       _id: generateUUID(),
       createdAt: now,
       updatedAt: now,
+      tags: [],
     };
   }
 }

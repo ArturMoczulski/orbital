@@ -14,6 +14,10 @@ export class AreaModel extends Area {
   @prop({ required: false }) // Changed to false to allow MongoDB to generate it
   override _id!: string;
 
+  @prop({ required: true })
+  @Reference({ collection: "worlds" })
+  override worldId!: string;
+
   // Add Typegoose decorators to inherited properties
   @prop({ required: true })
   override name!: string;
@@ -31,10 +35,6 @@ export class AreaModel extends Area {
   @prop()
   @Reference({ collection: "areas", required: false })
   override parentId?: string | null;
-
-  @prop({ required: true })
-  @Reference({ collection: "worlds" })
-  override worldId!: string;
 
   @prop({ type: () => [String], default: [] })
   override landmarks!: string[];

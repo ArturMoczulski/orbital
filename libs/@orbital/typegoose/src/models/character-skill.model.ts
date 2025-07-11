@@ -1,14 +1,14 @@
+import { CharactersSkill, SkillName } from "@orbital/characters";
 import { prop } from "@typegoose/typegoose";
-import { CharactersSkill as BaseCharactersSkill } from "@orbital/characters";
-import { SkillName } from "@orbital/characters";
 
 /**
  * TypeGoose model for embedded CharactersSkill sub-document.
+ * Extends CharactersSkill from @orbital/characters to inherit methods.
  */
-export class CharactersSkillModel implements BaseCharactersSkill {
+export class CharactersSkillModel extends CharactersSkill {
   @prop({ enum: SkillName, required: true })
-  name!: SkillName;
+  override name!: SkillName;
 
   @prop({ required: true })
-  level!: number;
+  override level!: number;
 }

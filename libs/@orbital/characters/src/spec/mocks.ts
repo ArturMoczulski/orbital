@@ -1,34 +1,28 @@
 import { faker } from "@faker-js/faker";
 import {
-  Character,
-  Gender,
-  Race,
-  CreatureType,
   Attributes,
-  PsychologicalProfile,
+  Character,
   CharactersSkill,
+  CreatureType,
+  Desire,
+  Gender,
   Goal,
   Intention,
-  Desire,
   Memory,
+  PsychologicalProfile,
+  Race,
   Relation,
   SkillName,
 } from "../index";
-import type { Position } from "@orbital/core";
 
 export function createMockCharacter(): Character {
-  const mockCharacter = new Character();
+  const mockCharacter = new Character({ worldId: "test" });
   mockCharacter._id = faker.string.uuid();
   mockCharacter.firstName = faker.person.firstName();
   mockCharacter.lastName = faker.person.lastName();
   mockCharacter.gender = faker.helpers.enumValue(Gender);
   mockCharacter.race = faker.helpers.enumValue(Race);
   mockCharacter.creatureType = faker.helpers.enumValue(CreatureType);
-  mockCharacter.position = {
-    x: faker.number.float(),
-    y: faker.number.float(),
-    z: faker.number.float(),
-  } as Position;
   mockCharacter.attributes = {
     ST: faker.number.int({ min: 1, max: 20 }),
     DX: faker.number.int({ min: 1, max: 20 }),

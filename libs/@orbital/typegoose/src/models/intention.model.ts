@@ -1,13 +1,14 @@
+import { Intention } from "@orbital/characters";
 import { prop } from "@typegoose/typegoose";
-import { Intention as BaseIntention } from "@orbital/characters";
 
 /**
  * TypeGoose model for embedded Intention sub-document.
+ * Extends Intention from @orbital/characters to inherit methods.
  */
-export class IntentionModel implements BaseIntention {
+export class IntentionModel extends Intention {
   @prop({ required: true })
-  plan!: string;
+  override plan!: string;
 
   @prop({ required: true })
-  due!: Date;
+  override due!: Date;
 }

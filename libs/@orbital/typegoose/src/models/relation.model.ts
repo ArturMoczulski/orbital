@@ -1,16 +1,17 @@
+import { Relation } from "@orbital/characters";
 import { prop } from "@typegoose/typegoose";
-import { Relation as BaseRelation } from "@orbital/characters";
 
 /**
  * TypeGoose model for embedded Relation sub-document.
+ * Extends Relation from @orbital/characters to inherit methods.
  */
-export class RelationModel implements BaseRelation {
+export class RelationModel extends Relation {
   @prop({ required: true })
-  targetId!: string;
+  override targetId!: string;
 
   @prop({ required: true })
-  type!: string;
+  override type!: string;
 
   @prop({ required: true })
-  strength!: number;
+  override strength!: number;
 }

@@ -1,22 +1,23 @@
+import { Goal } from "@orbital/characters";
 import { prop } from "@typegoose/typegoose";
-import { Goal as BaseGoal } from "@orbital/characters";
 
 /**
  * TypeGoose model for embedded Goal sub-document.
+ * Extends Goal from @orbital/characters to inherit methods.
  */
-export class GoalModel implements BaseGoal {
+export class GoalModel extends Goal {
   @prop({ required: true })
-  purpose!: string;
+  override purpose!: string;
 
   @prop({ required: true })
-  timeRange!: string;
+  override timeRange!: string;
 
   @prop({ type: () => [String] })
-  resources?: string[];
+  override resources?: string[];
 
   @prop({ type: () => [String] })
-  collaborators?: string[];
+  override collaborators?: string[];
 
   @prop({ type: () => [String] })
-  plan?: string[];
+  override plan?: string[];
 }

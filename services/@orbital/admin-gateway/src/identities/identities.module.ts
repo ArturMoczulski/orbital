@@ -2,8 +2,8 @@ import { Module } from "@nestjs/common";
 import { ConfigModule, ConfigService } from "@nestjs/config";
 import { ClientsModule, Transport } from "@nestjs/microservices";
 import { WorldMicroservice } from "@orbital/world-rpc";
-import { WorldsController } from "./worlds.controller";
-import { WorldsService } from "./worlds.service";
+import { IdentitiesController } from "./identities.controller";
+import { IdentitiesService } from "./identities.service";
 
 @Module({
   imports: [
@@ -23,9 +23,9 @@ import { WorldsService } from "./worlds.service";
       },
     ]),
   ],
-  controllers: [WorldsController],
+  controllers: [IdentitiesController],
   providers: [
-    WorldsService,
+    IdentitiesService,
     {
       provide: WorldMicroservice,
       useFactory: (client) => new WorldMicroservice(client),
@@ -33,4 +33,4 @@ import { WorldsService } from "./worlds.service";
     },
   ],
 })
-export class WorldsModule {}
+export class IdentitiesModule {}

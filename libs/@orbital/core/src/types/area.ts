@@ -3,12 +3,12 @@ import { z } from "zod";
 import { ZodSchema } from "../decorators/zod-schema.decorator";
 import { generateFantasyAreaName } from "../utils/data-generators";
 import { AreaMap, AreaMapSchema } from "./area-map";
-import {
-  IdentifiableObject,
-  IdentifiableObjectProps,
-  IdentifiableObjectSchema,
-} from "./identifiable-object";
 import { Position, PositionSchema } from "./position";
+import {
+  WorldObject,
+  WorldObjectProps,
+  WorldObjectSchema,
+} from "./world-object";
 
 // Use the generateUUID function from data-generators.ts
 
@@ -18,7 +18,7 @@ import { Position, PositionSchema } from "./position";
 export type AreaProps = z.infer<typeof AreaSchema>;
 
 /** Zod schema for Area */
-export const AreaSchema = IdentifiableObjectSchema.extend({
+export const AreaSchema = WorldObjectSchema.extend({
   parentId: z
     .string()
     .nullable()
@@ -29,10 +29,6 @@ export const AreaSchema = IdentifiableObjectSchema.extend({
     "Central position of the area in 3D space"
   ),
   areaMap: AreaMapSchema.optional().describe("Map representation of this area"),
-  worldId: z
-    .string()
-    .default("")
-    .describe("Identifier of the world this area belongs to"),
   description: z
     .string()
     .default("")
@@ -55,10 +51,7 @@ export const AreaSchema = IdentifiableObjectSchema.extend({
  * Domain class for Area with auto-assignment and validation.
  */
 @ZodSchema(AreaSchema)
-export class Area
-  extends IdentifiableObject
-  implements AreaProps, IdentifiableObjectProps
-{
+export class Area extends WorldObject implements AreaProps, WorldObjectProps {
   parentId?: string | null;
   name: string = "";
   position?: Position;
@@ -70,8 +63,6 @@ export class Area
   landmarks: string[] = [];
   /** Names of other areas this area connects to */
   connections: string[] = [];
-  /** Identifier of the world this area belongs to */
-  worldId!: string;
   /** Tags for categorizing the area */
   tags: string[] = [];
 
@@ -91,7 +82,6 @@ export class Area
       // Position is optional, but include it in mock by default
       position: Position.mock(),
       areaMap: Math.random() > 0.5 ? AreaMap.mock() : undefined,
-      worldId: faker.string.uuid(),
       description,
       landmarks: Array.from({ length: Math.floor(Math.random() * 3) }, () =>
         faker.lorem.word()
@@ -129,7 +119,6 @@ export class Area
     // Assign properties directly from data, ensuring we don't override with empty values
     if (typedData.name !== undefined) this.name = typedData.name;
     if (typedData.parentId !== undefined) this.parentId = typedData.parentId;
-    if (typedData.worldId !== undefined) this.worldId = typedData.worldId;
     if (typedData.description !== undefined)
       this.description = typedData.description;
     if (typedData.landmarks !== undefined) this.landmarks = typedData.landmarks;

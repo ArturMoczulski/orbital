@@ -1,13 +1,14 @@
+import { Desire } from "@orbital/characters";
 import { prop } from "@typegoose/typegoose";
-import { Desire as BaseDesire } from "@orbital/characters";
 
 /**
  * TypeGoose model for embedded Desire sub-document.
+ * Extends Desire from @orbital/characters to inherit methods.
  */
-export class DesireModel implements BaseDesire {
+export class DesireModel extends Desire {
   @prop({ required: true })
-  goal!: string;
+  override goal!: string;
 
   @prop({ required: true })
-  priority!: number;
+  override priority!: number;
 }
