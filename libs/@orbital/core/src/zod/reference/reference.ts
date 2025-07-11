@@ -115,34 +115,40 @@ export function getSchemaName(schema: z.ZodType<any>): string {
   return "reference";
 }
 
-// Extend ZodStringDef to include our reference property
+// Extend ZodStringDef and ZodArrayDef to include reference metadata
 declare module "zod" {
   interface ZodStringDef {
     reference?: ReferenceMetadata;
-  }
-
-  interface ZodString {
-    reference: (options: ReferenceOptions) => ZodString;
   }
 
   interface ZodArrayDef {
     reference?: ReferenceMetadata;
   }
 
-  // Update the ZodArray interface to match the current Zod version
+  // Add reference method to ZodString interface
+  interface ZodString {
+    reference(options: ReferenceOptions): ZodString;
+  }
+
+  // Add reference method to ZodArray interface
   interface ZodArray<
-    T extends z.ZodTypeAny,
-    Cardinality extends "many" | "atleastone",
-    Output = z.output<T>[],
+    T extends z.ZodType<any, any, any>,
+    Cardinality extends "many" | "atleastone" = "many",
   > {
-    reference: (options: ReferenceOptions) => ZodArray<T, Cardinality, Output>;
+    reference(options: ReferenceOptions): ZodArray<T, Cardinality>;
   }
 }
 
-// Add the reference method to ZodString prototype
-z.ZodString.prototype.reference = function (options: ReferenceOptions) {
-  const zodString = this as z.ZodString;
-
+/**
+ * Add reference metadata to a ZodString
+ * @param zodString The ZodString to add reference metadata to
+ * @param options The reference options
+ * @returns A new ZodString with reference metadata
+ */
+export function addStringReference(
+  zodString: z.ZodString,
+  options: ReferenceOptions
+): z.ZodString {
   // Determine relationship name if not provided
   const relationshipName = options.name || getSchemaName(options.schema);
 
@@ -150,7 +156,7 @@ z.ZodString.prototype.reference = function (options: ReferenceOptions) {
   const relationType = options.type || RelationshipType.BELONGS_TO;
 
   // Create a new ZodString with the reference metadata
-  const newZodString = new z.ZodString({
+  return new z.ZodString({
     ...zodString._def,
     reference: {
       schema: options.schema,
@@ -159,15 +165,18 @@ z.ZodString.prototype.reference = function (options: ReferenceOptions) {
       type: relationType,
     },
   });
+}
 
-  return newZodString;
-};
-
-// Add the reference method to ZodArray prototype
-z.ZodArray.prototype.reference = function (options: ReferenceOptions) {
-  // Use any to bypass the type checking issues with ZodArray
-  const zodArray = this as any;
-
+/**
+ * Add reference metadata to a ZodArray
+ * @param zodArray The ZodArray to add reference metadata to
+ * @param options The reference options
+ * @returns A new ZodArray with reference metadata
+ */
+export function addArrayReference<T extends z.ZodTypeAny>(
+  zodArray: z.ZodArray<T>,
+  options: ReferenceOptions
+): z.ZodArray<T> {
   // Determine relationship name if not provided
   const relationshipName = options.name || getSchemaName(options.schema);
 
@@ -175,7 +184,7 @@ z.ZodArray.prototype.reference = function (options: ReferenceOptions) {
   const relationType = options.type || RelationshipType.HAS_MANY;
 
   // Create a new ZodArray with the reference metadata
-  const newZodArray = new z.ZodArray({
+  return new z.ZodArray({
     ...zodArray._def,
     reference: {
       schema: options.schema,
@@ -184,9 +193,26 @@ z.ZodArray.prototype.reference = function (options: ReferenceOptions) {
       type: relationType,
     },
   });
+}
 
-  return newZodArray;
+// Add the reference method to ZodString prototype
+// @ts-ignore - Ignore TypeScript errors for this method
+z.ZodString.prototype.reference = function (
+  options: ReferenceOptions
+): z.ZodString {
+  return addStringReference(this, options);
 };
+
+// Add the reference method to ZodArray prototype
+// @ts-ignore - Ignore TypeScript errors for this method
+z.ZodArray.prototype.reference = function (
+  options: ReferenceOptions
+): z.ZodArray<any> {
+  return addArrayReference(this, options);
+};
+
+// Make sure these are exported
+export { z };
 
 /**
  * Check if a schema has reference metadata

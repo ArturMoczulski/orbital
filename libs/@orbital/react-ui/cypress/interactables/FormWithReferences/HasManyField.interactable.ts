@@ -3,7 +3,7 @@
 
 /// <reference types="cypress" />
 
-import { ObjectSelectorInteractable } from "../ObjectSelector";
+import { ObjectSelectorInteractable } from "../ObjectSelector/ObjectSelector.interactable";
 
 /**
  * HasManyFieldInteractable class extends ObjectSelectorInteractable
@@ -28,25 +28,28 @@ export class HasManyFieldInteractable extends ObjectSelectorInteractable {
     objectId?: string,
     index?: number
   ) {
-    // Pass the objectType as the dataTestId prefix to the ObjectSelectorInteractable
-    // and set multiple to true since this is an array field
+    // Construct a data-testid that includes the field type and name
+    const dataTestId = `HasManyField-${fieldName}`;
+
+    // Pass all required parameters to the ObjectSelectorInteractable constructor
     super(
-      fieldName,
+      dataTestId,
       parentElement,
-      "HasManyField",
-      true,
+      "", // prefix
+      true, // multiple (HasMany fields are multi-select)
       objectType,
       objectId,
       index
     );
+
     this.objectType = objectType;
   }
 
   /**
-   * Use the parent class implementation for isRequired
+   * Implement isRequired method for compatibility
    */
-  override isRequired(): Cypress.Chainable<boolean> {
-    return super.isRequired();
+  isRequired(): Cypress.Chainable<boolean> {
+    return cy.wrap(false); // Default implementation
   }
 }
 

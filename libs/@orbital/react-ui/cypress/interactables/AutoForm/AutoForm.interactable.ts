@@ -4,7 +4,10 @@
 /// <reference types="cypress" />
 
 // Import the CypressInteractable base class and inputField factory
-import { CypressInteractable } from "../Cypress.interactable";
+import {
+  CypressInteractable,
+  CypressInteractableOptions,
+} from "../Cypress.interactable";
 import { FormInputInteractable, inputField } from "./FormInput.interactable";
 
 /**
@@ -36,16 +39,11 @@ interface AutoFormButtons<T extends Record<string, any>> {
 /**
  * Interface for AutoForm options
  */
-interface AutoFormOptions {
+interface AutoFormOptions extends CypressInteractableOptions {
   /**
-   * The data-testid or class name of the form
+   * The data-testid of the form
    */
-  formTestId: string;
-
-  /**
-   * Optional parent element to scope the form within
-   */
-  parent?: () => Cypress.Chainable<JQuery<HTMLElement>>;
+  formTestId?: string;
 }
 
 /**
@@ -54,7 +52,7 @@ interface AutoFormOptions {
  */
 class AutoFormInteractable<
   T extends Record<string, any>,
-> extends CypressInteractable<string> {
+> extends CypressInteractable {
   /**
    * Input-related methods organized in a nested structure
    */
@@ -65,11 +63,17 @@ class AutoFormInteractable<
    */
   readonly buttons: AutoFormButtons<T>;
 
-  constructor(
-    formTestId: string,
-    parentElement?: () => Cypress.Chainable<JQuery<HTMLElement>>
-  ) {
-    super(formTestId, parentElement);
+  constructor(options: string | AutoFormOptions) {
+    // Handle string parameter for backward compatibility
+    const opts: AutoFormOptions =
+      typeof options === "string" ? { dataTestId: options } : options;
+
+    // If formTestId is provided, use it as dataTestId
+    if (typeof options !== "string" && options.formTestId) {
+      opts.dataTestId = options.formTestId;
+    }
+
+    super(opts);
 
     // Initialize the inputs property as a Proxy to dynamically handle field access
     this.inputs = new Proxy({} as AutoFormInputs<T>, {
@@ -79,7 +83,7 @@ class AutoFormInteractable<
           return undefined;
         }
 
-        return inputField(prop as string, () => this.getElement());
+        return inputField(prop as string, () => this.get());
       },
     });
 
@@ -87,7 +91,7 @@ class AutoFormInteractable<
     this.buttons = {
       submit: () =>
         // Get a fresh element each time to avoid context issues
-        this.getElement().find('button[type="submit"]').should("exist"),
+        this.get().find('button[type="submit"]').should("exist"),
     };
   }
 
@@ -134,15 +138,7 @@ class AutoFormInteractable<
 function autoForm<T extends Record<string, any>>(
   formTestIdOrOptions: string | AutoFormOptions
 ): AutoFormInteractable<T> {
-  if (typeof formTestIdOrOptions === "string") {
-    return new AutoFormInteractable<T>(formTestIdOrOptions);
-  } else {
-    cy.log(`autoform parent`, formTestIdOrOptions.parent);
-    return new AutoFormInteractable<T>(
-      formTestIdOrOptions.formTestId,
-      formTestIdOrOptions.parent
-    );
-  }
+  return new AutoFormInteractable<T>(formTestIdOrOptions);
 }
 
 // Export the helper function and class

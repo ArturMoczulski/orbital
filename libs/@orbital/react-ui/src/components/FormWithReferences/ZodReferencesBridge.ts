@@ -4,10 +4,10 @@ import {
   hasReference,
   parseWithReferences,
   RelationshipType,
+  z,
 } from "@orbital/core";
 import { camelCase, startCase } from "lodash";
 import { ZodBridge } from "uniforms-bridge-zod";
-import { z } from "zod";
 
 // Component names as constants to avoid typos and make refactoring easier
 const HAS_MANY_FIELD = "HasManyField";

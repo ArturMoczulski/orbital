@@ -4,32 +4,38 @@ import { DialogInteractable } from "./Dialog.interactable";
 /**
  * Test implementation of DialogInteractable for testing purposes
  */
-class TestDialogInteractable extends DialogInteractable<"TestDialog"> {
+class TestDialogInteractable extends DialogInteractable {
   constructor(parentElement?: () => Cypress.Chainable<JQuery<HTMLElement>>) {
-    super("TestDialog", parentElement);
+    super({
+      dataTestId: "TestDialog",
+      parentElement,
+      componentName: "Dialog",
+    });
   }
 
   /**
    * Override the open method for testing
    */
-  override open(): this {
+  override open(): Cypress.Chainable<void> {
     cy.get('[data-testid="OpenDialogButton"]').click();
-    return this;
+    return cy.wrap(null).then(() => {}) as unknown as Cypress.Chainable<void>;
   }
 
   /**
    * Override the close method for testing
    */
-  override close(): this {
+  override close(): Cypress.Chainable<void> {
     cy.get('[data-testid="CloseDialogButton"]').click();
-    return this;
+    return cy.wrap(null).then(() => {}) as unknown as Cypress.Chainable<void>;
   }
 
   /**
    * Get a specific element within the dialog
    */
-  getDialogElement(elementTestId: string): Cypress.Chainable {
-    return this.getElement().find(`[data-testid="${elementTestId}"]`);
+  getDialogElement(
+    elementTestId: string
+  ): Cypress.Chainable<JQuery<HTMLElement>> {
+    return this.get({}).find(`[data-testid="${elementTestId}"]`);
   }
 }
 
@@ -65,13 +71,13 @@ describe("DialogInteractable", () => {
       cy.get('[data-testid="TestDialog"]').invoke("css", "display", "none");
 
       // Initially the dialog is closed (hidden with display: none)
-      dialog.isOpen().should("eq", false);
+      dialog.isOpened().should("eq", false);
 
       // Show the dialog
       cy.get('[data-testid="TestDialog"]').invoke("css", "display", "block");
 
       // Now the dialog should be open
-      dialog.isOpen().should("eq", true);
+      dialog.isOpened().should("eq", true);
     });
 
     it("should open the dialog", () => {
@@ -81,7 +87,7 @@ describe("DialogInteractable", () => {
       cy.get('[data-testid="TestDialog"]').invoke("css", "display", "none");
 
       // Initially the dialog is closed
-      dialog.isOpen().should("eq", false);
+      dialog.isOpened().should("eq", false);
 
       // Open the dialog using the interactable - use force: true since the button might be in a hidden container
       cy.get('[data-testid="OpenDialogButton"]').click({ force: true });
@@ -90,7 +96,7 @@ describe("DialogInteractable", () => {
       cy.get('[data-testid="TestDialog"]').invoke("css", "display", "block");
 
       // The dialog should now be open
-      dialog.isOpen().should("eq", true);
+      dialog.isOpened().should("eq", true);
     });
 
     it("should close the dialog", () => {
@@ -100,7 +106,7 @@ describe("DialogInteractable", () => {
       cy.get('[data-testid="TestDialog"]').invoke("css", "display", "block");
 
       // Verify it's open
-      dialog.isOpen().should("eq", true);
+      dialog.isOpened().should("eq", true);
 
       // Close the dialog using the interactable - use force: true since the button might be in a hidden container
       cy.get('[data-testid="CloseDialogButton"]').click({ force: true });
@@ -114,7 +120,7 @@ describe("DialogInteractable", () => {
         "display",
         "none"
       );
-      dialog.isOpen().should("eq", false);
+      dialog.isOpened().should("eq", false);
     });
 
     it("should wait for dialog to close", () => {
@@ -124,7 +130,7 @@ describe("DialogInteractable", () => {
       cy.get('[data-testid="TestDialog"]').invoke("css", "display", "block");
 
       // Verify it's open
-      dialog.isOpen().should("eq", true);
+      dialog.isOpened().should("eq", true);
 
       // Close the dialog directly
       cy.get('[data-testid="TestDialog"]').invoke("css", "display", "none");
@@ -133,7 +139,7 @@ describe("DialogInteractable", () => {
       dialog.waitForClose(500);
 
       // Final verification
-      dialog.isOpen().should("eq", false);
+      dialog.isOpened().should("eq", false);
     });
 
     it("should get elements within the dialog", () => {
@@ -196,8 +202,8 @@ describe("DialogInteractable", () => {
       );
 
       // Verify both dialogs are open
-      dialog1.isOpen().should("eq", true);
-      dialog2.isOpen().should("eq", true);
+      dialog1.isOpened().should("eq", true);
+      dialog2.isOpened().should("eq", true);
 
       // Verify each dialog has the correct content
       dialog1
@@ -224,7 +230,7 @@ describe("DialogInteractable", () => {
       dialog1.getDialogElement("CloseDialogButton").click();
 
       // Verify the scope is maintained
-      dialog1.getElement().should("exist");
+      dialog1.get({}).should("exist");
       dialog1
         .getDialogElement("DialogContent")
         .should("have.text", "Content 1");
@@ -240,7 +246,7 @@ describe("DialogInteractable", () => {
       const dialog = testDialog();
 
       // Check if the dialog is open (should return false, not error)
-      dialog.isOpen().should("eq", false);
+      dialog.isOpened().should("eq", false);
 
       // Attempt to get the element (should fail with a clear error)
       cy.on("fail", (err) => {
@@ -249,7 +255,7 @@ describe("DialogInteractable", () => {
       });
 
       // This should fail because the element doesn't exist
-      dialog.getElement();
+      dialog.get({});
     });
 
     it("should handle dynamically added dialogs", () => {
@@ -264,7 +270,7 @@ describe("DialogInteractable", () => {
       const dialog = testDialog();
 
       // Initially the dialog doesn't exist
-      dialog.isOpen().should("eq", false);
+      dialog.isOpened().should("eq", false);
 
       // Add the dialog dynamically
       cy.get("#dynamic-container").then(($container) => {
@@ -279,7 +285,7 @@ describe("DialogInteractable", () => {
       });
 
       // Now the dialog should exist
-      dialog.getElement().should("exist");
+      dialog.get({}).should("exist");
       dialog
         .getDialogElement("DialogContent")
         .should("have.text", "Dynamic Content");

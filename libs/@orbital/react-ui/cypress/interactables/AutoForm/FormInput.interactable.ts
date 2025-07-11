@@ -8,20 +8,32 @@ import { CypressInteractable } from "../Cypress.interactable";
 /**
  * Base class for all form input interactables
  */
-export abstract class FormInputInteractable<
-  T,
-> extends CypressInteractable<string> {
+export abstract class FormInputInteractable<T> extends CypressInteractable {
   protected fieldName?: string;
 
   constructor(
-    fieldName?: string,
+    fieldNameOrOptions?:
+      | string
+      | {
+          dataTestId?: string;
+          parentElement?: () => Cypress.Chainable<JQuery<HTMLElement>>;
+        },
     parentElement?: () => Cypress.Chainable<JQuery<HTMLElement>>
   ) {
-    super(fieldName, parentElement);
-    this.fieldName = fieldName;
+    // Handle string parameter for backward compatibility
+    if (typeof fieldNameOrOptions === "string") {
+      super({
+        dataTestId: fieldNameOrOptions,
+        parentElement,
+      });
+      this.fieldName = fieldNameOrOptions;
+    } else {
+      super(fieldNameOrOptions || {});
+      this.fieldName = fieldNameOrOptions?.dataTestId;
+    }
   }
 
-  override selector() {
+  selector() {
     return [
       `input[name="${this.fieldName}"]`,
       `select[name="${this.fieldName}"]`,
@@ -40,7 +52,7 @@ export abstract class FormInputInteractable<
    * @returns A chainable that resolves to the field value
    */
   getValue(): Cypress.Chainable<any> {
-    return this.getElement().then(($el) => {
+    return this.get().then(($el) => {
       // For standard inputs, get the value directly
       return cy.wrap($el.val());
     });
@@ -50,7 +62,7 @@ export abstract class FormInputInteractable<
    * Clear the input
    */
   clear(): Cypress.Chainable<JQuery<HTMLElement>> {
-    return this.getElement().clear();
+    return this.get().clear();
   }
 
   /**
@@ -59,7 +71,7 @@ export abstract class FormInputInteractable<
    */
   hasError(): Cypress.Chainable<boolean> {
     // For Material-UI, the error class is on the FormControl
-    return this.getElement().then(($el) => {
+    return this.get().then(($el) => {
       // Check if the element itself has the error class
       if ($el.hasClass("Mui-error")) {
         return cy.wrap(true);
@@ -81,7 +93,7 @@ export abstract class FormInputInteractable<
    * @returns A chainable that resolves to the error message
    */
   getErrorMessage(): Cypress.Chainable<string> {
-    return this.getElement()
+    return this.get()
       .closest(".MuiFormControl-root")
       .find(".MuiFormHelperText-root")
       .invoke("text");
@@ -93,7 +105,7 @@ export abstract class FormInputInteractable<
    */
   isRequired(): Cypress.Chainable<boolean> {
     // First try to get the element using our selector method
-    return this.getElement().then(($el) => {
+    return this.get().then(($el) => {
       // Check if the element has the required attribute
       const isRequired = $el.attr("required") !== undefined;
 
@@ -127,7 +139,7 @@ export abstract class FormInputInteractable<
    */
   isDisabled(): Cypress.Chainable<boolean> {
     // First try to get the element using our selector method
-    return this.getElement().then(($el) => {
+    return this.get().then(($el) => {
       // Check if the element itself has the disabled attribute or class
       const elDisabled =
         $el.prop("disabled") === true ||
@@ -166,7 +178,7 @@ export class TextInputInteractable extends FormInputInteractable<string> {
    * Set a value on the text input
    */
   selectById(value: string): Cypress.Chainable<JQuery<HTMLElement>> {
-    return this.getElement().clear().type(value);
+    return this.get().clear().type(value);
   }
 }
 
@@ -178,7 +190,7 @@ export class NumberInputInteractable extends FormInputInteractable<number> {
    * Set a value on the number input
    */
   selectById(value: number): Cypress.Chainable<JQuery<HTMLElement>> {
-    return this.getElement().clear().type(String(value));
+    return this.get().clear().type(String(value));
   }
 }
 
@@ -201,14 +213,14 @@ export class CheckboxInputInteractable extends FormInputInteractable<boolean> {
    * Check the checkbox
    */
   check(): Cypress.Chainable<JQuery<HTMLElement>> {
-    return this.getElement().check();
+    return this.get().check();
   }
 
   /**
    * Uncheck the checkbox
    */
   uncheck(): Cypress.Chainable<JQuery<HTMLElement>> {
-    return this.getElement().uncheck();
+    return this.get().uncheck();
   }
 }
 
@@ -220,7 +232,7 @@ export class RadioInputInteractable extends FormInputInteractable<string> {
    * Set a value on the radio button
    */
   selectById(value: string): Cypress.Chainable<JQuery<HTMLElement>> {
-    return this.getElement().check(value);
+    return this.get().check(value);
   }
 }
 
@@ -232,14 +244,14 @@ export class SelectInputInteractable extends FormInputInteractable<string> {
    * Set a value on the select dropdown
    */
   selectById(value: string): Cypress.Chainable<JQuery<HTMLElement>> {
-    return this.getElement().select(value);
+    return this.get().select(value);
   }
 
   /**
    * Get all available options
    */
   getOptions(): Cypress.Chainable<JQuery<HTMLOptionElement>> {
-    return this.getElement().find("option") as unknown as Cypress.Chainable<
+    return this.get().find("option") as unknown as Cypress.Chainable<
       JQuery<HTMLOptionElement>
     >;
   }
@@ -268,11 +280,10 @@ export function inputField<
   }
 
   // Create a temporary element to determine the input type
-  const getElement = FormInputInteractable.prototype.getElement.bind({
-    fieldName,
-    selector: FormInputInteractable.prototype.selector,
-    parentElement,
-  });
+  const getElement = () => {
+    const interactable = new TextInputInteractable(fieldName, parentElement);
+    return interactable.get();
+  };
 
   // We need to determine the input type synchronously, so we'll create a default
   // text input interactable first, then replace it with the correct type after

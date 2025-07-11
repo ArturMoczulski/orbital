@@ -4,7 +4,7 @@
 // Import the CypressInteractable base class
 import { CypressInteractable } from "../../../cypress/interactables/Cypress.interactable";
 // Import the DialogInteractable classes
-import { ZodObjectSchema } from "../../../cypress/interactables/Dialog/FormDialog/FormDialog.interactable";
+import { ZodObjectSchema } from "../../../cypress/interactables/MaterialUI/FormDialog/FormDialog.interactable";
 // Import the TreeExplorerAddDialog class
 import { AddBranchDialogInteractable } from "./AddBranchDialog.interactable";
 // Import TreeNodeInteractable

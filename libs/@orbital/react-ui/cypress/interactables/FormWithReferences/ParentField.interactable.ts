@@ -1,4 +1,4 @@
-import { ObjectSelectorInteractable } from "../ObjectSelector";
+import { ObjectSelectorInteractable } from "../ObjectSelector/ObjectSelector.interactable";
 
 /**
  * ParentFieldInteractable class extends ObjectSelectorInteractable directly
@@ -24,17 +24,20 @@ export class ParentFieldInteractable extends ObjectSelectorInteractable {
     objectId?: string,
     index?: number
   ) {
-    // Pass the correct data-testid prefix to the ObjectSelectorInteractable
-    // and set multiple to false since this is a single-select field
+    // Construct a data-testid that includes the field type and name
+    const dataTestId = `ParentField-${fieldName}`;
+
+    // Pass all required parameters to the ObjectSelectorInteractable constructor
     super(
-      fieldName,
+      dataTestId,
       parentElement,
-      "ParentField",
-      false,
+      "", // prefix
+      false, // multiple (Parent fields are single-select)
       objectType,
       objectId,
       index
     );
+
     this.objectType = objectType;
   }
 }

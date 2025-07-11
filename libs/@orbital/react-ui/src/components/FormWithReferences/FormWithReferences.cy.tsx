@@ -1,8 +1,7 @@
-import { RelationshipType } from "@orbital/core/src/zod/reference/reference";
+import { RelationshipType, z } from "@orbital/core";
 import { mount } from "cypress/react";
 import React from "react";
 import { AutoField } from "uniforms-mui";
-import { z } from "zod";
 import { formWithReferences } from "../../../cypress/interactables/FormWithReferences/FormWithReferences.interactable";
 import { FormWithReferences, ZodReferencesBridge } from "./index";
 

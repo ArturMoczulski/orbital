@@ -29,6 +29,7 @@
   },
   "dependencies": {
     "@hookform/resolvers": "^5.1.1",
+    "@orbital/core": "^1.0.0",
     "notistack": "^3.0.2",
     "react-hook-form": "^7.58.1",
     "uniforms": "^4.0.0",

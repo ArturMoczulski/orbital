@@ -2,7 +2,7 @@
 import { mount } from "cypress/react";
 import { useState } from "react";
 import { ObjectSelector } from "../../../src/components/ObjectSelector/ObjectSelector";
-import { AutocompleteInteractable } from "../MaterialUI/Autocomplete.interactable";
+import { objectSelector } from "./ObjectSelector.interactable";
 
 describe("ObjectSelector", () => {
   // Sample data for testing
@@ -55,21 +55,12 @@ describe("ObjectSelector", () => {
       );
     };
 
-    // Helper function to create an AutocompleteInteractable for the component
-    const getSingleChoiceAutocomplete = (
-      dataTestId = "SingleChoiceSelector"
-    ) => {
-      return new AutocompleteInteractable({
-        dataTestId,
-      });
-    };
-
     it("should map object ID to value and display name correctly in single choice mode", () => {
       const onChangeSpy = cy.spy().as("onChange");
 
       mount(<SingleChoiceTestComponent onChange={onChangeSpy} />);
 
-      const autocomplete = getSingleChoiceAutocomplete();
+      const autocomplete = objectSelector("SingleChoiceSelector");
 
       // Open the dropdown
       autocomplete.open();
@@ -102,7 +93,7 @@ describe("ObjectSelector", () => {
         />
       );
 
-      const autocomplete = getSingleChoiceAutocomplete();
+      const autocomplete = objectSelector("SingleChoiceSelector");
 
       // Open the dropdown
       autocomplete.open();
@@ -127,7 +118,7 @@ describe("ObjectSelector", () => {
         />
       );
 
-      const autocomplete = getSingleChoiceAutocomplete();
+      const autocomplete = objectSelector("SingleChoiceSelector");
 
       // Verify initial selection
       autocomplete.textField().should("have.value", "Option 1");
@@ -175,9 +166,7 @@ describe("ObjectSelector", () => {
 
       mount(<AsyncLoadingComponent />);
 
-      const autocomplete = new AutocompleteInteractable({
-        dataTestId: "AsyncLoadingSelector",
-      });
+      const autocomplete = objectSelector("AsyncLoadingSelector");
 
       // Open the selector - this should trigger fetchOptions and show loading
       autocomplete.open();
@@ -208,7 +197,7 @@ describe("ObjectSelector", () => {
       // Mount component with an initial value
       mount(<SingleChoiceTestComponent initialValue="option2" />);
 
-      const autocomplete = getSingleChoiceAutocomplete();
+      const autocomplete = objectSelector("SingleChoiceSelector");
 
       // Verify the correct option is displayed without any user interaction
       autocomplete.textField().should("have.value", "Option 2");
@@ -323,19 +312,12 @@ describe("ObjectSelector", () => {
       );
     };
 
-    // Helper function to create an AutocompleteInteractable for a specific selector
-    const getMultiChoiceAutocomplete = (dataTestId: string) => {
-      return new AutocompleteInteractable({
-        dataTestId,
-      });
-    };
-
     it("should allow multiple selectors to work independently in multiple choice mode", () => {
       mount(<MultiChoiceTestComponent />);
 
       // Get interactables for the first two selectors
-      const selector1 = getMultiChoiceAutocomplete("selector1");
-      const selector2 = getMultiChoiceAutocomplete("selector2");
+      const selector1 = objectSelector("selector1");
+      const selector2 = objectSelector("selector2");
 
       // Select options in the first selector
       selector1.open();
@@ -371,7 +353,7 @@ describe("ObjectSelector", () => {
     it("should handle selecting and deselecting multiple options in multiple choice mode", () => {
       mount(<MultiChoiceTestComponent />);
 
-      const selector = getMultiChoiceAutocomplete("selector1");
+      const selector = objectSelector("selector1");
 
       // Select multiple options
       selector.open();
@@ -422,7 +404,7 @@ describe("ObjectSelector", () => {
     it("should display loading indicator when fetching options asynchronously in multiple choice mode", () => {
       mount(<MultiChoiceTestComponent />);
 
-      const loadingSelector = getMultiChoiceAutocomplete("selector3");
+      const loadingSelector = objectSelector("selector3");
 
       // Open the selector - this should trigger fetchOptions and show loading
       loadingSelector.open();
@@ -450,7 +432,7 @@ describe("ObjectSelector", () => {
     it("should display error state correctly in multiple choice mode", () => {
       mount(<MultiChoiceTestComponent />);
 
-      const errorSelector = getMultiChoiceAutocomplete("selector4");
+      const errorSelector = objectSelector("selector4");
 
       // Verify error styling is applied
       errorSelector.hasError().should("be.true");
@@ -485,7 +467,7 @@ describe("ObjectSelector", () => {
 
       mount(<HydratedMultiChoiceComponent />);
 
-      const selector = getMultiChoiceAutocomplete("hydratedSelector");
+      const selector = objectSelector("hydratedSelector");
 
       // Verify the correct options are displayed without any user interaction
       cy.get('[data-testid="hydrated-value"]').should(

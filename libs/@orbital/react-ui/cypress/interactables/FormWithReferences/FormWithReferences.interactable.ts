@@ -40,6 +40,11 @@ interface FormWithReferencesOptions extends AutoFormOptions {
    * Optional object type for reference fields
    */
   objectType?: string;
+
+  /**
+   * Optional parent element to scope the form within
+   */
+  parentElement?: () => Cypress.Chainable<JQuery<HTMLElement>>;
 }
 
 /**
@@ -65,7 +70,10 @@ class FormWithReferencesInteractable<
     objectType: string = "Unknown",
     parentElement?: () => Cypress.Chainable<JQuery<HTMLElement>>
   ) {
-    super(formTestId, parentElement);
+    super({
+      dataTestId: formTestId,
+      parentElement,
+    });
     this.objectType = objectType;
 
     // Override the inputs property with a new Proxy that handles reference fields
@@ -92,7 +100,7 @@ class FormWithReferencesInteractable<
                 return (...args: any[]) => {
                   return cy.then(() => {
                     // Get the form element
-                    return this.getElement().then(($form) => {
+                    return this.get({}).then(($form) => {
                       // Look for fields with data-testid that includes ReferenceSingleField or ReferenceArrayField
                       // Use more flexible selectors to match the actual elements in the DOM
                       // Also include the case where objectType might be undefined
@@ -125,20 +133,18 @@ class FormWithReferencesInteractable<
                         interactable = belongsToField(
                           prop,
                           this.objectType,
-                          () => this.getElement()
+                          () => this.get({})
                         );
                       } else if (isArrayRef) {
                         cy.log(
                           `Creating ReferenceArrayFieldInteractable for "${prop}"`
                         );
                         interactable = hasManyField(prop, this.objectType, () =>
-                          this.getElement()
+                          this.get({})
                         );
                       } else {
                         cy.log(`Creating standard input field for "${prop}"`);
-                        interactable = inputField(prop, () =>
-                          this.getElement()
-                        );
+                        interactable = inputField(prop, () => this.get({}));
                       }
 
                       // Call the method on the interactable with the provided arguments
@@ -180,7 +186,7 @@ class FormWithReferencesInteractable<
         if (typeof value === "boolean") {
           cy.log(`Handling boolean value for ${key}: ${value}`);
           // Get the checkbox element
-          this.getElement()
+          this.get({})
             .find(`[name="${key}"]`)
             .then(($el) => {
               // Check if it's a checkbox
@@ -207,7 +213,7 @@ class FormWithReferencesInteractable<
           cy.log(`Handling array value for ${key}: ${value}`);
 
           // Check if this is a reference array field
-          this.getElement()
+          this.get({})
             .find(
               `[data-testid*="${this.objectType}ReferenceArrayField"][data-field-name="${key}"]`
             )
@@ -260,7 +266,7 @@ class FormWithReferencesInteractable<
     }
 
     // Get the form element
-    this.getElement().then(($form) => {
+    this.get({}).then(($form) => {
       cy.log(`Form found, submitting it`);
 
       // Find the submit button and click it directly
@@ -293,10 +299,15 @@ function formWithReferences<T extends Record<string, any>>(
       objectType
     );
   } else {
+    // Make sure formTestId is defined
+    if (!formTestIdOrOptions.dataTestId) {
+      throw new Error("dataTestId is required in FormWithReferencesOptions");
+    }
+
     return new FormWithReferencesInteractable<T>(
-      formTestIdOrOptions.formTestId,
+      formTestIdOrOptions.dataTestId,
       formTestIdOrOptions.objectType || objectType,
-      formTestIdOrOptions.parent
+      formTestIdOrOptions.parentElement
     );
   }
 }

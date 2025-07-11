@@ -5,6 +5,8 @@ import Typography from "@mui/material/Typography";
 import { mount } from "cypress/react";
 import React, { useState } from "react";
 import { PopperInteractable } from "./Popper.interactable";
+// Type assertion to fix compatibility issue between React 18 and Material UI v7
+const PopperComponent = Popper as React.ComponentType<any>;
 
 /**
  * Test implementation of PopperInteractable for testing purposes
@@ -211,7 +213,7 @@ const PopperTestComponent: React.FC = () => {
       >
         Toggle Popper
       </Button>
-      <Popper
+      <PopperComponent
         id={id}
         open={open}
         anchorEl={anchorEl}
@@ -231,7 +233,7 @@ const PopperTestComponent: React.FC = () => {
             This is the popper content.
           </Typography>
         </div>
-      </Popper>
+      </PopperComponent>
     </div>
   );
 };
@@ -275,7 +277,7 @@ const MultiplePopperTestComponent: React.FC = () => {
         </Button>
       </div>
 
-      <Popper
+      <PopperComponent
         id={id1}
         open={open1}
         anchorEl={anchorEl1}
@@ -296,9 +298,9 @@ const MultiplePopperTestComponent: React.FC = () => {
             This is popper 1 content.
           </Typography>
         </div>
-      </Popper>
+      </PopperComponent>
 
-      <Popper
+      <PopperComponent
         id={id2}
         open={open2}
         anchorEl={anchorEl2}
@@ -319,7 +321,7 @@ const MultiplePopperTestComponent: React.FC = () => {
             This is popper 2 content.
           </Typography>
         </div>
-      </Popper>
+      </PopperComponent>
     </div>
   );
 };

@@ -24,17 +24,20 @@ export class ChildrenFieldInteractable extends ObjectSelectorInteractable {
     objectId?: string,
     index?: number
   ) {
-    // Pass the correct data-testid prefix to the ObjectSelectorInteractable
-    // and set multiple to true since this is a multi-select field
+    // Construct a data-testid that includes the field type and name
+    const dataTestId = `ChildrenField-${fieldName}`;
+
+    // Pass all required parameters to the ObjectSelectorInteractable constructor
     super(
-      fieldName,
+      dataTestId,
       parentElement,
-      "ChildrenField",
-      true,
+      "", // prefix
+      true, // multiple (children fields are multi-select)
       objectType,
       objectId,
       index
     );
+
     this.objectType = objectType;
   }
 }

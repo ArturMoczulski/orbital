@@ -5,7 +5,10 @@
 
 import { z } from "zod";
 import { AutoFormInteractable } from "../../AutoForm/AutoForm.interactable";
-import { DialogInteractable } from "../Dialog.interactable";
+import {
+  DialogInteractable,
+  DialogInteractableOptions,
+} from "../Dialog.interactable";
 
 /**
  * Type alias for any Zod object schema
@@ -13,31 +16,39 @@ import { DialogInteractable } from "../Dialog.interactable";
 export type ZodObjectSchema = z.ZodObject<any, any, any, any>;
 
 /**
+ * Options for FormDialogInteractable
+ */
+export interface FormDialogInteractableOptions
+  extends DialogInteractableOptions {
+  /**
+   * The data-testid of the form within the dialog
+   */
+  formTestId: string;
+
+  /**
+   * The Zod schema for the form
+   */
+  schema: ZodObjectSchema;
+}
+
+/**
  * FormDialogInteractable class represents a dialog with a form
  * and provides methods for interacting with the form
  */
 export class FormDialogInteractable<
   Schema extends ZodObjectSchema = ZodObjectSchema,
-> extends DialogInteractable<string> {
+> extends DialogInteractable {
   private readonly formTestId: string;
   private readonly schema: Schema;
 
   /**
    * Constructor for FormDialogInteractable
-   * @param componentType The data-testid of the dialog
-   * @param formTestId The data-testid of the form within the dialog
-   * @param schema The Zod schema for the form
-   * @param parentElement Optional parent element to scope the dialog within
+   * @param options The options for the FormDialogInteractable
    */
-  constructor(
-    componentType: string,
-    formTestId: string,
-    schema: Schema,
-    parentElement?: () => Cypress.Chainable<JQuery<HTMLElement>>
-  ) {
-    super(componentType, parentElement);
-    this.formTestId = formTestId;
-    this.schema = schema;
+  constructor(options: FormDialogInteractableOptions) {
+    super(options);
+    this.formTestId = options.formTestId;
+    this.schema = options.schema as Schema;
   }
 
   /**
@@ -46,21 +57,19 @@ export class FormDialogInteractable<
    */
   form(): AutoFormInteractable<z.infer<Schema>> {
     // Make sure the dialog is visible before trying to get the form
-    this.getElement().should("be.visible");
+    this.get({}).should("be.visible");
 
     // Log the form test ID for debugging
     cy.log(`Looking for form with test ID: ${this.formTestId}`);
 
     // Verify the form exists within the dialog
-    this.getElement()
-      .find(`[data-testid="${this.formTestId}"]`)
-      .should("exist");
+    this.get({}).find(`[data-testid="${this.formTestId}"]`).should("exist");
 
-    // Create and return the AutoFormInteractable with a direct parent function
-    // that always gets a fresh element to avoid stale element references
-    return new AutoFormInteractable<z.infer<Schema>>(this.formTestId, () =>
-      this.getElement()
-    );
+    // Create and return the AutoFormInteractable with the correct options
+    return new AutoFormInteractable({
+      dataTestId: this.formTestId,
+      parentElement: () => this.get({}),
+    });
   }
 
   /**
@@ -77,3 +86,5 @@ export class FormDialogInteractable<
     return this;
   }
 }
+
+export default FormDialogInteractable;

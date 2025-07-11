@@ -13,7 +13,7 @@ import { CypressInteractable } from "../Cypress.interactable";
  * ObjectFieldsetInteractable class represents an ObjectFieldset component
  * and provides methods for interacting with it and its fields
  */
-export class ObjectFieldsetInteractable extends CypressInteractable<string> {
+export class ObjectFieldsetInteractable extends CypressInteractable {
   /**
    * The object type for this fieldset (e.g., "User", "Post", "Address")
    */
@@ -42,10 +42,13 @@ export class ObjectFieldsetInteractable extends CypressInteractable<string> {
     objectId?: string,
     index?: number
   ) {
-    super(objectType, parentElement);
+    super({
+      dataTestId: "ObjectFieldset",
+      parentElement,
+      index,
+    });
     this.objectType = objectType;
     this.objectId = objectId;
-    this.index = index;
   }
 
   /**
@@ -62,9 +65,7 @@ export class ObjectFieldsetInteractable extends CypressInteractable<string> {
     return `[data-testid="ObjectFieldset"][data-object-type="${this.objectType}"]`;
   }
 
-  override getElement(): Cypress.Chainable<JQuery<HTMLElement>> {
-    return super.getElement().eq(this.index ? this.index : 0);
-  }
+  // The get() method from CypressInteractable already handles the index
 
   /**
    * Get a field within the fieldset by name
@@ -85,7 +86,7 @@ export class ObjectFieldsetInteractable extends CypressInteractable<string> {
     ) => T
   ): T {
     // Create a parent element function that returns the fieldset element
-    const parentElement = () => this.getElement();
+    const parentElement = () => this.get({});
 
     // Use the inputField factory to create the appropriate field interactable
     return inputField<T>(fieldName, parentElement, customInteractable);
@@ -96,7 +97,7 @@ export class ObjectFieldsetInteractable extends CypressInteractable<string> {
    * @returns A chainable that resolves to an array of field names
    */
   getFieldNames(): Cypress.Chainable<string[]> {
-    return this.getElement().then(($fieldset) => {
+    return this.get({}).then(($fieldset) => {
       // Find all input elements with a name attribute
       const inputNames: string[] = [];
 
@@ -128,7 +129,7 @@ export class ObjectFieldsetInteractable extends CypressInteractable<string> {
    * @returns A chainable that resolves to a boolean
    */
   hasField(fieldName: string): Cypress.Chainable<boolean> {
-    return this.getElement().then(($fieldset) => {
+    return this.get({}).then(($fieldset) => {
       // Check for standard input elements
       const hasStandardInput =
         $fieldset.find(
@@ -161,7 +162,7 @@ export class ObjectFieldsetInteractable extends CypressInteractable<string> {
    */
   getFieldValue(fieldName: string): Cypress.Chainable<any> {
     // Get the field element
-    return this.getElement()
+    return this.get({})
       .find(
         `input[name="${fieldName}"], select[name="${fieldName}"], textarea[name="${fieldName}"]`
       )
@@ -222,7 +223,7 @@ export class ObjectFieldsetInteractable extends CypressInteractable<string> {
 
     // First get the element
     return (
-      this.getElement()
+      this.get({})
         .then(($el) => {
           // First try to get the attribute directly from the element
           objectTypeResult = $el.attr("data-object-type") || undefined;
@@ -260,7 +261,7 @@ export class ObjectFieldsetInteractable extends CypressInteractable<string> {
 
     // First get the element
     return (
-      this.getElement()
+      this.get({})
         .then(($el) => {
           // First try to get the attribute directly from the element
           objectIdResult = $el.attr("data-object-id") || undefined;

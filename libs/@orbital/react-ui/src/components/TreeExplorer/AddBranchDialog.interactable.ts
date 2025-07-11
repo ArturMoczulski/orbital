@@ -7,7 +7,7 @@ import { z } from "zod";
 import {
   FormDialogInteractable,
   ZodObjectSchema,
-} from "../../../cypress/interactables/Dialog/FormDialog/FormDialog.interactable";
+} from "../../../cypress/interactables/MaterialUI/FormDialog/FormDialog.interactable";
 import { TreeExplorerInteractable } from "./TreeExplorer.interactable";
 
 /**
@@ -29,27 +29,30 @@ export class AddBranchDialogInteractable<
     explorer: TreeExplorerInteractable<CustomActions, Schema>,
     schema: Schema
   ) {
-    super(
-      "TreeExplorerAddDialog", // Dialog test ID
-      "AddForm", // Form test ID
-      schema // Schema for the form
-    );
+    super({
+      dataTestId: "TreeExplorerAddDialog", // Dialog test ID
+      formTestId: "AddForm", // Form test ID
+      schema, // Schema for the form
+      componentName: "Dialog",
+    });
     this.explorer = explorer;
   }
 
   /**
    * Override the open method to use the appropriate button based on state
    */
-  override open(): this {
+  override open(): Cypress.Chainable<void> {
     // Check if we're in empty state and use the appropriate button
-    this.explorer.get().then(($el) => {
+    return this.explorer.get().then(($el) => {
       if ($el.find('[data-testid="EmptyState"]').length > 0) {
         this.explorer.buttons.addEmpty().click({ force: true });
       } else {
         this.explorer.buttons.add().click({ force: true });
       }
+
+      // Return a chainable to satisfy TypeScript and maintain proper chaining
+      return cy.wrap(null).then(() => {}) as unknown as Cypress.Chainable<void>;
     });
-    return this;
   }
 
   /**

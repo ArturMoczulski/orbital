@@ -44,30 +44,36 @@ class TestFormDialogInteractable<
     schema: Schema = basicSchema as unknown as Schema,
     parentElement?: () => Cypress.Chainable<JQuery<HTMLElement>>
   ) {
-    super("TestFormDialog", "TestForm", schema, parentElement);
+    super({
+      dataTestId: "TestFormDialog",
+      formTestId: "TestForm",
+      schema,
+      parentElement,
+      componentName: "Dialog",
+    });
   }
 
   /**
    * Override the open method for testing
    */
-  override open(): this {
+  override open(): Cypress.Chainable<void> {
     cy.get('[data-testid="OpenFormDialogButton"]').click();
-    return this;
+    return cy.wrap(null).then(() => {}) as unknown as Cypress.Chainable<void>;
   }
 
   /**
    * Override the close method for testing
    */
-  override close(): this {
+  override close(): Cypress.Chainable<void> {
     cy.get('[data-testid="CloseFormDialogButton"]').click();
-    return this;
+    return cy.wrap(null).then(() => {}) as unknown as Cypress.Chainable<void>;
   }
 
   /**
    * Custom method to get the form title
    */
   getFormTitle(): Cypress.Chainable<string> {
-    return this.getElement().find('[data-testid="FormTitle"]').invoke("text");
+    return this.get({}).find('[data-testid="FormTitle"]').invoke("text");
   }
 
   /**
@@ -78,7 +84,7 @@ class TestFormDialogInteractable<
     this.form().fill(data);
 
     // Click submit button
-    this.getElement().find('[data-testid="SubmitButton"]').click();
+    this.get({}).find('[data-testid="SubmitButton"]').click();
 
     // Return this for chaining
     return this;
@@ -92,23 +98,29 @@ class ComplexFormDialogInteractable extends FormDialogInteractable<
   typeof complexSchema
 > {
   constructor(parentElement?: () => Cypress.Chainable<JQuery<HTMLElement>>) {
-    super("ComplexFormDialog", "ComplexForm", complexSchema, parentElement);
+    super({
+      dataTestId: "ComplexFormDialog",
+      formTestId: "ComplexForm",
+      schema: complexSchema,
+      parentElement,
+      componentName: "Dialog",
+    });
   }
 
   /**
    * Override the open method for testing
    */
-  override open(): this {
+  override open(): Cypress.Chainable<void> {
     cy.get('[data-testid="OpenComplexFormDialogButton"]').click();
-    return this;
+    return cy.wrap(null).then(() => {}) as unknown as Cypress.Chainable<void>;
   }
 
   /**
    * Override the close method for testing
    */
-  override close(): this {
+  override close(): Cypress.Chainable<void> {
     cy.get('[data-testid="CloseComplexFormDialogButton"]').click();
-    return this;
+    return cy.wrap(null).then(() => {}) as unknown as Cypress.Chainable<void>;
   }
 }
 
@@ -195,7 +207,7 @@ describe("FormDialogInteractable", () => {
       const dialog = testFormDialog();
 
       // Verify the dialog is visible
-      dialog.isOpen().should("eq", true);
+      dialog.isOpened().should("eq", true);
 
       // Verify the form exists directly first
       cy.get('[data-testid="TestFormDialog"]')
@@ -206,8 +218,8 @@ describe("FormDialogInteractable", () => {
       const form = dialog.form();
 
       // Verify we can interact with form elements
-      form.getElement().find('[data-testid="name"]').should("exist");
-      form.getElement().find('[data-testid="SubmitButton"]').should("exist");
+      form.get({}).find('[data-testid="name"]').should("exist");
+      form.get({}).find('[data-testid="SubmitButton"]').should("exist");
     });
 
     it("should fill and submit the form", () => {
@@ -225,7 +237,7 @@ describe("FormDialogInteractable", () => {
 
       // Attach the spy to the form
       dialog
-        .getElement()
+        .get({})
         .find("form")
         .then(($form) => {
           $form.on("submit", (e) => {
@@ -266,7 +278,7 @@ describe("FormDialogInteractable", () => {
         "display",
         "none"
       );
-      dialog.isOpen().should("eq", false);
+      dialog.isOpened().should("eq", false);
     });
 
     it("should use custom form methods", () => {
@@ -287,7 +299,7 @@ describe("FormDialogInteractable", () => {
 
       // Attach the spy to the form
       dialog
-        .getElement()
+        .get({})
         .find("form")
         .then(($form) => {
           $form.on("submit", (e) => {
@@ -470,7 +482,7 @@ describe("FormDialogInteractable", () => {
 
       // Attach the spy to the form
       dialog
-        .getElement()
+        .get({})
         .find("form")
         .then(($form) => {
           $form.on("submit", (e) => {
@@ -525,7 +537,7 @@ describe("FormDialogInteractable", () => {
         "display",
         "none"
       );
-      dialog.isOpen().should("eq", false);
+      dialog.isOpened().should("eq", false);
     });
   });
 
@@ -640,7 +652,7 @@ describe("FormDialogInteractable", () => {
       const dialog = testFormDialog();
 
       // Verify the dialog is initially open (we mounted it with display: block)
-      dialog.isOpen().should("eq", true);
+      dialog.isOpened().should("eq", true);
 
       // Submit with empty required field - use force: true
       cy.get('[data-testid="SubmitButton"]')
@@ -653,7 +665,7 @@ describe("FormDialogInteractable", () => {
         .should("have.text", "Name is required");
 
       // Verify the dialog is still open
-      dialog.isOpen().should("eq", true);
+      dialog.isOpened().should("eq", true);
 
       // Now submit with valid data - use force: true
       cy.get('[data-testid="name"]')
@@ -670,7 +682,7 @@ describe("FormDialogInteractable", () => {
         "display",
         "none"
       );
-      dialog.isOpen().should("eq", false);
+      dialog.isOpened().should("eq", false);
     });
 
     it("should handle different schema types", () => {
