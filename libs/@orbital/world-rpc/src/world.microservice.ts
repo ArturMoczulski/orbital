@@ -2,6 +2,7 @@ import { Injectable, Inject } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
 import { Microservice } from '@orbital/microservices';
 import { Area, AreaProps, WithId, WithoutId, World } from '@orbital/core';
+import { IdentityAccount } from '@orbital/identity-types';
 
 /**
  * Type Definitions
@@ -40,6 +41,23 @@ interface AreasController {
   }): Promise<Area[] | null>;
 }
 
+interface IdentitiesController {
+  create(dto: WithoutId<IdentityAccount> | WithoutId<IdentityAccount>[]): Promise<any | null>;
+  find(payload: {
+    filter?: Record<string, any>;
+    projection?: Record<string, any>;
+    options?: Record<string, any>;
+  }): Promise<any | null>;
+  findById(payload: { id: string; projection?: Record<string, any> }): Promise<any | null>;
+  update(data: WithId<IdentityAccount> | WithId<IdentityAccount>[]): Promise<any | null>;
+  delete(ids: string | string[]): Promise<any | null>;
+  findByCharacterId(payload: {
+    characterId: string;
+    projection?: Record<string, any>;
+    options?: Record<string, any>;
+  }): Promise<IdentityAccount[] | null>;
+}
+
 interface WorldsController {
   create(dto: WithoutId<World> | WithoutId<World>[]): Promise<any | null>;
   find(payload: {
@@ -68,6 +86,10 @@ export class WorldMicroservice extends Microservice {
    * areas controller proxy
    */
   public readonly areas: AreasController;
+  /**
+   * identities controller proxy
+   */
+  public readonly identities: IdentitiesController;
   /**
    * worlds controller proxy
    */
@@ -119,6 +141,36 @@ export class WorldMicroservice extends Microservice {
     options?: Record<string, any>;
   }) => {
         const result = await this.request<Area[]>('world.AreasMicroserviceController.findByTags', payload);
+        return result || [];
+      },
+    };
+    // Initialize identities controller
+    this.identities = {
+      create: async (dto: WithoutId<IdentityAccount> | WithoutId<IdentityAccount>[]) => {
+        return this.request<any>('world.IdentitiesMicroserviceController.create', dto);
+      },
+      find: async (payload: {
+    filter?: Record<string, any>;
+    projection?: Record<string, any>;
+    options?: Record<string, any>;
+  }) => {
+        return this.request<any>('world.IdentitiesMicroserviceController.find', payload);
+      },
+      findById: async (payload: { id: string; projection?: Record<string, any> }) => {
+        return this.request<any>('world.IdentitiesMicroserviceController.findById', payload);
+      },
+      update: async (data: WithId<IdentityAccount> | WithId<IdentityAccount>[]) => {
+        return this.request<any>('world.IdentitiesMicroserviceController.update', data);
+      },
+      delete: async (ids: string | string[]) => {
+        return this.request<any>('world.IdentitiesMicroserviceController.delete', ids);
+      },
+      findByCharacterId: async (payload: {
+    characterId: string;
+    projection?: Record<string, any>;
+    options?: Record<string, any>;
+  }) => {
+        const result = await this.request<IdentityAccount[]>('world.IdentitiesMicroserviceController.findByCharacterId', payload);
         return result || [];
       },
     };

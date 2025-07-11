@@ -13,6 +13,7 @@ import { OrbitalMicroservices } from "@orbital/contracts";
 import { PassThroughRpcExceptionFilter } from "@orbital/microservices";
 import { AreasModule } from "./areas/areas.module";
 import { DatabaseModule } from "./database.module";
+import { IdentitiesModule } from "./identities/identities.module.js";
 import { WorldsModule } from "./worlds/worlds.module";
 
 @Module({
@@ -42,6 +43,7 @@ import { WorldsModule } from "./worlds/worlds.module";
     DatabaseModule,
     WorldsModule,
     AreasModule,
+    IdentitiesModule,
   ],
   providers: [
     EventEmitter2,

@@ -36,6 +36,8 @@
     "@orbital/bulk-operations": "workspace:^1.0.0",
     "@orbital/contracts": "workspace:^1.0.0",
     "@orbital/core": "workspace:^1.0.0",
+    "@orbital/identity-typegoose": "workspace:*",
+    "@orbital/identity-types": "workspace:*",
     "@orbital/microservices": "workspace:^1.0.0",
     "@orbital/nest": "workspace:^1.0.0",
     "@orbital/typegoose": "workspace:^0.1.0",

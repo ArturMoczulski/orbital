@@ -12,4 +12,9 @@ export enum OrbitalMicroservices {
    * World microservice
    */
   World = "world",
+
+  /**
+   * Identity microservice
+   */
+  Identity = "identity",
 }
