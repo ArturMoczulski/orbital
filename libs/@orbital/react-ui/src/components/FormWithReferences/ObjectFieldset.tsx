@@ -2,7 +2,14 @@ import React, { useMemo } from "react";
 import { context as uniformsContext } from "uniforms";
 import { ZodBridge } from "uniforms-bridge-zod";
 import { AutoField } from "uniforms-mui";
+import BelongsToField from "./BelongsToField";
+import HasManyField from "./HasManyField";
 import { useObject } from "./ObjectProvider";
+import {
+  BELONGS_TO_FIELD,
+  createReferenceFieldsComponentDetector,
+  HAS_MANY_FIELD,
+} from "./ReferenceField";
 
 // Import Material-UI components from their specific paths
 import Card from "@mui/material/Card";
@@ -97,6 +104,12 @@ export function ObjectFieldset({
     updateData,
   } = useObject(objectKey);
 
+  // Register custom field types with Uniforms
+  const fieldTypes = {
+    [BELONGS_TO_FIELD]: BelongsToField,
+    [HAS_MANY_FIELD]: HasManyField,
+  };
+
   // Create a uniforms-compatible context
   const formContext = useMemo(() => {
     return {
@@ -143,8 +156,14 @@ export function ObjectFieldset({
         }
         return value;
       },
+
+      // Register custom field types
+      uniforms: {
+        fieldTypes,
+        objectType,
+      },
     };
-  }, [schema, data, updateData, objectKey, showInlineError]);
+  }, [schema, data, updateData, objectKey, showInlineError, objectType]);
 
   // Get field names from schema if not provided
   const fieldNames = useMemo(() => {
@@ -218,15 +237,20 @@ export function ObjectFieldset({
       {/* Provide the uniforms context */}
       {/* @ts-ignore - The context value doesn't match exactly what uniforms expects */}
       <uniformsContext.Provider value={formContext}>
-        {/* Render fields */}
-        {filteredFields.map((field: string) => (
-          <AutoField
-            key={field}
-            name={field}
-            showInlineError={showInlineError}
-          />
-        ))}
-        {children}
+        {/* Set up component detector context for reference fields */}
+        <AutoField.componentDetectorContext.Provider
+          value={createReferenceFieldsComponentDetector(schema, objectType)}
+        >
+          {/* Render fields */}
+          {filteredFields.map((field: string) => (
+            <AutoField
+              key={field}
+              name={field}
+              showInlineError={showInlineError}
+            />
+          ))}
+          {children}
+        </AutoField.componentDetectorContext.Provider>
       </uniformsContext.Provider>
     </div>
   );

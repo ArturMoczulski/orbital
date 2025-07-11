@@ -1,14 +1,24 @@
-import { ReferenceMetadata } from "@orbital/core/src/zod/reference/reference";
+import {
+  ReferenceMetadata,
+  RelationshipType,
+} from "@orbital/core/src/zod/reference/reference";
 import { camelCase, startCase } from "lodash";
 import { ZodBridge } from "uniforms-bridge-zod";
+import { AutoField } from "uniforms-mui";
 import { z } from "zod";
 import { ObjectSelector } from "../ObjectSelector/ObjectSelector";
+import BelongsToField from "./BelongsToField";
+import HasManyField from "./HasManyField";
 import { useObject } from "./ObjectProvider";
 import { useObjectSchema } from "./ObjectSchemaContext";
 import {
   inferObjectTypeFromSchema,
   ZodReferencesBridge,
 } from "./ZodReferencesBridge";
+
+// Component names as constants to avoid typos and make refactoring easier
+export const HAS_MANY_FIELD = "HasManyField";
+export const BELONGS_TO_FIELD = "BelongsToField";
 
 export type ReferenceFieldProps = {
   // Common props
@@ -226,6 +236,7 @@ export function ReferenceField({
       data-testid={
         dataTestId || `${multiple ? "ChildrenField" : "ParentField"}`
       }
+      data-field-name={name}
       objectType={objectType}
       objectId={objectId !== undefined ? objectId : contextObjectId}
     />
@@ -233,3 +244,140 @@ export function ReferenceField({
 }
 
 export default ReferenceField;
+
+/**
+ * Creates a component detector for reference fields
+ * This can be used by both FormWithReferences and ObjectFieldset
+ *
+ * @param schema The schema for the form or object
+ * @param objectType The type of object this form is for
+ * @returns A component detector function compatible with AutoField.componentDetectorContext
+ */
+/**
+ * Creates a component detector for reference fields
+ * This can be used by both FormWithReferences and ObjectFieldset
+ *
+ * @param schema The schema for the form or object
+ * @param objectType The type of object this form is for
+ * @returns A component detector function compatible with AutoField.componentDetectorContext
+ */
+export function createReferenceFieldsComponentDetector(
+  schema: z.ZodType<any> | ZodBridge<any> | ZodReferencesBridge<any>,
+  objectType: string
+) {
+  // Check if schema is a ZodReferencesBridge
+  const isZodReferencesBridge = schema instanceof ZodReferencesBridge;
+
+  // Use the same type signature as AutoField.defaultComponentDetector
+  return (props: any, uniforms: any) => {
+    const fieldName = props.name;
+
+    // 1. First check if the field has a reference in its uniforms metadata
+    if (props.field?.uniforms?.component === BELONGS_TO_FIELD) {
+      return (fieldProps: any) => (
+        <BelongsToField
+          {...fieldProps}
+          reference={props.field?.reference}
+          objectType={objectType}
+          schema={schema}
+        />
+      );
+    }
+
+    if (props.field?.uniforms?.component === HAS_MANY_FIELD) {
+      return (fieldProps: any) => (
+        <HasManyField
+          {...fieldProps}
+          reference={props.field?.reference}
+          objectType={objectType}
+          schema={schema}
+        />
+      );
+    }
+
+    // 2. For ZodReferencesBridge, try to get field info directly
+    if (isZodReferencesBridge) {
+      try {
+        // Use type assertion to access getField
+        const bridgeSchema = schema as ZodReferencesBridge<any>;
+        const fieldInfo = bridgeSchema.getField(fieldName);
+
+        // Check if the field has reference metadata and component info
+        if (fieldInfo?.reference && fieldInfo?.uniforms?.component) {
+          const referenceType = fieldInfo.uniforms.component;
+
+          if (referenceType === BELONGS_TO_FIELD) {
+            return (fieldProps: any) => (
+              <BelongsToField
+                {...fieldProps}
+                reference={fieldInfo.reference}
+                objectType={objectType}
+                schema={schema}
+              />
+            );
+          } else if (referenceType === HAS_MANY_FIELD) {
+            return (fieldProps: any) => (
+              <HasManyField
+                {...fieldProps}
+                reference={fieldInfo.reference}
+                objectType={objectType}
+                schema={schema}
+              />
+            );
+          }
+        }
+      } catch (e) {
+        // Silently continue to the next detection method
+      }
+    }
+
+    // 3. If we have a getReferences method, try to use it as a fallback
+    if (
+      "getReferences" in schema &&
+      typeof schema.getReferences === "function"
+    ) {
+      try {
+        // Use type assertion
+        const schemaWithReferences = schema as unknown as {
+          getReferences(): Record<string, any>;
+        };
+        const references = schemaWithReferences.getReferences();
+
+        if (references && references[fieldName]) {
+          // Determine the reference type based on the relationship type
+          // Use constants for consistency
+          const referenceType =
+            references[fieldName].type === RelationshipType.HAS_MANY ||
+            references[fieldName].type === "HAS_MANY"
+              ? HAS_MANY_FIELD
+              : BELONGS_TO_FIELD;
+
+          if (referenceType === BELONGS_TO_FIELD) {
+            return (fieldProps: any) => (
+              <BelongsToField
+                {...fieldProps}
+                reference={references[fieldName]}
+                objectType={objectType}
+                schema={schema}
+              />
+            );
+          } else {
+            return (fieldProps: any) => (
+              <HasManyField
+                {...fieldProps}
+                reference={references[fieldName]}
+                objectType={objectType}
+                schema={schema}
+              />
+            );
+          }
+        }
+      } catch (e) {
+        // Silently continue to the default detector
+      }
+    }
+
+    // 4. Fall back to the default component detector
+    return AutoField.defaultComponentDetector(props, uniforms);
+  };
+}

@@ -88,6 +88,15 @@ export class ObjectFieldsetInteractable extends CypressInteractable {
     // Create a parent element function that returns the fieldset element
     const parentElement = () => this.get({});
 
+    // Log for debugging
+    cy.log(`Looking for field: ${fieldName}`);
+    this.get({}).then(($el) => {
+      cy.log(`Fieldset HTML: ${$el.html()}`);
+      cy.log(
+        `Field elements found: ${$el.find(`[data-field-name="${fieldName}"]`).length}`
+      );
+    });
+
     // Use the inputField factory to create the appropriate field interactable
     return inputField<T>(fieldName, parentElement, customInteractable);
   }

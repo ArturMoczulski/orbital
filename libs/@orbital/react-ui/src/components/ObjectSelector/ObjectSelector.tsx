@@ -37,6 +37,7 @@ export type ObjectSelectorProps = {
   // Additional props
   className?: string;
   "data-testid"?: string;
+  "data-field-name"?: string; // Field name for testing
   objectType?: string;
   objectId?: string;
   componentName?: string;
@@ -78,6 +79,7 @@ export function ObjectSelector({
   // Additional props
   className,
   "data-testid": dataTestId,
+  "data-field-name": dataFieldName,
   objectType,
   objectId,
   componentName = "ObjectSelector",
@@ -111,6 +113,7 @@ export function ObjectSelector({
         providerState,
         className,
         "data-testid": dataTestId,
+        "data-field-name": dataFieldName,
       } = adapterProps;
 
       const {
@@ -220,6 +223,7 @@ export function ObjectSelector({
           )}
           className={className}
           data-testid={testId}
+          data-field-name={dataFieldName}
           onInputChange={(_, value) => {
             if (setSearchQuery) {
               setSearchQuery(value);
@@ -257,6 +261,7 @@ export function ObjectSelector({
             providerState={providerState}
             className={className}
             data-testid={testId}
+            data-field-name={dataFieldName}
             objectType={objectType}
             objectId={objectId}
           />
@@ -292,6 +297,7 @@ export function ObjectSelector({
             providerState={providerState}
             className={className}
             data-testid={testId}
+            data-field-name={dataFieldName}
             objectType={objectType}
             objectId={objectId}
           />
@@ -323,6 +329,7 @@ export function ObjectSelector({
             providerState={providerState}
             className={className}
             data-testid={testId}
+            data-field-name={dataFieldName}
             objectType={objectType}
             objectId={objectId}
           />

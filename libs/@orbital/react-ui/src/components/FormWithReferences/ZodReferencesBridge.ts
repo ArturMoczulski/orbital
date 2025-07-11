@@ -78,23 +78,42 @@ export class ZodReferencesBridge<T extends z.ZodType<any, any, any>> {
       let schema: any = this.schema;
 
       // For simple fields, just return the field schema
-      if (path.length === 1 && schema instanceof z.ZodObject) {
-        return schema.shape[name] as z.ZodType<any>;
+      if (path.length === 1) {
+        // Check if schema is a ZodObject with a shape property
+        if (
+          schema &&
+          typeof schema === "object" &&
+          "shape" in schema &&
+          schema.shape &&
+          typeof schema.shape === "object" &&
+          name in schema.shape
+        ) {
+          return schema.shape[name];
+        }
       }
 
       // For nested fields, traverse the schema
       for (const segment of path) {
-        if (schema instanceof z.ZodObject && segment in schema.shape) {
+        if (
+          schema &&
+          typeof schema === "object" &&
+          "shape" in schema &&
+          schema.shape &&
+          typeof schema.shape === "object" &&
+          segment in schema.shape
+        ) {
           schema = schema.shape[segment];
         } else {
           // If we can't find the field, return a generic schema
+          console.log(`Could not find segment ${segment} in schema shape`);
           return z.any();
         }
       }
 
-      return schema as z.ZodType<any>;
+      return schema;
     } catch (error) {
       // If anything goes wrong, return a generic schema
+      console.error(`Error in getSubschema for ${name}:`, error);
       return z.any();
     }
   }
@@ -182,6 +201,89 @@ export class ZodReferencesBridge<T extends z.ZodType<any, any, any>> {
         uniforms: {},
       };
     }
+  }
+
+  // Get all references in the schema
+  getReferences(): Record<string, any> {
+    const references: Record<string, any> = {};
+
+    try {
+      // Get all top-level fields
+      const fields = this.getSubfields();
+      console.log(`Getting references for fields:`, fields);
+
+      // For each field, check if it has a reference
+      for (const field of fields) {
+        try {
+          // First try to get the field info using getField
+          const fieldInfo = this.getField(field);
+          console.log(`Field info for ${field}:`, fieldInfo);
+
+          // If the field has reference metadata from getField, use it
+          if (fieldInfo?.reference) {
+            console.log(
+              `Found reference for ${field} in fieldInfo:`,
+              fieldInfo.reference
+            );
+            references[field] = fieldInfo.reference;
+            continue;
+          }
+
+          // If getField didn't find a reference, try to access the schema directly
+          // This is a more direct approach that bypasses potential issues with getSubschema
+          if (
+            this.schema &&
+            typeof this.schema === "object" &&
+            "shape" in this.schema &&
+            this.schema.shape &&
+            typeof this.schema.shape === "object" &&
+            field in this.schema.shape
+          ) {
+            const fieldSchema = this.schema.shape[
+              field as keyof typeof this.schema.shape
+            ] as z.ZodType<any>;
+            console.log(`Direct field schema for ${field}:`, fieldSchema);
+
+            // Check if fieldSchema has a _def property with a reference
+            if (
+              fieldSchema &&
+              typeof fieldSchema === "object" &&
+              "_def" in fieldSchema &&
+              fieldSchema._def &&
+              typeof fieldSchema._def === "object" &&
+              "reference" in fieldSchema._def
+            ) {
+              const reference = fieldSchema._def.reference as {
+                name: string;
+                type: RelationshipType;
+              };
+              if (reference) {
+                console.log(
+                  `Found reference for ${field} directly in _def:`,
+                  reference
+                );
+
+                // Get the options for this reference
+                const options = this.dependencies?.[reference.name] || [];
+
+                // Add to references with options
+                references[field] = {
+                  ...reference,
+                  options,
+                };
+              }
+            }
+          }
+        } catch (error) {
+          console.error(`Error getting reference for field ${field}:`, error);
+        }
+      }
+    } catch (error) {
+      console.error("Error getting references:", error);
+    }
+
+    console.log(`Final references:`, references);
+    return references;
   }
 
   // Get a validator function that uses parseWithReferences
