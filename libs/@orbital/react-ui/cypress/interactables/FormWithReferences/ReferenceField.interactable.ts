@@ -71,12 +71,12 @@ export class ReferenceFieldInteractable
         this.autocomplete.open();
         this.autocomplete.select(val);
       });
-      return this.getElement();
+      return this.get();
     } else {
       // For single selection
       this.autocomplete.open();
       this.autocomplete.select(value);
-      return this.getElement();
+      return this.get();
     }
   }
 
@@ -84,7 +84,7 @@ export class ReferenceFieldInteractable
    * Get the DOM element for this component
    * This method is required because we're extending FormInputInteractable
    */
-  getElement(): Cypress.Chainable<JQuery<HTMLElement>> {
+  get(): Cypress.Chainable<JQuery<HTMLElement>> {
     return this.autocomplete.get();
   }
 
@@ -152,7 +152,7 @@ export class ReferenceFieldInteractable
   protected isMultipleSelection(): Cypress.Chainable<boolean> {
     return cy.wrap(null).then(() => {
       // First check for chips which is the most reliable visual indicator
-      return this.getElement().then(($el) => {
+      return this.get().then(($el) => {
         // Check for chips (which only appear in multiple selection)
         const hasChips = $el.find(".MuiChip-root").length > 0;
 
@@ -250,6 +250,14 @@ export class ReferenceFieldInteractable
 
   isDisabled(): Cypress.Chainable<boolean> {
     return this.autocomplete.isDisabled();
+  }
+
+  /**
+   * Override getValue to return the actual value (ID) of the selected option
+   * This ensures we get the correct value from the form field
+   */
+  getValue(): Cypress.Chainable<string | string[]> {
+    return this.autocomplete.selected();
   }
 }
 

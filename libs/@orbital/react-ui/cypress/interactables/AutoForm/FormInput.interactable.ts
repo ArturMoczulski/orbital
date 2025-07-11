@@ -54,6 +54,7 @@ export abstract class FormInputInteractable<T> extends CypressInteractable {
   getValue(): Cypress.Chainable<any> {
     return this.get().then(($el) => {
       // For standard inputs, get the value directly
+      debugger;
       return cy.wrap($el.val());
     });
   }

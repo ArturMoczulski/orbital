@@ -4,7 +4,7 @@
 /// <reference types="cypress" />
 
 import { CypressInteractable } from "../../../cypress/interactables/Cypress.interactable";
-import { ZodObjectSchema } from "../../../cypress/interactables/MaterialUI/FormDialog/FormDialog.interactable";
+import { ZodObjectSchema } from "../../../cypress/interactables/FormDialog/FormDialog.interactable";
 import { TreeExplorerInteractable } from "./TreeExplorer.interactable";
 
 /**

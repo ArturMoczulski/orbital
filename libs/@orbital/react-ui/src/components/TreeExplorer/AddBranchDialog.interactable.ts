@@ -7,7 +7,7 @@ import { z } from "zod";
 import {
   FormDialogInteractable,
   ZodObjectSchema,
-} from "../../../cypress/interactables/MaterialUI/FormDialog/FormDialog.interactable";
+} from "../../../cypress/interactables/FormDialog/FormDialog.interactable";
 import { TreeExplorerInteractable } from "./TreeExplorer.interactable";
 
 /**

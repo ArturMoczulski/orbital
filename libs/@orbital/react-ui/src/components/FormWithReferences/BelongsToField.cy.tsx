@@ -280,7 +280,7 @@ describe("BelongsToField Component", () => {
       );
 
       // Verify the field exists and can be interacted with
-      field.getElement().should("exist");
+      field.get().should("exist");
     });
   });
 });

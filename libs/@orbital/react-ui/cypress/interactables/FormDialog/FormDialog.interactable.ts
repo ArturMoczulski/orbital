@@ -4,11 +4,11 @@
 /// <reference types="cypress" />
 
 import { z } from "zod";
-import { AutoFormInteractable } from "../../AutoForm/AutoForm.interactable";
+import { AutoFormInteractable } from "../AutoForm/AutoForm.interactable";
 import {
   DialogInteractable,
   DialogInteractableOptions,
-} from "../Dialog.interactable";
+} from "../MaterialUI/Dialog.interactable";
 
 /**
  * Type alias for any Zod object schema
