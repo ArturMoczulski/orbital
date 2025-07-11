@@ -3,7 +3,7 @@ import { AreaMap } from "@orbital/core/src/types/area-map";
 import { TreeExplorer, useWorld } from "@orbital/react-ui";
 import { useEffect, useState } from "react";
 import {
-  useAreasControllerGetAllQuery,
+  useAreasControllerFindQuery,
   useAreasControllerGetMapQuery,
 } from "../../services/adminApi.generated";
 import { AreaActionsButtons } from "./AreaActionsButtons";
@@ -38,8 +38,8 @@ export default function AreaExplorer({ onSelect }: AreaExplorerProps) {
   // Use the enhanced TreeExplorer with API-based functionality
   return (
     <TreeExplorer<Area>
-      type="Area"
-      schema={AreaSchema}
+      type={Area.name}
+      schema={AreaSchema as any}
       itemActions={(area: Area, defaultActions: React.ReactNode) => (
         <AreaActionsButtons
           area={area}
@@ -52,7 +52,7 @@ export default function AreaExplorer({ onSelect }: AreaExplorerProps) {
       // Custom query function to filter by worldId
       query={() => {
         // Use the built-in query hook
-        const result = useAreasControllerGetAllQuery();
+        const result = useAreasControllerFindQuery({});
 
         // Create a properly typed version of the query result
         const typedResult = result as unknown as {

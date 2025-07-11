@@ -1,18 +1,18 @@
 // PM2 Log Behavior:
 // - Logs are appended by default and not cleared on restart
 // - Log rotation is enabled (max_size: "10M", max_files: 10)
-// - All modes write to the same combined log file (admin.log)
+// - All modes write to the same combined log file (phaser-maps.log)
 // - Both stdout and stderr are merged into a single log file
 // - PM2 also maintains process-specific log files with the process name prefix
 //
 // Process Management:
-// - Only one mode should run at a time (admin, admin-watch, or admin-debug)
+// - Only one mode should run at a time (phaser-maps, phaser-maps-watch, or phaser-maps-debug)
 // - All modes use the same HTTP port (3000)
 // - Each script stops any existing processes before starting
 module.exports = {
   apps: [
     {
-      name: "admin",
+      name: "phaser-maps",
       script: "node",
       args: "server.js",
       watch: false,
@@ -22,14 +22,14 @@ module.exports = {
         PORT: "3000",
       },
       log_date_format: "YYYY-MM-DD HH:mm:ss",
-      error_file: "logs/admin.log",
-      out_file: "logs/admin.log",
+      error_file: "logs/phaser-maps.log",
+      out_file: "logs/phaser-maps.log",
       merge_logs: true,
       max_size: "10M",
       max_files: 10,
     },
     {
-      name: "admin-watch",
+      name: "phaser-maps-watch",
       script: "./node_modules/.bin/next",
       args: "dev",
       watch: false,
@@ -40,14 +40,14 @@ module.exports = {
         DOTENV_CONFIG_PATH: ".env.local",
       },
       log_date_format: "YYYY-MM-DD HH:mm:ss",
-      error_file: "logs/admin.log",
-      out_file: "logs/admin.log",
+      error_file: "logs/phaser-maps.log",
+      out_file: "logs/phaser-maps.log",
       merge_logs: true,
       max_size: "10M",
       max_files: 10,
     },
     {
-      name: "admin-debug",
+      name: "phaser-maps-debug",
       script: "./node_modules/.bin/next",
       args: "dev",
       node_args: "--inspect=localhost:9231",
@@ -59,8 +59,8 @@ module.exports = {
         DOTENV_CONFIG_PATH: ".env.local",
       },
       log_date_format: "YYYY-MM-DD HH:mm:ss",
-      error_file: "logs/admin.log",
-      out_file: "logs/admin.log",
+      error_file: "logs/phaser-maps.log",
+      out_file: "logs/phaser-maps.log",
       merge_logs: true,
       max_size: "10M",
       max_files: 10,

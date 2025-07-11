@@ -1,7 +1,8 @@
 import { z } from "zod";
 import { ZodSchema } from "../decorators/zod-schema.decorator";
 import { generateUUID } from "../utils/data-generators";
-import { BaseObject, OptionalId } from "./base-object";
+import type { OptionalId } from "./base-object";
+import { BaseObject } from "./base-object";
 /**
  * Interface for objects that have a unique identifier
  */

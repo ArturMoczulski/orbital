@@ -6340,6 +6340,7 @@ __metadata:
     "@mui/system": "npm:^7.1.1"
     "@mui/utils": "npm:^7.1.1"
     "@mui/x-tree-view": "npm:^8.5.3"
+    "@orbital/core": "workspace:*"
     "@orbital/phaser-extended-mocks": "workspace:*"
     "@orbital/phaser-ui": "workspace:*"
     "@orbital/react-ui": "workspace:*"

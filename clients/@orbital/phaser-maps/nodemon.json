@@ -1,9 +1,0 @@
-{
-  "watch": [
-    "./",
-    "../shared/phaser-ui/src"
-  ],
-  "ext": "ts,tsx,js,jsx,json,css",
-  "exec": "yarn run dotenv -e .env.local next dev",
-  "legacyWatch": true
-}

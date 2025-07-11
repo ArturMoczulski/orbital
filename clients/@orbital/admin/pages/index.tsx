@@ -6,7 +6,7 @@ import { WorldExplorer } from "@orbital/react-ui";
 import dynamic from "next/dynamic";
 import { useState } from "react";
 import AreaExplorer from "../components/AreaExplorer/AreaExplorer";
-import { useAreasControllerGetByIdQuery } from "../services/adminApi.generated";
+import { useAreasControllerFindByIdQuery } from "../services/adminApi.generated";
 
 // Dynamically load PhaserClient without SSR
 const PhaserClient = dynamic(() => import("../components/PhaserClient"), {
@@ -27,7 +27,7 @@ export default function ExplorerPage() {
     data: area,
     isLoading,
     error,
-  } = useAreasControllerGetByIdQuery(
+  } = useAreasControllerFindByIdQuery(
     { _id: selectedAreaId! },
     { skip: !selectedAreaId }
   );

@@ -383,6 +383,285 @@
           "worlds"
         ]
       }
+    },
+    "/identities": {
+      "get": {
+        "operationId": "IdentitiesController_find",
+        "parameters": [
+          {
+            "name": "characterId",
+            "required": false,
+            "in": "query",
+            "description": "Filter identity accounts by character ID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Returns all identity accounts"
+          }
+        },
+        "summary": "Get all identity accounts",
+        "tags": [
+          "identities"
+        ]
+      },
+      "post": {
+        "operationId": "IdentitiesController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateIdentityAccountDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "The identity account has been successfully created."
+          }
+        },
+        "summary": "Create a new identity account",
+        "tags": [
+          "identities"
+        ]
+      }
+    },
+    "/identities/{_id}": {
+      "get": {
+        "operationId": "IdentitiesController_findById",
+        "parameters": [
+          {
+            "name": "_id",
+            "required": true,
+            "in": "path",
+            "description": "The ID of the identity account to retrieve",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Returns the identity account with the specified ID"
+          },
+          "404": {
+            "description": "Identity account not found"
+          }
+        },
+        "summary": "Get identity account by ID",
+        "tags": [
+          "identities"
+        ]
+      },
+      "put": {
+        "operationId": "IdentitiesController_update",
+        "parameters": [
+          {
+            "name": "_id",
+            "required": true,
+            "in": "path",
+            "description": "The ID of the identity account to update",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateIdentityAccountDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The identity account has been successfully updated."
+          }
+        },
+        "summary": "Update an existing identity account",
+        "tags": [
+          "identities"
+        ]
+      },
+      "delete": {
+        "operationId": "IdentitiesController_delete",
+        "parameters": [
+          {
+            "name": "_id",
+            "required": true,
+            "in": "path",
+            "description": "The ID of the identity account to delete",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The identity account has been successfully deleted"
+          },
+          "404": {
+            "description": "Identity account not found"
+          }
+        },
+        "summary": "Delete an identity account",
+        "tags": [
+          "identities"
+        ]
+      }
+    },
+    "/characters": {
+      "get": {
+        "operationId": "CharactersController_find",
+        "parameters": [
+          {
+            "name": "locationId",
+            "required": false,
+            "in": "query",
+            "description": "Filter characters by location ID",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "worldId",
+            "required": false,
+            "in": "query",
+            "description": "Filter characters by world ID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Returns all characters"
+          }
+        },
+        "summary": "Get all characters",
+        "tags": [
+          "characters"
+        ]
+      },
+      "post": {
+        "operationId": "CharactersController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateCharacterDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "The character has been successfully created."
+          }
+        },
+        "summary": "Create a new character",
+        "tags": [
+          "characters"
+        ]
+      }
+    },
+    "/characters/{_id}": {
+      "get": {
+        "operationId": "CharactersController_findById",
+        "parameters": [
+          {
+            "name": "_id",
+            "required": true,
+            "in": "path",
+            "description": "The ID of the character to retrieve",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Returns the character with the specified ID"
+          },
+          "404": {
+            "description": "Character not found"
+          }
+        },
+        "summary": "Get character by ID",
+        "tags": [
+          "characters"
+        ]
+      },
+      "put": {
+        "operationId": "CharactersController_update",
+        "parameters": [
+          {
+            "name": "_id",
+            "required": true,
+            "in": "path",
+            "description": "The ID of the character to update",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateCharacterDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The character has been successfully updated."
+          }
+        },
+        "summary": "Update an existing character",
+        "tags": [
+          "characters"
+        ]
+      },
+      "delete": {
+        "operationId": "CharactersController_delete",
+        "parameters": [
+          {
+            "name": "_id",
+            "required": true,
+            "in": "path",
+            "description": "The ID of the character to delete",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The character has been successfully deleted"
+          },
+          "404": {
+            "description": "Character not found"
+          }
+        },
+        "summary": "Delete a character",
+        "tags": [
+          "characters"
+        ]
+      }
     }
   },
   "info": {
@@ -612,6 +891,185 @@
           "techLevel": {
             "type": "number",
             "description": "Technology level of the world"
+          }
+        }
+      },
+      "CreateIdentityAccountDto": {
+        "type": "object",
+        "properties": {
+          "characterId": {
+            "type": "string",
+            "description": "Identifier of the character associated with this account"
+          },
+          "provider": {
+            "type": "string",
+            "description": "Identity provider platform"
+          },
+          "identifier": {
+            "type": "string",
+            "description": "Unique identifier for this account on the provider"
+          },
+          "credentials": {
+            "description": "Authentication credentials for this account",
+            "type": "array",
+            "items": {
+              "type": "object"
+            }
+          }
+        },
+        "required": [
+          "characterId",
+          "provider",
+          "identifier"
+        ]
+      },
+      "UpdateIdentityAccountDto": {
+        "type": "object",
+        "properties": {
+          "characterId": {
+            "type": "string",
+            "description": "Identifier of the character associated with this account"
+          },
+          "provider": {
+            "type": "string",
+            "description": "Identity provider platform"
+          },
+          "identifier": {
+            "type": "string",
+            "description": "Unique identifier for this account on the provider"
+          },
+          "credentials": {
+            "description": "Authentication credentials for this account",
+            "type": "array",
+            "items": {
+              "type": "object"
+            }
+          }
+        }
+      },
+      "CreateCharacterDto": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string",
+            "description": "Optional formal title (e.g., Sir, Lady)"
+          },
+          "firstName": {
+            "type": "string",
+            "description": "First, given name"
+          },
+          "lastName": {
+            "type": "string",
+            "description": "Last, family name"
+          },
+          "history": {
+            "description": "Character's historical events",
+            "type": "array",
+            "items": {
+              "type": "object"
+            }
+          },
+          "currentLocation": {
+            "type": "string",
+            "description": "Character's current location ID"
+          },
+          "worldId": {
+            "type": "string",
+            "description": "World ID this character belongs to"
+          },
+          "description": {
+            "type": "string",
+            "description": "Character's description"
+          },
+          "attributes": {
+            "type": "object",
+            "description": "Character's attributes"
+          },
+          "skills": {
+            "description": "Character's skills",
+            "type": "array",
+            "items": {
+              "type": "object"
+            }
+          },
+          "memories": {
+            "description": "Character's memories",
+            "type": "array",
+            "items": {
+              "type": "object"
+            }
+          },
+          "relations": {
+            "description": "Character's relations with other characters",
+            "type": "array",
+            "items": {
+              "type": "object"
+            }
+          }
+        },
+        "required": [
+          "firstName",
+          "lastName"
+        ]
+      },
+      "UpdateCharacterDto": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string",
+            "description": "Optional formal title (e.g., Sir, Lady)"
+          },
+          "firstName": {
+            "type": "string",
+            "description": "First, given name"
+          },
+          "lastName": {
+            "type": "string",
+            "description": "Last, family name"
+          },
+          "history": {
+            "description": "Character's historical events",
+            "type": "array",
+            "items": {
+              "type": "object"
+            }
+          },
+          "currentLocation": {
+            "type": "string",
+            "description": "Character's current location ID"
+          },
+          "worldId": {
+            "type": "string",
+            "description": "World ID this character belongs to"
+          },
+          "description": {
+            "type": "string",
+            "description": "Character's description"
+          },
+          "attributes": {
+            "type": "object",
+            "description": "Character's attributes"
+          },
+          "skills": {
+            "description": "Character's skills",
+            "type": "array",
+            "items": {
+              "type": "object"
+            }
+          },
+          "memories": {
+            "description": "Character's memories",
+            "type": "array",
+            "items": {
+              "type": "object"
+            }
+          },
+          "relations": {
+            "description": "Character's relations with other characters",
+            "type": "array",
+            "items": {
+              "type": "object"
+            }
           }
         }
       }

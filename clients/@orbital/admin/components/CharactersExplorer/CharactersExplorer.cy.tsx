@@ -1,50 +1,55 @@
 // @ts-nocheck
 /// <reference types="cypress" />
-import { Area } from "@orbital/core/src/types/area";
 import {
   NotificationProvider,
   ReduxProvider,
   WorldProvider,
 } from "@orbital/react-ui";
 import { adminApi } from "../../services/adminApi.generated";
-import AreaExplorer from "./AreaExplorer";
-import { areaExplorer } from "./AreaExplorer.interactable";
+import CharactersExplorer from "./CharactersExplorer";
+import { charactersExplorer } from "./CharactersExplorer.interactable";
 
-describe("AreaExplorer Component", () => {
+describe("CharactersExplorer Component", () => {
   describe("Basic Functionality", () => {
     beforeEach(() => {
       // Mock data for testing
-      const mockAreas = [
+      const mockCharacters = [
         {
-          _id: "area1",
-          name: "Forest",
+          _id: "char1",
+          firstName: "John",
+          lastName: "Doe",
           worldId: "world1",
         },
         {
-          _id: "area2",
-          name: "Castle",
+          _id: "char2",
+          firstName: "Jane",
+          lastName: "Smith",
           worldId: "world1",
         },
         {
-          _id: "area3",
-          name: "Village",
+          _id: "char3",
+          firstName: "Bob",
+          lastName: "Johnson",
           worldId: "world1",
         },
       ];
 
-      // Mock area map data
-      const mockAreaMap = {
-        width: 10,
-        height: 10,
-        grid: Array(10).fill(Array(10).fill(0)),
+      // Mock character details
+      const mockCharacterDetails = {
+        _id: "char2",
+        firstName: "Jane",
+        lastName: "Smith",
+        worldId: "world1",
+        title: "Dr.",
+        description: "A brilliant scientist",
       };
 
       // Stub for API calls
       cy.stub(window, "fetch").callsFake((url) => {
-        if (url.includes("areas")) {
+        if (url.includes("characters")) {
           return Promise.resolve({
             ok: true,
-            json: () => Promise.resolve(mockAreas),
+            json: () => Promise.resolve(mockCharacters),
           });
         }
         return Promise.resolve({
@@ -57,12 +62,25 @@ describe("AreaExplorer Component", () => {
       const onSelectStub = cy.stub().as("onSelectStub");
 
       // Stub for query hooks
+      const findQueryStub = cy.stub().returns({
+        data: mockCharacters,
+        isLoading: false,
+        error: null,
+      });
+
+      const findByIdQueryStub = cy.stub().returns({
+        data: mockCharacterDetails,
+        isLoading: false,
+        error: null,
+      });
+
+      // Stub the API hooks
       cy.stub(
         // @ts-ignore - Stub the imported hooks
         require("../../services/adminApi.generated"),
-        "useAreasControllerFindQuery"
+        "useCharactersControllerFindQuery"
       ).returns({
-        data: mockAreas,
+        data: mockCharacters,
         isLoading: false,
         error: null,
       });
@@ -70,9 +88,9 @@ describe("AreaExplorer Component", () => {
       cy.stub(
         // @ts-ignore - Stub the imported hooks
         require("../../services/adminApi.generated"),
-        "useAreasControllerGetMapQuery"
+        "useCharactersControllerFindByIdQuery"
       ).returns({
-        data: mockAreaMap,
+        data: mockCharacterDetails,
         isLoading: false,
         error: null,
       });
@@ -85,37 +103,38 @@ describe("AreaExplorer Component", () => {
         >
           <NotificationProvider>
             <WorldProvider worldId="world1">
-              <AreaExplorer onSelect={onSelectStub} />
+              <CharactersExplorer onSelect={onSelectStub} />
             </WorldProvider>
           </NotificationProvider>
         </ReduxProvider>
       );
     });
 
-    it("should display areas correctly", () => {
-      const explorer = areaExplorer();
+    it("should display characters correctly", () => {
+      const explorer = charactersExplorer();
 
       // Verify the explorer exists
       explorer.getElement().should("exist");
 
-      // Verify areas are visible
-      explorer.item("Forest").getElement().should("be.visible");
-      explorer.item("Castle").getElement().should("be.visible");
-      explorer.item("Village").getElement().should("be.visible");
+      // Verify characters are visible
+      explorer.item("John Doe").getElement().should("be.visible");
+      explorer.item("Jane Smith").getElement().should("be.visible");
+      explorer.item("Bob Johnson").getElement().should("be.visible");
     });
 
-    it("should load area map when clicking the load map button", () => {
-      const explorer = areaExplorer();
+    it("should load character details when clicking the view details button", () => {
+      const explorer = charactersExplorer();
 
-      // Get the Castle mock area - convert to Area object for loadMap
-      const castle = Area.mock({
-        _id: "area2",
-        name: "Castle",
+      // Instead of using Character.mock, create a plain object that matches the interface
+      const janeSmith = {
+        _id: "char2",
+        firstName: "Jane",
+        lastName: "Smith",
         worldId: "world1",
-      });
+      };
 
-      // Load the map for Castle
-      explorer.loadMap(castle);
+      // View the details for Jane Smith
+      explorer.viewDetails(janeSmith);
 
       // Verify the onSelect callback was called
       cy.get("@onSelectStub").should("have.been.called");
@@ -124,18 +143,13 @@ describe("AreaExplorer Component", () => {
       cy.get("@onSelectStub")
         .invoke("getCall", 0)
         .then((call) => {
-          const calledArea = call.args[0];
-          const calledMap = call.args[1];
+          const calledCharacter = call.args[0];
 
           // Check that the important properties match
-          expect(calledArea._id).to.equal("area2");
-          expect(calledArea.name).to.equal("Castle");
-          expect(calledArea.worldId).to.equal("world1");
-
-          // Check that the map was passed
-          expect(calledMap).to.exist;
-          expect(calledMap.width).to.equal(10);
-          expect(calledMap.height).to.equal(10);
+          expect(calledCharacter._id).to.equal("char2");
+          expect(calledCharacter.firstName).to.equal("Jane");
+          expect(calledCharacter.lastName).to.equal("Smith");
+          expect(calledCharacter.worldId).to.equal("world1");
         });
     });
   });
@@ -146,7 +160,7 @@ describe("AreaExplorer Component", () => {
       cy.stub(
         // @ts-ignore - Stub the imported hooks
         require("../../services/adminApi.generated"),
-        "useAreasControllerFindQuery"
+        "useCharactersControllerFindQuery"
       ).returns({
         data: null,
         isLoading: true,
@@ -164,14 +178,14 @@ describe("AreaExplorer Component", () => {
         >
           <NotificationProvider>
             <WorldProvider worldId="world1">
-              <AreaExplorer onSelect={onSelectStub} />
+              <CharactersExplorer onSelect={onSelectStub} />
             </WorldProvider>
           </NotificationProvider>
         </ReduxProvider>
       );
 
       // Verify loading state is shown
-      areaExplorer().states.loading.shouldExist();
+      charactersExplorer().states.loading.shouldExist();
     });
 
     it("should show error state", () => {
@@ -179,11 +193,11 @@ describe("AreaExplorer Component", () => {
       cy.stub(
         // @ts-ignore - Stub the imported hooks
         require("../../services/adminApi.generated"),
-        "useAreasControllerFindQuery"
+        "useCharactersControllerFindQuery"
       ).returns({
         data: null,
         isLoading: false,
-        error: { message: "Error loading areas" },
+        error: { message: "Error loading characters" },
       });
 
       // Stub for onSelect callback
@@ -197,14 +211,14 @@ describe("AreaExplorer Component", () => {
         >
           <NotificationProvider>
             <WorldProvider worldId="world1">
-              <AreaExplorer onSelect={onSelectStub} />
+              <CharactersExplorer onSelect={onSelectStub} />
             </WorldProvider>
           </NotificationProvider>
         </ReduxProvider>
       );
 
       // Verify error state is shown
-      areaExplorer().states.error.shouldExist();
+      charactersExplorer().states.error.shouldExist();
     });
 
     it("should show empty state", () => {
@@ -212,7 +226,7 @@ describe("AreaExplorer Component", () => {
       cy.stub(
         // @ts-ignore - Stub the imported hooks
         require("../../services/adminApi.generated"),
-        "useAreasControllerFindQuery"
+        "useCharactersControllerFindQuery"
       ).returns({
         data: [],
         isLoading: false,
@@ -230,24 +244,25 @@ describe("AreaExplorer Component", () => {
         >
           <NotificationProvider>
             <WorldProvider worldId="world1">
-              <AreaExplorer onSelect={onSelectStub} />
+              <CharactersExplorer onSelect={onSelectStub} />
             </WorldProvider>
           </NotificationProvider>
         </ReduxProvider>
       );
 
       // Verify empty state is shown
-      areaExplorer().states.empty.shouldExist();
+      charactersExplorer().states.empty.shouldExist();
     });
   });
 
-  describe("Map Loading", () => {
-    it("should handle map loading state", () => {
-      // Mock areas
-      const mockAreas = [
+  describe("Details Loading", () => {
+    it("should handle details loading state", () => {
+      // Mock characters
+      const mockCharacters = [
         {
-          _id: "area1",
-          name: "Forest",
+          _id: "char1",
+          firstName: "John",
+          lastName: "Doe",
           worldId: "world1",
         },
       ];
@@ -256,18 +271,18 @@ describe("AreaExplorer Component", () => {
       cy.stub(
         // @ts-ignore - Stub the imported hooks
         require("../../services/adminApi.generated"),
-        "useAreasControllerFindQuery"
+        "useCharactersControllerFindQuery"
       ).returns({
-        data: mockAreas,
+        data: mockCharacters,
         isLoading: false,
         error: null,
       });
 
-      // Stub the map query to return loading state
+      // Stub the details query to return loading state
       cy.stub(
         // @ts-ignore - Stub the imported hooks
         require("../../services/adminApi.generated"),
-        "useAreasControllerGetMapQuery"
+        "useCharactersControllerFindByIdQuery"
       ).returns({
         data: null,
         isLoading: true,
@@ -285,32 +300,34 @@ describe("AreaExplorer Component", () => {
         >
           <NotificationProvider>
             <WorldProvider worldId="world1">
-              <AreaExplorer onSelect={onSelectStub} />
+              <CharactersExplorer onSelect={onSelectStub} />
             </WorldProvider>
           </NotificationProvider>
         </ReduxProvider>
       );
 
-      // Get the Forest mock area - convert to Area object for loadMap
-      const forest = Area.mock({
-        _id: "area1",
-        name: "Forest",
+      // Instead of using Character.mock, create a plain object that matches the interface
+      const johnDoe = {
+        _id: "char1",
+        firstName: "John",
+        lastName: "Doe",
         worldId: "world1",
-      });
+      };
 
-      // Load the map
-      areaExplorer().loadMap(forest);
+      // View the details
+      charactersExplorer().viewDetails(johnDoe);
 
-      // Verify the onSelect callback was not called yet (map is still loading)
+      // Verify the onSelect callback was not called yet (details are still loading)
       cy.get("@onSelectStub").should("not.have.been.called");
     });
 
-    it("should handle map loading error", () => {
-      // Mock areas
-      const mockAreas = [
+    it("should handle details loading error", () => {
+      // Mock characters
+      const mockCharacters = [
         {
-          _id: "area1",
-          name: "Forest",
+          _id: "char1",
+          firstName: "John",
+          lastName: "Doe",
           worldId: "world1",
         },
       ];
@@ -319,22 +336,22 @@ describe("AreaExplorer Component", () => {
       cy.stub(
         // @ts-ignore - Stub the imported hooks
         require("../../services/adminApi.generated"),
-        "useAreasControllerFindQuery"
+        "useCharactersControllerFindQuery"
       ).returns({
-        data: mockAreas,
+        data: mockCharacters,
         isLoading: false,
         error: null,
       });
 
-      // Stub the map query to return error state
+      // Stub the details query to return error state
       cy.stub(
         // @ts-ignore - Stub the imported hooks
         require("../../services/adminApi.generated"),
-        "useAreasControllerGetMapQuery"
+        "useCharactersControllerFindByIdQuery"
       ).returns({
         data: null,
         isLoading: false,
-        error: { message: "Error loading area map" },
+        error: { message: "Error loading character details" },
       });
 
       // Stub for onSelect callback
@@ -348,23 +365,24 @@ describe("AreaExplorer Component", () => {
         >
           <NotificationProvider>
             <WorldProvider worldId="world1">
-              <AreaExplorer onSelect={onSelectStub} />
+              <CharactersExplorer onSelect={onSelectStub} />
             </WorldProvider>
           </NotificationProvider>
         </ReduxProvider>
       );
 
-      // Get the Forest mock area - convert to Area object for loadMap
-      const forest = Area.mock({
-        _id: "area1",
-        name: "Forest",
+      // Instead of using Character.mock, create a plain object that matches the interface
+      const johnDoe = {
+        _id: "char1",
+        firstName: "John",
+        lastName: "Doe",
         worldId: "world1",
-      });
+      };
 
-      // Load the map
-      areaExplorer().loadMap(forest);
+      // View the details
+      charactersExplorer().viewDetails(johnDoe);
 
-      // Verify the onSelect callback was not called (map loading failed)
+      // Verify the onSelect callback was not called (details loading failed)
       cy.get("@onSelectStub").should("not.have.been.called");
     });
   });
