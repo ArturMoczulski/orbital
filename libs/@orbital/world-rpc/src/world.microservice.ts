@@ -2,6 +2,7 @@ import { Injectable, Inject } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
 import { Microservice } from '@orbital/microservices';
 import { Area, AreaProps, WithId, WithoutId, World } from '@orbital/core';
+import { Character, CharacterProps } from '@orbital/characters';
 import { IdentityAccount } from '@orbital/identity-types';
 
 /**
@@ -39,6 +40,28 @@ interface AreasController {
     projection?: Record<string, any>;
     options?: Record<string, any>;
   }): Promise<Area[] | null>;
+}
+
+interface CharactersController {
+  create(dto: WithoutId<Character> | WithoutId<Character>[]): Promise<any | null>;
+  find(payload: {
+    filter?: Record<string, any>;
+    projection?: Record<string, any>;
+    options?: Record<string, any>;
+  }): Promise<any | null>;
+  findById(payload: { id: string; projection?: Record<string, any> }): Promise<any | null>;
+  update(data: WithId<Character> | WithId<Character>[]): Promise<any | null>;
+  delete(ids: string | string[]): Promise<any | null>;
+  findByLocationId(payload: {
+    locationId: string;
+    projection?: Record<string, any>;
+    options?: Record<string, any>;
+  }): Promise<Character[] | null>;
+  findByWorldId(payload: {
+    worldId: string;
+    projection?: Record<string, any>;
+    options?: Record<string, any>;
+  }): Promise<Character[] | null>;
 }
 
 interface IdentitiesController {
@@ -86,6 +109,10 @@ export class WorldMicroservice extends Microservice {
    * areas controller proxy
    */
   public readonly areas: AreasController;
+  /**
+   * characters controller proxy
+   */
+  public readonly characters: CharactersController;
   /**
    * identities controller proxy
    */
@@ -141,6 +168,44 @@ export class WorldMicroservice extends Microservice {
     options?: Record<string, any>;
   }) => {
         const result = await this.request<Area[]>('world.AreasMicroserviceController.findByTags', payload);
+        return result || [];
+      },
+    };
+    // Initialize characters controller
+    this.characters = {
+      create: async (dto: WithoutId<Character> | WithoutId<Character>[]) => {
+        return this.request<any>('world.CharactersMicroserviceController.create', dto);
+      },
+      find: async (payload: {
+    filter?: Record<string, any>;
+    projection?: Record<string, any>;
+    options?: Record<string, any>;
+  }) => {
+        return this.request<any>('world.CharactersMicroserviceController.find', payload);
+      },
+      findById: async (payload: { id: string; projection?: Record<string, any> }) => {
+        return this.request<any>('world.CharactersMicroserviceController.findById', payload);
+      },
+      update: async (data: WithId<Character> | WithId<Character>[]) => {
+        return this.request<any>('world.CharactersMicroserviceController.update', data);
+      },
+      delete: async (ids: string | string[]) => {
+        return this.request<any>('world.CharactersMicroserviceController.delete', ids);
+      },
+      findByLocationId: async (payload: {
+    locationId: string;
+    projection?: Record<string, any>;
+    options?: Record<string, any>;
+  }) => {
+        const result = await this.request<Character[]>('world.CharactersMicroserviceController.findByLocationId', payload);
+        return result || [];
+      },
+      findByWorldId: async (payload: {
+    worldId: string;
+    projection?: Record<string, any>;
+    options?: Record<string, any>;
+  }) => {
+        const result = await this.request<Character[]>('world.CharactersMicroserviceController.findByWorldId', payload);
         return result || [];
       },
     };

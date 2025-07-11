@@ -6,6 +6,7 @@ import { ClientsModule, Transport } from "@nestjs/microservices";
 import { MongooseModule } from "@nestjs/mongoose";
 import { AreasModule } from "./areas/areas.module";
 import { AuthModule } from "./auth/auth.module";
+import { CharactersModule } from "./characters/characters.module";
 import { LoggingInterceptor } from "./common/logging.interceptor";
 import { IdentitiesModule } from "./identities/identities.module";
 import { PingController } from "./ping/ping.controller";
@@ -48,6 +49,7 @@ import { WorldsModule } from "./worlds/worlds.module";
     AreasModule,
     WorldsModule,
     IdentitiesModule,
+    CharactersModule,
   ],
   controllers: [PingController],
   providers: [
