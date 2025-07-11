@@ -3,26 +3,20 @@
 
 /// <reference types="cypress" />
 
-import { ObjectSelectorInteractable } from "../ObjectSelector";
+import { ReferenceFieldInteractable } from "./ReferenceField.interactable";
 
 /**
  * BelongsToFieldInteractable class represents a BelongsToField component
  * and provides methods for interacting with it.
  *
- * Since BelongsToField is a wrapper around ObjectSelector, this interactable
- * extends ObjectSelectorInteractable and only overrides what's necessary.
+ * Since BelongsToField is a wrapper around ReferenceField with multiple=false,
+ * this interactable extends ReferenceFieldInteractable with minimal overrides.
  */
-export class BelongsToFieldInteractable extends ObjectSelectorInteractable {
-  /**
-   * The type of object this selector is for (e.g., "world", "area")
-   */
-  protected objectType: string;
-
+export class BelongsToFieldInteractable extends ReferenceFieldInteractable {
   /**
    * Constructor for BelongsToFieldInteractable
-   * @param fieldName The name of the field
-   * @param objectType The type of object this selector is for
-   * @param parentElement Optional parent element to scope the field within
+   * Passes "BelongsToField" as the dataTestId to the parent constructor
+   * This matches the data-testid attribute set on the component
    */
   constructor(
     fieldName: string,
@@ -31,25 +25,8 @@ export class BelongsToFieldInteractable extends ObjectSelectorInteractable {
     objectId?: string,
     index?: number
   ) {
-    // Pass the objectType as the dataTestId prefix to the ObjectSelectorInteractable
-    // objectType should be in PascalCase when used in component names
-    super(
-      fieldName,
-      parentElement,
-      "BelongsToField",
-      false,
-      objectType,
-      objectId,
-      index
-    );
-    this.objectType = objectType;
-  }
-
-  /**
-   * Use the parent class implementation for isRequired
-   */
-  override isRequired(): Cypress.Chainable<boolean> {
-    return super.isRequired();
+    // Call parent constructor with the fixed dataTestId
+    super("BelongsToField", objectType, parentElement, objectId, index);
   }
 }
 
@@ -58,6 +35,8 @@ export class BelongsToFieldInteractable extends ObjectSelectorInteractable {
  * @param fieldName The name of the field
  * @param objectType The type of object this reference field is for
  * @param parentElement Optional parent element to scope the field within
+ * @param objectId Optional object ID to further scope the field
+ * @param index Optional index for when multiple fields with the same name exist
  * @returns A BelongsToField interactable
  */
 export function belongsToField(
@@ -67,6 +46,8 @@ export function belongsToField(
   objectId?: string,
   index?: number
 ): BelongsToFieldInteractable {
+  // We still pass the fieldName to the constructor even though it's not used for the selector
+  // This maintains the API compatibility and the fieldName might be used for other purposes
   return new BelongsToFieldInteractable(
     fieldName,
     objectType,
