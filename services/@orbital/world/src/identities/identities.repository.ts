@@ -39,6 +39,11 @@ export class IdentitiesRepository extends DocumentRepository<
     projection?: Record<string, any>,
     options?: Record<string, any>
   ): Promise<IdentityAccount[]> {
-    return this.find({ characterId }, projection, options);
+    // If projection is provided, ensure characterId is included
+    const finalProjection = projection
+      ? { ...projection, characterId: 1 }
+      : projection;
+
+    return this.find({ characterId }, finalProjection, options);
   }
 }
