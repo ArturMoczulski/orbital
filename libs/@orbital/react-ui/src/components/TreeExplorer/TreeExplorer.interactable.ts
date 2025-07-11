@@ -53,7 +53,7 @@ interface TreeExplorerStates<
     /**
      * Get the loading state element
      */
-    getElement: () => Cypress.Chainable;
+    get: () => Cypress.Chainable;
 
     /**
      * Check if the explorer is in loading state
@@ -65,7 +65,7 @@ interface TreeExplorerStates<
     /**
      * Get the error state element
      */
-    getElement: () => Cypress.Chainable;
+    get: () => Cypress.Chainable;
 
     /**
      * Check if the explorer is in error state
@@ -77,7 +77,7 @@ interface TreeExplorerStates<
     /**
      * Get the empty state element
      */
-    getElement: () => Cypress.Chainable;
+    get: () => Cypress.Chainable;
 
     /**
      * Check if the explorer is in empty state
@@ -107,7 +107,7 @@ interface TreeExplorerStates<
 class TreeExplorerInteractable<
   CustomActions extends string | number | symbol = never,
   Schema extends ZodObjectSchema = never,
-> extends CypressInteractable<string> {
+> extends CypressInteractable {
   readonly typePrefixPascal: string;
 
   /**
@@ -139,15 +139,15 @@ class TreeExplorerInteractable<
     schema: Schema,
     customActions?: CustomActions[]
   ) {
-    super(`TreeExplorer`); // Pass the base component type to the parent class
+    super({ dataTestId: `TreeExplorer` }); // Pass the base component type to the parent class
     this.typePrefixPascal = typePrefixPascal;
     this.schema = schema;
     this.customActions = customActions;
 
     // Initialize the buttons property
     this.buttons = {
-      add: () => this.getElement().find('[data-testid="AddButton"]'),
-      addEmpty: () => this.getElement().find('[data-testid="AddButtonEmpty"]'),
+      add: () => this.get().find('[data-testid="AddButton"]'),
+      addEmpty: () => this.get().find('[data-testid="AddButtonEmpty"]'),
     };
 
     // Initialize the dialogs property with TreeExplorerAddDialog
@@ -161,33 +161,33 @@ class TreeExplorerInteractable<
     // Initialize the states property with more specific selectors
     this.states = {
       loading: {
-        getElement: () => {
+        get: () => {
           // Use the TreeExplorer prefixed selector for components outside the main structure
           return cy
             .get('[data-testid="TreeExplorerLoadingState"]')
             .should("exist");
         },
         shouldExist: () => {
-          this.states.loading.getElement().should("exist");
+          this.states.loading.get().should("exist");
           return this;
         },
       },
       error: {
-        getElement: () => {
+        get: () => {
           // Use the TreeExplorer prefixed selector for components outside the main structure
           return cy
             .get('[data-testid="TreeExplorerErrorState"]')
             .should("exist");
         },
         shouldExist: () => {
-          this.states.error.getElement().should("exist");
+          this.states.error.get().should("exist");
           return this;
         },
       },
       empty: {
-        getElement: () => this.getElement().find('[data-testid="EmptyState"]'),
+        get: () => this.get().find('[data-testid="EmptyState"]'),
         shouldExist: () => {
-          this.states.empty.getElement().should("exist");
+          this.states.empty.get().should("exist");
           return this;
         },
         add: () => {
@@ -196,16 +196,6 @@ class TreeExplorerInteractable<
         },
       },
     };
-  }
-
-  /**
-   * Override the getElement method to use the specific TreeExplorer selector
-   */
-  override getElement() {
-    // The data-testid format in the component is "TreeExplorer ${typePrefixPascal}Explorer"
-    // For example: "TreeExplorer ItemExplorer"
-    // But for more flexibility, we'll use a partial match
-    return cy.get(`[data-testid^="TreeExplorer"]`).should("exist");
   }
 
   /**
@@ -221,7 +211,7 @@ class TreeExplorerInteractable<
   shouldHaveRootItemCount(
     count: number
   ): TreeExplorerInteractable<CustomActions, Schema> {
-    this.getElement()
+    this.get()
       .find('[data-testid="TreeNode"]')
       .filter((_, el) => {
         // Check if this is a root-level node (no margin-left)
@@ -238,9 +228,7 @@ class TreeExplorerInteractable<
   shouldHaveTotalItemCount(
     count: number
   ): TreeExplorerInteractable<CustomActions, Schema> {
-    this.getElement()
-      .find('[data-testid="TreeNode"]')
-      .should("have.length", count);
+    this.get().find('[data-testid="TreeNode"]').should("have.length", count);
     return this;
   }
 

@@ -15,6 +15,30 @@ export class CharactersExplorerInteractable extends TreeExplorerInteractable<
   typeof CharacterSchema
 > {
   /**
+   * Add a new character to the explorer
+   * @param character The character data to add
+   */
+  addCharacter(character: {
+    firstName: string;
+    lastName: string;
+    worldId?: string;
+  }): CharactersExplorerInteractable {
+    // Construct the data object with name property derived from firstName and lastName
+    const data = {
+      ...character,
+      name: `${character.firstName} ${character.lastName}`,
+    };
+
+    // Use the base add method from TreeExplorerInteractable
+    this.dialogs.add.open();
+    this.dialogs.add.submitAndReturnExplorer(
+      data as Partial<z.infer<typeof CharacterSchema>>
+    );
+
+    return this;
+  }
+
+  /**
    * View details for a specific character
    * @param character The character object to view details for
    */
@@ -55,6 +79,23 @@ export class CharactersExplorerInteractable extends TreeExplorerInteractable<
         if (character.worldId)
           expect(calledCharacter.worldId).to.equal(character.worldId);
       });
+    return this;
+  }
+
+  /**
+   * Verify that a character with the given properties exists in the tree
+   * @param character The character properties to verify
+   */
+  shouldHaveCharacter(character: {
+    firstName: string;
+    lastName: string;
+  }): CharactersExplorerInteractable {
+    // Construct the expected name from firstName and lastName
+    const expectedName = `${character.firstName} ${character.lastName}`;
+
+    // Check that a tree node with this name exists
+    this.item(expectedName).getElement().should("exist");
+
     return this;
   }
 }
@@ -98,6 +139,12 @@ export function charactersExplorer(): CharactersExplorerInteractable {
       charactersExplorerInstance.shouldHaveLoadedDetails.bind(
         charactersExplorerInstance
       ),
+    addCharacter: charactersExplorerInstance.addCharacter.bind(
+      charactersExplorerInstance
+    ),
+    shouldHaveCharacter: charactersExplorerInstance.shouldHaveCharacter.bind(
+      charactersExplorerInstance
+    ),
   });
 
   return charactersExplorerInstance;

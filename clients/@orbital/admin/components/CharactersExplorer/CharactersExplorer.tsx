@@ -1,6 +1,7 @@
 import { Character, CharacterSchema } from "@orbital/characters";
 import { TreeExplorer, useWorld } from "@orbital/react-ui";
 import { useEffect, useState } from "react";
+import { ZodBridge } from "uniforms-bridge-zod";
 import {
   useCharactersControllerFindByIdQuery,
   useCharactersControllerFindQuery,
@@ -47,7 +48,8 @@ export default function CharactersExplorer({
   return (
     <TreeExplorer<CharacterWithName>
       type="Character"
-      schema={CharacterSchema as any}
+      // Wrap the schema in a ZodBridge for proper form validation
+      schema={new ZodBridge({ schema: CharacterSchema })}
       itemActions={(
         character: CharacterWithName,
         defaultActions: React.ReactNode

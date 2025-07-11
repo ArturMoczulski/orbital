@@ -60,7 +60,7 @@ export interface TreeNodeButtons<
 export class TreeNodeInteractable<
   CustomActions extends string | number | symbol = never,
   Schema extends ZodObjectSchema = never,
-> extends CypressInteractable<string> {
+> extends CypressInteractable {
   private explorer: TreeExplorerInteractable<CustomActions, Schema>;
   private name: string;
 
@@ -81,7 +81,7 @@ export class TreeNodeInteractable<
     explorer: TreeExplorerInteractable<CustomActions, Schema>,
     name: string
   ) {
-    super("TreeNode"); // Pass the base component type to the parent class
+    super({ dataTestId: "TreeNode" }); // Pass the base component type to the parent class
     this.explorer = explorer;
     this.name = name;
 
@@ -93,7 +93,7 @@ export class TreeNodeInteractable<
 
         // Find and return the delete button using the explorer's element for scoping
         return this.explorer
-          .getElement()
+          .get()
           .contains(this.name)
           .closest('[data-testid="TreeNode"]')
           .find('[data-testid="DeleteButton"]')
@@ -115,7 +115,7 @@ export class TreeNodeInteractable<
 
           // Find and return the action button using the explorer's element for scoping
           return this.explorer
-            .getElement()
+            .get()
             .contains(this.name)
             .closest('[data-testid="TreeNode"]')
             .find(`[data-testid="${String(actionName)}"]`)
@@ -128,9 +128,9 @@ export class TreeNodeInteractable<
   /**
    * Override findElement to use the explorer's getElement method for proper scoping
    */
-  protected override findElement() {
+  protected findElement() {
     return this.explorer
-      .getElement()
+      .get()
       .find(`[data-testid="TreeNode"]`)
       .contains(this.name)
       .should("exist");
@@ -207,7 +207,7 @@ export class TreeNodeInteractable<
     // Use the custom action button and click it
     if (!this.buttons.custom[actionName]) {
       throw new Error(
-        `Custom action "${String(actionName)}" does not exist on component ${this.componentName}`
+        `Custom action "${String(actionName)}" does not exist on component ${TreeNodeInteractable.componentName()}`
       );
     }
     this.buttons.custom[actionName]().click({ force: true });
@@ -228,7 +228,7 @@ export class TreeNodeInteractable<
     // Then check if there are child nodes visible
     // This is more reliable than looking for specific text
     this.explorer
-      .getElement()
+      .get()
       .find('[data-testid="TreeNode"]')
       .should("have.length.gt", 1);
 
@@ -249,7 +249,7 @@ export class TreeNodeInteractable<
     // and we'll rely on the test structure to verify collapse behavior
     // by checking the total number of visible nodes
     this.explorer
-      .getElement()
+      .get()
       .find('[data-testid="TreeNode"]:visible')
       .should("have.length", 1);
 
@@ -272,7 +272,7 @@ export class TreeNodeInteractable<
         // Find all nodes that have this node as parent
         // This is more reliable than counting all nodes
         this.explorer
-          .getElement()
+          .get()
           .find(`[data-testid="TreeNode"]`)
           .filter((_, el) => {
             // Check if this is a child node (has margin-left)
@@ -307,7 +307,7 @@ export class TreeNodeInteractable<
         if (count === 0) {
           // If expecting no children, verify there are no child nodes
           this.explorer
-            .getElement()
+            .get()
             .find(`[data-testid="TreeNode"]`)
             .filter((_, el) => {
               // Check if this is a child node (has margin-left)
@@ -318,7 +318,7 @@ export class TreeNodeInteractable<
         } else {
           // For a specific count, verify the exact number of children
           this.explorer
-            .getElement()
+            .get()
             .find(`[data-testid="TreeNode"]`)
             .filter((_, el) => {
               // Check if this is a child node (has margin-left)

@@ -42,7 +42,7 @@ export class AddBranchDialogInteractable<
    */
   override open(): this {
     // Check if we're in empty state and use the appropriate button
-    this.explorer.getElement().then(($el) => {
+    this.explorer.get().then(($el) => {
       if ($el.find('[data-testid="EmptyState"]').length > 0) {
         this.explorer.buttons.addEmpty().click({ force: true });
       } else {
