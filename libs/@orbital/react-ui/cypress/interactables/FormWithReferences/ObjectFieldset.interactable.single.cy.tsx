@@ -602,6 +602,12 @@ describe("ObjectFieldsetInteractable", () => {
     fieldset.getFieldValue("name").should("equal", "Forest of Shadows");
     fieldset.getFieldValue("size").should("equal", "500");
 
+    // Check that the worldId field shows the correct display value
+    cy.get('[data-field-name="worldId"] input').should(
+      "have.value",
+      "Fantasy World"
+    );
+
     // Use fieldset.field() to interact with the reference field, passing the ObjectSelectorInteractable constructor
     // Instead of using ObjectSelectorInteractable, directly interact with the element
     fieldset.get({}).find('[data-field-name="worldId"]').should("exist");

@@ -86,6 +86,7 @@ function BelongsToField({
       objectType={finalObjectType}
       schema={schema}
       multiple={false}
+      idField="id" // Explicitly set idField to match the structure of our options
       data-testid="BelongsToField"
       objectId={objectId}
     />
