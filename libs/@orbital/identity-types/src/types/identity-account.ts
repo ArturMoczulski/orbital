@@ -6,7 +6,7 @@ import {
   ZodSchema,
 } from "@orbital/core";
 import { z } from "zod";
-import { AuthCredentialsSchema } from "./auth-credentials";
+import { AnyCredentialsSchema } from "./credential-types";
 import { IdentityProviderEnum } from "./identity-provider";
 
 /**
@@ -26,7 +26,7 @@ export const IdentityAccountSchema = IdentifiableObjectSchema.extend({
     .string()
     .describe("Unique identifier for this account on the provider"),
   credentials: z
-    .array(AuthCredentialsSchema)
+    .array(AnyCredentialsSchema)
     .describe("Authentication credentials for this account"),
 }).describe("An identity account for a character");
 
@@ -41,7 +41,7 @@ export class IdentityAccount
   characterId: string = "";
   provider!: IdentityProviderEnum;
   identifier: string = "";
-  credentials: z.infer<typeof AuthCredentialsSchema>[] = [];
+  credentials: z.infer<typeof AnyCredentialsSchema>[] = [];
 
   /** Create a fake IdentityAccount instance with randomized data */
   static mockDefaults(): Partial<IdentityAccountProps> {

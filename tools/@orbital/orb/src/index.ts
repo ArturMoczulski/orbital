@@ -26,6 +26,7 @@ program.version(
 );
 
 import {
+  build,
   create,
   debug,
   dev,
@@ -39,6 +40,7 @@ import {
   watch,
 } from "./commands/index.js";
 
+program.addCommand(build);
 program.addCommand(create);
 program.addCommand(monorepo);
 program.addCommand(profile);
