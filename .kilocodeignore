@@ -21,6 +21,8 @@ tmp/
 
 # Log files
 *.log
+services/**/*.log
+clients/**/*.log
 
 # TypeScript generated files
 *.js.map

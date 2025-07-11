@@ -12,7 +12,7 @@
 module.exports = {
   apps: [
     {
-      name: "admin-gateway",
+      name: "orbital/admin-gateway",
       script: "nest",
       args: "start",
       watch: false,
@@ -29,7 +29,7 @@ module.exports = {
       max_files: 10,
     },
     {
-      name: "admin-gateway-watch",
+      name: "orbital/admin-gateway-watch",
       script: "nest",
       args: "start --watch --preserveWatchOutput",
       watch: false,
@@ -47,7 +47,7 @@ module.exports = {
       max_files: 10,
     },
     {
-      name: "admin-gateway-debug",
+      name: "orbital/admin-gateway-debug",
       script: "nest",
       args: "start --watch --preserveWatchOutput",
       watch: false,

@@ -12,7 +12,7 @@
 module.exports = {
   apps: [
     {
-      name: "world",
+      name: "orbital/world",
       script: "nest",
       args: "start",
       watch: false,
@@ -29,7 +29,7 @@ module.exports = {
       max_files: 10,
     },
     {
-      name: "world-watch",
+      name: "orbital/world-watch",
       script: "nest",
       args: "start --watch --preserveWatchOutput",
       watch: false,
@@ -50,7 +50,7 @@ module.exports = {
       max_files: 10,
     },
     {
-      name: "world-debug",
+      name: "orbital/world-debug",
       script: "nest",
       args: "start --preserveWatchOutput",
       watch: false,

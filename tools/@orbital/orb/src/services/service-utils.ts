@@ -3,6 +3,18 @@ import fs from "fs";
 import path from "path";
 import { root } from "../utils.js";
 
+// Read the monorepo name from package.json
+const packageJsonPath = path.join(root, "package.json");
+let monorepoName = "orbital"; // Default fallback
+try {
+  if (fs.existsSync(packageJsonPath)) {
+    const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, "utf8"));
+    monorepoName = packageJson.name || monorepoName;
+  }
+} catch (error) {
+  console.warn("Error reading monorepo name from package.json:", error);
+}
+
 /**
  * Service information interface
  */
@@ -61,9 +73,9 @@ export function getAvailableServices(): ServiceInfo[] {
               fullName,
               type: "service",
               path: path.join(servicePath, subEntry),
-              watchName: `${name}-watch`,
-              debugName: `${name}-debug`,
-              prodName: name,
+              watchName: `${monorepoName}/${name}-watch`,
+              debugName: `${monorepoName}/${name}-debug`,
+              prodName: `${monorepoName}/${name}`,
             });
           } catch (error) {
             console.warn(
@@ -109,9 +121,9 @@ export function getAvailableServices(): ServiceInfo[] {
               fullName,
               type: "client",
               path: path.join(clientPath, subEntry),
-              watchName: `${name}-watch`,
-              debugName: `${name}-debug`,
-              prodName: name,
+              watchName: `${monorepoName}/${name}-watch`,
+              debugName: `${monorepoName}/${name}-debug`,
+              prodName: `${monorepoName}/${name}`,
             });
           } catch (error) {
             console.warn(
@@ -363,17 +375,32 @@ export function downServices(
 
   // If no services specified, stop and delete all services
   if (serviceNames.length === 0) {
-    console.log("Stopping and deleting all services...");
+    console.log(`Stopping and deleting all ${monorepoName} services...`);
     try {
-      execSync("npx pm2 stop all 2>/dev/null || true", {
-        stdio: "inherit",
-        cwd: root,
-      });
-      execSync("npx pm2 delete all 2>/dev/null || true", {
-        stdio: "inherit",
-        cwd: root,
-      });
-      console.log("All services stopped and deleted.");
+      // Get list of running PM2 processes
+      const pmList = execSync("npx pm2 jlist", { encoding: "utf8", cwd: root });
+      const processes = JSON.parse(pmList);
+
+      // Filter processes by monorepo prefix
+      const monorepoProcesses = processes
+        .filter((p: any) => p.name.startsWith(`${monorepoName}/`))
+        .map((p: any) => p.name);
+
+      if (monorepoProcesses.length > 0) {
+        // Stop and delete only processes with the monorepo prefix
+        const processNames = monorepoProcesses.join(" ");
+        execSync(`npx pm2 stop ${processNames} 2>/dev/null || true`, {
+          stdio: "inherit",
+          cwd: root,
+        });
+        execSync(`npx pm2 delete ${processNames} 2>/dev/null || true`, {
+          stdio: "inherit",
+          cwd: root,
+        });
+        console.log(`All ${monorepoName} services stopped and deleted.`);
+      } else {
+        console.log(`No running ${monorepoName} services found.`);
+      }
     } catch (error) {
       console.error("Error stopping and deleting services:", error);
     }
