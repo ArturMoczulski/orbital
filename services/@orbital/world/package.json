@@ -34,6 +34,7 @@
     "@nestjs/platform-express": "^10.0.0",
     "@nestjs/swagger": "^11.2.0",
     "@orbital/bulk-operations": "workspace:^1.0.0",
+    "@orbital/characters": "workspace:^0.1.0",
     "@orbital/contracts": "workspace:^1.0.0",
     "@orbital/core": "workspace:^1.0.0",
     "@orbital/identity-typegoose": "workspace:*",

@@ -4,6 +4,7 @@ const withTM = require("next-transpile-modules")([
   "@orbital/react-ui",
   "@orbital/phaser",
   "@orbital/core",
+  "@orbital/characters",
   "@mui/material",
   "@mui/system",
   "@mui/styled-engine",
@@ -32,6 +33,18 @@ const nextConfig = withTM({
         dev
           ? "../../../libs/@orbital/react-ui/src"
           : "../../../libs/@orbital/react-ui/dist/src"
+      ),
+      "@orbital/characters": path.resolve(
+        __dirname,
+        dev
+          ? "../../../libs/@orbital/characters/src"
+          : "../../../libs/@orbital/characters/dist"
+      ),
+      "@orbital/core": path.resolve(
+        __dirname,
+        dev
+          ? "../../../libs/@orbital/core/src"
+          : "../../../libs/@orbital/core/dist"
       ),
       // force every import to hit the *one* hoisted copy
       "@emotion/react": path.resolve(

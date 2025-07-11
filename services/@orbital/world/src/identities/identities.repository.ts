@@ -1,7 +1,9 @@
-import { Inject, Injectable } from "@nestjs/common";
+import { Injectable } from "@nestjs/common";
+import { IdentityAccountModel } from "@orbital/identity-typegoose";
 import { IdentityAccount } from "@orbital/identity-types";
 import { DocumentRepository } from "@orbital/typegoose";
 import type { ReturnModelType } from "@typegoose/typegoose";
+import { InjectModel } from "nestjs-typegoose";
 
 // Define IdentityAccountProps locally based on IdentityAccount properties
 export type IdentityAccountProps = {
@@ -21,8 +23,8 @@ export class IdentitiesRepository extends DocumentRepository<
   any
 > {
   constructor(
-    @Inject("IdentityAccountModel")
-    identityAccountModel: ReturnModelType<any>
+    @InjectModel(IdentityAccountModel)
+    identityAccountModel: ReturnModelType<typeof IdentityAccountModel>
   ) {
     super(identityAccountModel, IdentityAccount);
   }

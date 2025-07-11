@@ -1,5 +1,5 @@
 import MapIcon from "@mui/icons-material/Map";
-import { Area } from "@orbital/core/src/types/area";
+import { Area } from "@orbital/core";
 import React from "react";
 import { AreaActionButton } from "./AreaActionButton";
 import { AreaTreeNodeCustomAction } from "./AreaActionsButtons";

@@ -38,7 +38,6 @@ The Orb CLI offers the following commands:
 
 - `yarn orb create <category> <template> <name>`  
   Creates a new project from a template.
-
   - `category`: `library`, `service`, `client`, or `tool`.
   - `template`: e.g., `ts-lib`, `nestjs`, `client`.
   - `name`: Package name (scoped names allowed, e.g., `@org/pkg`).
@@ -83,16 +82,14 @@ The monorepo includes PM2 integration for managing services and clients through 
 - **dev**: `yarn orb dev [service1 service2 ...]`
   Starts services in development mode (watch mode by default).
   Examples:
-
   - `yarn orb dev world admin-gateway` - Start specific services
   - `yarn orb dev --debug world` - Start world service in debug mode
-  - `yarn orb dev --prod phaser-maps` - Start phaser-maps in production mode
+  - `yarn orb dev --prod admin` - Start admin in production mode
   - `yarn orb dev --list` - List all available services
 
 - **watch**: `yarn orb watch [service1 service2 ...]`
   Starts services in watch mode (alias for `dev`).
   Examples:
-
   - `yarn orb watch world admin-gateway` - Start specific services
   - `yarn orb watch` - Start all services
   - `yarn orb watch --list` - List all available services
@@ -100,15 +97,13 @@ The monorepo includes PM2 integration for managing services and clients through 
 - **logs**: `yarn orb logs [service1 service2 ...]`
   Views logs for specified services.
   Examples:
-
-  - `yarn orb logs world phaser-maps` - View logs for specific services
+  - `yarn orb logs world admin` - View logs for specific services
   - `yarn orb logs -w` or `yarn orb logs --watch` - Stream logs continuously
   - `yarn orb logs --list` - List all available services
 
 - **restart**: `yarn orb restart [service1 service2 ...]`
   Restarts specified services. If no services are specified, all services are restarted.
   Examples:
-
   - `yarn orb restart world admin-gateway` - Restart specific services
   - `yarn orb restart --watch world` - Restart only watch mode for world service
   - `yarn orb restart --list` - List all available services
@@ -116,8 +111,7 @@ The monorepo includes PM2 integration for managing services and clients through 
 - **down**: `yarn orb down [service1 service2 ...]`
   Stops and deletes specified services. If no services are specified, all services are stopped and deleted.
   Examples:
-
-  - `yarn orb down phaser-maps phaser-game` - Stop and delete specific services
+  - `yarn orb down admin phaser-game` - Stop and delete specific services
   - `yarn orb down --debug world` - Stop and delete only debug mode for world service
   - `yarn orb down --list` - List all available services
 
@@ -136,7 +130,7 @@ The following service names can be used with the commands above:
 
 - `world` or `@orbital/world`: World microservice
 - `admin-gateway` or `@orbital/admin-gateway`: Admin Gateway service
-- `phaser-maps` or `@orbital/phaser-maps`: Phaser Maps client
+- `admin` or `@orbital/admin`: Phaser Maps client
 - `phaser-game` or `@orbital/phaser-game`: Phaser Game client
 
 Or equivalently:

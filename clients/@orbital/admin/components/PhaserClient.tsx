@@ -1,9 +1,9 @@
 "use client";
-import React, { useRef, useEffect, useState } from "react";
 import Typography from "@mui/material/Typography";
+import type { AreaMapProps } from "@orbital/core";
+import { MapViewerScene } from "@orbital/phaser";
 import Phaser from "phaser";
-import type { AreaMapProps } from "@orbital/core/src/types/area-map";
-import { MapViewerScene } from "@orbital/phaser/src/components/MapViewer";
+import { useEffect, useRef, useState } from "react";
 
 interface PhaserClientProps {
   areaMap?: AreaMapProps;

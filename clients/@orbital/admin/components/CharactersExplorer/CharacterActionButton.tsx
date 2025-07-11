@@ -1,4 +1,4 @@
-import { Character } from "@orbital/characters/src/types/character";
+import { Character } from "@orbital/characters";
 import { TreeNodeActionButton } from "@orbital/react-ui";
 import { CharacterTreeNodeCustomAction } from "./CharacterTypes";
 

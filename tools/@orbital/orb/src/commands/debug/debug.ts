@@ -23,7 +23,7 @@ const debug = new Command("debug")
         "  yarn orb debug world            # Start only the world service"
       );
       console.log(
-        "  yarn orb debug world phaser-maps # Start multiple specific services"
+        "  yarn orb debug world admin # Start multiple specific services"
       );
       console.log("");
       return;

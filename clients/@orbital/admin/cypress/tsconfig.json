@@ -9,7 +9,7 @@
     "jsx": "react-jsx",
     "baseUrl": "../../../",
     "paths": {
-      "@/*": ["./clients/@orbital/phaser-maps/src/*"],
+      "@/*": ["./clients/@orbital/admin/src/*"],
       "@orbital/phaser-ui": ["libs/@orbital/phaser-ui/src"],
       "@orbital/phaser-ui/*": ["libs/@orbital/phaser-ui/src/*"],
       "@orbital/phaser": ["libs/@orbital/phaser/src"],

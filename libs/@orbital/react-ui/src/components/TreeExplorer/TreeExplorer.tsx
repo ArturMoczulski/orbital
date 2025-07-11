@@ -3,7 +3,7 @@ import Box from "@mui/material/Box";
 import IconButton from "@mui/material/IconButton";
 import { useTheme } from "@mui/material/styles";
 import Typography from "@mui/material/Typography";
-import { RelationshipType } from "@orbital/core/src/zod/reference/reference";
+import { RelationshipType } from "@orbital/core";
 import { lowerFirst } from "lodash";
 import React, { useEffect, useState } from "react";
 import { ZodBridge } from "uniforms-bridge-zod";

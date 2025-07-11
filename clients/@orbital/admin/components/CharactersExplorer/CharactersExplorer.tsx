@@ -1,7 +1,4 @@
-import {
-  Character,
-  CharacterSchema,
-} from "@orbital/characters/src/types/character";
+import { Character, CharacterSchema } from "@orbital/characters";
 import { TreeExplorer, useWorld } from "@orbital/react-ui";
 import { useEffect, useState } from "react";
 import {

@@ -2,8 +2,6 @@
   "compilerOptions": {
     "target": "ES2017",
     "module": "CommonJS",
-    "declaration": true,
-    "composite": true,
     "outDir": "dist",
     "rootDir": "src",
     "esModuleInterop": true,
@@ -11,11 +9,11 @@
     "emitDecoratorMetadata": true,
     "baseUrl": "../..",
     "paths": {
-      "@orbital/core": ["libs/@orbital/core/src"],
-      "@orbital/core/*": ["libs/@orbital/core/src/*"]
+      "@orbital/core": ["libs/@orbital/core/dist"],
+      "@orbital/core/*": ["libs/@orbital/core/dist/*"]
     }
   },
   "include": ["src/**/*.ts"],
   "exclude": ["**/*.spec.ts", "**/*.test.ts"],
-  "references": [{ "path": "../core" }]
+  "references": [{ "path": "../core/tsconfig.minimal.json" }]
 }

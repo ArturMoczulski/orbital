@@ -43,6 +43,7 @@ export class CharactersService {
 
   async findByWorldId(worldId: string): Promise<any[]> {
     this.logger.log(`Finding characters by worldId: ${worldId}`);
+
     const characters = await (
       this.worldMicroservice as any
     ).characters.findByWorldId({

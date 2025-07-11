@@ -1,4 +1,4 @@
-import { Area } from "@orbital/core/src/types/area";
+import { Area } from "@orbital/core";
 import React from "react";
 import { AreaLoadMapActionButton } from "./AreaLoadMapActionButton";
 

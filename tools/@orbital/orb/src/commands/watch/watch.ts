@@ -23,7 +23,7 @@ const watch = new Command("watch")
         "  yarn orb watch world            # Start only the world service"
       );
       console.log(
-        "  yarn orb watch world phaser-maps # Start multiple specific services"
+        "  yarn orb watch world admin # Start multiple specific services"
       );
       console.log("");
       return;

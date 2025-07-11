@@ -1,5 +1,4 @@
-import { Area, AreaSchema } from "@orbital/core/src/types/area";
-import { AreaMap } from "@orbital/core/src/types/area-map";
+import { Area, AreaMap, AreaSchema } from "@orbital/core";
 import { TreeExplorer, useWorld } from "@orbital/react-ui";
 import { useEffect, useState } from "react";
 import {

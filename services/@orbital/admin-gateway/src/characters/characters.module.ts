@@ -15,7 +15,7 @@ import { CharactersService } from "./characters.service";
           transport: Transport.NATS,
           options: {
             servers: [
-              configService.get<string>("NATS_URL", "nats://localhost:4222"),
+              configService.get<string>("NATS_URL", "nats://localhost:4223"),
             ],
           },
         }),

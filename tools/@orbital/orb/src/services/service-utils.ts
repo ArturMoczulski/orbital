@@ -212,8 +212,8 @@ export function startServices(
     console.log(`Starting all services in ${modeName} mode...`);
     for (const service of services) {
       try {
-        // Special case for phaser-maps service
-        if (service.name === "phaser-maps") {
+        // Special case for admin service
+        if (service.name === "admin") {
           console.log(
             `Starting ${service.fullName} directly with next dev in background...`
           );
@@ -254,8 +254,8 @@ export function startServices(
 
     for (const service of matchingServices) {
       try {
-        // Special case for phaser-maps service
-        if (service.name === "phaser-maps") {
+        // Special case for admin service
+        if (service.name === "admin") {
           console.log(
             `Starting ${service.fullName} directly with next dev in background...`
           );
@@ -534,11 +534,14 @@ export function displayServiceInfo(services: ServiceInfo[]): void {
   console.log("------------------");
 
   // Group by type
-  const servicesByType = services.reduce((acc, service) => {
-    acc[service.type] = acc[service.type] || [];
-    acc[service.type].push(service);
-    return acc;
-  }, {} as Record<string, ServiceInfo[]>);
+  const servicesByType = services.reduce(
+    (acc, service) => {
+      acc[service.type] = acc[service.type] || [];
+      acc[service.type].push(service);
+      return acc;
+    },
+    {} as Record<string, ServiceInfo[]>
+  );
 
   // Display services
   if (servicesByType.service) {

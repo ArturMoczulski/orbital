@@ -1,11 +1,13 @@
 "use client";
 import Box from "@mui/material/Box";
-import { Area } from "@orbital/core/src/types/area";
-import type { AreaMap } from "@orbital/core/src/types/area-map";
+import { Character } from "@orbital/characters";
+import type { AreaMap } from "@orbital/core";
+import { Area } from "@orbital/core";
 import { WorldExplorer } from "@orbital/react-ui";
 import dynamic from "next/dynamic";
 import { useState } from "react";
 import AreaExplorer from "../components/AreaExplorer/AreaExplorer";
+import CharactersExplorer from "../components/CharactersExplorer/CharactersExplorer";
 import { useAreasControllerFindByIdQuery } from "../services/adminApi.generated";
 
 // Dynamically load PhaserClient without SSR
@@ -16,11 +18,25 @@ const PhaserClient = dynamic(() => import("../components/PhaserClient"), {
 export default function ExplorerPage() {
   const [selectedAreaId, setSelectedAreaId] = useState<string | null>(null);
   const [selectedAreaMap, setSelectedAreaMap] = useState<AreaMap | null>(null);
+  const [selectedCharacterId, setSelectedCharacterId] = useState<string | null>(
+    null
+  );
+  const [selectedCharacterDetails, setSelectedCharacterDetails] =
+    useState<Character | null>(null);
 
   // Handle area selection with map
   const handleSelectArea = (area: Area, areaMap: AreaMap) => {
     setSelectedAreaId(area._id);
     setSelectedAreaMap(areaMap);
+  };
+
+  // Handle character selection with details
+  const handleSelectCharacter = (
+    character: Character,
+    characterDetails: Character
+  ) => {
+    setSelectedCharacterId(character._id);
+    setSelectedCharacterDetails(characterDetails);
   };
 
   const {
@@ -42,11 +58,17 @@ export default function ExplorerPage() {
             label: "Areas",
             component: <AreaExplorer onSelect={handleSelectArea} />,
           },
+          {
+            type: "Character",
+            label: "Characters",
+            component: <CharactersExplorer onSelect={handleSelectCharacter} />,
+          },
         ]}
-        defaultObjectType="Area"
-        defaultWorldId="world1"
-        defaultWorldName="Fantasy World"
+        defaultObjectType="Character"
+        defaultWorldId="real"
+        defaultWorldName="Real"
         worlds={[
+          { id: "real", name: "Real" },
           { id: "world1", name: "Fantasy World" },
           { id: "world2", name: "Sci-Fi World" },
           { id: "world3", name: "Medieval World" },

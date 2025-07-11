@@ -1,4 +1,4 @@
-import { Area } from "@orbital/core/src/types/area";
+import { Area } from "@orbital/core";
 import { TreeNodeActionButton } from "@orbital/react-ui";
 import { AreaTreeNodeCustomAction } from "./AreaActionsButtons";
 

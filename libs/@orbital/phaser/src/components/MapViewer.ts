@@ -1,6 +1,5 @@
+import { AreaMapProps, AreaMapTiles } from "@orbital/core";
 import Phaser from "phaser";
-import { AreaMapProps } from "@orbital/core/src/types/area-map";
-import { AreaMapTiles } from "@orbital/core/src/types/area-map-tiles";
 
 const defaultTileColors: Record<AreaMapTiles, number> = {
   [AreaMapTiles.Water]: 0x3366cc,
@@ -30,8 +29,8 @@ export class MapViewer extends Phaser.GameObjects.Container {
     tileColors: Record<AreaMapTiles, number> = defaultTileColors
   ) {
     super(scene, x, y);
-    this.mapWidth = mapData.width;
-    this.mapHeight = mapData.height;
+    this.mapWidth = mapData.width ?? 0;
+    this.mapHeight = mapData.height ?? 0;
     this.tileSize = Math.min(width / this.mapWidth, height / this.mapHeight);
 
     // Create a single graphics object for all tiles
@@ -75,8 +74,8 @@ export class MapViewer extends Phaser.GameObjects.Container {
     const strokeWidth = Math.max(1, Math.min(2, size / 16)); // Adaptive stroke width
 
     // First pass: fill all tiles
-    for (let row = 0; row < mapData.height; row++) {
-      for (let col = 0; col < mapData.width; col++) {
+    for (let row = 0; row < (mapData.height ?? 0); row++) {
+      for (let col = 0; col < (mapData.width ?? 0); col++) {
         const code = mapData.grid[row][col] as AreaMapTiles;
         const color = tileColors[code] ?? 0x000000;
 
@@ -89,17 +88,17 @@ export class MapViewer extends Phaser.GameObjects.Container {
     if (size > 4) {
       // Only draw grid lines if tiles are big enough
       this.graphics.lineStyle(strokeWidth, 0x000000, 0.3);
-      for (let row = 0; row <= mapData.height; row++) {
+      for (let row = 0; row <= (mapData.height ?? 0); row++) {
         this.graphics.beginPath();
         this.graphics.moveTo(0, row * size);
-        this.graphics.lineTo(mapData.width * size, row * size);
+        this.graphics.lineTo((mapData.width ?? 0) * size, row * size);
         this.graphics.closePath();
         this.graphics.strokePath();
       }
-      for (let col = 0; col <= mapData.width; col++) {
+      for (let col = 0; col <= (mapData.width ?? 0); col++) {
         this.graphics.beginPath();
         this.graphics.moveTo(col * size, 0);
-        this.graphics.lineTo(col * size, mapData.height * size);
+        this.graphics.lineTo(col * size, (mapData.height ?? 0) * size);
         this.graphics.closePath();
         this.graphics.strokePath();
       }
@@ -117,8 +116,8 @@ export class MapViewer extends Phaser.GameObjects.Container {
     this.labelText.setVisible(true).setText("Updating map...");
 
     // update dimensions and tile size
-    this.mapWidth = mapData.width;
-    this.mapHeight = mapData.height;
+    this.mapWidth = mapData.width ?? 0;
+    this.mapHeight = mapData.height ?? 0;
     this.tileSize = Math.min(
       this.scene.scale.width / this.mapWidth,
       this.scene.scale.height / this.mapHeight
