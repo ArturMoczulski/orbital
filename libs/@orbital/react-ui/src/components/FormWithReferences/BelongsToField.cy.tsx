@@ -365,7 +365,8 @@ describe("BelongsToField Component", () => {
       const field = belongsToField("worldId", "Project");
 
       // Verify that the initial value from Redux is properly displayed
-      field.selected().should("equal", "Test World 2");
+      // Instead of using field.selected(), directly check the input value
+      field.get().find("input").should("have.value", "Test World 2");
     });
 
     it("should update redux store and ui when selecting a new option", () => {
