@@ -525,7 +525,7 @@ describe("ObjectFieldsetInteractable", () => {
     customerFieldset.getObjectId().should("equal", "customer-456");
   });
 
-  it.only("works with references between different object types (area belongs to world)", () => {
+  it("works with references between different object types (area belongs to world)", () => {
     // Create schemas with references
     const worldSchema = z
       .object({
@@ -575,37 +575,71 @@ describe("ObjectFieldsetInteractable", () => {
       },
     });
 
-    const areaData = {
+    const initialAreaData = {
       name: "Forest of Shadows",
       size: 500,
       worldId: "123e4567-e89b-12d3-a456-426614174000",
     };
 
-    // Use ObjectProvider directly instead of FormWithReferences
-    // This avoids the issue with AutoValidatedQuickMaterialForm
-    mount(
-      <ObjectProvider schema={refBridge} data={areaData} objectType="Area">
-        <ObjectFieldset />
-      </ObjectProvider>
-    );
+    // Create a wrapper component that displays the current data
+    function TestAreaForm() {
+      // Use useState to track the current data
+      const [areaData, setAreaData] = useState(initialAreaData);
 
-    const fieldset = objectFieldset("Area");
+      // This function will be called when updateObjectData is called
+      const handleUpdate = (
+        key: string,
+        newData: Record<string, any>,
+        merge = true
+      ) => {
+        setAreaData((prevData) => {
+          if (merge) {
+            // Ensure we maintain the correct type by explicitly including all required fields
+            return { ...prevData, ...newData } as typeof initialAreaData;
+          }
+          // For complete replacement, we'd need to ensure the new data has all required fields
+          // In practice, this branch shouldn't be hit in our test
+          return { ...initialAreaData, ...newData } as typeof initialAreaData;
+        });
+      };
+
+      return (
+        <div>
+          <ObjectProvider
+            schema={refBridge}
+            objectType="Area"
+            data={areaData}
+            onUpdate={handleUpdate}
+          >
+            <ObjectFieldset />
+            {/* Display the current worldId for verification */}
+            <div data-testid="current-worldId">{areaData.worldId}</div>
+          </ObjectProvider>
+        </div>
+      );
+    }
+
+    // Mount the test component
+    mount(<TestAreaForm />);
+
+    const areaFieldset = objectFieldset("Area");
 
     // Verify the fieldset exists
-    fieldset.should("exist");
+    areaFieldset.should("exist");
 
     // Verify it has the expected fields
-    fieldset.hasField("name").should("be.true");
-    fieldset.hasField("size").should("be.true");
-    fieldset.hasField("worldId").should("be.true");
+    areaFieldset.hasField("name").should("be.true");
+    areaFieldset.hasField("size").should("be.true");
+    areaFieldset.hasField("worldId").should("be.true");
 
     // Verify field values
-    fieldset.getFieldValue("name").should("equal", "Forest of Shadows");
-    fieldset.getFieldValue("size").should("equal", "500");
-    fieldset.getFieldValue("worldId").should("equal", "Fantasy World");
+    areaFieldset.getFieldValue("name").should("equal", "Forest of Shadows");
+    areaFieldset.getFieldValue("size").should("equal", "500");
+    areaFieldset.getFieldValue("worldId").should("equal", "Fantasy World");
 
     // Get the input field within the BelongsToField
-    const worldField = fieldset.field<BelongsToFieldInteractable>("worldId");
+    const worldField =
+      areaFieldset.field<BelongsToFieldInteractable>("worldId");
 
     // Get the display text using selected() helper
     worldField.then((field) => {
@@ -635,6 +669,18 @@ describe("ObjectFieldsetInteractable", () => {
       field.isClosed().should("be.true");
 
       // Verify the new selection
+      field.selected().should("equal", "Sci-Fi World");
+
+      // Verify the data model was updated with the correct ID
+      cy.get('[data-testid="current-worldId"]').should(
+        "contain",
+        "223e4567-e89b-12d3-a456-426614174000"
+      );
+
+      // Click outside to trigger any blur events
+      cy.get("body").click(0, 0);
+
+      // Verify the selection is still "Sci-Fi World" after clicking outside
       field.selected().should("equal", "Sci-Fi World");
     });
   });

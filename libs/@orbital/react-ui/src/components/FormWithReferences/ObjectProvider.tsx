@@ -45,6 +45,8 @@ type ObjectProviderProps = {
     data: Record<string, any>,
     merge?: boolean
   ) => any;
+  // Optional callback for data updates (for testing)
+  onUpdate?: (key: string, data: Record<string, any>, merge?: boolean) => void;
 };
 
 /**
@@ -70,6 +72,8 @@ export function ObjectProvider({
   additionalDataSelector,
   dispatch,
   createUpdateAction = createUpdateObjectDataAction,
+  // Testing callback
+  onUpdate,
 }: ObjectProviderProps) {
   return (
     <ObjectSchemaProvider schema={schema} objectType={objectType}>
@@ -84,6 +88,8 @@ export function ObjectProvider({
         additionalDataSelector={additionalDataSelector}
         dispatch={dispatch}
         createUpdateAction={createUpdateAction}
+        // Testing callback
+        onUpdate={onUpdate}
       >
         {children}
       </ObjectDataProvider>

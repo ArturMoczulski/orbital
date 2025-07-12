@@ -501,4 +501,57 @@ describe("ObjectProvider - Single Provider Tests", () => {
       "redux-post-456"
     );
   });
+
+  it("should call onUpdate when data is updated", () => {
+    // Create test schema
+    const userSchema = z.object({
+      name: z.string(),
+      email: z.string().email(),
+    });
+
+    const bridge = new ZodReferencesBridge({
+      schema: userSchema,
+    });
+
+    // Create test data
+    const userData = {
+      name: "John Doe",
+      email: "john@example.com",
+    };
+
+    // Create a spy for the onUpdate callback
+    const onUpdateSpy = cy.spy().as("onUpdateSpy");
+
+    // Mount the provider with the onUpdate prop
+    mount(
+      <ObjectProvider
+        schema={bridge}
+        objectType="User"
+        data={userData}
+        objectId="user-123"
+        onUpdate={onUpdateSpy}
+      >
+        <ObjectConsumer />
+      </ObjectProvider>
+    );
+
+    // Verify initial data
+    cy.get("[data-testid='object-type']").should("contain.text", "User");
+    cy.get("[data-testid='object-data']").should("contain.text", "John Doe");
+
+    // Update data
+    cy.get("[data-testid='update-data-button']").click();
+
+    // Verify onUpdate was called with the correct parameters
+    cy.get("@onUpdateSpy").should("have.been.called");
+    cy.get("@onUpdateSpy").then((spy) => {
+      expect(spy).to.have.been.calledWith(
+        "main", // key
+        Cypress.sinon.match((data: any) => {
+          return data.updated === true && typeof data.timestamp === "number";
+        }), // data
+        true // merge
+      );
+    });
+  });
 });
