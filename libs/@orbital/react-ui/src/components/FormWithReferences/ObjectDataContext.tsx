@@ -99,12 +99,74 @@ export function ObjectDataProvider({
   onUpdate,
   onRegister,
 }: ObjectDataProviderProps) {
-  // Use Redux data if selectors are provided, otherwise use props
-  const reduxData = dataSelector ? dataSelector() : undefined;
-  const reduxObjectId = objectIdSelector ? objectIdSelector() : undefined;
-  const reduxAdditionalData = additionalDataSelector
-    ? additionalDataSelector()
-    : undefined;
+  // Use React's useState to track the latest data from Redux
+  const [reduxData, setReduxData] = React.useState(
+    dataSelector ? dataSelector() : undefined
+  );
+  const [reduxObjectId, setReduxObjectId] = React.useState(
+    objectIdSelector ? objectIdSelector() : undefined
+  );
+  const [reduxAdditionalData, setReduxAdditionalData] = React.useState(
+    additionalDataSelector ? additionalDataSelector() : undefined
+  );
+
+  // Set up a force update mechanism to trigger re-renders when Redux state changes
+  const [, forceUpdate] = React.useState({});
+
+  // Subscribe to Redux state changes if selectors are provided
+  React.useEffect(() => {
+    if (!dataSelector && !objectIdSelector && !additionalDataSelector) {
+      return; // No selectors provided, no need to subscribe
+    }
+
+    // Create a function to check for changes and update state
+    const checkForChanges = () => {
+      let hasChanges = false;
+
+      if (dataSelector) {
+        const newData = dataSelector();
+        if (JSON.stringify(newData) !== JSON.stringify(reduxData)) {
+          setReduxData(newData);
+          hasChanges = true;
+        }
+      }
+
+      if (objectIdSelector) {
+        const newObjectId = objectIdSelector();
+        if (newObjectId !== reduxObjectId) {
+          setReduxObjectId(newObjectId);
+          hasChanges = true;
+        }
+      }
+
+      if (additionalDataSelector) {
+        const newAdditionalData = additionalDataSelector();
+        if (
+          JSON.stringify(newAdditionalData) !==
+          JSON.stringify(reduxAdditionalData)
+        ) {
+          setReduxAdditionalData(newAdditionalData);
+          hasChanges = true;
+        }
+      }
+
+      // Force a re-render if any data has changed
+      if (hasChanges) {
+        forceUpdate({});
+      }
+    };
+
+    // Initial check
+    checkForChanges();
+
+    // Set up an interval to periodically check for changes
+    // This is a simple approach that doesn't require direct access to the Redux store
+    const intervalId = setInterval(checkForChanges, 100);
+
+    return () => {
+      clearInterval(intervalId);
+    };
+  }, [dataSelector, objectIdSelector, additionalDataSelector]);
 
   // Combine data from props and Redux
   const finalData = reduxData || data;
