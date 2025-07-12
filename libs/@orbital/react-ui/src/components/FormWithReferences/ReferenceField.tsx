@@ -139,24 +139,59 @@ export function ReferenceField({
   // Convert string to PascalCase (e.g., "hello_world" -> "HelloWorld")
   const toPascalCase = (str: string): string =>
     startCase(camelCase(str)).replace(/\s/g, "");
-
   // Helper to get a proper label from field name or reference
   const getLabel = (): string | undefined => {
-    // Use provided label if available
-    if (label) return label;
+    console.log(`[ReferenceField] getLabel called for field: ${name}`);
+    console.log(`[ReferenceField] label prop: ${label}`);
+    console.log(`[ReferenceField] reference:`, reference);
+    console.log(`[ReferenceField] multiple: ${multiple}`);
 
-    // Use reference name if available
-    if (reference?.name) return toPascalCase(reference.name);
+    // For reference fields, prioritize the reference name over the provided label
+    // This ensures we get "World" instead of "World id" for worldId fields
+    if (reference?.name) {
+      const refName = reference.name;
+      console.log(`[ReferenceField] Using reference name: ${refName}`);
+
+      // Just capitalize the first letter of the reference name
+      const result = refName.charAt(0).toUpperCase() + refName.slice(1);
+      console.log(
+        `[ReferenceField] Final label from reference name: ${result}`
+      );
+      return result;
+    }
+
+    // Use provided label if available and no reference name
+    if (label) {
+      console.log(`[ReferenceField] Using provided label: ${label}`);
+      return label;
+    }
 
     // Extract reference name from field name based on pattern
     if (multiple && name.endsWith("Ids")) {
       const referenceName = name.slice(0, -3); // Remove 'Ids' suffix
-      return toPascalCase(referenceName);
+      console.log(
+        `[ReferenceField] Extracted reference name from field: ${referenceName}`
+      );
+      const result =
+        referenceName.charAt(0).toUpperCase() + referenceName.slice(1);
+      console.log(
+        `[ReferenceField] Final label from field name (multiple): ${result}`
+      );
+      return result;
     } else if (!multiple && name.endsWith("Id")) {
       const referenceName = name.slice(0, -2); // Remove 'Id' suffix
-      return toPascalCase(referenceName);
+      console.log(
+        `[ReferenceField] Extracted reference name from field: ${referenceName}`
+      );
+      const result =
+        referenceName.charAt(0).toUpperCase() + referenceName.slice(1);
+      console.log(
+        `[ReferenceField] Final label from field name (single): ${result}`
+      );
+      return result;
     }
 
+    console.log(`[ReferenceField] No label determined, returning undefined`);
     return undefined;
   };
 
@@ -303,9 +338,13 @@ export function createReferenceFieldsComponentDetector(
   // Use the same type signature as AutoField.defaultComponentDetector
   return (props: any, uniforms: any) => {
     const fieldName = props.name;
+    console.log(`[ComponentDetector] Checking field: ${fieldName}`);
+    console.log(`[ComponentDetector] Field props:`, props.field);
 
     // 1. First check if the field has a reference in its uniforms metadata
     if (props.field?.uniforms?.component === BELONGS_TO_FIELD) {
+      console.log(`[ComponentDetector] Field ${fieldName} is a BelongsToField`);
+      console.log(`[ComponentDetector] Reference:`, props.field?.reference);
       return (fieldProps: any) => (
         <BelongsToField
           {...fieldProps}
@@ -317,6 +356,8 @@ export function createReferenceFieldsComponentDetector(
     }
 
     if (props.field?.uniforms?.component === HAS_MANY_FIELD) {
+      console.log(`[ComponentDetector] Field ${fieldName} is a HasManyField`);
+      console.log(`[ComponentDetector] Reference:`, props.field?.reference);
       return (fieldProps: any) => (
         <HasManyField
           {...fieldProps}

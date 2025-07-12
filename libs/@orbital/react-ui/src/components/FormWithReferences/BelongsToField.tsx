@@ -44,7 +44,10 @@ function BelongsToField({
   schema: propSchema,
   objectId,
 }: BelongsToFieldProps) {
-  console.log(`[BelongsToField] Rendering with props value:`, value);
+  console.log(`[BelongsToField] Rendering for field: ${name}`);
+  console.log(`[BelongsToField] label prop: ${label}`);
+  console.log(`[BelongsToField] reference:`, reference);
+  console.log(`[BelongsToField] props value:`, value);
 
   // Get data from ObjectDataContext if available
   let contextData: string | undefined;

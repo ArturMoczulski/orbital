@@ -44,6 +44,9 @@ function HasManyField({
   schema: propSchema,
   objectId,
 }: HasManyFieldProps) {
+  console.log(`[HasManyField] Rendering for field: ${name}`);
+  console.log(`[HasManyField] label prop: ${label}`);
+  console.log(`[HasManyField] reference:`, reference);
   // Get data from ObjectDataContext if available
   let contextData: string[] | undefined;
   let updateContextData:
