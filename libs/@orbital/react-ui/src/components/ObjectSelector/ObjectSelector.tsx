@@ -203,6 +203,7 @@ export function ObjectSelector({
           renderInput={(params) => (
             <TextField
               {...params}
+              name={dataFieldName || name}
               label={label}
               placeholder={placeholder}
               error={error}

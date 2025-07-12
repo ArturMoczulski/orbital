@@ -8,7 +8,10 @@ import {
   MaterialUIInteractable,
   MaterialUIInteractableOptions,
 } from "./MaterialUI.interactable";
-import { PopperInteractable } from "./Popper.interactable";
+import {
+  PopperInteractable,
+  PopperInteractableOptions,
+} from "./Popper.interactable";
 
 /**
  * Options for AutocompleteInteractable
@@ -42,10 +45,11 @@ export class AutocompleteInteractable
       componentName: options.componentName || "Autocomplete",
     });
 
-    // If no triggerElement is provided, create a default one that finds the input element
-    const popperOptions = { ...options };
+    const popperOptions = {
+      triggerElement: undefined,
+    } as PopperInteractableOptions;
 
-    if (!popperOptions.triggerElement) {
+    if (!options.triggerElement) {
       popperOptions.triggerElement = () => {
         return this.get().find("input") as unknown as Cypress.Chainable<
           JQuery<HTMLElement>

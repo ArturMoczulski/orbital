@@ -84,7 +84,7 @@ export class ObjectFieldsetInteractable extends CypressInteractable {
       fieldName: string,
       parentElement?: () => Cypress.Chainable<JQuery<HTMLElement>>
     ) => T
-  ): T {
+  ): Cypress.Chainable<T> {
     // Create a parent element function that returns the fieldset element
     const parentElement = () => this.get({});
 
@@ -151,7 +151,9 @@ export class ObjectFieldsetInteractable extends CypressInteractable {
    * @returns The fieldset interactable for chaining
    */
   setFieldValue(fieldName: string, value: any): this {
-    this.field(fieldName).selectById(value);
+    this.field(fieldName).then((field) => {
+      field.selectById(value);
+    });
     return this;
   }
 
@@ -173,7 +175,7 @@ export class ObjectFieldsetInteractable extends CypressInteractable {
       .then(($field) => {
         if ($field.length === 0) {
           // If not found as a standard input, try to use the field interactable
-          return this.field(fieldName).getValue();
+          return this.field(fieldName).then((field) => field.getValue());
         }
 
         // For standard inputs, get the value directly
@@ -187,7 +189,7 @@ export class ObjectFieldsetInteractable extends CypressInteractable {
    * @returns A chainable that resolves to a boolean
    */
   fieldHasError(fieldName: string): Cypress.Chainable<boolean> {
-    return this.field(fieldName).hasError();
+    return this.field(fieldName).then((field) => field.hasError());
   }
 
   /**
@@ -196,7 +198,7 @@ export class ObjectFieldsetInteractable extends CypressInteractable {
    * @returns A chainable that resolves to the error message
    */
   getFieldErrorMessage(fieldName: string): Cypress.Chainable<string> {
-    return this.field(fieldName).getErrorMessage();
+    return this.field(fieldName).then((field) => field.getErrorMessage());
   }
 
   /**
@@ -205,7 +207,7 @@ export class ObjectFieldsetInteractable extends CypressInteractable {
    * @returns A chainable that resolves to a boolean
    */
   isFieldRequired(fieldName: string): Cypress.Chainable<boolean> {
-    return this.field(fieldName).isRequired();
+    return this.field(fieldName).then((field) => field.isRequired());
   }
 
   /**
@@ -214,7 +216,7 @@ export class ObjectFieldsetInteractable extends CypressInteractable {
    * @returns A chainable that resolves to a boolean
    */
   isFieldDisabled(fieldName: string): Cypress.Chainable<boolean> {
-    return this.field(fieldName).isDisabled();
+    return this.field(fieldName).then((field) => field.isDisabled());
   }
 
   /**

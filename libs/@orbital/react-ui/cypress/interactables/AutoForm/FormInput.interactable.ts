@@ -264,6 +264,13 @@ export class SelectInputInteractable extends FormInputInteractable<string> {
  * @param customInteractable Optional custom interactable constructor to use instead of auto-detection
  * @returns A specialized input field interactable based on the input type
  */
+/**
+ * Factory function to create an input field interactable based on the input type
+ * @param fieldName The name of the field
+ * @param parentElement Optional parent element to scope the field within
+ * @param customInteractable Optional custom interactable constructor to use instead of auto-detection
+ * @returns A specialized input field interactable based on the input type
+ */
 export function inputField<
   T extends FormInputInteractable<any> = FormInputInteractable<any>,
 >(
@@ -273,74 +280,127 @@ export function inputField<
     fieldName: string,
     parentElement?: () => Cypress.Chainable<JQuery<HTMLElement>>
   ) => T
-): T {
+): Cypress.Chainable<T> {
   // If a custom interactable constructor is provided, use it
   if (customInteractable) {
-    return new customInteractable(fieldName, parentElement);
+    return cy.wrap(
+      new customInteractable(fieldName, parentElement)
+    ) as Cypress.Chainable<T>;
   }
 
-  // Create a temporary element to determine the input type
-  const getElement = () => {
-    const interactable = new TextInputInteractable(fieldName, parentElement);
-    return interactable.get();
+  // Create a simple selector to find the element
+  const inputSelector = [
+    `input[name="${fieldName}"]`,
+    `select[name="${fieldName}"]`,
+    `textarea[name="${fieldName}"]`,
+  ].join(", ");
+
+  // Function to get the element using the parent if provided
+  const getInputElement = () => {
+    if (parentElement) {
+      return parentElement().find(inputSelector);
+    }
+    return cy.get(inputSelector);
   };
 
-  // We need to determine the input type synchronously, so we'll create a default
-  // text input interactable first, then replace it with the correct type after
-  // we've determined the input type
-  let interactable: FormInputInteractable<any> = new TextInputInteractable(
-    fieldName,
-    parentElement
-  );
+  // Create a command that returns the appropriate interactable based on the element type
+  return getInputElement().then(($el) => {
+    // Use our new factory function to create the appropriate interactable
+    return createInteractableFromInput<T>($el, fieldName, parentElement);
+  });
+}
 
-  cy.log(`getElement`, getElement());
+/**
+ * Factory function to create an appropriate interactable from a jQuery element
+ * This function examines the element and its ancestors to determine the most appropriate
+ * interactable type based on data-testid attributes and other characteristics
+ *
+ * @param $el The jQuery element to create an interactable for
+ * @param fieldName The name of the field
+ * @param parentElement Optional parent element to scope the field within
+ * @returns A specialized interactable based on the element type
+ */
+export function createInteractableFromInput<
+  T extends FormInputInteractable<any> = FormInputInteractable<any>,
+>(
+  $el: JQuery<HTMLElement>,
+  fieldName: string,
+  parentElement?: () => Cypress.Chainable<JQuery<HTMLElement>>
+): Cypress.Chainable<T> {
+  // Check for data-testid on the element itself
+  let dataTestId = $el.attr("data-testid");
 
-  // Use a one-time Cypress command to determine the input type
-  getElement().then(($el) => {
-    const inputType = $el.attr("type")?.toLowerCase();
-    const tagName = $el.prop("tagName")?.toLowerCase();
-    const dataTestId = $el.attr("data-testid");
+  // If not found on the element itself, check ancestors for known component types
+  if (!dataTestId) {
+    // Check for BelongsToField
+    const $belongsToField = $el.closest('[data-testid="BelongsToField"]');
+    if ($belongsToField.length > 0) {
+      dataTestId = "BelongsToField";
+    }
 
-    // First check if we can determine the interactable type based on data-testid
-    if (dataTestId) {
-      // Import necessary interactables dynamically to avoid circular dependencies
-      // This is a workaround since we can't directly import here due to potential circular dependencies
-      try {
-        if (dataTestId === "BelongsToField") {
-          // Use require to dynamically import the ObjectSelectorInteractable
-          const objectSelectorModule = require("../ObjectSelector/ObjectSelector.interactable");
-          if (
-            objectSelectorModule &&
-            objectSelectorModule.ObjectSelectorInteractable
-          ) {
-            interactable = new objectSelectorModule.ObjectSelectorInteractable(
-              fieldName,
-              parentElement
-            );
-            return;
-          }
-        }
-        // Add more data-testid checks for other component types as needed
-      } catch (e) {
-        cy.log(`Error loading interactable for data-testid ${dataTestId}:`, e);
+    // Check for other known component types (can be extended as needed)
+    // For example: HasManyField, ObjectSelector, etc.
+    if (!dataTestId) {
+      const $objectSelector = $el.closest('[data-testid^="ObjectSelector"]');
+      if ($objectSelector.length > 0) {
+        dataTestId = $objectSelector.attr("data-testid");
       }
     }
+  }
 
-    // If we couldn't determine the interactable type based on data-testid,
-    // fall back to the original logic based on input type
-    if (inputType === "checkbox") {
-      interactable = new CheckboxInputInteractable(fieldName, parentElement);
-    } else if (inputType === "radio") {
-      interactable = new RadioInputInteractable(fieldName, parentElement);
-    } else if (inputType === "number") {
-      interactable = new NumberInputInteractable(fieldName, parentElement);
-    } else if (tagName === "select") {
-      interactable = new SelectInputInteractable(fieldName, parentElement);
+  // Handle special cases based on the data-testid
+  if (dataTestId === "BelongsToField") {
+    // Import directly to avoid circular dependencies
+    const {
+      BelongsToFieldInteractable,
+    } = require("../FormWithReferences/BelongsToField.interactable");
+
+    // Find the closest ObjectFieldset to get the objectType
+    const $fieldset = $el.closest('[data-testid="ObjectFieldset"]');
+    const objectType =
+      $fieldset.attr("data-object-type") || "UnknownObjectType";
+
+    // Create the interactable with the correct objectType
+    const interactable = new BelongsToFieldInteractable(
+      fieldName,
+      objectType,
+      parentElement
+    );
+
+    return cy.wrap(interactable) as unknown as Cypress.Chainable<T>;
+  }
+
+  // Handle standard HTML elements
+  const tagName = $el.prop("tagName")?.toLowerCase();
+  const inputType = $el.attr("type")?.toLowerCase();
+
+  if (tagName === "select") {
+    const interactable = new SelectInputInteractable(fieldName, parentElement);
+    return cy.wrap(interactable) as unknown as Cypress.Chainable<T>;
+  }
+
+  if (tagName === "input") {
+    let interactable: FormInputInteractable<any>;
+    switch (inputType) {
+      case "checkbox":
+        interactable = new CheckboxInputInteractable(fieldName, parentElement);
+        break;
+      case "radio":
+        interactable = new RadioInputInteractable(fieldName, parentElement);
+        break;
+      case "number":
+        interactable = new NumberInputInteractable(fieldName, parentElement);
+        break;
+      default:
+        interactable = new TextInputInteractable(fieldName, parentElement);
+        break;
     }
-  });
-  cy.log(`interactable: `, interactable);
+    return cy.wrap(interactable) as unknown as Cypress.Chainable<T>;
+  }
 
-  return interactable as unknown as T;
+  // Default to text input for other element types
+  const interactable = new TextInputInteractable(fieldName, parentElement);
+  return cy.wrap(interactable) as unknown as Cypress.Chainable<T>;
 }
 
 // No need to export FormInputInteractable as a type since it's already exported as a class

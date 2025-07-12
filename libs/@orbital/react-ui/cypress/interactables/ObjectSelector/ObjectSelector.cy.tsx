@@ -208,6 +208,47 @@ describe("ObjectSelector", () => {
         .find("input")
         .should("have.value", "Option 2");
     });
+
+    it("should correctly associate the name prop with the input field", () => {
+      // Create a component with a specific name
+      const NamePropTestComponent = () => {
+        const [value, setValue] = useState<string | null>(null);
+
+        return (
+          <div>
+            <ObjectSelector
+              id="nameTest"
+              name="customFieldName"
+              value={value}
+              onChange={setValue}
+              options={options}
+              idField="_id"
+              displayField="name"
+              label="Name Test Field"
+              data-testid="NamePropSelector"
+              multiple={false}
+            />
+          </div>
+        );
+      };
+
+      mount(<NamePropTestComponent />);
+
+      const autocomplete = objectSelector("NamePropSelector");
+
+      // Verify the name attribute is correctly set on the input field
+      autocomplete.get().find('input[name="customFieldName"]').should("exist");
+
+      // Open the dropdown and select an option
+      autocomplete.open();
+      autocomplete.select("Option 1");
+
+      // Verify the selected value is displayed in the input with the correct name
+      autocomplete
+        .get()
+        .find('input[name="customFieldName"]')
+        .should("have.value", "Option 1");
+    });
   });
 
   describe("Multiple Choice Mode", () => {
@@ -481,6 +522,142 @@ describe("ObjectSelector", () => {
         chips[0].label().should("eq", "Option 1");
         chips[1].label().should("eq", "Option 3");
       });
+    });
+
+    it("should correctly associate the name prop with the input field in multiple choice mode", () => {
+      // Create a component with a specific name
+      const MultiNamePropTestComponent = () => {
+        const [value, setValue] = useState<string[]>([]);
+
+        return (
+          <div>
+            <ObjectSelector
+              id="multiNameTest"
+              name="customMultiFieldName"
+              value={value}
+              onChange={setValue}
+              options={options}
+              idField="_id"
+              displayField="name"
+              label="Multi Name Test Field"
+              data-testid="MultiNamePropSelector"
+              multiple={true}
+            />
+            <div data-testid="multi-name-value">{JSON.stringify(value)}</div>
+          </div>
+        );
+      };
+
+      mount(<MultiNamePropTestComponent />);
+
+      const selector = objectSelector("MultiNamePropSelector");
+
+      // Verify the name attribute is correctly set on the input field
+      selector.get().find('input[name="customMultiFieldName"]').should("exist");
+
+      // Select multiple options
+      selector.open();
+      selector.select("Option 1");
+      selector.open();
+      selector.select("Option 2");
+
+      // Verify the selections were made
+      cy.get('[data-testid="multi-name-value"]').should(
+        "contain",
+        '["option1","option2"]'
+      );
+
+      // Verify the name attribute is still correctly set after selections
+      selector.get().find('input[name="customMultiFieldName"]').should("exist");
+
+      // Verify chips display the correct names
+      selector.chips().then((chips) => {
+        expect(chips.length).to.equal(2);
+        chips[0].label().should("eq", "Option 1");
+        chips[1].label().should("eq", "Option 2");
+      });
+    });
+
+    it("should maintain the name attribute through various interactions in multiple choice mode", () => {
+      // Create a component with a specific name for persistence testing
+      const NamePersistenceTestComponent = () => {
+        const [value, setValue] = useState<string[]>([]);
+
+        return (
+          <div>
+            <ObjectSelector
+              id="persistenceTest"
+              name="persistentFieldName"
+              value={value}
+              onChange={setValue}
+              options={options}
+              idField="_id"
+              displayField="name"
+              label="Persistence Test Field"
+              data-testid="NamePersistenceSelector"
+              multiple={true}
+            />
+            <div data-testid="persistence-value">{JSON.stringify(value)}</div>
+          </div>
+        );
+      };
+
+      mount(<NamePersistenceTestComponent />);
+
+      const selector = objectSelector("NamePersistenceSelector");
+
+      // 1. Verify name attribute is present initially
+      selector
+        .get()
+        .find('input[name="persistentFieldName"]')
+        .should("exist")
+        .as("inputField");
+
+      // 2. Select options and verify name persists
+      selector.open();
+      selector.select("Option 1");
+      selector.open();
+      selector.select("Option 3");
+
+      cy.get('[data-testid="persistence-value"]').should(
+        "contain",
+        '["option1","option3"]'
+      );
+
+      cy.get("@inputField").should("have.attr", "name", "persistentFieldName");
+
+      // 3. Clear selections and verify name persists
+      selector.clearSelection();
+
+      cy.get('[data-testid="persistence-value"]').should("contain", "[]");
+      cy.get("@inputField").should("have.attr", "name", "persistentFieldName");
+
+      // 4. Make new selections and verify name persists
+      selector.open();
+      selector.select("Option 2");
+      selector.open();
+      selector.select("Option 4");
+
+      cy.get('[data-testid="persistence-value"]').should(
+        "contain",
+        '["option2","option4"]'
+      );
+
+      cy.get("@inputField").should("have.attr", "name", "persistentFieldName");
+
+      // 5. Type in the field and verify name persists
+      selector.type("test");
+      cy.get("@inputField").should("have.attr", "name", "persistentFieldName");
+
+      // 6. Deselect an option and verify name persists
+      selector.deselect("Option 2");
+
+      cy.get('[data-testid="persistence-value"]').should(
+        "contain",
+        '["option4"]'
+      );
+
+      cy.get("@inputField").should("have.attr", "name", "persistentFieldName");
     });
   });
 });
