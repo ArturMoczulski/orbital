@@ -306,7 +306,7 @@ export function inputField<
       // Import necessary interactables dynamically to avoid circular dependencies
       // This is a workaround since we can't directly import here due to potential circular dependencies
       try {
-        if (dataTestId === "ObjectSelector") {
+        if (dataTestId === "BelongsToField") {
           // Use require to dynamically import the ObjectSelectorInteractable
           const objectSelectorModule = require("../ObjectSelector/ObjectSelector.interactable");
           if (
