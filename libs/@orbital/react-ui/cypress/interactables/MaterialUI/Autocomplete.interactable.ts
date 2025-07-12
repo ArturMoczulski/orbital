@@ -218,15 +218,22 @@ export class AutocompleteInteractable
 
       // For single selection, check if the field is focused before blurring
       // This prevents the "cy.blur() can only be called when there is a currently focused element" error
-      this.textField().then(($field) => {
-        // Check if the field is the active element (focused)
-        const isFieldFocused =
-          $field.is(":focus") ||
-          $field[0] === Cypress.$(document.activeElement)[0];
-        if (isFieldFocused) {
-          // Only blur if the field is focused
-          this.textField().blur();
-        }
+      cy.document().then((doc) => {
+        this.textField().then(($field) => {
+          // Check if any element in the field is the active element
+          const activeElement = doc.activeElement;
+          const fieldElements = $field.toArray();
+
+          // Type-safe check if the field is focused
+          const isFieldFocused = fieldElements.some(
+            (el) => el === activeElement
+          );
+
+          if (isFieldFocused) {
+            // Only blur if the field is focused
+            this.textField().blur();
+          }
+        });
       });
     }
 
