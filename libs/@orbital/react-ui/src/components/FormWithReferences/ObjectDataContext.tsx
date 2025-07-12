@@ -110,62 +110,19 @@ export function ObjectDataProvider({
     additionalDataSelector ? additionalDataSelector() : undefined
   );
 
-  // Set up a force update mechanism to trigger re-renders when Redux state changes
-  const [, forceUpdate] = React.useState({});
-
-  // Subscribe to Redux state changes if selectors are provided
+  // Initialize state with data from selectors
   React.useEffect(() => {
-    if (!dataSelector && !objectIdSelector && !additionalDataSelector) {
-      return; // No selectors provided, no need to subscribe
+    if (dataSelector) {
+      setReduxData(dataSelector());
     }
 
-    // Create a function to check for changes and update state
-    const checkForChanges = () => {
-      let hasChanges = false;
+    if (objectIdSelector) {
+      setReduxObjectId(objectIdSelector());
+    }
 
-      if (dataSelector) {
-        const newData = dataSelector();
-        if (JSON.stringify(newData) !== JSON.stringify(reduxData)) {
-          setReduxData(newData);
-          hasChanges = true;
-        }
-      }
-
-      if (objectIdSelector) {
-        const newObjectId = objectIdSelector();
-        if (newObjectId !== reduxObjectId) {
-          setReduxObjectId(newObjectId);
-          hasChanges = true;
-        }
-      }
-
-      if (additionalDataSelector) {
-        const newAdditionalData = additionalDataSelector();
-        if (
-          JSON.stringify(newAdditionalData) !==
-          JSON.stringify(reduxAdditionalData)
-        ) {
-          setReduxAdditionalData(newAdditionalData);
-          hasChanges = true;
-        }
-      }
-
-      // Force a re-render if any data has changed
-      if (hasChanges) {
-        forceUpdate({});
-      }
-    };
-
-    // Initial check
-    checkForChanges();
-
-    // Set up an interval to periodically check for changes
-    // This is a simple approach that doesn't require direct access to the Redux store
-    const intervalId = setInterval(checkForChanges, 100);
-
-    return () => {
-      clearInterval(intervalId);
-    };
+    if (additionalDataSelector) {
+      setReduxAdditionalData(additionalDataSelector());
+    }
   }, [dataSelector, objectIdSelector, additionalDataSelector]);
 
   // Combine data from props and Redux
@@ -206,6 +163,29 @@ export function ObjectDataProvider({
     // If Redux integration is enabled, dispatch an action
     if (dispatch && createUpdateAction) {
       dispatch(createUpdateAction(key, newData, merge));
+
+      // Immediately update local state to reflect the change
+      if (key === "main" && dataSelector) {
+        // For main data, update with the new data
+        const currentData = dataSelector();
+        const updatedData = merge ? { ...currentData, ...newData } : newData;
+        setReduxData(updatedData);
+      } else if (additionalDataSelector) {
+        // For additional data, update the specific key
+        const currentAdditionalData = additionalDataSelector();
+        if (currentAdditionalData && currentAdditionalData[key]) {
+          const updatedAdditionalData = {
+            ...currentAdditionalData,
+            [key]: {
+              ...currentAdditionalData[key],
+              data: merge
+                ? { ...currentAdditionalData[key].data, ...newData }
+                : newData,
+            },
+          };
+          setReduxAdditionalData(updatedAdditionalData);
+        }
+      }
     }
 
     // If testing callback is provided, call it
@@ -223,6 +203,21 @@ export function ObjectDataProvider({
     // If Redux integration is enabled, dispatch an action
     if (dispatch && createUpdateAction) {
       dispatch(createUpdateAction(key, newData, false));
+
+      // Immediately update local state to reflect the registration
+      if (key === "main" && dataSelector) {
+        setReduxData(newData);
+        if (objectIdSelector && objectId) {
+          setReduxObjectId(objectId);
+        }
+      } else if (additionalDataSelector) {
+        const currentAdditionalData = additionalDataSelector() || {};
+        const updatedAdditionalData = {
+          ...currentAdditionalData,
+          [key]: { data: newData, objectId },
+        };
+        setReduxAdditionalData(updatedAdditionalData);
+      }
     }
 
     // If testing callback is provided, call it

@@ -1,5 +1,4 @@
 import { ReferenceMetadata } from "@orbital/core/src/zod/reference/reference";
-import React from "react";
 import { connectField } from "uniforms";
 import { ZodBridge } from "uniforms-bridge-zod";
 import { z } from "zod";
@@ -45,53 +44,35 @@ function HasManyField({
   schema: propSchema,
   objectId,
 }: HasManyFieldProps) {
-  // Get object data from context if available
-  const [contextValue, setContextValue] = React.useState<string[] | undefined>(
-    undefined
-  );
+  // Get data from ObjectDataContext if available
+  let contextData: string[] | undefined;
+  let updateContextData:
+    | ((data: Record<string, any>, merge?: boolean) => void)
+    | undefined;
 
-  // Initialize local state with the provided value
-  const [localValue, setLocalValue] = React.useState<string[]>(value);
-
-  // Try to get data from ObjectDataContext
   try {
-    const { getObjectData } = useObjectData();
+    const { getObjectData, updateObjectData } = useObjectData();
     const mainData = getObjectData("main");
 
-    // Use effect to update the value when Redux state changes
-    React.useEffect(() => {
-      if (mainData && mainData.data && name in mainData.data) {
-        const dataValue = mainData.data[name];
-        if (Array.isArray(dataValue)) {
-          setContextValue(dataValue);
-          setLocalValue(dataValue); // Update local state when Redux changes
-        }
+    // Get the field value from context data if available
+    if (mainData && mainData.data && name in mainData.data) {
+      const dataValue = mainData.data[name];
+      if (Array.isArray(dataValue)) {
+        contextData = dataValue;
       }
-    }, [mainData, name]);
+    }
 
-    // Force re-render when Redux state changes
-    React.useEffect(() => {
-      // This empty dependency array ensures we're not causing infinite re-renders
-      // but the effect itself will be re-run whenever the component re-renders
-      // due to parent updates, which happens when Redux state changes
-      if (contextValue !== undefined) {
-        setLocalValue(contextValue);
-      }
-    }, [contextValue]);
-
-    // Add a direct effect to update when the value prop changes
-    // This is important for the test case where we manually dispatch an action
-    React.useEffect(() => {
-      if (value && value.length > 0) {
-        setLocalValue(value);
-      }
-    }, [value]);
+    // Store the update function for later use
+    updateContextData = (data: Record<string, any>, merge = true) => {
+      updateObjectData("main", data, merge);
+    };
   } catch (error) {
     // Context not available, will use props only
   }
 
-  // Use context value if available, otherwise fall back to local value
-  const finalValue = contextValue !== undefined ? contextValue : localValue;
+  // Use context data if available, otherwise fall back to prop value
+  // This ensures we're always using the most up-to-date value
+  const finalValue = contextData !== undefined ? contextData : value;
 
   // Create a wrapper for onChange that can handle both string and string[] values
   // but will only pass string[] values to the original onChange function
@@ -108,11 +89,13 @@ function HasManyField({
       processedValue = [newValue];
     }
 
-    // Update local state immediately for responsive UI
-    setLocalValue(processedValue);
-
-    // Call the original onChange to update Redux
+    // Call the original onChange to update parent component state
     onChange(processedValue);
+
+    // Update context data if available
+    if (updateContextData) {
+      updateContextData({ [name]: processedValue });
+    }
   };
 
   // Try to get schema and objectType from context if not provided as prop

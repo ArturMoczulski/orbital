@@ -2,6 +2,7 @@ import { ReferenceMetadata } from "@orbital/core/src/zod/reference/reference";
 import { connectField } from "uniforms";
 import { ZodBridge } from "uniforms-bridge-zod";
 import { z } from "zod";
+import { useObjectData } from "./ObjectDataContext";
 import { useObjectSchema } from "./ObjectSchemaContext";
 import ReferenceField from "./ReferenceField";
 import { ZodReferencesBridge } from "./ZodReferencesBridge";
@@ -37,19 +38,59 @@ function BelongsToField({
   placeholder,
   readOnly,
   required,
-  value,
+  value = "",
   reference,
   objectType,
   schema: propSchema,
   objectId,
 }: BelongsToFieldProps) {
+  // Get data from ObjectDataContext if available
+  let contextData: string | undefined;
+  let updateContextData:
+    | ((data: Record<string, any>, merge?: boolean) => void)
+    | undefined;
+
+  try {
+    const { getObjectData, updateObjectData } = useObjectData();
+    const mainData = getObjectData("main");
+
+    // Get the field value from context data if available
+    if (mainData && mainData.data && name in mainData.data) {
+      const dataValue = mainData.data[name];
+      if (typeof dataValue === "string") {
+        contextData = dataValue;
+      }
+    }
+
+    // Store the update function for later use
+    updateContextData = (data: Record<string, any>, merge = true) => {
+      updateObjectData("main", data, merge);
+    };
+  } catch (error) {
+    // Context not available, will use props only
+  }
+
+  // Use context data if available, otherwise fall back to prop value
+  // This ensures we're always using the most up-to-date value
+  const finalValue = contextData !== undefined ? contextData : value;
+
   // Create a wrapper for onChange that can handle both string and string[] values
   // but will only pass string values to the original onChange function
   const handleChange = (newValue: string | string[]) => {
+    let processedValue: string = "";
+
     if (Array.isArray(newValue)) {
-      onChange(newValue.length > 0 ? newValue[0] : "");
+      processedValue = newValue.length > 0 ? newValue[0] : "";
     } else {
-      onChange(newValue);
+      processedValue = newValue;
+    }
+
+    // Call the original onChange to update parent component state
+    onChange(processedValue);
+
+    // Update context data if available
+    if (updateContextData) {
+      updateContextData({ [name]: processedValue });
     }
   };
 
@@ -81,7 +122,7 @@ function BelongsToField({
       placeholder={placeholder}
       readOnly={readOnly}
       required={required}
-      value={value}
+      value={finalValue}
       reference={reference}
       objectType={finalObjectType}
       schema={schema}

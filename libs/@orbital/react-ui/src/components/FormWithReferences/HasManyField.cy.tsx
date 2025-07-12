@@ -160,7 +160,7 @@ describe("HasManyField Component", () => {
     });
   });
 
-  describe.only("Redux Integration", () => {
+  describe("Redux Integration", () => {
     // Define types for our Redux state and actions
     interface ObjectData {
       data: Record<string, any>;
@@ -340,7 +340,7 @@ describe("HasManyField Component", () => {
                 dispatch={store.dispatch}
                 createUpdateAction={updateObjectData}
               >
-                {/* Add a polling mechanism to ensure the component re-renders when Redux state changes */}
+                {/* Display component that subscribes to Redux state changes */}
                 <div style={{ display: "none" }}>
                   <TagsDisplay />
                 </div>
@@ -382,7 +382,7 @@ describe("HasManyField Component", () => {
         });
     });
 
-    it.only("should update Redux store and UI when selecting a new option", () => {
+    it("should update Redux store and UI when selecting a new option", () => {
       // Create a real Redux store
       const store = createRealStore();
 
@@ -473,7 +473,7 @@ describe("HasManyField Component", () => {
                 dispatch={store.dispatch}
                 createUpdateAction={updateObjectData}
               >
-                {/* Add a polling mechanism to ensure the component re-renders when Redux state changes */}
+                {/* Display component that subscribes to Redux state changes */}
                 <div>
                   <TagsDisplay />
                 </div>
@@ -487,7 +487,7 @@ describe("HasManyField Component", () => {
                     name="tagIds"
                     reference={referenceMetadata}
                     options={tagOptions}
-                    value={store.getState().objectData.main?.data.tagIds} // Explicitly pass the value from Redux
+                    // Don't pass value directly from store.getState() - let the ObjectProvider handle it
                   />
                 </AutoForm>
 
@@ -516,20 +516,17 @@ describe("HasManyField Component", () => {
 
       // Interact with the field
 
-      // Open the dropdown and add another selection
-      field.open();
+      // Select Science - the select method will open the dropdown automatically
       field.select("Science");
 
       // Verify the dispatch was called with the correct action
       cy.get("@dispatchSpy").should("have.been.called");
 
-      // Force update the Redux state manually to ensure it's updated
-      store.dispatch(
-        updateObjectData("main", { tagIds: ["tag1", "tag3", "tag2"] })
-      );
+      // Wait for the TagsDisplay component to update, which indicates the Redux state has changed
+      // and the UI should reflect the new state
+      cy.get('[data-testid="tags-display"]').should("contain", "tag2");
 
-      cy.wait(100); // Give Redux time to update
-
+      // Now verify the UI shows all three tags
       field
         .selected()
         .should("have.length", 3)
