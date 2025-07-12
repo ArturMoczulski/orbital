@@ -15,6 +15,7 @@ import {
 import Card from "@mui/material/Card";
 import CardContent from "@mui/material/CardContent";
 import CardHeader from "@mui/material/CardHeader";
+import Stack from "@mui/material/Stack";
 
 /**
  * Props for the ObjectFieldset component
@@ -241,15 +242,17 @@ export function ObjectFieldset({
         <AutoField.componentDetectorContext.Provider
           value={createReferenceFieldsComponentDetector(schema, objectType)}
         >
-          {/* Render fields */}
-          {filteredFields.map((field: string) => (
-            <AutoField
-              key={field}
-              name={field}
-              showInlineError={showInlineError}
-            />
-          ))}
-          {children}
+          {/* Render fields with consistent spacing using Stack */}
+          <Stack spacing={2}>
+            {filteredFields.map((field: string) => (
+              <AutoField
+                key={field}
+                name={field}
+                showInlineError={showInlineError}
+              />
+            ))}
+            {children}
+          </Stack>
         </AutoField.componentDetectorContext.Provider>
       </uniformsContext.Provider>
     </div>
