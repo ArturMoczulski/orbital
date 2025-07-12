@@ -1,7 +1,9 @@
 import { ReferenceMetadata } from "@orbital/core/src/zod/reference/reference";
+import React from "react";
 import { connectField } from "uniforms";
 import { ZodBridge } from "uniforms-bridge-zod";
 import { z } from "zod";
+import { useObjectData } from "./ObjectDataContext";
 import { useObjectSchema } from "./ObjectSchemaContext";
 import ReferenceField from "./ReferenceField";
 import { ZodReferencesBridge } from "./ZodReferencesBridge";
@@ -43,18 +45,74 @@ function HasManyField({
   schema: propSchema,
   objectId,
 }: HasManyFieldProps) {
+  // Get object data from context if available
+  const [contextValue, setContextValue] = React.useState<string[] | undefined>(
+    undefined
+  );
+
+  // Initialize local state with the provided value
+  const [localValue, setLocalValue] = React.useState<string[]>(value);
+
+  // Try to get data from ObjectDataContext
+  try {
+    const { getObjectData } = useObjectData();
+    const mainData = getObjectData("main");
+
+    // Use effect to update the value when Redux state changes
+    React.useEffect(() => {
+      if (mainData && mainData.data && name in mainData.data) {
+        const dataValue = mainData.data[name];
+        if (Array.isArray(dataValue)) {
+          setContextValue(dataValue);
+          setLocalValue(dataValue); // Update local state when Redux changes
+        }
+      }
+    }, [mainData, name]);
+
+    // Force re-render when Redux state changes
+    React.useEffect(() => {
+      // This empty dependency array ensures we're not causing infinite re-renders
+      // but the effect itself will be re-run whenever the component re-renders
+      // due to parent updates, which happens when Redux state changes
+      if (contextValue !== undefined) {
+        setLocalValue(contextValue);
+      }
+    }, [contextValue]);
+
+    // Add a direct effect to update when the value prop changes
+    // This is important for the test case where we manually dispatch an action
+    React.useEffect(() => {
+      if (value && value.length > 0) {
+        setLocalValue(value);
+      }
+    }, [value]);
+  } catch (error) {
+    // Context not available, will use props only
+  }
+
+  // Use context value if available, otherwise fall back to local value
+  const finalValue = contextValue !== undefined ? contextValue : localValue;
+
   // Create a wrapper for onChange that can handle both string and string[] values
   // but will only pass string[] values to the original onChange function
   const handleChange = (newValue: string | string[]) => {
+    let processedValue: string[] = [];
+
     if (Array.isArray(newValue)) {
-      onChange(newValue);
+      processedValue = newValue;
     } else if (newValue === "") {
       // Empty string means no selection, so pass empty array
-      onChange([]);
+      processedValue = [];
     } else {
       // Single string value, convert to array with one item
-      onChange([newValue]);
+      processedValue = [newValue];
     }
+
+    // Update local state immediately for responsive UI
+    setLocalValue(processedValue);
+
+    // Call the original onChange to update Redux
+    onChange(processedValue);
   };
 
   // Try to get schema and objectType from context if not provided as prop
@@ -85,7 +143,7 @@ function HasManyField({
       placeholder={placeholder}
       readOnly={readOnly}
       required={required}
-      value={value}
+      value={finalValue}
       reference={reference}
       objectType={finalObjectType}
       schema={schema}

@@ -329,6 +329,7 @@ export function createInteractableFromInput<
 ): Cypress.Chainable<T> {
   // Check for data-testid on the element itself
   let dataTestId = $el.attr("data-testid");
+  let objectType: string = "";
 
   // If not found on the element itself, check ancestors for known component types
   if (!dataTestId) {
@@ -336,38 +337,32 @@ export function createInteractableFromInput<
     const $belongsToField = $el.closest('[data-testid="BelongsToField"]');
     if ($belongsToField.length > 0) {
       dataTestId = "BelongsToField";
+      objectType = $belongsToField.attr("data-object-type") as string;
     }
 
-    // Check for other known component types (can be extended as needed)
-    // For example: HasManyField, ObjectSelector, etc.
-    if (!dataTestId) {
-      const $objectSelector = $el.closest('[data-testid^="ObjectSelector"]');
-      if ($objectSelector.length > 0) {
-        dataTestId = $objectSelector.attr("data-testid");
-      }
+    const $hasManyField = $el.closest('[data-testid="HasManyField"]');
+    if ($hasManyField.length > 0) {
+      dataTestId = "HasManyField";
+      objectType = $hasManyField.attr("data-object-type") as string;
     }
   }
 
-  // Handle special cases based on the data-testid
-  if (dataTestId === "BelongsToField") {
-    // Import directly to avoid circular dependencies
+  if (dataTestId == "BelongsToField") {
     const {
       BelongsToFieldInteractable,
-    } = require("../FormWithReferences/BelongsToField.interactable");
+    } = require("./../FormWithReferences/BelongsToField.interactable");
+    return cy.wrap(
+      new BelongsToFieldInteractable(fieldName, objectType, parentElement)
+    ) as unknown as Cypress.Chainable<T>;
+  }
 
-    // Find the closest ObjectFieldset to get the objectType
-    const $fieldset = $el.closest('[data-testid="ObjectFieldset"]');
-    const objectType =
-      $fieldset.attr("data-object-type") || "UnknownObjectType";
-
-    // Create the interactable with the correct objectType
-    const interactable = new BelongsToFieldInteractable(
-      fieldName,
-      objectType,
-      parentElement
-    );
-
-    return cy.wrap(interactable) as unknown as Cypress.Chainable<T>;
+  if (dataTestId == "HasManyField") {
+    const {
+      HasManyFieldInteractable,
+    } = require("./../FormWithReferences/HasManyField.interactable");
+    return cy.wrap(
+      new HasManyFieldInteractable(fieldName, objectType, parentElement)
+    ) as unknown as Cypress.Chainable<T>;
   }
 
   // Handle standard HTML elements

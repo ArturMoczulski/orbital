@@ -29,7 +29,7 @@ export class HasManyFieldInteractable extends ObjectSelectorInteractable {
     index?: number
   ) {
     // Construct a data-testid that includes the field type and name
-    const dataTestId = `HasManyField-${fieldName}`;
+    const dataTestId = `HasManyField`;
 
     // Pass all required parameters to the ObjectSelectorInteractable constructor
     super(

@@ -10,6 +10,7 @@ import { ObjectFieldset } from "../../../src/components/FormWithReferences/Objec
 import { ObjectProvider } from "../../../src/components/FormWithReferences/ObjectProvider";
 import { ZodReferencesBridge } from "../../../src/components/FormWithReferences/ZodReferencesBridge";
 import { BelongsToFieldInteractable } from "./BelongsToField.interactable.js";
+import { HasManyFieldInteractable } from "./HasManyField.interactable";
 import { objectFieldset } from "./ObjectFieldset.interactable";
 
 // Define types for our Redux state and actions
@@ -983,6 +984,443 @@ describe("ObjectFieldsetInteractable", () => {
         // Verify the input field shows the correct value and selected() returns the correct value
         field.textField().should("have.value", "Historical World");
         field.selected().should("equal", "Historical World");
+      });
+    });
+  });
+  describe("HasMany Reference Fields without Redux", () => {
+    it("works with has many relationship allowing multiple selections", () => {
+      // Create schemas with references
+      const tagSchema = z
+        .object({
+          id: z.string().uuid().describe("ID"),
+          name: z.string().describe("Name"),
+          color: z.string().optional().describe("Color"),
+        })
+        .describe("Tag");
+
+      const postSchema = z
+        .object({
+          title: z.string().describe("Title"),
+          content: z.string().describe("Content"),
+          tagIds: z
+            .array(z.string().uuid())
+            .reference({
+              type: RelationshipType.HAS_MANY,
+              schema: tagSchema,
+              name: "tags",
+            })
+            .describe("Tags"),
+        })
+        .describe("Post");
+
+      // Create a bridge with references
+      const refBridge = new ZodReferencesBridge({
+        schema: postSchema,
+        dependencies: {
+          tags: [
+            {
+              id: "123e4567-e89b-12d3-a456-426614174000",
+              name: "Technology",
+              color: "blue",
+            },
+            {
+              id: "223e4567-e89b-12d3-a456-426614174000",
+              name: "Science",
+              color: "green",
+            },
+            {
+              id: "323e4567-e89b-12d3-a456-426614174000",
+              name: "Health",
+              color: "red",
+            },
+            {
+              id: "423e4567-e89b-12d3-a456-426614174000",
+              name: "Education",
+              color: "purple",
+            },
+          ],
+        },
+      });
+
+      const initialPostData = {
+        title: "My First Post",
+        content: "This is the content of my first post",
+        tagIds: ["123e4567-e89b-12d3-a456-426614174000"], // Initially has one tag
+      };
+
+      // Create a wrapper component that displays the current data
+      function TestPostForm() {
+        // Use useState to track the current data
+        const [postData, setPostData] = useState(initialPostData);
+
+        // This function will be called when updateObjectData is called
+        const handleUpdate = (
+          key: string,
+          newData: Record<string, any>,
+          merge = true
+        ) => {
+          setPostData((prevData) => {
+            if (merge) {
+              return { ...prevData, ...newData } as typeof initialPostData;
+            }
+            return { ...initialPostData, ...newData } as typeof initialPostData;
+          });
+        };
+
+        return (
+          <div>
+            <ObjectProvider
+              schema={refBridge}
+              objectType="Post"
+              data={postData}
+              onUpdate={handleUpdate}
+            >
+              <ObjectFieldset />
+              {/* Display the current tagIds for verification */}
+              <div data-testid="current-tagIds">
+                {JSON.stringify(postData.tagIds)}
+              </div>
+            </ObjectProvider>
+          </div>
+        );
+      }
+
+      // Mount the test component
+      mount(<TestPostForm />);
+
+      const postFieldset = objectFieldset("Post");
+
+      // Verify the fieldset exists
+      postFieldset.should("exist");
+
+      // Verify it has the expected fields
+      postFieldset.hasField("title").should("be.true");
+      postFieldset.hasField("content").should("be.true");
+      postFieldset.hasField("tagIds").should("be.true");
+
+      // Verify field values
+      postFieldset.getFieldValue("title").should("equal", "My First Post");
+      postFieldset
+        .getFieldValue("content")
+        .should("equal", "This is the content of my first post");
+
+      // Get the input field within the HasManyField
+      const tagsField = postFieldset.field<HasManyFieldInteractable>("tagIds");
+
+      // Get the field and interact with it
+      tagsField.then((field) => {
+        // Verify initial selection (should have Technology tag)
+        // Since field.selected() is not available, check the chips directly
+        cy.get('[data-testid="HasManyField"]')
+          .find(".MuiChip-label")
+          .should("contain", "Technology");
+
+        // Open the dropdown
+        field.open();
+
+        // Verify dropdown is open
+        field.isOpened().should("be.true");
+
+        // Verify number of options
+        field.items().should("have.length", 4);
+
+        // Verify option text
+        field.items().then((items) => {
+          expect(items[0].textContent).to.include("Technology");
+          expect(items[1].textContent).to.include("Science");
+          expect(items[2].textContent).to.include("Health");
+          expect(items[3].textContent).to.include("Education");
+        });
+
+        // Select additional options (Science and Health)
+        field.select("Science");
+
+        // Need to reopen the dropdown after each selection
+        field.open();
+        field.select("Health");
+
+        // Verify dropdown is closed after selection
+        field.isClosed().should("be.true");
+
+        // Wait for state updates to propagate
+        cy.wait(100);
+
+        // Verify the new selection by checking the chips
+        cy.get('[data-testid="HasManyField"]')
+          .find(".MuiChip-label")
+          .should("have.length", 3)
+          .then(($chips) => {
+            const chipTexts = $chips.map((i, el) => Cypress.$(el).text()).get();
+            expect(chipTexts).to.include("Technology");
+            expect(chipTexts).to.include("Science");
+            expect(chipTexts).to.include("Health");
+          });
+
+        // Verify the data model was updated with the correct IDs
+        cy.get('[data-testid="current-tagIds"]').should((el) => {
+          const tagIds = JSON.parse(el.text());
+          expect(tagIds).to.include("123e4567-e89b-12d3-a456-426614174000"); // Technology
+          expect(tagIds).to.include("223e4567-e89b-12d3-a456-426614174000"); // Science
+          expect(tagIds).to.include("323e4567-e89b-12d3-a456-426614174000"); // Health
+          expect(tagIds).to.have.length(3);
+        });
+
+        // Click outside to trigger any blur events
+        cy.get("body").click(0, 0);
+
+        // Verify the selection is still the same after clicking outside
+        cy.get('[data-testid="HasManyField"]')
+          .find(".MuiChip-label")
+          .should("have.length", 3);
+      });
+    });
+  });
+
+  describe("HasMany Reference Fields with Redux", () => {
+    it.only("verifies multiple dropdown selections directly update Redux store and UI correctly reflects changes", () => {
+      // Add debugging to see what's happening
+      cy.log("Starting HasMany Redux test");
+      // Create schemas with references
+      const tagSchema = z
+        .object({
+          id: z.string().uuid().describe("ID"),
+          name: z.string().describe("Name"),
+          color: z.string().optional().describe("Color"),
+        })
+        .describe("Tag");
+
+      const postSchema = z
+        .object({
+          title: z.string().describe("Title"),
+          content: z.string().describe("Content"),
+          tagIds: z
+            .array(z.string().uuid())
+            .reference({
+              type: RelationshipType.HAS_MANY,
+              schema: tagSchema,
+              name: "tags",
+            })
+            .describe("Tags"),
+        })
+        .describe("Post");
+
+      // Create a bridge with references
+      const refBridge = new ZodReferencesBridge({
+        schema: postSchema,
+        dependencies: {
+          tags: [
+            {
+              id: "123e4567-e89b-12d3-a456-426614174000",
+              name: "Technology",
+              color: "blue",
+            },
+            {
+              id: "223e4567-e89b-12d3-a456-426614174000",
+              name: "Science",
+              color: "green",
+            },
+            {
+              id: "323e4567-e89b-12d3-a456-426614174000",
+              name: "Health",
+              color: "red",
+            },
+            {
+              id: "423e4567-e89b-12d3-a456-426614174000",
+              name: "Education",
+              color: "purple",
+            },
+          ],
+        },
+      });
+
+      const initialPostData = {
+        title: "My First Post",
+        content: "This is the content of my first post",
+        tagIds: ["123e4567-e89b-12d3-a456-426614174000"], // Initially has one tag
+      };
+
+      // Create a real Redux store
+      const store = createRealStore();
+
+      // Add a spy to the dispatch function to track updates
+      const dispatchSpy = cy.spy(store, "dispatch").as("dispatchSpy");
+
+      // Initialize store with data
+      store.dispatch({
+        type: "REGISTER_OBJECT_DATA",
+        payload: {
+          key: "main",
+          data: initialPostData,
+          objectId: "post-123",
+        },
+      });
+
+      // Log the initial state to verify it's set correctly
+      cy.log("Initial Redux State", JSON.stringify(store.getState()));
+
+      // Type assertion to help TypeScript understand the store state structure
+      const getTagIds = () => {
+        const state = store.getState() as ObjectDataState;
+        return state.objectData.main?.data.tagIds;
+      };
+
+      // Import useSelector explicitly to ensure it's properly typed
+      const { useSelector } = require("react-redux");
+
+      // Create a component to display the current Redux state using useSelector
+      const ReduxStateDisplay = () => {
+        // Use useSelector to subscribe to Redux state changes
+        const tagIds = useSelector(
+          (state: ObjectDataState) => state.objectData.main?.data.tagIds
+        );
+        return <div data-testid="current-tagIds">{JSON.stringify(tagIds)}</div>;
+      };
+
+      // Create selectors for the Redux store
+      const dataSelector = () => store.getState().objectData.main?.data || {};
+      const objectIdSelector = () => store.getState().objectData.main?.objectId;
+
+      // Create a wrapper component that uses Redux
+      function TestPostFormWithRedux() {
+        return (
+          <Provider store={store}>
+            <div>
+              <ObjectProvider
+                schema={refBridge}
+                objectType="Post"
+                data={{}} // Empty default data
+                dataSelector={dataSelector}
+                objectIdSelector={objectIdSelector}
+                dispatch={store.dispatch}
+                createUpdateAction={updateObjectData}
+              >
+                <ObjectFieldset />
+
+                {/* Use the component that will re-render when Redux state changes */}
+                <ReduxStateDisplay />
+
+                {/* Display Redux state for debugging */}
+                <div
+                  data-testid="redux-state-debug"
+                  style={{ display: "none" }}
+                >
+                  {JSON.stringify(store.getState())}
+                </div>
+              </ObjectProvider>
+            </div>
+          </Provider>
+        );
+      }
+
+      // Mount the test component
+      mount(<TestPostFormWithRedux />);
+
+      const postFieldset = objectFieldset("Post");
+
+      // Verify the fieldset exists
+      postFieldset.should("exist");
+
+      // Get the input field within the HasManyField
+      const tagsField = postFieldset.field<HasManyFieldInteractable>("tagIds");
+
+      // Get the field and interact with it
+      tagsField.then((field) => {
+        // Log the current value to debug
+        cy.log("Current field value", field.getValue());
+
+        // Check if there are any chips rendered initially
+        cy.get('[data-testid="HasManyField"]')
+          .find(".MuiChip-label")
+          .then(($chips) => {
+            cy.log(`Initial chips count: ${$chips.length}`);
+            if ($chips.length > 0) {
+              const chipTexts = $chips
+                .map((i, el) => Cypress.$(el).text())
+                .get();
+              cy.log(`Initial chip texts: ${JSON.stringify(chipTexts)}`);
+            }
+          });
+
+        // Verify initial selection (should have Technology tag)
+        field.selected().should("include", "Technology");
+
+        // Open the dropdown
+        field.open();
+
+        // Verify dropdown is open
+        field.isOpened().should("be.true");
+
+        // Make the store available in the window object for testing
+        cy.window().then((win) => {
+          (win as any).store = store;
+        });
+
+        // Select additional options (Science and Health)
+        field.select("Science");
+
+        // Need to reopen the dropdown after each selection
+        field.open();
+        field.select("Health");
+
+        // Verify dropdown is closed after selection
+        field.isClosed().should("be.true");
+
+        // Wait for state updates to propagate
+        cy.wait(100);
+
+        // Verify the Redux store was updated with the correct IDs
+        cy.window()
+          .its("store")
+          .then((storeInstance) => {
+            const state = storeInstance.getState() as ObjectDataState;
+            const tagIds = state.objectData.main?.data.tagIds;
+
+            expect(tagIds).to.include("123e4567-e89b-12d3-a456-426614174000"); // Technology
+            expect(tagIds).to.include("223e4567-e89b-12d3-a456-426614174000"); // Science
+            expect(tagIds).to.include("323e4567-e89b-12d3-a456-426614174000"); // Health
+            expect(tagIds).to.have.length(3);
+          });
+
+        // Verify that the dispatch function was called with an UPDATE_OBJECT_DATA action
+        cy.get("@dispatchSpy").should(
+          "be.calledWith",
+          Cypress.sinon.match({
+            type: "UPDATE_OBJECT_DATA",
+            payload: Cypress.sinon.match({
+              key: "main",
+              data: Cypress.sinon.match({
+                tagIds: Cypress.sinon.match.array.deepEquals([
+                  "123e4567-e89b-12d3-a456-426614174000",
+                  "223e4567-e89b-12d3-a456-426614174000",
+                  "323e4567-e89b-12d3-a456-426614174000",
+                ]),
+              }),
+            }),
+          })
+        );
+
+        // Wait for the UI to update after the Redux store changes
+        cy.wait(100);
+
+        // Verify the UI shows the correct values
+        cy.get('[data-testid="current-tagIds"]').should((el) => {
+          const tagIds = JSON.parse(el.text());
+          expect(tagIds).to.include("123e4567-e89b-12d3-a456-426614174000"); // Technology
+          expect(tagIds).to.include("223e4567-e89b-12d3-a456-426614174000"); // Science
+          expect(tagIds).to.include("323e4567-e89b-12d3-a456-426614174000"); // Health
+          expect(tagIds).to.have.length(3);
+        });
+
+        // Verify the selection by checking the chips
+        cy.get('[data-testid="HasManyField"]')
+          .find(".MuiChip-label")
+          .should("have.length", 3)
+          .then(($chips) => {
+            const chipTexts = $chips.map((i, el) => Cypress.$(el).text()).get();
+            expect(chipTexts).to.include("Technology");
+            expect(chipTexts).to.include("Science");
+            expect(chipTexts).to.include("Health");
+          });
       });
     });
   });
