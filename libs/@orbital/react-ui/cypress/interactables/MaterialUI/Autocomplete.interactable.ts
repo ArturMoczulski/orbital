@@ -216,9 +216,18 @@ export class AutocompleteInteractable
       this.item(text).click();
       cy.wait(100); // Wait for the selection to be processed
 
-      // For single selection, blur the field to ensure the selection is committed
-      // This simulates a user clicking away after making a selection
-      this.textField().blur();
+      // For single selection, check if the field is focused before blurring
+      // This prevents the "cy.blur() can only be called when there is a currently focused element" error
+      this.textField().then(($field) => {
+        // Check if the field is the active element (focused)
+        const isFieldFocused =
+          $field.is(":focus") ||
+          $field[0] === Cypress.$(document.activeElement)[0];
+        if (isFieldFocused) {
+          // Only blur if the field is focused
+          this.textField().blur();
+        }
+      });
     }
 
     return this;

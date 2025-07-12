@@ -128,48 +128,105 @@ export function ObjectSelector({
 
       // Ensure getOptionValue is a function
       const safeGetOptionValue = (option: any) => {
+        if (!option) return null;
+
         if (typeof getOptionValue !== "function") {
           // Fallback to using the idField directly
-          return option[providerState.idField];
+          const idFieldValue = option[providerState.idField];
+
+          // If idField value is not found, try _id and id as fallbacks
+          if (idFieldValue === undefined) {
+            return option._id !== undefined ? option._id : option.id;
+          }
+
+          return idFieldValue;
         }
         return getOptionValue(option);
       };
 
       // Handle option selection based on multiple mode
       const handleChange = (_: any, newValue: any) => {
+        console.log(
+          `[ObjectSelector] handleChange called with newValue:`,
+          newValue
+        );
+        console.log(`[ObjectSelector] current value:`, value);
+        console.log(`[ObjectSelector] multiple:`, multiple);
+
         if (multiple) {
           // For multiple choice, map the selected option objects to their values
           const selectedValues = newValue.map((option: any) =>
             safeGetOptionValue(option)
           );
+          console.log(
+            `[ObjectSelector] multiple selection, passing values:`,
+            selectedValues
+          );
           onChange(selectedValues);
         } else {
           // For single choice, map the selected option object to its value
-          onChange(newValue ? safeGetOptionValue(newValue) : null);
+          const result = newValue ? safeGetOptionValue(newValue) : null;
+          console.log(
+            `[ObjectSelector] single selection, passing value:`,
+            result
+          );
+          onChange(result);
         }
       };
 
       // Find the selected option object(s) based on value
       const selectedOption = React.useMemo(() => {
+        console.log(
+          `[ObjectSelector] Computing selectedOption for value:`,
+          value
+        );
+        console.log(`[ObjectSelector] options:`, options);
+
         if (!value || !options.length) {
+          console.log(
+            `[ObjectSelector] No value or no options, returning:`,
+            multiple ? [] : null
+          );
           return multiple ? [] : null;
         }
 
         if (multiple) {
           // For multiple choice, map each value to its corresponding option object
           if (!Array.isArray(value)) {
+            console.log(
+              `[ObjectSelector] Value is not an array for multiple selection, returning empty array`
+            );
             return [];
           }
 
-          return value
-            .map((val) =>
-              options.find((option: any) => safeGetOptionValue(option) === val)
-            )
+          const result = value
+            .map((val) => {
+              const found = options.find(
+                (option: any) => safeGetOptionValue(option) === val
+              );
+              console.log(
+                `[ObjectSelector] Looking for value in options:`,
+                val,
+                `found:`,
+                found
+              );
+              return found;
+            })
             .filter(Boolean); // Remove any undefined values
+
+          console.log(`[ObjectSelector] Multiple selection result:`, result);
+          return result;
         } else {
           // For single choice, find the option object that matches the value
           const foundOption = options.find(
             (option: any) => safeGetOptionValue(option) === value
+          );
+
+          console.log(
+            `[ObjectSelector] Looking for value in options:`,
+            value,
+            `found:`,
+            foundOption
           );
 
           // If we found an option, return it
@@ -183,6 +240,12 @@ export function ObjectSelector({
             (option: any) => option._id === value || option.id === value
           );
 
+          console.log(
+            `[ObjectSelector] Fallback search by _id/id:`,
+            value,
+            `found:`,
+            foundByAltId
+          );
           return foundByAltId || null;
         }
       }, [value, options, safeGetOptionValue, multiple]);

@@ -165,24 +165,54 @@ export function ReferenceField({
 
   // Handle the onChange event based on whether this is a single or multi-select field
   const handleChange = (newValue: string | string[] | null) => {
+    console.log(
+      `[ReferenceField] handleChange called with newValue:`,
+      newValue
+    );
+    console.log(`[ReferenceField] current value:`, value);
+    console.log(`[ReferenceField] multiple:`, multiple);
+
     if (multiple) {
       // For multi-select fields, ensure we always return an array
       if (Array.isArray(newValue)) {
+        console.log(
+          `[ReferenceField] array received for multiple selection:`,
+          newValue
+        );
         onChange(newValue);
       } else if (newValue === "" || newValue === null) {
         // Empty string or null means no selection, so pass empty array
+        console.log(
+          `[ReferenceField] empty/null received for multiple selection, passing empty array`
+        );
         onChange([]);
       } else {
         // Single string value, convert to array with one item
+        console.log(
+          `[ReferenceField] string received for multiple selection, converting to array:`,
+          [newValue]
+        );
         onChange([newValue]);
       }
     } else {
       // For single-select fields, ensure we always return a string
       if (newValue === null) {
+        console.log(
+          `[ReferenceField] null received for single selection, passing empty string`
+        );
         onChange("");
       } else if (Array.isArray(newValue)) {
-        onChange(newValue.length > 0 ? newValue[0] : "");
+        const result = newValue.length > 0 ? newValue[0] : "";
+        console.log(
+          `[ReferenceField] array received for single selection, using first item:`,
+          result
+        );
+        onChange(result);
       } else {
+        console.log(
+          `[ReferenceField] string received for single selection:`,
+          newValue
+        );
         onChange(newValue);
       }
     }

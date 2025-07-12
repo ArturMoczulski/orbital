@@ -44,6 +44,8 @@ function BelongsToField({
   schema: propSchema,
   objectId,
 }: BelongsToFieldProps) {
+  console.log(`[BelongsToField] Rendering with props value:`, value);
+
   // Get data from ObjectDataContext if available
   let contextData: string | undefined;
   let updateContextData:
@@ -62,27 +64,45 @@ function BelongsToField({
       }
     }
 
+    console.log(`[BelongsToField] contextData from Redux:`, contextData);
+
     // Store the update function for later use
     updateContextData = (data: Record<string, any>, merge = true) => {
+      console.log(
+        `[BelongsToField] Updating context data:`,
+        data,
+        `merge:`,
+        merge
+      );
       updateObjectData("main", data, merge);
     };
   } catch (error) {
+    console.log(`[BelongsToField] Context not available:`, error);
     // Context not available, will use props only
   }
 
   // Use context data if available, otherwise fall back to prop value
   // This ensures we're always using the most up-to-date value
   const finalValue = contextData !== undefined ? contextData : value;
+  console.log(`[BelongsToField] finalValue:`, finalValue);
 
   // Create a wrapper for onChange that can handle both string and string[] values
   // but will only pass string values to the original onChange function
-  const handleChange = (newValue: string | string[]) => {
+  const handleChange = (newValue: string | string[] | null) => {
     let processedValue: string = "";
 
-    if (Array.isArray(newValue)) {
+    // If newValue is null or empty string and we have a finalValue,
+    // this is likely a blur event and we should keep the current value
+    if ((newValue === null || newValue === "") && finalValue) {
+      // Keep the current value
+      processedValue = finalValue;
+
+      // No need to call onChange or updateContextData since we're not changing anything
+      return;
+    } else if (Array.isArray(newValue)) {
       processedValue = newValue.length > 0 ? newValue[0] : "";
     } else {
-      processedValue = newValue;
+      processedValue = newValue || "";
     }
 
     // Call the original onChange to update parent component state
@@ -123,6 +143,8 @@ function BelongsToField({
       readOnly={readOnly}
       required={required}
       value={finalValue}
+      // Add a key prop to force re-render when finalValue changes
+      key={`belongsto-${name}-${finalValue}`}
       reference={reference}
       objectType={finalObjectType}
       schema={schema}
