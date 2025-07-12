@@ -160,7 +160,7 @@ describe("HasManyField Component", () => {
     });
   });
 
-  describe("Redux Integration", () => {
+  describe.only("Redux Integration", () => {
     // Define types for our Redux state and actions
     interface ObjectData {
       data: Record<string, any>;

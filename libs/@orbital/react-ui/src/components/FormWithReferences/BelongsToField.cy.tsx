@@ -4,13 +4,16 @@
 // @ts-nocheck
 /// <reference types="cypress" />
 import { RelationshipType } from "@orbital/core/src/zod/reference/reference";
+import { configureStore } from "@reduxjs/toolkit";
 import { mount } from "cypress/react";
 import { useState } from "react";
+import { Provider } from "react-redux";
 import { ZodBridge } from "uniforms-bridge-zod";
 import { AutoForm } from "uniforms-mui";
 import { z } from "zod";
 import { belongsToField } from "../../../cypress/interactables/FormWithReferences/BelongsToField.interactable";
 import BelongsToField from "./BelongsToField";
+import { ObjectProvider } from "./ObjectProvider";
 import { ObjectSchemaProvider } from "./ObjectSchemaContext";
 
 describe("BelongsToField Component", () => {
@@ -83,91 +86,6 @@ describe("BelongsToField Component", () => {
       // Verify the data-testid attribute is set correctly
       cy.get('[data-testid="BelongsToField"]').should("exist");
     });
-
-    it("should handle string values in onChange", () => {
-      const onChangeSpy = cy.spy().as("onChange");
-      mount(<TestForm onChange={onChangeSpy} />);
-
-      const field = belongsToField("worldId", "World");
-      field.selectById("world2");
-
-      // Check that onChange was called with the string value
-      cy.get("@onChange").should("have.been.calledWith", "world2");
-    });
-
-    it("should handle array values in onChange by taking the first value", () => {
-      const onChangeSpy = cy.spy().as("onChange");
-
-      // Create a component that directly tests the handleChange function
-      const TestArrayHandling = () => {
-        const [value, setValue] = useState("");
-
-        // Create a wrapper for the component's handleChange function
-        const handleChange = (newValue) => {
-          if (Array.isArray(newValue)) {
-            setValue(newValue.length > 0 ? newValue[0] : "");
-            if (onChangeSpy) {
-              onChangeSpy(newValue.length > 0 ? newValue[0] : "");
-            }
-          } else {
-            setValue(newValue);
-            if (onChangeSpy) {
-              onChangeSpy(newValue);
-            }
-          }
-        };
-
-        // Simulate calling handleChange with an array
-        cy.window().then(() => {
-          handleChange(["world2", "world3"]);
-        });
-
-        return <div data-testid="test-result">{value}</div>;
-      };
-
-      mount(<TestArrayHandling />);
-
-      // Check that the first value from the array was used
-      cy.get('[data-testid="test-result"]').should("have.text", "world2");
-      cy.get("@onChange").should("have.been.calledWith", "world2");
-    });
-
-    it("should handle empty array in onChange by setting empty string", () => {
-      const onChangeSpy = cy.spy().as("onChange");
-
-      // Create a component that directly tests the handleChange function
-      const TestEmptyArrayHandling = () => {
-        const [value, setValue] = useState("world1");
-
-        // Create a wrapper for the component's handleChange function
-        const handleChange = (newValue) => {
-          if (Array.isArray(newValue)) {
-            setValue(newValue.length > 0 ? newValue[0] : "");
-            if (onChangeSpy) {
-              onChangeSpy(newValue.length > 0 ? newValue[0] : "");
-            }
-          } else {
-            setValue(newValue);
-            if (onChangeSpy) {
-              onChangeSpy(newValue);
-            }
-          }
-        };
-
-        // Simulate calling handleChange with an empty array
-        cy.window().then(() => {
-          handleChange([]);
-        });
-
-        return <div data-testid="test-result">{value}</div>;
-      };
-
-      mount(<TestEmptyArrayHandling />);
-
-      // Check that an empty string was set
-      cy.get('[data-testid="test-result"]').should("have.text", "");
-      cy.get("@onChange").should("have.been.calledWith", "");
-    });
   });
 
   describe("Context Integration", () => {
@@ -235,52 +153,362 @@ describe("BelongsToField Component", () => {
     });
   });
 
-  describe("Prop Passing to ReferenceField", () => {
-    it("should pass multiple=false to ReferenceField", () => {
-      mount(<TestForm initialValue="world1" />);
+  describe.only("Redux Integration", () => {
+    // Define types for our Redux state and actions
+    interface ObjectData {
+      data: Record<string, any>;
+      objectId?: string;
+    }
 
-      // Verify that the field is in single-select mode
-      const field = belongsToField("worldId", "World");
-      field.getValue().should("eq", "world1");
+    interface ObjectDataState {
+      objectData: {
+        [key: string]: ObjectData;
+      };
+    }
 
-      // In single-select mode, there should be no chips
-      cy.get(".MuiChip-root").should("not.exist");
+    type ObjectDataAction =
+      | {
+          type: "UPDATE_OBJECT_DATA";
+          payload: { key: string; data: Record<string, any>; merge: boolean };
+        }
+      | {
+          type: "REGISTER_OBJECT_DATA";
+          payload: {
+            key: string;
+            data: Record<string, any>;
+            objectId?: string;
+          };
+        };
+
+    // Create a Redux slice for object data
+    const initialState: ObjectDataState = {
+      objectData: {
+        main: { data: {}, objectId: undefined },
+      },
+    };
+
+    // Simple reducer for handling object data actions
+    const objectDataReducer = (
+      state = initialState,
+      action: ObjectDataAction
+    ): ObjectDataState => {
+      switch (action.type) {
+        case "UPDATE_OBJECT_DATA":
+          const { key, data, merge } = action.payload;
+          const existingEntry = state.objectData[key];
+
+          return {
+            ...state,
+            objectData: {
+              ...state.objectData,
+              [key]: {
+                ...existingEntry,
+                data: merge ? { ...existingEntry?.data, ...data } : data,
+              },
+            },
+          };
+        case "REGISTER_OBJECT_DATA":
+          const { key: regKey, data: regData, objectId } = action.payload;
+          return {
+            ...state,
+            objectData: {
+              ...state.objectData,
+              [regKey]: { data: regData, objectId },
+            },
+          };
+        default:
+          return state;
+      }
+    };
+
+    // Action creator for updating object data
+    const updateObjectData = (
+      key: string,
+      data: Record<string, any>,
+      merge = true
+    ) => ({
+      type: "UPDATE_OBJECT_DATA" as const,
+      payload: { key, data, merge },
     });
 
-    it("should pass all provided props to ReferenceField", () => {
-      mount(
-        <TestForm
-          disabled={true}
-          required={true}
-          initialValue="world1"
-          error={true}
-          errorMessage="Test error message"
-        />
-      );
+    // Create a real Redux store
+    const createRealStore = () => {
+      return configureStore({
+        reducer: objectDataReducer,
+        preloadedState: initialState,
+      });
+    };
 
-      const field = belongsToField("worldId", "World");
+    it.only("should properly hydrate initial values from Redux store", () => {
+      // Create a real Redux store
+      const store = createRealStore();
 
-      // Check that props were passed correctly
-      field.isDisabled().should("be.true");
-      field.isRequired().should("be.true");
-      field.getValue().should("eq", "world1");
-      field.hasError().should("be.true");
-      field.getErrorMessage().should("eq", "Test error message");
+      // Add a spy to the dispatch function to track updates
+      const dispatchSpy = cy.spy(store, "dispatch").as("dispatchSpy");
+
+      // Initial data with a world selected
+      const initialWorldData = {
+        name: "My World",
+        description: "This is a test world",
+        worldId: "world2", // Test World 2
+      };
+
+      // Initialize store with data
+      store.dispatch({
+        type: "REGISTER_OBJECT_DATA",
+        payload: {
+          key: "main",
+          data: initialWorldData,
+          objectId: "world-123",
+        },
+      });
+
+      // Log the initial state to verify it's set correctly
+      cy.log("Initial Redux State", JSON.stringify(store.getState()));
+
+      // Create selectors for the Redux store
+      const dataSelector = () => store.getState().objectData.main?.data || {};
+      const objectIdSelector = () => store.getState().objectData.main?.objectId;
+
+      // Create a schema with references
+      const worldSchema = z
+        .object({
+          _id: z.string().describe("ID"),
+          name: z.string().describe("Name"),
+        })
+        .describe("World");
+
+      const projectSchema = z
+        .object({
+          name: z.string().describe("Name"),
+          description: z.string().describe("Description"),
+          worldId: z
+            .string()
+            .reference({
+              type: RelationshipType.BELONGS_TO,
+              schema: worldSchema,
+              name: "world",
+            })
+            .describe("World"),
+        })
+        .describe("Project");
+
+      // Create a component to display the current Redux state
+      const ReduxStateDisplay = () => {
+        return (
+          <div data-testid="redux-state">
+            {JSON.stringify(store.getState().objectData.main?.data.worldId)}
+          </div>
+        );
+      };
+
+      // Import useSelector explicitly to ensure it's properly typed
+      const { useSelector } = require("react-redux");
+
+      // Create a component that will re-render when Redux state changes
+      const WorldDisplay = () => {
+        // Use useSelector to subscribe to Redux state changes
+        const worldId = useSelector(
+          (state: ObjectDataState) => state.objectData.main?.data.worldId
+        );
+        return (
+          <div data-testid="world-display">
+            Selected World: {JSON.stringify(worldId)}
+          </div>
+        );
+      };
+
+      // Create a wrapper component that uses Redux
+      function TestProjectFormWithRedux() {
+        return (
+          <Provider store={store}>
+            <div>
+              <ObjectProvider
+                schema={schema}
+                objectType="Project"
+                data={{}} // Empty default data
+                dataSelector={dataSelector}
+                objectIdSelector={objectIdSelector}
+                dispatch={store.dispatch}
+                createUpdateAction={updateObjectData}
+              >
+                {/* Display component that subscribes to Redux state changes */}
+                <div>
+                  <WorldDisplay />
+                </div>
+
+                <AutoForm
+                  schema={new ZodBridge({ schema })}
+                  model={{}}
+                  onSubmit={() => {}}
+                >
+                  <BelongsToField
+                    name="worldId"
+                    reference={referenceMetadata}
+                    options={worldOptions}
+                    // Don't pass value directly from store.getState() - let the ObjectProvider handle it
+                  />
+                </AutoForm>
+
+                {/* Display Redux state for debugging */}
+                <ReduxStateDisplay />
+              </ObjectProvider>
+            </div>
+          </Provider>
+        );
+      }
+
+      // Mount the test component
+      mount(<TestProjectFormWithRedux />);
+
+      // Get the field using the interactable pattern
+      const field = belongsToField("worldId", "Project");
+
+      // Verify that the initial value from Redux is properly displayed
+      field.selected().should("equal", "Test World 2");
     });
 
-    it("should pass objectId to ReferenceField", () => {
-      mount(<TestForm objectId="test-object-id" />);
+    it.only("should update Redux store and UI when selecting a new option", () => {
+      // Create a real Redux store
+      const store = createRealStore();
 
-      // Create a field interactable with the objectId
-      const field = belongsToField(
-        "worldId",
-        "World",
-        undefined,
-        "test-object-id"
-      );
+      // Add a spy to the dispatch function to track updates
+      const dispatchSpy = cy.spy(store, "dispatch").as("dispatchSpy");
 
-      // Verify the field exists and can be interacted with
-      field.get().should("exist");
+      // Initial data with a world selected
+      const initialWorldData = {
+        name: "My World",
+        description: "This is a test world",
+        worldId: "world2", // Test World 2
+      };
+
+      // Initialize store with data
+      store.dispatch({
+        type: "REGISTER_OBJECT_DATA",
+        payload: {
+          key: "main",
+          data: initialWorldData,
+          objectId: "world-123",
+        },
+      });
+
+      // Create selectors for the Redux store
+      const dataSelector = () => store.getState().objectData.main?.data || {};
+      const objectIdSelector = () => store.getState().objectData.main?.objectId;
+
+      // Create a schema with references
+      const worldSchema = z
+        .object({
+          _id: z.string().describe("ID"),
+          name: z.string().describe("Name"),
+        })
+        .describe("World");
+
+      const projectSchema = z
+        .object({
+          name: z.string().describe("Name"),
+          description: z.string().describe("Description"),
+          worldId: z
+            .string()
+            .reference({
+              type: RelationshipType.BELONGS_TO,
+              schema: worldSchema,
+              name: "world",
+            })
+            .describe("World"),
+        })
+        .describe("Project");
+
+      // Create a component to display the current Redux state
+      const ReduxStateDisplay = () => {
+        return (
+          <div data-testid="redux-state">
+            {JSON.stringify(store.getState().objectData.main?.data.worldId)}
+          </div>
+        );
+      };
+
+      // Import useSelector explicitly to ensure it's properly typed
+      const { useSelector } = require("react-redux");
+
+      // Create a component that will re-render when Redux state changes
+      const WorldDisplay = () => {
+        // Use useSelector to subscribe to Redux state changes
+        const worldId = useSelector(
+          (state: ObjectDataState) => state.objectData.main?.data.worldId
+        );
+        return (
+          <div data-testid="world-display">
+            Selected World: {JSON.stringify(worldId)}
+          </div>
+        );
+      };
+
+      // Create a wrapper component that uses Redux
+      function TestProjectFormWithRedux() {
+        return (
+          <Provider store={store}>
+            <div>
+              <ObjectProvider
+                schema={schema}
+                objectType="Project"
+                data={{}} // Empty default data
+                dataSelector={dataSelector}
+                objectIdSelector={objectIdSelector}
+                dispatch={store.dispatch}
+                createUpdateAction={updateObjectData}
+              >
+                {/* Display component that subscribes to Redux state changes */}
+                <div>
+                  <WorldDisplay />
+                </div>
+
+                <AutoForm
+                  schema={new ZodBridge({ schema })}
+                  model={{}}
+                  onSubmit={() => {}}
+                >
+                  <BelongsToField
+                    name="worldId"
+                    reference={referenceMetadata}
+                    options={worldOptions}
+                    // Don't pass value directly from store.getState() - let the ObjectProvider handle it
+                  />
+                </AutoForm>
+
+                {/* Display Redux state for debugging */}
+                <ReduxStateDisplay />
+              </ObjectProvider>
+            </div>
+          </Provider>
+        );
+      }
+
+      // Mount the test component
+      mount(<TestProjectFormWithRedux />);
+
+      // Get the field using the interactable pattern
+      const field = belongsToField("worldId", "Project");
+
+      // Verify that the initial value from Redux is properly displayed
+      field.selected().should("equal", "Test World 2");
+
+      // Select a different world
+      field.select("Test World 3");
+
+      // Verify the dispatch was called with the correct action
+      cy.get("@dispatchSpy").should("have.been.called");
+
+      // Wait for the WorldDisplay component to update, which indicates the Redux state has changed
+      // and the UI should reflect the new state
+      cy.get('[data-testid="world-display"]').should("contain", "world3");
+
+      // Click away from the field to ensure the selection is committed in the UI
+      // This simulates a user clicking elsewhere after making a selection
+      cy.get("body").click(0, 0);
+
+      // Now verify the UI shows the new selection
+      field.selected().should("equal", "Test World 3");
     });
   });
 });

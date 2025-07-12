@@ -215,6 +215,10 @@ export class AutocompleteInteractable
       this.open(); // Make sure the dropdown is open
       this.item(text).click();
       cy.wait(100); // Wait for the selection to be processed
+
+      // For single selection, blur the field to ensure the selection is committed
+      // This simulates a user clicking away after making a selection
+      this.textField().blur();
     }
 
     return this;
@@ -305,10 +309,26 @@ export class AutocompleteInteractable
           // For single selection, get the input value
           return this.getTriggerElement().then(($input) => {
             const inputValue = $input.val();
-            return !inputValue ||
+
+            // Log the input value for debugging
+            cy.log(`Autocomplete input value: ${JSON.stringify(inputValue)}`);
+
+            // If the input has no value, try to get the displayed text from the component
+            if (
+              !inputValue ||
               (Array.isArray(inputValue) && inputValue.length === 0)
-              ? ""
-              : (inputValue as string);
+            ) {
+              // Try to get the displayed text from the component
+              return this.get()
+                .find(".MuiAutocomplete-input")
+                .then(($el) => {
+                  const displayText = $el.text();
+                  cy.log(`Autocomplete display text: ${displayText}`);
+                  return displayText || "";
+                });
+            }
+
+            return inputValue as string;
           });
         }
       });

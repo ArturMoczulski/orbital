@@ -168,11 +168,22 @@ export function ObjectSelector({
             .filter(Boolean); // Remove any undefined values
         } else {
           // For single choice, find the option object that matches the value
-          return (
-            options.find(
-              (option: any) => safeGetOptionValue(option) === value
-            ) || null
+          const foundOption = options.find(
+            (option: any) => safeGetOptionValue(option) === value
           );
+
+          // If we found an option, return it
+          if (foundOption) {
+            return foundOption;
+          }
+
+          // If we didn't find an option but have a value, try to find it by _id as well
+          // This is needed because some components use _id and others use id
+          const foundByAltId = options.find(
+            (option: any) => option._id === value || option.id === value
+          );
+
+          return foundByAltId || null;
         }
       }, [value, options, safeGetOptionValue, multiple]);
 

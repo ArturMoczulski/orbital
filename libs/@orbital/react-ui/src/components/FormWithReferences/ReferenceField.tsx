@@ -164,13 +164,13 @@ export function ReferenceField({
   const referenceOptions = reference?.options || [];
 
   // Handle the onChange event based on whether this is a single or multi-select field
-  const handleChange = (newValue: string | string[]) => {
+  const handleChange = (newValue: string | string[] | null) => {
     if (multiple) {
       // For multi-select fields, ensure we always return an array
       if (Array.isArray(newValue)) {
         onChange(newValue);
-      } else if (newValue === "") {
-        // Empty string means no selection, so pass empty array
+      } else if (newValue === "" || newValue === null) {
+        // Empty string or null means no selection, so pass empty array
         onChange([]);
       } else {
         // Single string value, convert to array with one item
@@ -178,7 +178,9 @@ export function ReferenceField({
       }
     } else {
       // For single-select fields, ensure we always return a string
-      if (Array.isArray(newValue)) {
+      if (newValue === null) {
+        onChange("");
+      } else if (Array.isArray(newValue)) {
         onChange(newValue.length > 0 ? newValue[0] : "");
       } else {
         onChange(newValue);
