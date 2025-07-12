@@ -339,6 +339,15 @@ export function inferObjectTypeFromSchema(
       return "Unknown";
     }
 
+    // Check for direct description that might contain the type
+    if (rawSchema._def.description) {
+      // Try to extract type from description like "A User"
+      const directMatch = rawSchema._def.description.match(/^A (\w+)$/i);
+      if (directMatch) {
+        return toPascalCase(directMatch[1]);
+      }
+    }
+
     // Use the existing getSchemaName function from @orbital/core
     const schemaName = getSchemaName(rawSchema);
 
@@ -350,6 +359,7 @@ export function inferObjectTypeFromSchema(
 
     return "Unknown";
   } catch (error) {
+    console.error("Error inferring object type:", error);
     return "Unknown";
   }
 }

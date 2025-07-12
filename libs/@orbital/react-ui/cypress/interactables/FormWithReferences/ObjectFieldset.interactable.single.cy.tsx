@@ -6,6 +6,10 @@ import { ZodBridge } from "uniforms-bridge-zod";
 import { z } from "zod";
 import { ObjectFieldset } from "../../../src/components/FormWithReferences/ObjectFieldset";
 import { ObjectProvider } from "../../../src/components/FormWithReferences/ObjectProvider";
+import {
+  MockReduxStore,
+  createUpdateAction,
+} from "../../../src/components/FormWithReferences/ObjectProviderTestUtils";
 import { ZodReferencesBridge } from "../../../src/components/FormWithReferences/ZodReferencesBridge";
 import { BelongsToFieldInteractable } from "./BelongsToField.interactable.js";
 import { objectFieldset } from "./ObjectFieldset.interactable";
@@ -525,163 +529,348 @@ describe("ObjectFieldsetInteractable", () => {
     customerFieldset.getObjectId().should("equal", "customer-456");
   });
 
-  it("works with references between different object types (area belongs to world)", () => {
-    // Create schemas with references
-    const worldSchema = z
-      .object({
-        id: z.string().uuid().describe("ID"),
-        name: z.string().describe("Name"),
-        description: z.string().optional().describe("Description"),
-      })
-      .describe("World");
+  describe("Reference Fields without Redux", () => {
+    it("works with references between different object types (area belongs to world)", () => {
+      // Create schemas with references
+      const worldSchema = z
+        .object({
+          id: z.string().uuid().describe("ID"),
+          name: z.string().describe("Name"),
+          description: z.string().optional().describe("Description"),
+        })
+        .describe("World");
 
-    const areaSchema = z
-      .object({
-        name: z.string().describe("Name"),
-        size: z.number().min(0).describe("Size"),
-        worldId: z
-          .string()
-          .uuid()
-          .reference({
-            type: RelationshipType.BELONGS_TO,
-            schema: worldSchema,
-            name: "world",
-          })
-          .describe("World"),
-      })
-      .describe("Area");
+      const areaSchema = z
+        .object({
+          name: z.string().describe("Name"),
+          size: z.number().min(0).describe("Size"),
+          worldId: z
+            .string()
+            .uuid()
+            .reference({
+              type: RelationshipType.BELONGS_TO,
+              schema: worldSchema,
+              name: "world",
+            })
+            .describe("World"),
+        })
+        .describe("Area");
 
-    // Create a bridge with references
-    const refBridge = new ZodReferencesBridge({
-      schema: areaSchema,
-      dependencies: {
-        world: [
-          {
-            id: "123e4567-e89b-12d3-a456-426614174000",
-            name: "Fantasy World",
-            description: "A magical realm",
-          },
-          {
-            id: "223e4567-e89b-12d3-a456-426614174000",
-            name: "Sci-Fi World",
-            description: "A futuristic setting",
-          },
-          {
-            id: "323e4567-e89b-12d3-a456-426614174000",
-            name: "Historical World",
-            description: "Based on real history",
-          },
-        ],
-      },
-    });
-
-    const initialAreaData = {
-      name: "Forest of Shadows",
-      size: 500,
-      worldId: "123e4567-e89b-12d3-a456-426614174000",
-    };
-
-    // Create a wrapper component that displays the current data
-    function TestAreaForm() {
-      // Use useState to track the current data
-      const [areaData, setAreaData] = useState(initialAreaData);
-
-      // This function will be called when updateObjectData is called
-      const handleUpdate = (
-        key: string,
-        newData: Record<string, any>,
-        merge = true
-      ) => {
-        setAreaData((prevData) => {
-          if (merge) {
-            // Ensure we maintain the correct type by explicitly including all required fields
-            return { ...prevData, ...newData } as typeof initialAreaData;
-          }
-          // For complete replacement, we'd need to ensure the new data has all required fields
-          // In practice, this branch shouldn't be hit in our test
-          return { ...initialAreaData, ...newData } as typeof initialAreaData;
-        });
-      };
-
-      return (
-        <div>
-          <ObjectProvider
-            schema={refBridge}
-            objectType="Area"
-            data={areaData}
-            onUpdate={handleUpdate}
-          >
-            <ObjectFieldset />
-            {/* Display the current worldId for verification */}
-            <div data-testid="current-worldId">{areaData.worldId}</div>
-          </ObjectProvider>
-        </div>
-      );
-    }
-
-    // Mount the test component
-    mount(<TestAreaForm />);
-
-    const areaFieldset = objectFieldset("Area");
-
-    // Verify the fieldset exists
-    areaFieldset.should("exist");
-
-    // Verify it has the expected fields
-    areaFieldset.hasField("name").should("be.true");
-    areaFieldset.hasField("size").should("be.true");
-    areaFieldset.hasField("worldId").should("be.true");
-
-    // Verify field values
-    areaFieldset.getFieldValue("name").should("equal", "Forest of Shadows");
-    areaFieldset.getFieldValue("size").should("equal", "500");
-    areaFieldset.getFieldValue("worldId").should("equal", "Fantasy World");
-
-    // Get the input field within the BelongsToField
-    const worldField =
-      areaFieldset.field<BelongsToFieldInteractable>("worldId");
-
-    // Get the display text using selected() helper
-    worldField.then((field) => {
-      // Verify initial selection
-      field.selected().should("equal", "Fantasy World");
-
-      // Open the dropdown
-      field.open();
-
-      // Verify dropdown is open
-      field.isOpened().should("be.true");
-
-      // Verify number of options
-      field.items().should("have.length", 3);
-
-      // Verify option text
-      field.items().then((items) => {
-        expect(items[0].textContent).to.include("Fantasy World");
-        expect(items[1].textContent).to.include("Sci-Fi World");
-        expect(items[2].textContent).to.include("Historical World");
+      // Create a bridge with references
+      const refBridge = new ZodReferencesBridge({
+        schema: areaSchema,
+        dependencies: {
+          world: [
+            {
+              id: "123e4567-e89b-12d3-a456-426614174000",
+              name: "Fantasy World",
+              description: "A magical realm",
+            },
+            {
+              id: "223e4567-e89b-12d3-a456-426614174000",
+              name: "Sci-Fi World",
+              description: "A futuristic setting",
+            },
+            {
+              id: "323e4567-e89b-12d3-a456-426614174000",
+              name: "Historical World",
+              description: "Based on real history",
+            },
+          ],
+        },
       });
 
-      // Select a different option
-      field.select("Sci-Fi World");
+      const initialAreaData = {
+        name: "Forest of Shadows",
+        size: 500,
+        worldId: "123e4567-e89b-12d3-a456-426614174000",
+      };
 
-      // Verify dropdown is closed after selection
-      field.isClosed().should("be.true");
+      // Create a wrapper component that displays the current data
+      function TestAreaForm() {
+        // Use useState to track the current data
+        const [areaData, setAreaData] = useState(initialAreaData);
 
-      // Verify the new selection
-      field.selected().should("equal", "Sci-Fi World");
+        // This function will be called when updateObjectData is called
+        const handleUpdate = (
+          key: string,
+          newData: Record<string, any>,
+          merge = true
+        ) => {
+          setAreaData((prevData) => {
+            if (merge) {
+              // Ensure we maintain the correct type by explicitly including all required fields
+              return { ...prevData, ...newData } as typeof initialAreaData;
+            }
+            // For complete replacement, we'd need to ensure the new data has all required fields
+            // In practice, this branch shouldn't be hit in our test
+            return { ...initialAreaData, ...newData } as typeof initialAreaData;
+          });
+        };
 
-      // Verify the data model was updated with the correct ID
-      cy.get('[data-testid="current-worldId"]').should(
-        "contain",
-        "223e4567-e89b-12d3-a456-426614174000"
-      );
+        return (
+          <div>
+            <ObjectProvider
+              schema={refBridge}
+              objectType="Area"
+              data={areaData}
+              onUpdate={handleUpdate}
+            >
+              <ObjectFieldset />
+              {/* Display the current worldId for verification */}
+              <div data-testid="current-worldId">{areaData.worldId}</div>
+            </ObjectProvider>
+          </div>
+        );
+      }
 
-      // Click outside to trigger any blur events
-      cy.get("body").click(0, 0);
+      // Mount the test component
+      mount(<TestAreaForm />);
 
-      // Verify the selection is still "Sci-Fi World" after clicking outside
-      field.selected().should("equal", "Sci-Fi World");
+      const areaFieldset = objectFieldset("Area");
+
+      // Verify the fieldset exists
+      areaFieldset.should("exist");
+
+      // Verify it has the expected fields
+      areaFieldset.hasField("name").should("be.true");
+      areaFieldset.hasField("size").should("be.true");
+      areaFieldset.hasField("worldId").should("be.true");
+
+      // Verify field values
+      areaFieldset.getFieldValue("name").should("equal", "Forest of Shadows");
+      areaFieldset.getFieldValue("size").should("equal", "500");
+      areaFieldset.getFieldValue("worldId").should("equal", "Fantasy World");
+
+      // Get the input field within the BelongsToField
+      const worldField =
+        areaFieldset.field<BelongsToFieldInteractable>("worldId");
+
+      // Get the display text using selected() helper
+      worldField.then((field) => {
+        // Verify initial selection
+        field.selected().should("equal", "Fantasy World");
+
+        // Open the dropdown
+        field.open();
+
+        // Verify dropdown is open
+        field.isOpened().should("be.true");
+
+        // Verify number of options
+        field.items().should("have.length", 3);
+
+        // Verify option text
+        field.items().then((items) => {
+          expect(items[0].textContent).to.include("Fantasy World");
+          expect(items[1].textContent).to.include("Sci-Fi World");
+          expect(items[2].textContent).to.include("Historical World");
+        });
+
+        // Select a different option
+        field.select("Sci-Fi World");
+
+        // Verify dropdown is closed after selection
+        field.isClosed().should("be.true");
+
+        // Verify the new selection
+        field.selected().should("equal", "Sci-Fi World");
+
+        // Verify the data model was updated with the correct ID
+        cy.get('[data-testid="current-worldId"]').should(
+          "contain",
+          "223e4567-e89b-12d3-a456-426614174000"
+        );
+
+        // Click outside to trigger any blur events
+        cy.get("body").click(0, 0);
+
+        // Verify the selection is still "Sci-Fi World" after clicking outside
+        field.selected().should("equal", "Sci-Fi World");
+      });
+    });
+  });
+
+  describe("Reference Fields with Redux", () => {
+    it("works with references between different object types using Redux", () => {
+      // Create schemas with references
+      const worldSchema = z
+        .object({
+          id: z.string().uuid().describe("ID"),
+          name: z.string().describe("Name"),
+          description: z.string().optional().describe("Description"),
+        })
+        .describe("World");
+
+      const areaSchema = z
+        .object({
+          name: z.string().describe("Name"),
+          size: z.number().min(0).describe("Size"),
+          worldId: z
+            .string()
+            .uuid()
+            .reference({
+              type: RelationshipType.BELONGS_TO,
+              schema: worldSchema,
+              name: "world",
+            })
+            .describe("World"),
+        })
+        .describe("Area");
+
+      // Create a bridge with references
+      const refBridge = new ZodReferencesBridge({
+        schema: areaSchema,
+        dependencies: {
+          world: [
+            {
+              id: "123e4567-e89b-12d3-a456-426614174000",
+              name: "Fantasy World",
+              description: "A magical realm",
+            },
+            {
+              id: "223e4567-e89b-12d3-a456-426614174000",
+              name: "Sci-Fi World",
+              description: "A futuristic setting",
+            },
+            {
+              id: "323e4567-e89b-12d3-a456-426614174000",
+              name: "Historical World",
+              description: "Based on real history",
+            },
+          ],
+        },
+      });
+
+      const initialAreaData = {
+        name: "Forest of Shadows",
+        size: 500,
+        worldId: "123e4567-e89b-12d3-a456-426614174000",
+      };
+
+      // Create a wrapper component that uses Redux
+      function TestAreaFormWithRedux() {
+        // Create a mock Redux store
+        const store = new MockReduxStore();
+
+        // Initialize store with data
+        store.dispatch({
+          type: "REGISTER_OBJECT_DATA",
+          payload: {
+            key: "main",
+            data: initialAreaData,
+            objectId: "area-123",
+          },
+        });
+
+        // Create selectors
+        const dataSelector = store.createDataSelector("main");
+        const objectIdSelector = store.createObjectIdSelector("main");
+
+        // Force re-render when Redux store changes
+        const [, forceUpdate] = useState({});
+
+        React.useEffect(() => {
+          const unsubscribe = store.subscribe(() => {
+            forceUpdate({});
+          });
+          return unsubscribe;
+        }, []);
+
+        return (
+          <div>
+            <ObjectProvider
+              schema={refBridge}
+              objectType="Area"
+              data={{}} // Empty default data
+              dataSelector={dataSelector}
+              objectIdSelector={objectIdSelector}
+              dispatch={store.dispatch.bind(store)}
+              createUpdateAction={createUpdateAction}
+            >
+              <ObjectFieldset />
+              {/* Display the current worldId for verification */}
+              <div data-testid="current-worldId">
+                {store.getState().objectData.main?.data.worldId}
+              </div>
+            </ObjectProvider>
+          </div>
+        );
+      }
+
+      // Mount the test component
+      mount(<TestAreaFormWithRedux />);
+
+      const areaFieldset = objectFieldset("Area");
+
+      // Verify the fieldset exists
+      areaFieldset.should("exist");
+
+      // Verify it has the expected fields
+      areaFieldset.hasField("name").should("be.true");
+      areaFieldset.hasField("size").should("be.true");
+      areaFieldset.hasField("worldId").should("be.true");
+
+      // Verify field values
+      areaFieldset.getFieldValue("name").should("equal", "Forest of Shadows");
+      areaFieldset.getFieldValue("size").should("equal", "500");
+      areaFieldset.getFieldValue("worldId").should("equal", "Fantasy World");
+
+      // Get the input field within the BelongsToField
+      const worldField =
+        areaFieldset.field<BelongsToFieldInteractable>("worldId");
+
+      // Get the display text using selected() helper
+      worldField.then((field) => {
+        // Verify initial selection
+        field.selected().should("equal", "Fantasy World");
+
+        // Open the dropdown
+        field.open();
+
+        // Verify dropdown is open
+        field.isOpened().should("be.true");
+
+        // Verify number of options
+        field.items().should("have.length", 3);
+
+        // Verify option text
+        field.items().then((items) => {
+          expect(items[0].textContent).to.include("Fantasy World");
+          expect(items[1].textContent).to.include("Sci-Fi World");
+          expect(items[2].textContent).to.include("Historical World");
+        });
+
+        // Select a different option
+        field.select("Sci-Fi World");
+
+        // Verify dropdown is closed after selection
+        field.isClosed().should("be.true");
+
+        // Add a wait to ensure Redux state updates are processed
+        cy.wait(100);
+
+        // Force a re-render by clicking elsewhere and then back
+        cy.get("body").click(0, 0);
+
+        // Wait for any state updates to propagate
+        cy.wait(100);
+
+        // Click back on the field to ensure it's refreshed
+        field.textField().click();
+        cy.wait(100);
+        cy.get("body").type("{esc}");
+        cy.wait(100);
+
+        // Verify the new selection
+        field.selected().should("equal", "Sci-Fi World");
+
+        // Verify the data model was updated with the correct ID
+        cy.get('[data-testid="current-worldId"]').should(
+          "contain",
+          "223e4567-e89b-12d3-a456-426614174000"
+        );
+      });
     });
   });
 });

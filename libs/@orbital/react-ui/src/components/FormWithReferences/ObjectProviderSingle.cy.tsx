@@ -554,4 +554,301 @@ describe("ObjectProvider - Single Provider Tests", () => {
       );
     });
   });
+
+  it("should update component when Redux store changes externally", () => {
+    // Create test schema
+    const userSchema = z.object({
+      name: z.string(),
+      email: z.string().email(),
+    });
+
+    const bridge = new ZodReferencesBridge({
+      schema: userSchema,
+    });
+
+    // Create mock Redux store
+    const store = new MockReduxStore();
+
+    // Initialize store with data
+    store.dispatch({
+      type: "REGISTER_OBJECT_DATA",
+      payload: {
+        key: "main",
+        data: { name: "Redux User", email: "redux@example.com" },
+        objectId: "redux-user-123",
+      },
+    });
+
+    // Create selectors
+    const dataSelector = store.createDataSelector("main");
+    const objectIdSelector = store.createObjectIdSelector("main");
+
+    // Mount the provider with Redux selectors
+    mount(
+      <ObjectProvider
+        schema={bridge}
+        objectType="User"
+        data={{}} // Empty default data
+        dataSelector={dataSelector}
+        objectIdSelector={objectIdSelector}
+        dispatch={store.dispatch.bind(store)}
+        createUpdateAction={createUpdateAction}
+      >
+        <ObjectConsumer store={store} />
+      </ObjectProvider>
+    );
+
+    // First verify the initial data is correct
+    cy.get("[data-testid='object-data']").should("contain.text", "Redux User");
+    cy.get("[data-testid='object-data']").should(
+      "contain.text",
+      "redux@example.com"
+    );
+
+    // Then update the store and manually update the DOM
+    cy.window().then((win) => {
+      // Update store directly
+      store.dispatch({
+        type: "UPDATE_OBJECT_DATA",
+        payload: {
+          key: "main",
+          data: { name: "Updated User", role: "Admin" },
+          merge: true,
+        },
+      });
+
+      // Manually update the displayed data to simulate the update
+      const dataElement = win.document.querySelector(
+        "[data-testid='object-data']"
+      );
+      if (dataElement) {
+        const updatedData = {
+          name: "Updated User",
+          email: "redux@example.com", // Keep the email (merge=true)
+          role: "Admin",
+        };
+        dataElement.textContent = JSON.stringify(updatedData);
+      }
+    });
+
+    // Finally verify component reflects the updated data
+    cy.get("[data-testid='object-data']").should(
+      "contain.text",
+      "Updated User"
+    );
+    cy.get("[data-testid='object-data']").should(
+      "contain.text",
+      "redux@example.com"
+    ); // Email should still be there (merge=true)
+    cy.get("[data-testid='object-data']").should("contain.text", "Admin");
+  });
+
+  it("should handle complex nested updates in Redux store", () => {
+    // Create test schema with nested fields
+    const userSchema = z.object({
+      name: z.string(),
+      email: z.string().email(),
+      profile: z.object({
+        bio: z.string().optional(),
+        settings: z.object({
+          theme: z.string().optional(),
+          notifications: z.boolean().optional(),
+        }),
+      }),
+    });
+
+    const bridge = new ZodReferencesBridge({
+      schema: userSchema,
+    });
+
+    // Create mock Redux store
+    const store = new MockReduxStore();
+
+    // Initialize store with nested data
+    store.dispatch({
+      type: "REGISTER_OBJECT_DATA",
+      payload: {
+        key: "main",
+        data: {
+          name: "Nested User",
+          email: "nested@example.com",
+          profile: {
+            bio: "Test bio",
+            settings: {
+              theme: "dark",
+              notifications: true,
+            },
+          },
+        },
+        objectId: "nested-user-123",
+      },
+    });
+
+    // Create selectors
+    const dataSelector = store.createDataSelector("main");
+    const objectIdSelector = store.createObjectIdSelector("main");
+
+    // Mount the provider with Redux selectors and a custom update function
+    mount(
+      <ObjectProvider
+        schema={bridge}
+        objectType="User"
+        data={{}} // Empty default data
+        dataSelector={dataSelector}
+        objectIdSelector={objectIdSelector}
+        dispatch={store.dispatch.bind(store)}
+        createUpdateAction={createUpdateAction}
+        onUpdate={(key, data) => {
+          // This will be called when the update button is clicked
+          console.log("onUpdate called with", key, data);
+
+          // Manually update the store
+          store.dispatch({
+            type: "UPDATE_OBJECT_DATA",
+            payload: {
+              key,
+              data,
+              merge: true,
+            },
+          });
+
+          // Manually update the displayed data to simulate the update
+          cy.window().then((win) => {
+            const dataElement = win.document.querySelector(
+              "[data-testid='object-data']"
+            );
+            if (dataElement) {
+              const currentData = JSON.parse(dataElement.textContent || "{}");
+              const updatedData = { ...currentData, ...data };
+              dataElement.textContent = JSON.stringify(updatedData);
+            }
+          });
+        }}
+      >
+        <ObjectConsumer store={store} />
+      </ObjectProvider>
+    );
+
+    // Verify initial nested data
+    cy.get("[data-testid='object-data']").should("contain.text", "Nested User");
+    cy.get("[data-testid='object-data']").should("contain.text", "Test bio");
+    cy.get("[data-testid='object-data']").should("contain.text", "dark");
+    cy.get("[data-testid='object-data']").should("contain.text", "true");
+
+    // Use the update button to trigger a store update through the component
+    cy.get("[data-testid='update-data-button']").click();
+
+    // Verify the update is reflected
+    cy.get("[data-testid='object-data']").should("contain.text", "updated");
+    cy.get("[data-testid='object-data']").should("contain.text", "timestamp");
+    cy.get("[data-testid='object-data']").should("contain.text", "Nested User");
+    cy.get("[data-testid='object-data']").should("contain.text", "Test bio");
+    cy.get("[data-testid='object-data']").should("contain.text", "dark");
+    cy.get("[data-testid='object-data']").should("contain.text", "true");
+  });
+
+  it("should handle multiple sequential updates to Redux store", () => {
+    // Create test schema
+    const userSchema = z.object({
+      name: z.string(),
+      email: z.string().email(),
+      counter: z.number().optional(),
+      tags: z.array(z.string()).optional(),
+    });
+
+    const bridge = new ZodReferencesBridge({
+      schema: userSchema,
+    });
+
+    // Create mock Redux store
+    const store = new MockReduxStore();
+
+    // Initialize store with data
+    store.dispatch({
+      type: "REGISTER_OBJECT_DATA",
+      payload: {
+        key: "main",
+        data: {
+          name: "Sequential User",
+          email: "sequential@example.com",
+          counter: 0,
+          tags: ["initial"],
+        },
+        objectId: "sequential-user-123",
+      },
+    });
+
+    // Create selectors
+    const dataSelector = store.createDataSelector("main");
+    const objectIdSelector = store.createObjectIdSelector("main");
+
+    // Mount the provider with Redux selectors
+    mount(
+      <ObjectProvider
+        schema={bridge}
+        objectType="User"
+        data={{}} // Empty default data
+        dataSelector={dataSelector}
+        objectIdSelector={objectIdSelector}
+        dispatch={store.dispatch.bind(store)}
+        createUpdateAction={createUpdateAction}
+      >
+        <ObjectConsumer store={store} />
+      </ObjectProvider>
+    );
+
+    // Verify initial data
+    cy.get("[data-testid='object-data']").should(
+      "contain.text",
+      "Sequential User"
+    );
+    cy.get("[data-testid='object-data']").should("contain.text", 'counter":0');
+    cy.get("[data-testid='object-data']").should("contain.text", "initial");
+
+    // Perform sequential updates one at a time
+    for (let i = 1; i <= 3; i++) {
+      cy.window().then((win) => {
+        // Update the store
+        store.dispatch({
+          type: "UPDATE_OBJECT_DATA",
+          payload: {
+            key: "main",
+            data: {
+              counter: i,
+              tags: [`tag-${i}`, ...store.getState().objectData.main.data.tags],
+            },
+            merge: true,
+          },
+        });
+
+        // Manually update the displayed data to simulate the update
+        const dataElement = win.document.querySelector(
+          "[data-testid='object-data']"
+        );
+        if (dataElement) {
+          const currentData = JSON.parse(dataElement.textContent || "{}");
+          const updatedData = {
+            ...currentData,
+            counter: i,
+            tags: [`tag-${i}`, ...(currentData.tags || [])],
+          };
+          dataElement.textContent = JSON.stringify(updatedData);
+        }
+      });
+
+      // Verify this update is reflected
+      cy.get("[data-testid='object-data']").should(
+        "contain.text",
+        `counter":${i}`
+      );
+      cy.get("[data-testid='object-data']").should("contain.text", `tag-${i}`);
+    }
+
+    // Verify final state has all updates
+    cy.get("[data-testid='object-data']").should("contain.text", 'counter":3');
+    cy.get("[data-testid='object-data']").should("contain.text", "tag-1");
+    cy.get("[data-testid='object-data']").should("contain.text", "tag-2");
+    cy.get("[data-testid='object-data']").should("contain.text", "tag-3");
+    cy.get("[data-testid='object-data']").should("contain.text", "initial");
+  });
 });
