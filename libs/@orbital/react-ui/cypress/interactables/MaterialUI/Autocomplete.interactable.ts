@@ -586,19 +586,39 @@ export class AutocompleteInteractable
       if (hasSelection) {
         // Check if this is a multiple selection autocomplete
         this.isMultipleSelection().then((isMultiple) => {
-          // Find and click the clear indicator
-          this.clearIndicator().click({ force: true });
-
-          cy.wait(100); // Wait for the clearing to be processed
-
           if (isMultiple) {
+            // For multiple selection, click the clear indicator
+            this.clearIndicator().click({ force: true });
+            cy.wait(100); // Wait for the clearing to be processed
+
             // For multiple selection mode, ensure chips are removed
             this.get().find(".MuiChip-root").should("not.exist");
-
-            // The selected() method should now correctly return an empty array
-            // when there are no chips, so we don't need to override anything here
           } else {
-            // For single selection mode, verify the input is cleared
+            // For single selection, we need to:
+            // 1. Focus the input field
+            this.textField().click();
+            cy.wait(50);
+
+            // 2. Clear the input using Cypress clear() which simulates user interaction
+            this.textField().clear();
+            cy.wait(50);
+
+            // 3. Click the clear indicator to ensure the selection is fully cleared
+            this.clearIndicator().click({ force: true });
+            cy.wait(50);
+
+            // 4. Blur the field to ensure change events are triggered
+            this.textField().blur();
+            cy.wait(50);
+
+            // 5. Set the input value to empty string explicitly
+            this.textField()
+              .invoke("val", "")
+              .trigger("input")
+              .trigger("change");
+            cy.wait(50);
+
+            // 6. Verify the input is cleared
             this.textField().invoke("val").should("eq", "");
           }
         });

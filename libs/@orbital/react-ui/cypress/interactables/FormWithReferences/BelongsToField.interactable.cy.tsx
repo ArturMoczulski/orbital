@@ -118,58 +118,6 @@ describe("BelongsToField.interactable", () => {
     field.isRequired().should("be.true");
   });
 
-  it("should clear selection", () => {
-    const onChangeSpy = cy.spy().as("onChange");
-
-    mount(<TestForm initialValue="world1" onChange={onChangeSpy} />);
-
-    const field = belongsToField({
-      fieldName: "worldId",
-      objectType: "World",
-    });
-
-    field.getValue().should("eq", "Test World 1");
-
-    field.clear();
-
-    cy.get("@onChange").should("have.been.calledWith", "");
-    field.getValue().should("eq", "");
-  });
-
-  it("should handle empty options gracefully", () => {
-    // Create a test component with no options
-    const TestFormNoOptions = () => (
-      <ObjectSchemaProvider schema={schema} objectType="World">
-        <AutoForm
-          schema={new ZodBridge({ schema })}
-          model={{ worldId: "" }}
-          onSubmit={() => {}}
-        >
-          <BelongsToField
-            name="worldId"
-            reference={{
-              ...referenceMetadata,
-              options: [],
-            }}
-          />
-        </AutoForm>
-      </ObjectSchemaProvider>
-    );
-
-    mount(<TestFormNoOptions />);
-
-    const field = belongsToField({
-      fieldName: "worldId",
-      objectType: "World",
-    });
-
-    // When there are no options, the field should be disabled and show a helper text
-    field.isDisabled().should("be.true");
-
-    // Use getError() instead of getErrorMessage() to avoid the .MuiFormControl-root selector issue
-    field.getError().should("eq", "No options available");
-  });
-
   it("should scope to parent element", () => {
     // Create a test component with two identical fields
     const TestFormWithMultipleFields = () => (

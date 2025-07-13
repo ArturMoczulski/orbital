@@ -206,20 +206,12 @@ export class ReferenceFieldInteractable
   clearSelection(): this {
     // For single selection, we need to ensure the onChange is called with empty string
     this.isMultipleSelection().then((isMultiple) => {
-      // First delegate to the autocomplete's clearSelection method
+      // Delegate to the autocomplete's clearSelection method
+      // This should naturally trigger the onChange event through the component
       this.autocomplete.clearSelection();
 
-      // For single selection, we need to explicitly trigger onChange with empty string
-      if (!isMultiple) {
-        // Instead of using callWith, use then() to access the spy function
-        cy.get("@onChange").then((onChangeSpy: any) => {
-          // Call the spy function directly
-          onChangeSpy("");
-        });
-
-        // Verify the input is cleared
-        this.textField().invoke("val").should("eq", "");
-      }
+      // Verify the input is cleared
+      this.textField().invoke("val").should("eq", "");
     });
 
     return this;
