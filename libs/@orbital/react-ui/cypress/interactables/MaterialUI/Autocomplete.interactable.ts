@@ -354,7 +354,6 @@ export class AutocompleteInteractable
       const chipInteractables: ChipInteractable[] = [];
 
       $chips.each((index, _) => {
-        console.log(`chip index`, index);
         chipInteractables.push(
           new ChipInteractable({
             componentName: "Chip",

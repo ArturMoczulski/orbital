@@ -843,7 +843,6 @@ describe("Multiple Object Fieldsets on the Same Page", () => {
       organizationFieldset.should("exist");
 
       // Test Project fieldset
-      cy.log("Testing Project fieldset");
       projectFieldset.hasField("name").should("be.true");
       projectFieldset.hasField("managerId").should("be.true");
       projectFieldset.hasField("taskIds").should("be.true");
