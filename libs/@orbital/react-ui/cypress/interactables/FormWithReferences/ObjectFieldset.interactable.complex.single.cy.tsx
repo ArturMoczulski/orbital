@@ -1926,6 +1926,626 @@ describe("Complex Object with Multiple References", () => {
           expect(skillIds).to.include("423e4567-e89b-12d3-a456-426614174012"); // DevOps
           expect(skillIds).to.have.length(4);
         });
+
+        it("works with combined BelongsTo and HasMany relationships in Redux (University with Campus, Accreditation, Programs, Facilities, Events)", () => {
+          // Create schemas with references for a complex university
+          const campusSchema = z
+            .object({
+              id: z.string().uuid().describe("ID"),
+              name: z.string().describe("Name"),
+              location: z.string().describe("Location"),
+              size: z.number().optional().describe("Size (acres)"),
+            })
+            .describe("Campus");
+
+          const accreditationSchema = z
+            .object({
+              id: z.string().uuid().describe("ID"),
+              name: z.string().describe("Name"),
+              organization: z.string().describe("Organization"),
+              validUntil: z.string().describe("Valid Until"),
+            })
+            .describe("Accreditation");
+
+          const programSchema = z
+            .object({
+              id: z.string().uuid().describe("ID"),
+              name: z.string().describe("Name"),
+              level: z.string().describe("Level"),
+              duration: z.number().describe("Duration (years)"),
+            })
+            .describe("Program");
+
+          const facilitySchema = z
+            .object({
+              id: z.string().uuid().describe("ID"),
+              name: z.string().describe("Name"),
+              type: z.string().describe("Type"),
+              capacity: z.number().optional().describe("Capacity"),
+            })
+            .describe("Facility");
+
+          const eventSchema = z
+            .object({
+              id: z.string().uuid().describe("ID"),
+              name: z.string().describe("Name"),
+              date: z.string().describe("Date"),
+              description: z.string().optional().describe("Description"),
+            })
+            .describe("Event");
+
+          // University schema with both BelongsTo and HasMany references
+          const universitySchema = z
+            .object({
+              name: z.string().describe("University Name"),
+              description: z.string().describe("Description"),
+              foundedYear: z.number().describe("Founded Year"),
+              website: z.string().describe("Website"),
+              // BelongsTo relationships
+              mainCampusId: z
+                .string()
+                .uuid()
+                .reference({
+                  type: RelationshipType.BELONGS_TO,
+                  schema: campusSchema,
+                  name: "mainCampus",
+                })
+                .describe("Main Campus"),
+              accreditationId: z
+                .string()
+                .uuid()
+                .reference({
+                  type: RelationshipType.BELONGS_TO,
+                  schema: accreditationSchema,
+                  name: "accreditation",
+                })
+                .describe("Primary Accreditation"),
+              // HasMany relationships
+              programIds: z
+                .array(z.string().uuid())
+                .reference({
+                  type: RelationshipType.HAS_MANY,
+                  schema: programSchema,
+                  name: "programs",
+                })
+                .describe("Academic Programs"),
+              facilityIds: z
+                .array(z.string().uuid())
+                .reference({
+                  type: RelationshipType.HAS_MANY,
+                  schema: facilitySchema,
+                  name: "facilities",
+                })
+                .describe("Facilities"),
+              eventIds: z
+                .array(z.string().uuid())
+                .reference({
+                  type: RelationshipType.HAS_MANY,
+                  schema: eventSchema,
+                  name: "events",
+                })
+                .describe("Upcoming Events"),
+            })
+            .describe("University");
+
+          // Create a bridge with references
+          const refBridge = new ZodReferencesBridge({
+            schema: universitySchema,
+            dependencies: {
+              mainCampus: [
+                {
+                  id: "123e4567-e89b-12d3-a456-426614174030",
+                  name: "Main Campus",
+                  location: "Downtown",
+                  size: 200,
+                },
+                {
+                  id: "223e4567-e89b-12d3-a456-426614174030",
+                  name: "North Campus",
+                  location: "Suburbs",
+                  size: 300,
+                },
+                {
+                  id: "323e4567-e89b-12d3-a456-426614174030",
+                  name: "South Campus",
+                  location: "Riverside",
+                  size: 150,
+                },
+              ],
+              accreditation: [
+                {
+                  id: "123e4567-e89b-12d3-a456-426614174031",
+                  name: "National Academic Accreditation",
+                  organization: "National Education Board",
+                  validUntil: "2030-12-31",
+                },
+                {
+                  id: "223e4567-e89b-12d3-a456-426614174031",
+                  name: "International Quality Certification",
+                  organization: "Global Education Standards",
+                  validUntil: "2028-06-30",
+                },
+                {
+                  id: "323e4567-e89b-12d3-a456-426614174031",
+                  name: "Professional Excellence Award",
+                  organization: "Industry Education Council",
+                  validUntil: "2026-09-15",
+                },
+              ],
+              programs: [
+                {
+                  id: "123e4567-e89b-12d3-a456-426614174032",
+                  name: "Computer Science",
+                  level: "Bachelor",
+                  duration: 4,
+                },
+                {
+                  id: "223e4567-e89b-12d3-a456-426614174032",
+                  name: "Business Administration",
+                  level: "Master",
+                  duration: 2,
+                },
+                {
+                  id: "323e4567-e89b-12d3-a456-426614174032",
+                  name: "Mechanical Engineering",
+                  level: "Bachelor",
+                  duration: 4,
+                },
+                {
+                  id: "423e4567-e89b-12d3-a456-426614174032",
+                  name: "Data Science",
+                  level: "PhD",
+                  duration: 3,
+                },
+              ],
+              facilities: [
+                {
+                  id: "123e4567-e89b-12d3-a456-426614174033",
+                  name: "Main Library",
+                  type: "Library",
+                  capacity: 500,
+                },
+                {
+                  id: "223e4567-e89b-12d3-a456-426614174033",
+                  name: "Science Lab",
+                  type: "Laboratory",
+                  capacity: 100,
+                },
+                {
+                  id: "323e4567-e89b-12d3-a456-426614174033",
+                  name: "Student Center",
+                  type: "Recreation",
+                  capacity: 300,
+                },
+                {
+                  id: "423e4567-e89b-12d3-a456-426614174033",
+                  name: "Sports Complex",
+                  type: "Athletics",
+                  capacity: 1000,
+                },
+              ],
+              events: [
+                {
+                  id: "123e4567-e89b-12d3-a456-426614174034",
+                  name: "Graduation Ceremony",
+                  date: "2023-06-15",
+                  description: "Annual graduation ceremony",
+                },
+                {
+                  id: "223e4567-e89b-12d3-a456-426614174034",
+                  name: "Research Symposium",
+                  date: "2023-04-20",
+                  description: "Annual research showcase",
+                },
+                {
+                  id: "323e4567-e89b-12d3-a456-426614174034",
+                  name: "Career Fair",
+                  date: "2023-05-10",
+                  description: "Connect with potential employers",
+                },
+                {
+                  id: "423e4567-e89b-12d3-a456-426614174034",
+                  name: "Alumni Reunion",
+                  date: "2023-07-22",
+                  description: "Annual alumni gathering",
+                },
+              ],
+            },
+          });
+
+          const initialUniversityData = {
+            name: "Orbital University",
+            description: "A leading institution for higher education",
+            foundedYear: 1950,
+            website: "https://orbitaluniversity.edu",
+            // Initial BelongsTo relationships
+            mainCampusId: "123e4567-e89b-12d3-a456-426614174030", // Main Campus
+            accreditationId: "123e4567-e89b-12d3-a456-426614174031", // National Academic Accreditation
+            // Initial HasMany relationships
+            programIds: ["123e4567-e89b-12d3-a456-426614174032"], // Initially has Computer Science
+            facilityIds: ["123e4567-e89b-12d3-a456-426614174033"], // Initially has Main Library
+            eventIds: ["123e4567-e89b-12d3-a456-426614174034"], // Initially has Graduation Ceremony
+          };
+
+          // Create a real Redux store
+          const store = createRealStore();
+
+          // Attach store to window object for Cypress to access
+          cy.window().then((win) => {
+            (win as any).store = store;
+          });
+
+          // Add a spy to the dispatch function to track updates
+          const dispatchSpy = cy.spy(store, "dispatch").as("dispatchSpy");
+
+          // Initialize store with data
+          store.dispatch({
+            type: "REGISTER_OBJECT_DATA",
+            payload: {
+              key: "main",
+              data: initialUniversityData,
+              objectId: "university-123",
+            },
+          });
+
+          // Import useSelector explicitly to ensure it's properly typed
+          const { useSelector } = require("react-redux");
+
+          // Create a component to display the current Redux state using useSelector
+          const ReduxStateDisplay = () => {
+            // Use useSelector to subscribe to Redux state changes
+            const mainCampusId = useSelector(
+              (state: ObjectDataState) =>
+                state.objectData.main?.data.mainCampusId
+            );
+            const accreditationId = useSelector(
+              (state: ObjectDataState) =>
+                state.objectData.main?.data.accreditationId
+            );
+            const programIds = useSelector(
+              (state: ObjectDataState) => state.objectData.main?.data.programIds
+            );
+            const facilityIds = useSelector(
+              (state: ObjectDataState) =>
+                state.objectData.main?.data.facilityIds
+            );
+            const eventIds = useSelector(
+              (state: ObjectDataState) => state.objectData.main?.data.eventIds
+            );
+
+            return (
+              <div>
+                <div data-testid="current-mainCampusId">{mainCampusId}</div>
+                <div data-testid="current-accreditationId">
+                  {accreditationId}
+                </div>
+                <div data-testid="current-programIds">
+                  {JSON.stringify(programIds)}
+                </div>
+                <div data-testid="current-facilityIds">
+                  {JSON.stringify(facilityIds)}
+                </div>
+                <div data-testid="current-eventIds">
+                  {JSON.stringify(eventIds)}
+                </div>
+              </div>
+            );
+          };
+
+          // Create selectors for the Redux store
+          const dataSelector = () =>
+            store.getState().objectData.main?.data || {};
+          const objectIdSelector = () =>
+            store.getState().objectData.main?.objectId;
+
+          // Create a wrapper component that uses Redux
+          function TestUniversityFormWithRedux() {
+            return (
+              <Provider store={store}>
+                <div>
+                  <ObjectProvider
+                    schema={refBridge}
+                    objectType="University"
+                    data={{}} // Empty default data
+                    dataSelector={dataSelector}
+                    objectIdSelector={objectIdSelector}
+                    dispatch={store.dispatch}
+                    createUpdateAction={updateObjectData}
+                  >
+                    <ObjectFieldset />
+
+                    {/* Use the component that will re-render when Redux state changes */}
+                    <ReduxStateDisplay />
+
+                    {/* Display Redux state for debugging */}
+                    <div
+                      data-testid="redux-state-debug"
+                      style={{ display: "none" }}
+                    >
+                      {JSON.stringify(store.getState())}
+                    </div>
+                  </ObjectProvider>
+                </div>
+              </Provider>
+            );
+          }
+
+          // Mount the test component
+          mount(<TestUniversityFormWithRedux />);
+
+          const universityFieldset = objectFieldset("University");
+
+          // Verify the fieldset exists
+          universityFieldset.should("exist");
+
+          // Verify it has all the expected fields
+          universityFieldset.hasField("name").should("be.true");
+          universityFieldset.hasField("description").should("be.true");
+          universityFieldset.hasField("foundedYear").should("be.true");
+          universityFieldset.hasField("website").should("be.true");
+          universityFieldset.hasField("mainCampusId").should("be.true");
+          universityFieldset.hasField("accreditationId").should("be.true");
+          universityFieldset.hasField("programIds").should("be.true");
+          universityFieldset.hasField("facilityIds").should("be.true");
+          universityFieldset.hasField("eventIds").should("be.true");
+
+          // Test BelongsTo fields
+          // Get the BelongsToField for main campus and interact with it
+          const mainCampusField =
+            universityFieldset.field<BelongsToFieldInteractable>(
+              "mainCampusId"
+            );
+          mainCampusField.then((field) => {
+            // Verify initial selection
+            field.textField().should("have.value", "Main Campus");
+
+            // Open the dropdown
+            field.open();
+
+            // Verify dropdown is open
+            field.isOpened().should("be.true");
+
+            // Select a different campus
+            field.select("North Campus");
+
+            // Verify the new selection
+            field.textField().should("have.value", "North Campus");
+
+            // Verify the Redux store was updated with the correct ID
+            cy.window()
+              .its("store")
+              .then((storeInstance) => {
+                const state = storeInstance.getState() as ObjectDataState;
+                expect(state.objectData.main?.data.mainCampusId).to.equal(
+                  "223e4567-e89b-12d3-a456-426614174030"
+                );
+              });
+
+            // Verify the UI reflects this state
+            cy.get('[data-testid="current-mainCampusId"]')
+              .should("be.visible")
+              .and("contain", "223e4567-e89b-12d3-a456-426614174030");
+          });
+
+          // Get the BelongsToField for accreditation and interact with it
+          const accreditationField =
+            universityFieldset.field<BelongsToFieldInteractable>(
+              "accreditationId"
+            );
+          accreditationField.then((field) => {
+            // Verify initial selection
+            field
+              .textField()
+              .should("have.value", "National Academic Accreditation");
+
+            // Open the dropdown
+            field.open();
+
+            // Verify dropdown is open
+            field.isOpened().should("be.true");
+
+            // Select a different accreditation
+            field.select("International Quality Certification");
+
+            // Verify the new selection
+            field
+              .textField()
+              .should("have.value", "International Quality Certification");
+
+            // Verify the Redux store was updated with the correct ID
+            cy.window()
+              .its("store")
+              .then((storeInstance) => {
+                const state = storeInstance.getState() as ObjectDataState;
+                expect(state.objectData.main?.data.accreditationId).to.equal(
+                  "223e4567-e89b-12d3-a456-426614174031"
+                );
+              });
+
+            // Verify the UI reflects this state
+            cy.get('[data-testid="current-accreditationId"]')
+              .should("be.visible")
+              .and("contain", "223e4567-e89b-12d3-a456-426614174031");
+          });
+
+          // Test HasMany fields
+          // Get the HasManyField for programs and interact with it
+          const programsField =
+            universityFieldset.field<HasManyFieldInteractable>("programIds");
+          programsField.then((field) => {
+            // Verify initial selection (should have Computer Science)
+            field.selected().should("include", "Computer Science");
+
+            // Open the dropdown
+            field.open();
+
+            // Verify dropdown is open
+            field.isOpened().should("be.true");
+
+            // Select multiple programs at once (adding 3 more)
+            field.select("Business Administration");
+            field.select("Mechanical Engineering");
+            field.select("Data Science");
+
+            // Verify the Redux store was updated with the correct IDs
+            cy.window()
+              .its("store")
+              .then((storeInstance) => {
+                const state = storeInstance.getState() as ObjectDataState;
+                const programIds = state.objectData.main?.data.programIds;
+
+                expect(programIds).to.include(
+                  "123e4567-e89b-12d3-a456-426614174032"
+                ); // Computer Science
+                expect(programIds).to.include(
+                  "223e4567-e89b-12d3-a456-426614174032"
+                ); // Business Administration
+                expect(programIds).to.include(
+                  "323e4567-e89b-12d3-a456-426614174032"
+                ); // Mechanical Engineering
+                expect(programIds).to.include(
+                  "423e4567-e89b-12d3-a456-426614174032"
+                ); // Data Science
+                expect(programIds).to.have.length(4);
+              });
+
+            // Verify the UI reflects this state
+            cy.get('[data-testid="current-programIds"]').should((el) => {
+              const programIds = JSON.parse(el.text());
+              expect(programIds).to.include(
+                "123e4567-e89b-12d3-a456-426614174032"
+              ); // Computer Science
+              expect(programIds).to.include(
+                "223e4567-e89b-12d3-a456-426614174032"
+              ); // Business Administration
+              expect(programIds).to.include(
+                "323e4567-e89b-12d3-a456-426614174032"
+              ); // Mechanical Engineering
+              expect(programIds).to.include(
+                "423e4567-e89b-12d3-a456-426614174032"
+              ); // Data Science
+              expect(programIds).to.have.length(4);
+            });
+          });
+
+          // Get the HasManyField for facilities and interact with it
+          const facilitiesField =
+            universityFieldset.field<HasManyFieldInteractable>("facilityIds");
+          facilitiesField.then((field) => {
+            // Verify initial selection (should have Main Library)
+            field.selected().should("include", "Main Library");
+
+            // Open the dropdown
+            field.open();
+
+            // Verify dropdown is open
+            field.isOpened().should("be.true");
+
+            // Select multiple facilities at once (adding 3 more)
+            field.select("Science Lab");
+            field.select("Student Center");
+            field.select("Sports Complex");
+
+            // Verify the Redux store was updated with the correct IDs
+            cy.window()
+              .its("store")
+              .then((storeInstance) => {
+                const state = storeInstance.getState() as ObjectDataState;
+                const facilityIds = state.objectData.main?.data.facilityIds;
+
+                expect(facilityIds).to.include(
+                  "123e4567-e89b-12d3-a456-426614174033"
+                ); // Main Library
+                expect(facilityIds).to.include(
+                  "223e4567-e89b-12d3-a456-426614174033"
+                ); // Science Lab
+                expect(facilityIds).to.include(
+                  "323e4567-e89b-12d3-a456-426614174033"
+                ); // Student Center
+                expect(facilityIds).to.include(
+                  "423e4567-e89b-12d3-a456-426614174033"
+                ); // Sports Complex
+                expect(facilityIds).to.have.length(4);
+              });
+
+            // Verify the UI reflects this state
+            cy.get('[data-testid="current-facilityIds"]').should((el) => {
+              const facilityIds = JSON.parse(el.text());
+              expect(facilityIds).to.include(
+                "123e4567-e89b-12d3-a456-426614174033"
+              ); // Main Library
+              expect(facilityIds).to.include(
+                "223e4567-e89b-12d3-a456-426614174033"
+              ); // Science Lab
+              expect(facilityIds).to.include(
+                "323e4567-e89b-12d3-a456-426614174033"
+              ); // Student Center
+              expect(facilityIds).to.include(
+                "423e4567-e89b-12d3-a456-426614174033"
+              ); // Sports Complex
+              expect(facilityIds).to.have.length(4);
+            });
+          });
+
+          // Get the HasManyField for events and interact with it
+          const eventsField =
+            universityFieldset.field<HasManyFieldInteractable>("eventIds");
+          eventsField.then((field) => {
+            // Verify initial selection (should have Graduation Ceremony)
+            field.selected().should("include", "Graduation Ceremony");
+
+            // Open the dropdown
+            field.open();
+
+            // Verify dropdown is open
+            field.isOpened().should("be.true");
+
+            // Select multiple events at once (adding 3 more)
+            field.select("Research Symposium");
+            field.select("Career Fair");
+            field.select("Alumni Reunion");
+
+            // Verify the Redux store was updated with the correct IDs
+            cy.window()
+              .its("store")
+              .then((storeInstance) => {
+                const state = storeInstance.getState() as ObjectDataState;
+                const eventIds = state.objectData.main?.data.eventIds;
+
+                expect(eventIds).to.include(
+                  "123e4567-e89b-12d3-a456-426614174034"
+                ); // Graduation Ceremony
+                expect(eventIds).to.include(
+                  "223e4567-e89b-12d3-a456-426614174034"
+                ); // Research Symposium
+                expect(eventIds).to.include(
+                  "323e4567-e89b-12d3-a456-426614174034"
+                ); // Career Fair
+                expect(eventIds).to.include(
+                  "423e4567-e89b-12d3-a456-426614174034"
+                ); // Alumni Reunion
+                expect(eventIds).to.have.length(4);
+              });
+
+            // Verify the UI reflects this state
+            cy.get('[data-testid="current-eventIds"]').should((el) => {
+              const eventIds = JSON.parse(el.text());
+              expect(eventIds).to.include(
+                "123e4567-e89b-12d3-a456-426614174034"
+              ); // Graduation Ceremony
+              expect(eventIds).to.include(
+                "223e4567-e89b-12d3-a456-426614174034"
+              ); // Research Symposium
+              expect(eventIds).to.include(
+                "323e4567-e89b-12d3-a456-426614174034"
+              ); // Career Fair
+              expect(eventIds).to.include(
+                "423e4567-e89b-12d3-a456-426614174034"
+              ); // Alumni Reunion
+              expect(eventIds).to.have.length(4);
+            });
+          });
+        });
       });
     });
   });
