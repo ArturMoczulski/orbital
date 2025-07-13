@@ -110,7 +110,7 @@ describe("Complex Object with Multiple References", () => {
   });
 
   describe("Without Redux", () => {
-    it.only("works with multiple BelongsTo relationships (Project with Manager, Department, Client)", () => {
+    it("works with multiple BelongsTo relationships (Project with Manager, Department, Client)", () => {
       // Create schemas with references for a complex business project
       const personSchema = z
         .object({
@@ -414,7 +414,7 @@ describe("Complex Object with Multiple References", () => {
       const resourceSchema = z
         .object({
           id: z.string().uuid().describe("ID"),
-          title: z.string().describe("Title"),
+          name: z.string().describe("Name"),
           type: z.string().describe("Resource Type"),
           url: z.string().optional().describe("URL"),
         })
@@ -507,31 +507,31 @@ describe("Complex Object with Multiple References", () => {
           resources: [
             {
               id: "123e4567-e89b-12d3-a456-426614174006",
-              title: "Introduction to Algorithms",
+              name: "Introduction to Algorithms",
               type: "Textbook",
               url: "https://example.com/textbook",
             },
             {
               id: "223e4567-e89b-12d3-a456-426614174006",
-              title: "Data Structures Tutorial",
+              name: "Data Structures Tutorial",
               type: "Video",
               url: "https://example.com/video",
             },
             {
               id: "323e4567-e89b-12d3-a456-426614174006",
-              title: "Programming Assignment 1",
+              name: "Programming Assignment 1",
               type: "Assignment",
               url: "https://example.com/assignment1",
             },
             {
               id: "423e4567-e89b-12d3-a456-426614174006",
-              title: "Programming Assignment 2",
+              name: "Programming Assignment 2",
               type: "Assignment",
               url: "https://example.com/assignment2",
             },
             {
               id: "523e4567-e89b-12d3-a456-426614174006",
-              title: "Final Project Guidelines",
+              name: "Final Project Guidelines",
               type: "Document",
               url: "https://example.com/project",
             },
@@ -631,18 +631,19 @@ describe("Complex Object with Multiple References", () => {
         // Verify dropdown is open
         field.isOpened().should("be.true");
 
-        // Select additional students
+        // Select multiple students at once (3 additional students)
         field.select("Jane Smith");
-        field.open();
+        field.select("Michael Johnson");
         field.select("Emily Davis");
 
-        // Verify the data model was updated with the correct IDs
+        // Verify the data model was updated with all the correct IDs
         cy.get('[data-testid="current-studentIds"]').should((el) => {
           const studentIds = JSON.parse(el.text());
           expect(studentIds).to.include("123e4567-e89b-12d3-a456-426614174004"); // John Doe
           expect(studentIds).to.include("223e4567-e89b-12d3-a456-426614174004"); // Jane Smith
+          expect(studentIds).to.include("323e4567-e89b-12d3-a456-426614174004"); // Michael Johnson
           expect(studentIds).to.include("423e4567-e89b-12d3-a456-426614174004"); // Emily Davis
-          expect(studentIds).to.have.length(3);
+          expect(studentIds).to.have.length(4);
         });
       });
 
@@ -659,9 +660,8 @@ describe("Complex Object with Multiple References", () => {
         // Verify dropdown is open
         field.isOpened().should("be.true");
 
-        // Select additional instructors
+        // Select all remaining instructors at once (adding 2 more)
         field.select("Prof. Sarah Wilson");
-        field.open();
         field.select("Dr. James Taylor");
 
         // Verify the data model was updated with the correct IDs
@@ -693,12 +693,10 @@ describe("Complex Object with Multiple References", () => {
         // Verify dropdown is open
         field.isOpened().should("be.true");
 
-        // Select additional resources
+        // Select multiple resources at once (adding 3 more)
         field.select("Data Structures Tutorial");
-        field.open();
         field.select("Programming Assignment 1");
-        field.open();
-        field.select("Final Project Guidelines");
+        field.select("Programming Assignment 2");
 
         // Verify the data model was updated with the correct IDs
         cy.get('[data-testid="current-resourceIds"]').should((el) => {
@@ -713,8 +711,8 @@ describe("Complex Object with Multiple References", () => {
             "323e4567-e89b-12d3-a456-426614174006"
           ); // Programming Assignment 1
           expect(resourceIds).to.include(
-            "523e4567-e89b-12d3-a456-426614174006"
-          ); // Final Project Guidelines
+            "423e4567-e89b-12d3-a456-426614174006"
+          ); // Programming Assignment 2
           expect(resourceIds).to.have.length(4);
         });
       });
@@ -863,6 +861,11 @@ describe("Complex Object with Multiple References", () => {
 
       // Create a real Redux store
       const store = createRealStore();
+
+      // Attach store to window object for Cypress to access
+      cy.window().then((win) => {
+        (win as any).store = store;
+      });
 
       // Add a spy to the dispatch function to track updates
       const dispatchSpy = cy.spy(store, "dispatch").as("dispatchSpy");
@@ -1214,6 +1217,11 @@ describe("Complex Object with Multiple References", () => {
       // Create a real Redux store
       const store = createRealStore();
 
+      // Attach store to window object for Cypress to access
+      cy.window().then((win) => {
+        (win as any).store = store;
+      });
+
       // Add a spy to the dispatch function to track updates
       const dispatchSpy = cy.spy(store, "dispatch").as("dispatchSpy");
 
@@ -1321,9 +1329,9 @@ describe("Complex Object with Multiple References", () => {
         // Verify dropdown is open
         field.isOpened().should("be.true");
 
-        // Select additional members
+        // Select multiple members at once (adding 3 more)
         field.select("Sam Williams");
-        field.open();
+        field.select("Taylor Brown");
         field.select("Jordan Smith");
 
         // Verify the Redux store was updated with the correct IDs
@@ -1340,9 +1348,12 @@ describe("Complex Object with Multiple References", () => {
               "223e4567-e89b-12d3-a456-426614174010"
             ); // Sam Williams
             expect(memberIds).to.include(
+              "323e4567-e89b-12d3-a456-426614174010"
+            ); // Taylor Brown
+            expect(memberIds).to.include(
               "423e4567-e89b-12d3-a456-426614174010"
             ); // Jordan Smith
-            expect(memberIds).to.have.length(3);
+            expect(memberIds).to.have.length(4);
           });
 
         // Verify the UI reflects this state
@@ -1350,8 +1361,9 @@ describe("Complex Object with Multiple References", () => {
           const memberIds = JSON.parse(el.text());
           expect(memberIds).to.include("123e4567-e89b-12d3-a456-426614174010"); // Alex Johnson
           expect(memberIds).to.include("223e4567-e89b-12d3-a456-426614174010"); // Sam Williams
+          expect(memberIds).to.include("323e4567-e89b-12d3-a456-426614174010"); // Taylor Brown
           expect(memberIds).to.include("423e4567-e89b-12d3-a456-426614174010"); // Jordan Smith
-          expect(memberIds).to.have.length(3);
+          expect(memberIds).to.have.length(4);
         });
       });
 
@@ -1368,9 +1380,8 @@ describe("Complex Object with Multiple References", () => {
         // Verify dropdown is open
         field.isOpened().should("be.true");
 
-        // Select additional projects
+        // Select all remaining projects at once (adding 2 more)
         field.select("Mobile App Development");
-        field.open();
         field.select("API Integration");
 
         // Verify the Redux store was updated with the correct IDs
@@ -1415,9 +1426,9 @@ describe("Complex Object with Multiple References", () => {
         // Verify dropdown is open
         field.isOpened().should("be.true");
 
-        // Select additional skills
+        // Select multiple skills at once (adding 3 more)
         field.select("UI/UX Design");
-        field.open();
+        field.select("Project Management");
         field.select("DevOps");
 
         // Verify the Redux store was updated with the correct IDs
@@ -1429,8 +1440,9 @@ describe("Complex Object with Multiple References", () => {
 
             expect(skillIds).to.include("123e4567-e89b-12d3-a456-426614174012"); // JavaScript
             expect(skillIds).to.include("223e4567-e89b-12d3-a456-426614174012"); // UI/UX Design
+            expect(skillIds).to.include("323e4567-e89b-12d3-a456-426614174012"); // Project Management
             expect(skillIds).to.include("423e4567-e89b-12d3-a456-426614174012"); // DevOps
-            expect(skillIds).to.have.length(3);
+            expect(skillIds).to.have.length(4);
           });
 
         // Verify the UI reflects this state
@@ -1438,8 +1450,9 @@ describe("Complex Object with Multiple References", () => {
           const skillIds = JSON.parse(el.text());
           expect(skillIds).to.include("123e4567-e89b-12d3-a456-426614174012"); // JavaScript
           expect(skillIds).to.include("223e4567-e89b-12d3-a456-426614174012"); // UI/UX Design
+          expect(skillIds).to.include("323e4567-e89b-12d3-a456-426614174012"); // Project Management
           expect(skillIds).to.include("423e4567-e89b-12d3-a456-426614174012"); // DevOps
-          expect(skillIds).to.have.length(3);
+          expect(skillIds).to.have.length(4);
         });
       });
     });
