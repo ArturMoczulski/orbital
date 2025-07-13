@@ -38,6 +38,10 @@ export abstract class FormInputInteractable<T> extends CypressInteractable {
     ].join(", ");
   }
 
+  protected override validateTarget(): boolean {
+    return !!this.fieldName;
+  }
+
   /**
    * Set a value on the input field
    * This method will be implemented by subclasses
