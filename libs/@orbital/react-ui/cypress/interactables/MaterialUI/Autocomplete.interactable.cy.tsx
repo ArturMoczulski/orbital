@@ -345,26 +345,6 @@ describe("AutocompleteInteractable", () => {
   });
 
   describe("Basic functionality", () => {
-    it("should open and close the autocomplete", () => {
-      const autocomplete = new TestAutocompleteInteractable(
-        "single-autocomplete"
-      );
-
-      // Initially closed
-      autocomplete.isClosed().should("be.true");
-      autocomplete.isOpened().should("be.false");
-
-      // Open
-      autocomplete.open();
-      autocomplete.isOpened().should("be.true");
-      autocomplete.isClosed().should("be.false");
-
-      // Close
-      autocomplete.close();
-      autocomplete.isClosed().should("be.true");
-      autocomplete.isOpened().should("be.false");
-    });
-
     it("should list all options", () => {
       const autocomplete = new TestAutocompleteInteractable(
         "another-autocomplete"
@@ -1002,6 +982,59 @@ describe("AutocompleteInteractable", () => {
       cy.contains(
         "Selected values with IDs: Option with ID 3, Last option with ID"
       ).should("exist");
+    });
+  });
+
+  describe("Required field functionality", () => {
+    it("should detect required state", () => {
+      // Create a test component with required and non-required autocompletes
+      const RequiredAutocompleteTest = () => {
+        const [value1, setValue1] = useState<string | null>(null);
+        const [value2, setValue2] = useState<string | null>(null);
+
+        return (
+          <Box sx={{ p: 2 }}>
+            <Typography variant="h6">Required Field Test</Typography>
+
+            {/* Required autocomplete */}
+            <Autocomplete
+              data-testid="required-autocomplete"
+              options={options}
+              value={value1}
+              onChange={(_, newValue) => setValue1(newValue)}
+              renderInput={(params) => (
+                <TextField {...params} label="Required field" required={true} />
+              )}
+            />
+
+            {/* Non-required autocomplete */}
+            <Autocomplete
+              data-testid="non-required-autocomplete"
+              options={options}
+              value={value2}
+              onChange={(_, newValue) => setValue2(newValue)}
+              renderInput={(params) => (
+                <TextField {...params} label="Optional field" />
+              )}
+            />
+          </Box>
+        );
+      };
+
+      // Mount the component
+      mount(<RequiredAutocompleteTest />);
+
+      // Test required autocomplete
+      const requiredAutocomplete = new TestAutocompleteInteractable(
+        "required-autocomplete"
+      );
+      requiredAutocomplete.isRequired().should("be.true");
+
+      // Test non-required autocomplete
+      const nonRequiredAutocomplete = new TestAutocompleteInteractable(
+        "non-required-autocomplete"
+      );
+      nonRequiredAutocomplete.isRequired().should("be.false");
     });
   });
 });

@@ -37,13 +37,6 @@ export class HasManyFieldInteractable extends ReferenceFieldInteractable {
       multiple: true, // HasMany fields are multi-select
     });
   }
-
-  /**
-   * Implement isRequired method for compatibility
-   */
-  isRequired(): Cypress.Chainable<boolean> {
-    return cy.wrap(false); // Default implementation
-  }
 }
 
 /**

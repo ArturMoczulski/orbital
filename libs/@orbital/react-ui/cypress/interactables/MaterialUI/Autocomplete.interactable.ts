@@ -813,6 +813,46 @@ export class AutocompleteInteractable
       });
     });
   }
+
+  /**
+   * Checks if the autocomplete is required
+   * @returns Cypress.Chainable<boolean> - chainable that resolves to true if the autocomplete is required
+   */
+  isRequired(): Cypress.Chainable<boolean> {
+    return cy.then(() => {
+      return this.get().then(($el) => {
+        // Primary check: Check for the required attribute on the input element
+        const hasRequiredInput = $el.find("input").prop("required") === true;
+
+        if (hasRequiredInput) {
+          return true;
+        }
+
+        // Secondary checks if the input check didn't find it
+        // 1. Check for the aria-required attribute
+        const hasInputAriaRequired =
+          $el.find("input").attr("aria-required") === "true";
+
+        // 2. Check for the required attribute on the form control
+        const $formControl = $el.closest(".MuiFormControl-root");
+        const hasFormControlRequired =
+          $formControl.length > 0 &&
+          $formControl.find("label").hasClass("Mui-required");
+
+        // 3. Check for asterisk in the label (MUI adds an asterisk to required fields)
+        const hasAsteriskInLabel =
+          $el.find("label .MuiFormLabel-asterisk").length > 0;
+
+        // Return true if any of the required indicators are found
+        return (
+          hasRequiredInput ||
+          hasInputAriaRequired ||
+          hasFormControlRequired ||
+          hasAsteriskInLabel
+        );
+      });
+    });
+  }
 }
 
 /**

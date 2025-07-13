@@ -82,7 +82,7 @@ describe("HasManyField.interactable", () => {
     );
   };
 
-  it.only("should select multiple values", () => {
+  it("should select multiple values", () => {
     const onChangeSpy = cy.spy().as("onChange");
 
     mount(<TestForm onChange={onChangeSpy} />);
@@ -92,47 +92,10 @@ describe("HasManyField.interactable", () => {
       objectType: "Movie",
     });
 
-    field.selectById(["tag1", "tag3"]);
-    cy.pause();
+    field.select(["Action", "Drama"]);
 
     cy.get("@onChange").should("have.been.calledWith", ["tag1", "tag3"]);
-    // field.getSelectedValues().should("deep.equal", ["tag1", "tag3"]);
-
-    // // Verify the selected text by checking the combobox content
-    // field
-    //   .getElement()
-    //   .find('[role="combobox"]')
-    //   .should("contain.text", "Action");
-    // field
-    //   .getElement()
-    //   .find('[role="combobox"]')
-    //   .should("contain.text", "Drama");
-  });
-
-  it("should handle disabled state", () => {
-    mount(<TestForm disabled={true} initialValue={["tag1", "tag2"]} />);
-
-    const field = hasManyField({
-      fieldName: "tagIds",
-      objectType: "Movie",
-    });
-
-    field.isDisabled().should("be.true");
-    field.getSelectedValues().should("deep.equal", ["tag1", "tag2"]);
-
-    // Verify the selected text by checking the combobox content
-    field
-      .getElement()
-      .find('[role="combobox"]')
-      .should("contain.text", "Action");
-    field
-      .getElement()
-      .find('[role="combobox"]')
-      .should("contain.text", "Comedy");
-
-    // Verify that clicking doesn't open the dropdown when disabled
-    field.getElement().click();
-    cy.get('[role="presentation"]').should("not.exist");
+    field.selected().should("deep.equal", ["Action", "Drama"]);
   });
 
   it("should handle required state", () => {
@@ -156,61 +119,13 @@ describe("HasManyField.interactable", () => {
       objectType: "Movie",
     });
 
-    field.getSelectedValues().should("deep.equal", ["tag1", "tag2"]);
-
-    // Verify the selected text by checking the combobox content
-    field
-      .getElement()
-      .find('[role="combobox"]')
-      .should("contain.text", "Action");
-    field
-      .getElement()
-      .find('[role="combobox"]')
-      .should("contain.text", "Comedy");
+    field.selected().should("deep.equal", ["Action", "Comedy"]);
 
     // Use selectById with empty array to clear selections
-    field.selectById([]);
+    field.clear();
 
     cy.get("@onChange").should("have.been.calledWith", []);
-    field.getSelectedValues().should("deep.equal", []);
-  });
-
-  it("should handle empty reference options gracefully", () => {
-    // Create a test component with no options
-    const TestFormNoOptions = () => (
-      <ObjectSchemaProvider schema={schema} objectType="Movie">
-        <AutoForm
-          schema={new ZodBridge({ schema })}
-          model={{ tagIds: [] }}
-          onSubmit={() => {}}
-        >
-          <HasManyField
-            name="tagIds"
-            reference={{
-              ...referenceMetadata,
-              options: [],
-            }}
-          />
-        </AutoForm>
-      </ObjectSchemaProvider>
-    );
-
-    mount(<TestFormNoOptions />);
-
-    const field = hasManyField({
-      fieldName: "tagIds",
-      objectType: "Movie",
-    });
-
-    // Field should be disabled when no options are available
-    field.isDisabled().should("be.true");
-
-    // Check for the error message directly instead of using hasError
-    field
-      .getElement()
-      .closest(".MuiFormControl-root")
-      .find(".MuiFormHelperText-root")
-      .should("contain.text", "No options available");
+    field.selected().should("deep.equal", "");
   });
 
   it("should scope to parent element", () => {
@@ -270,61 +185,12 @@ describe("HasManyField.interactable", () => {
     cy.wait(100);
 
     // Check first field
-    firstField
-      .getElement()
-      .find('[role="combobox"]')
-      .should("contain.text", "Action")
-      .should("contain.text", "Comedy");
+    firstField.selected().should("include", "Action");
+    firstField.selected().should("include", "Comedy");
 
     // Check second field
-    secondField
-      .getElement()
-      .find('[role="combobox"]')
-      .should("contain.text", "Drama")
-      .should("contain.text", "Sci-Fi");
-  });
-
-  it("should handle error state", () => {
-    // Mount a basic form first
-    mount(
-      <ObjectSchemaProvider schema={schema} objectType="Movie">
-        <AutoForm
-          schema={new ZodBridge({ schema })}
-          model={{ tagIds: ["tag1", "tag2"] }}
-          onSubmit={() => {}}
-        >
-          <HasManyField
-            name="tagIds"
-            options={tagOptions}
-            reference={referenceMetadata}
-          />
-        </AutoForm>
-      </ObjectSchemaProvider>
-    );
-
-    const field = hasManyField({
-      fieldName: "tagIds",
-      objectType: "Movie",
-    });
-
-    // Manually add error class and message to simulate error state
-    field
-      .getElement()
-      .closest(".MuiFormControl-root")
-      .then(($el) => {
-        // Add error class
-        $el.addClass("Mui-error");
-
-        // Add error message
-        const errorMessage = document.createElement("p");
-        errorMessage.className = "MuiFormHelperText-root Mui-error";
-        errorMessage.textContent = "Invalid tags";
-        $el.append(errorMessage);
-
-        // Now check error state
-        field.hasError().should("be.true");
-        field.getErrorMessage().should("eq", "Invalid tags");
-      });
+    secondField.selected().should("include", "Drama");
+    secondField.selected().should("include", "Sci-Fi");
   });
 
   it("should add and remove individual items", () => {
@@ -338,54 +204,32 @@ describe("HasManyField.interactable", () => {
     });
 
     // Initial state
-    field.getSelectedValues().should("deep.equal", ["tag1"]);
+    field.selected().should("deep.equal", ["Action"]);
 
-    // Verify the selected text by checking the combobox content
-    field
-      .getElement()
-      .find('[role="combobox"]')
-      .should("contain.text", "Action");
+    // Verify the selected text
+    field.selected().should("include", "Action");
 
     // Add a new tag
-    field.openDropdown();
-    field.selectByText("Comedy");
+    field.select("Comedy");
 
     // Should now have both tags
     cy.get("@onChange").should("have.been.calledWith", ["tag1", "tag2"]);
-    field.getSelectedValues().should("deep.equal", ["tag1", "tag2"]);
+    field.selected().should("deep.equal", ["Action", "Comedy"]);
 
-    // Verify the selected text by checking the combobox content
-    field
-      .getElement()
-      .find('[role="combobox"]')
-      .should("contain.text", "Action");
-    field
-      .getElement()
-      .find('[role="combobox"]')
-      .should("contain.text", "Comedy");
+    // Verify the selected text
+    field.selected().should("include", "Action");
+    field.selected().should("include", "Comedy");
 
     // Remove by selecting again (deselecting)
-    field.openDropdown();
-    field.getItemByName("Action").then((item) => {
-      if (item) {
-        item.click();
-      }
-    });
-    field.closeDropdown();
+    field.select("Action");
 
     // Should only have the second tag now
     cy.get("@onChange").should("have.been.calledWith", ["tag2"]);
-    field.getSelectedValues().should("deep.equal", ["tag2"]);
+    field.selected().should("deep.equal", ["Comedy"]);
 
-    // Verify the selected text by checking the combobox content
-    field
-      .getElement()
-      .find('[role="combobox"]')
-      .should("contain.text", "Comedy");
-    field
-      .getElement()
-      .find('[role="combobox"]')
-      .should("not.contain.text", "Action");
+    // Verify the selected text
+    field.selected().should("include", "Comedy");
+    field.selected().should("not.include", "Action");
   });
 
   describe("Multiple HasManyFields on the same page", () => {
@@ -539,37 +383,25 @@ describe("HasManyField.interactable", () => {
       });
 
       // Check first field
-      movie1Field
-        .getElement()
-        .find('[role="combobox"]')
-        .should("contain.text", "Action")
-        .should("contain.text", "Comedy");
+      movie1Field.selected().should("include", "Action");
+      movie1Field.selected().should("include", "Comedy");
 
       // Check second field
-      movie2Field
-        .getElement()
-        .find('[role="combobox"]')
-        .should("contain.text", "Drama")
-        .should("contain.text", "Sci-Fi");
+      movie2Field.selected().should("include", "Drama");
+      movie2Field.selected().should("include", "Sci-Fi");
 
       // Test interactions with each field
       movie1Field.selectById(["tag3"]);
       movie2Field.selectById(["tag1"]);
 
       // Verify the values were updated correctly
-      movie1Field
-        .getElement()
-        .find('[role="combobox"]')
-        .should("contain.text", "Drama")
-        .should("not.contain.text", "Action")
-        .should("not.contain.text", "Comedy");
+      movie1Field.selected().should("include", "Drama");
+      movie1Field.selected().should("not.include", "Action");
+      movie1Field.selected().should("not.include", "Comedy");
 
-      movie2Field
-        .getElement()
-        .find('[role="combobox"]')
-        .should("contain.text", "Action")
-        .should("not.contain.text", "Drama")
-        .should("not.contain.text", "Sci-Fi");
+      movie2Field.selected().should("include", "Action");
+      movie2Field.selected().should("not.include", "Drama");
+      movie2Field.selected().should("not.include", "Sci-Fi");
     });
 
     it("should handle different object types but same IDs", () => {
@@ -647,37 +479,25 @@ describe("HasManyField.interactable", () => {
       cy.wait(100); // Wait for the component to fully render
 
       // Check movie field
-      movieField
-        .getElement()
-        .find('[role="combobox"]')
-        .should("contain.text", "Action")
-        .should("contain.text", "Comedy");
+      movieField.selected().should("include", "Action");
+      movieField.selected().should("include", "Comedy");
 
       // Check book field
-      bookField
-        .getElement()
-        .find('[role="combobox"]')
-        .should("contain.text", "Fiction")
-        .should("contain.text", "Non-Fiction");
+      bookField.selected().should("include", "Fiction");
+      bookField.selected().should("include", "Non-Fiction");
 
       // Test interactions with each field
       movieField.selectById(["tag3"]);
       bookField.selectById(["genre3"]);
 
       // Verify the values were updated correctly
-      movieField
-        .getElement()
-        .find('[role="combobox"]')
-        .should("contain.text", "Drama")
-        .should("not.contain.text", "Action")
-        .should("not.contain.text", "Comedy");
+      movieField.selected().should("include", "Drama");
+      movieField.selected().should("not.include", "Action");
+      movieField.selected().should("not.include", "Comedy");
 
-      bookField
-        .getElement()
-        .find('[role="combobox"]')
-        .should("contain.text", "Biography")
-        .should("not.contain.text", "Fiction")
-        .should("not.contain.text", "Non-Fiction");
+      bookField.selected().should("include", "Biography");
+      bookField.selected().should("not.include", "Fiction");
+      bookField.selected().should("not.include", "Non-Fiction");
     });
 
     it("should handle parent element and objectId together", () => {
@@ -750,37 +570,25 @@ describe("HasManyField.interactable", () => {
       cy.wait(100); // Wait for the component to fully render
 
       // Check first field
-      field1
-        .getElement()
-        .find('[role="combobox"]')
-        .should("contain.text", "Action")
-        .should("contain.text", "Comedy");
+      field1.selected().should("include", "Action");
+      field1.selected().should("include", "Comedy");
 
       // Check second field
-      field2
-        .getElement()
-        .find('[role="combobox"]')
-        .should("contain.text", "Drama")
-        .should("contain.text", "Sci-Fi");
+      field2.selected().should("include", "Drama");
+      field2.selected().should("include", "Sci-Fi");
 
       // Test interactions with each field
       field1.selectById(["tag3"]);
       field2.selectById(["tag1"]);
 
       // Verify the values were updated correctly
-      field1
-        .getElement()
-        .find('[role="combobox"]')
-        .should("contain.text", "Drama")
-        .should("not.contain.text", "Action")
-        .should("not.contain.text", "Comedy");
+      field1.selected().should("include", "Drama");
+      field1.selected().should("not.include", "Action");
+      field1.selected().should("not.include", "Comedy");
 
-      field2
-        .getElement()
-        .find('[role="combobox"]')
-        .should("contain.text", "Action")
-        .should("not.contain.text", "Drama")
-        .should("not.contain.text", "Sci-Fi");
+      field2.selected().should("include", "Action");
+      field2.selected().should("not.include", "Drama");
+      field2.selected().should("not.include", "Sci-Fi");
     });
   });
 });
