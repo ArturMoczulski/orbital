@@ -271,6 +271,21 @@ export function ObjectSelector({
 
             return typeof option === "string" ? option : getOptionLabel(option);
           }}
+          renderOption={(props, option) => {
+            // Add data-id attribute to each option for easier testing
+            const optionId =
+              typeof option === "string" ? option : safeGetOptionValue(option);
+
+            return (
+              <li {...props} key={optionId} data-id={optionId}>
+                {typeof option === "string"
+                  ? option
+                  : typeof getOptionLabel === "function"
+                    ? getOptionLabel(option)
+                    : String(option[providerState.displayField] || "")}
+              </li>
+            );
+          }}
           onOpen={() => setSearchQuery && setSearchQuery("")}
           loading={isLoading}
           disabled={disabled || readOnly}

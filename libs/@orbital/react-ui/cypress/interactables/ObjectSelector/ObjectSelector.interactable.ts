@@ -81,14 +81,12 @@ export class ObjectSelectorInteractable
     if (Array.isArray(value)) {
       // For multiple selection, we need to select each value
       value.forEach((val) => {
-        this.autocomplete.open();
-        this.autocomplete.select(val);
+        this.autocomplete.selectById(val);
       });
       return this.get();
     } else {
       // For single selection
-      this.autocomplete.open();
-      this.autocomplete.select(value);
+      this.autocomplete.selectById(value);
       return this.get();
     }
   }
@@ -138,6 +136,16 @@ export class ObjectSelectorInteractable
 
   item(text: string): Cypress.Chainable<JQuery<HTMLElement>> {
     return this.autocomplete.item(text);
+  }
+
+  /**
+   * Gets a specific option element by its ID attribute
+   * Delegates to the autocomplete's itemById method
+   * @param id - The ID to search for
+   * @returns Cypress.Chainable<JQuery<HTMLElement>> - the found option element
+   */
+  itemById(id: string): Cypress.Chainable<JQuery<HTMLElement>> {
+    return this.autocomplete.itemById(id);
   }
 
   select(text: string | string[]): this {

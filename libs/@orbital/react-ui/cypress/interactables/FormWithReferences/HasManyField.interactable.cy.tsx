@@ -263,7 +263,7 @@ describe("HasManyField.interactable", () => {
       options: genreOptions,
     };
 
-    it.only("should handle same object type but different IDs", () => {
+    it("should handle same object type but different IDs", () => {
       // Create a test component with two fields of the same object type but different IDs
       const TestFormWithSameTypeFields = () => {
         const [movie1Tags, setMovie1Tags] = useState(["tag1", "tag2"]);
@@ -340,9 +340,11 @@ describe("HasManyField.interactable", () => {
       movie2Field.selected().should("include", "Drama");
       movie2Field.selected().should("include", "Sci-Fi");
 
-      // Test interactions with each field
-      movie1Field.selectById("tag3");
-      movie2Field.selectById("tag1");
+      // Test interactions with each field using text-based selection
+      movie1Field.clear();
+      movie1Field.select("Drama");
+      movie2Field.clear();
+      movie2Field.select("Action");
 
       // Verify the values were updated correctly
       movie1Field.selected().should("include", "Drama");
@@ -436,9 +438,13 @@ describe("HasManyField.interactable", () => {
       bookField.selected().should("include", "Fiction");
       bookField.selected().should("include", "Non-Fiction");
 
-      // Test interactions with each field
-      movieField.selectById(["tag3"]);
-      bookField.selectById(["genre3"]);
+      // Clear selections first
+      movieField.clear();
+      bookField.clear();
+
+      // Test interactions with each field using text-based selection
+      movieField.select("Drama");
+      bookField.select("Biography");
 
       // Verify the values were updated correctly
       movieField.selected().should("include", "Drama");
@@ -527,9 +533,11 @@ describe("HasManyField.interactable", () => {
       field2.selected().should("include", "Drama");
       field2.selected().should("include", "Sci-Fi");
 
-      // Test interactions with each field
-      field1.selectById(["tag3"]);
-      field2.selectById(["tag1"]);
+      // Test interactions with each field using text-based selection
+      field1.clear();
+      field1.select("Drama");
+      field2.clear();
+      field2.select("Action");
 
       // Verify the values were updated correctly
       field1.selected().should("include", "Drama");

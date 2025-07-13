@@ -155,6 +155,16 @@ export class ReferenceFieldInteractable
     return this.autocomplete.item(text);
   }
 
+  /**
+   * Gets a specific option element by its ID attribute
+   * Delegates to the autocomplete's itemById method
+   * @param id - The ID to search for
+   * @returns Cypress.Chainable<JQuery<HTMLElement>> - the found option element
+   */
+  itemById(id: string): Cypress.Chainable<JQuery<HTMLElement>> {
+    return this.autocomplete.itemById(id);
+  }
+
   select(text: string | string[]) {
     this.autocomplete.select(text);
     return this;
