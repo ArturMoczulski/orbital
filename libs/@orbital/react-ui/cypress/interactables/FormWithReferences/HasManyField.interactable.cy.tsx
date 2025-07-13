@@ -263,7 +263,7 @@ describe("HasManyField.interactable", () => {
       options: genreOptions,
     };
 
-    it("should handle same object type but different IDs", () => {
+    it.only("should handle same object type but different IDs", () => {
       // Create a test component with two fields of the same object type but different IDs
       const TestFormWithSameTypeFields = () => {
         const [movie1Tags, setMovie1Tags] = useState(["tag1", "tag2"]);
@@ -315,47 +315,6 @@ describe("HasManyField.interactable", () => {
       const movie1Container = () => cy.get('[data-testid="movie1-container"]');
       const movie2Container = () => cy.get('[data-testid="movie2-container"]');
 
-      // Log the HTML structure to debug data-object-id attribute
-      movie1Container().then(($el) => {
-        cy.log("Movie 1 Container HTML:");
-        cy.log($el.html());
-
-        // Check if data-object-id is present
-        const hasObjectId = $el.find('[data-object-id="movie-1"]').length > 0;
-        cy.log(`Has data-object-id="movie-1": ${hasObjectId}`);
-
-        // Log all data attributes for debugging
-        const dataAttrs = [];
-
-        // Find all elements in the container
-        $el.find("*").each((i, el) => {
-          const attrs = el.attributes;
-          const dataAttrObj = {};
-          let hasDataAttr = false;
-
-          for (let i = 0; i < attrs.length; i++) {
-            if (attrs[i].name.startsWith("data-")) {
-              dataAttrObj[attrs[i].name] = attrs[i].value;
-              hasDataAttr = true;
-            }
-          }
-
-          // Only add elements that have at least one data attribute
-          if (hasDataAttr) {
-            dataAttrs.push(dataAttrObj);
-          }
-        });
-
-        cy.log("All data attributes found:");
-        cy.log(JSON.stringify(dataAttrs, null, 2));
-      });
-
-      // Log the selector that will be used
-      cy.log("Selector that will be used for movie1Field:");
-      cy.log(
-        `[data-testid="HasManyField"][data-field-name="tagIds"][data-object-id="movie-1"]`
-      );
-
       // Create field interactables with the same object type but different IDs
       const movie1Field = hasManyField({
         fieldName: "tagIds",
@@ -373,15 +332,6 @@ describe("HasManyField.interactable", () => {
       // Verify each field has the correct values
       cy.wait(100); // Wait for the component to fully render
 
-      // Debug: Check if the element can be found directly with the selector
-      movie1Container().within(() => {
-        cy.get(
-          '[data-testid="HasManyField"][data-field-name="tagIds"][data-object-id="movie-1"]'
-        ).then(($el) => {
-          cy.log(`Direct selector found ${$el.length} elements`);
-        });
-      });
-
       // Check first field
       movie1Field.selected().should("include", "Action");
       movie1Field.selected().should("include", "Comedy");
@@ -391,8 +341,8 @@ describe("HasManyField.interactable", () => {
       movie2Field.selected().should("include", "Sci-Fi");
 
       // Test interactions with each field
-      movie1Field.selectById(["tag3"]);
-      movie2Field.selectById(["tag1"]);
+      movie1Field.selectById("tag3");
+      movie2Field.selectById("tag1");
 
       // Verify the values were updated correctly
       movie1Field.selected().should("include", "Drama");

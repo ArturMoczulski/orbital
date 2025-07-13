@@ -98,12 +98,12 @@ export class ReferenceFieldInteractable
     if (Array.isArray(value)) {
       // For multiple selection, we need to select each value
       value.forEach((val) => {
-        this.autocomplete.select(val);
+        this.autocomplete.selectById(val);
       });
       return this.get();
     } else {
       // For single selection
-      this.autocomplete.select(value);
+      this.autocomplete.selectById(value);
       return this.get();
     }
   }
