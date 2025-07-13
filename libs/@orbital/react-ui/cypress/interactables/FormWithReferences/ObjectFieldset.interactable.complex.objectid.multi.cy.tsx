@@ -628,16 +628,16 @@ describe("Multiple Object Fieldsets on the Same Page", () => {
             });
           });
         });
-
-        it("works with 3 different object types with 3 IDs each (9 total fieldsets)", () => {
-          // This test has been moved to a separate file
-          // ObjectFieldset.interactable.complex.objecttype.multi.cy.tsx
-          // This is just a placeholder to indicate the test has been moved
-          cy.log(
-            "Test moved to ObjectFieldset.interactable.complex.objecttype.multi.cy.tsx"
-          );
-        });
       });
+    });
+
+    it("works with 3 different object types with 3 IDs each (9 total fieldsets)", () => {
+      // This test has been moved to a separate file
+      // ObjectFieldset.interactable.complex.objecttype.multi.cy.tsx
+      // This is just a placeholder to indicate the test has been moved
+      cy.log(
+        "Test moved to ObjectFieldset.interactable.complex.objecttype.multi.cy.tsx"
+      );
     });
   });
 });

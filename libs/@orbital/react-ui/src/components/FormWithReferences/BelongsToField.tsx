@@ -44,11 +44,6 @@ function BelongsToField({
   schema: propSchema,
   objectId,
 }: BelongsToFieldProps) {
-  console.log(`[BelongsToField] Rendering for field: ${name}`);
-  console.log(`[BelongsToField] label prop: ${label}`);
-  console.log(`[BelongsToField] reference:`, reference);
-  console.log(`[BelongsToField] props value:`, value);
-
   // Get data from ObjectDataContext if available
   let contextData: string | undefined;
   let updateContextData:
@@ -67,16 +62,8 @@ function BelongsToField({
       }
     }
 
-    console.log(`[BelongsToField] contextData from Redux:`, contextData);
-
     // Store the update function for later use
     updateContextData = (data: Record<string, any>, merge = true) => {
-      console.log(
-        `[BelongsToField] Updating context data:`,
-        data,
-        `merge:`,
-        merge
-      );
       updateObjectData("main", data, merge);
     };
   } catch (error) {

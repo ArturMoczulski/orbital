@@ -210,21 +210,15 @@ export class ZodReferencesBridge<T extends z.ZodType<any, any, any>> {
     try {
       // Get all top-level fields
       const fields = this.getSubfields();
-      console.log(`Getting references for fields:`, fields);
 
       // For each field, check if it has a reference
       for (const field of fields) {
         try {
           // First try to get the field info using getField
           const fieldInfo = this.getField(field);
-          console.log(`Field info for ${field}:`, fieldInfo);
 
           // If the field has reference metadata from getField, use it
           if (fieldInfo?.reference) {
-            console.log(
-              `Found reference for ${field} in fieldInfo:`,
-              fieldInfo.reference
-            );
             references[field] = fieldInfo.reference;
             continue;
           }
@@ -242,7 +236,6 @@ export class ZodReferencesBridge<T extends z.ZodType<any, any, any>> {
             const fieldSchema = this.schema.shape[
               field as keyof typeof this.schema.shape
             ] as z.ZodType<any>;
-            console.log(`Direct field schema for ${field}:`, fieldSchema);
 
             // Check if fieldSchema has a _def property with a reference
             if (
@@ -258,11 +251,6 @@ export class ZodReferencesBridge<T extends z.ZodType<any, any, any>> {
                 type: RelationshipType;
               };
               if (reference) {
-                console.log(
-                  `Found reference for ${field} directly in _def:`,
-                  reference
-                );
-
                 // Get the options for this reference
                 const options = this.dependencies?.[reference.name] || [];
 
@@ -282,7 +270,6 @@ export class ZodReferencesBridge<T extends z.ZodType<any, any, any>> {
       console.error("Error getting references:", error);
     }
 
-    console.log(`Final references:`, references);
     return references;
   }
 
