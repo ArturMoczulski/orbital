@@ -15,6 +15,7 @@ export abstract class FormInputInteractable<T> extends CypressInteractable {
     fieldNameOrOptions?:
       | string
       | {
+          fieldName: string;
           dataTestId?: string;
           parentElement?: () => Cypress.Chainable<JQuery<HTMLElement>>;
         },
@@ -29,7 +30,7 @@ export abstract class FormInputInteractable<T> extends CypressInteractable {
       this.fieldName = fieldNameOrOptions;
     } else {
       super(fieldNameOrOptions || {});
-      this.fieldName = fieldNameOrOptions?.dataTestId;
+      this.fieldName = fieldNameOrOptions?.fieldName;
     }
   }
 

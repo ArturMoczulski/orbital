@@ -41,7 +41,7 @@ export class ReferenceFieldInteractable
     objectId?: string,
     index?: number
   ) {
-    super(fieldName, parentElement);
+    super({ fieldName, parentElement });
     this.objectType = objectType;
 
     // Create internal AutocompleteInteractable instance
@@ -51,13 +51,6 @@ export class ReferenceFieldInteractable
       parentElement: parentElement,
       index: index,
     });
-  }
-
-  /**
-   * Override the selector to use the data-testid attribute
-   */
-  selector() {
-    return `[data-testid="${this.fieldName}"]`;
   }
 
   /**

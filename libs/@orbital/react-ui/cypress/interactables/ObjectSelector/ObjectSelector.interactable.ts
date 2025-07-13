@@ -59,13 +59,6 @@ export class ObjectSelectorInteractable
   }
 
   /**
-   * Override the selector to use the data-testid attribute
-   */
-  selector() {
-    return `[data-testid="${this.fieldName}"]`;
-  }
-
-  /**
    * Implementation of selectById from FormInputInteractable
    * Delegates to the select method of AutocompleteInteractable
    */

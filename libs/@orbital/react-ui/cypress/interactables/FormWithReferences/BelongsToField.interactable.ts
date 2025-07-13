@@ -28,6 +28,14 @@ export class BelongsToFieldInteractable extends ReferenceFieldInteractable {
     // Call parent constructor with the fixed dataTestId
     super("BelongsToField", objectType, parentElement, objectId, index);
   }
+
+  /**
+   * Override the selector to use both data-testid and data-field-name attributes
+   * This ensures we can uniquely identify a specific BelongsToField when multiple exist
+   */
+  selector() {
+    return `[data-testid="BelongsToField"][data-field-name="${this.fieldName}"]`;
+  }
 }
 
 /**

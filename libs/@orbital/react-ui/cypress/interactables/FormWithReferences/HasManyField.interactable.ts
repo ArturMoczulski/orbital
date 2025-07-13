@@ -46,6 +46,14 @@ export class HasManyFieldInteractable extends ObjectSelectorInteractable {
   }
 
   /**
+   * Override the selector to use both data-testid and data-field-name attributes
+   * This ensures we can uniquely identify a specific HasManyField when multiple exist
+   */
+  selector() {
+    return `[data-testid="HasManyField"][data-field-name="${this.fieldName}"]`;
+  }
+
+  /**
    * Implement isRequired method for compatibility
    */
   isRequired(): Cypress.Chainable<boolean> {
