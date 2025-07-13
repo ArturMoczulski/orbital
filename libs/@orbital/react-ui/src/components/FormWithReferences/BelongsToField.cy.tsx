@@ -113,7 +113,10 @@ describe("BelongsToField Component", () => {
 
       mount(<ContextTestComponent />);
 
-      const field = belongsToField("worldId", "World");
+      const field = belongsToField({
+        fieldName: "worldId",
+        objectType: "World",
+      });
       field.label().should("contain", "World");
     });
 
@@ -148,7 +151,10 @@ describe("BelongsToField Component", () => {
 
       mount(<OverrideContextComponent />);
 
-      const field = belongsToField("worldId", "Planet");
+      const field = belongsToField({
+        fieldName: "worldId",
+        objectType: "Planet",
+      });
       field.label().should("contain", "World"); // Label should still come from reference metadata
     });
   });
@@ -362,7 +368,10 @@ describe("BelongsToField Component", () => {
       mount(<TestProjectFormWithRedux />);
 
       // Get the field using the interactable pattern
-      const field = belongsToField("worldId", "Project");
+      const field = belongsToField({
+        fieldName: "worldId",
+        objectType: "Project",
+      });
 
       // Verify that the initial value from Redux is properly displayed
       // Instead of using field.selected(), directly check the input value
@@ -489,7 +498,10 @@ describe("BelongsToField Component", () => {
       mount(<TestProjectFormWithRedux />);
 
       // Get the field using the interactable pattern
-      const field = belongsToField("worldId", "Project");
+      const field = belongsToField({
+        fieldName: "worldId",
+        objectType: "Project",
+      });
 
       // Verify that the initial value from Redux is properly displayed
       // Instead of using field.selected(), directly check the input value

@@ -60,7 +60,9 @@ describe("ObjectSelector", () => {
 
       mount(<SingleChoiceTestComponent onChange={onChangeSpy} />);
 
-      const autocomplete = objectSelector("SingleChoiceSelector");
+      const autocomplete = objectSelector({
+        dataTestId: "SingleChoiceSelector",
+      });
 
       // Open the dropdown
       autocomplete.open();
@@ -93,7 +95,9 @@ describe("ObjectSelector", () => {
         />
       );
 
-      const autocomplete = objectSelector("SingleChoiceSelector");
+      const autocomplete = objectSelector({
+        dataTestId: "SingleChoiceSelector",
+      });
 
       // Open the dropdown
       autocomplete.open();
@@ -118,7 +122,9 @@ describe("ObjectSelector", () => {
         />
       );
 
-      const autocomplete = objectSelector("SingleChoiceSelector");
+      const autocomplete = objectSelector({
+        dataTestId: "SingleChoiceSelector",
+      });
 
       // Verify initial selection
       autocomplete.textField().should("have.value", "Option 1");
@@ -166,7 +172,9 @@ describe("ObjectSelector", () => {
 
       mount(<AsyncLoadingComponent />);
 
-      const autocomplete = objectSelector("AsyncLoadingSelector");
+      const autocomplete = objectSelector({
+        dataTestId: "AsyncLoadingSelector",
+      });
 
       // Open the selector - this should trigger fetchOptions and show loading
       autocomplete.open();
@@ -197,7 +205,9 @@ describe("ObjectSelector", () => {
       // Mount component with an initial value
       mount(<SingleChoiceTestComponent initialValue="option2" />);
 
-      const autocomplete = objectSelector("SingleChoiceSelector");
+      const autocomplete = objectSelector({
+        dataTestId: "SingleChoiceSelector",
+      });
 
       // Verify the correct option is displayed without any user interaction
       autocomplete.textField().should("have.value", "Option 2");
@@ -234,7 +244,7 @@ describe("ObjectSelector", () => {
 
       mount(<NamePropTestComponent />);
 
-      const autocomplete = objectSelector("NamePropSelector");
+      const autocomplete = objectSelector({ dataTestId: "NamePropSelector" });
 
       // Verify the name attribute is correctly set on the input field
       autocomplete.get().find('input[name="customFieldName"]').should("exist");
@@ -357,8 +367,8 @@ describe("ObjectSelector", () => {
       mount(<MultiChoiceTestComponent />);
 
       // Get interactables for the first two selectors
-      const selector1 = objectSelector("selector1");
-      const selector2 = objectSelector("selector2");
+      const selector1 = objectSelector({ dataTestId: "selector1" });
+      const selector2 = objectSelector({ dataTestId: "selector2" });
 
       // Select options in the first selector
       selector1.open();
@@ -394,7 +404,7 @@ describe("ObjectSelector", () => {
     it("should handle selecting and deselecting multiple options in multiple choice mode", () => {
       mount(<MultiChoiceTestComponent />);
 
-      const selector = objectSelector("selector1");
+      const selector = objectSelector({ dataTestId: "selector1" });
 
       // Select multiple options
       selector.open();
@@ -445,7 +455,7 @@ describe("ObjectSelector", () => {
     it("should display loading indicator when fetching options asynchronously in multiple choice mode", () => {
       mount(<MultiChoiceTestComponent />);
 
-      const loadingSelector = objectSelector("selector3");
+      const loadingSelector = objectSelector({ dataTestId: "selector3" });
 
       // Open the selector - this should trigger fetchOptions and show loading
       loadingSelector.open();
@@ -473,7 +483,7 @@ describe("ObjectSelector", () => {
     it("should display error state correctly in multiple choice mode", () => {
       mount(<MultiChoiceTestComponent />);
 
-      const errorSelector = objectSelector("selector4");
+      const errorSelector = objectSelector({ dataTestId: "selector4" });
 
       // Verify error styling is applied
       errorSelector.hasError().should("be.true");
@@ -508,7 +518,7 @@ describe("ObjectSelector", () => {
 
       mount(<HydratedMultiChoiceComponent />);
 
-      const selector = objectSelector("hydratedSelector");
+      const selector = objectSelector({ dataTestId: "hydratedSelector" });
 
       // Verify the correct options are displayed without any user interaction
       cy.get('[data-testid="hydrated-value"]').should(
@@ -550,7 +560,7 @@ describe("ObjectSelector", () => {
 
       mount(<MultiNamePropTestComponent />);
 
-      const selector = objectSelector("MultiNamePropSelector");
+      const selector = objectSelector({ dataTestId: "MultiNamePropSelector" });
 
       // Verify the name attribute is correctly set on the input field
       selector.get().find('input[name="customMultiFieldName"]').should("exist");
@@ -604,7 +614,9 @@ describe("ObjectSelector", () => {
 
       mount(<NamePersistenceTestComponent />);
 
-      const selector = objectSelector("NamePersistenceSelector");
+      const selector = objectSelector({
+        dataTestId: "NamePersistenceSelector",
+      });
 
       // 1. Verify name attribute is present initially
       selector

@@ -5,6 +5,7 @@
 
 import {
   FormInputInteractable,
+  FormInputInteractableOptions,
   inputField,
 } from "../AutoForm/FormInput.interactable";
 import { CypressInteractable } from "../Cypress.interactable";
@@ -80,16 +81,19 @@ export class ObjectFieldsetInteractable extends CypressInteractable {
    */
   field<T extends FormInputInteractable<any> = FormInputInteractable<any>>(
     fieldName: string,
-    customInteractable?: new (
-      fieldName: string,
-      parentElement?: () => Cypress.Chainable<JQuery<HTMLElement>>
-    ) => T
+    customInteractable?: new (options: FormInputInteractableOptions) => T
   ): Cypress.Chainable<T> {
     // Create a parent element function that returns the fieldset element
     const parentElement = () => this.get({});
 
     // Use the inputField factory to create the appropriate field interactable
-    return inputField<T>(fieldName, parentElement, customInteractable);
+    return inputField<T>(
+      {
+        fieldName,
+        parentElement,
+      },
+      customInteractable
+    );
   }
 
   /**

@@ -15,6 +15,7 @@ export interface MaterialUIInteractableOptions
    * Example: for .MuiButton-root, componentName should be "Button".
    */
   componentName?: string;
+  fieldName?: string;
 }
 
 /**
@@ -24,10 +25,12 @@ export interface MaterialUIInteractableOptions
 export class MaterialUIInteractable extends CypressInteractable {
   /** Cached component name suffix (e.g. "Button"). */
   protected componentName?: string;
+  protected fieldName?: string;
 
   constructor(options: MaterialUIInteractableOptions) {
     super(options);
     this.componentName = options.componentName;
+    this.fieldName = options.fieldName;
   }
 
   protected override validateTarget(): boolean {
@@ -58,7 +61,13 @@ export class MaterialUIInteractable extends CypressInteractable {
   public override selector(): string {
     const idSel = this.dataTestId ? `[data-testid="${this.dataTestId}"]` : "";
     const rootSel = this.componentName ? this.rootSelector : "";
-    return rootSel ? `${rootSel}${idSel}` : idSel;
+    let selector = rootSel ? `${rootSel}${idSel}` : idSel;
+
+    if (this.fieldName) {
+      selector += `[data-field-name="${this.fieldName}"]`;
+    }
+
+    return selector;
   }
 
   /**

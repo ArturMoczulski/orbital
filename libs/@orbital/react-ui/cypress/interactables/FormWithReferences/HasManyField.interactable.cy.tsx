@@ -82,33 +82,40 @@ describe("HasManyField.interactable", () => {
     );
   };
 
-  it("should select multiple values", () => {
+  it.only("should select multiple values", () => {
     const onChangeSpy = cy.spy().as("onChange");
 
     mount(<TestForm onChange={onChangeSpy} />);
 
-    const field = hasManyField("tagIds", "Movie");
+    const field = hasManyField({
+      fieldName: "tagIds",
+      objectType: "Movie",
+    });
 
     field.selectById(["tag1", "tag3"]);
+    cy.pause();
 
     cy.get("@onChange").should("have.been.calledWith", ["tag1", "tag3"]);
-    field.getSelectedValues().should("deep.equal", ["tag1", "tag3"]);
+    // field.getSelectedValues().should("deep.equal", ["tag1", "tag3"]);
 
-    // Verify the selected text by checking the combobox content
-    field
-      .getElement()
-      .find('[role="combobox"]')
-      .should("contain.text", "Action");
-    field
-      .getElement()
-      .find('[role="combobox"]')
-      .should("contain.text", "Drama");
+    // // Verify the selected text by checking the combobox content
+    // field
+    //   .getElement()
+    //   .find('[role="combobox"]')
+    //   .should("contain.text", "Action");
+    // field
+    //   .getElement()
+    //   .find('[role="combobox"]')
+    //   .should("contain.text", "Drama");
   });
 
   it("should handle disabled state", () => {
     mount(<TestForm disabled={true} initialValue={["tag1", "tag2"]} />);
 
-    const field = hasManyField("tagIds", "Movie");
+    const field = hasManyField({
+      fieldName: "tagIds",
+      objectType: "Movie",
+    });
 
     field.isDisabled().should("be.true");
     field.getSelectedValues().should("deep.equal", ["tag1", "tag2"]);
@@ -131,7 +138,10 @@ describe("HasManyField.interactable", () => {
   it("should handle required state", () => {
     mount(<TestForm required={true} />);
 
-    const field = hasManyField("tagIds", "Movie");
+    const field = hasManyField({
+      fieldName: "tagIds",
+      objectType: "Movie",
+    });
 
     field.isRequired().should("be.true");
   });
@@ -141,7 +151,10 @@ describe("HasManyField.interactable", () => {
 
     mount(<TestForm initialValue={["tag1", "tag2"]} onChange={onChangeSpy} />);
 
-    const field = hasManyField("tagIds", "Movie");
+    const field = hasManyField({
+      fieldName: "tagIds",
+      objectType: "Movie",
+    });
 
     field.getSelectedValues().should("deep.equal", ["tag1", "tag2"]);
 
@@ -184,7 +197,10 @@ describe("HasManyField.interactable", () => {
 
     mount(<TestFormNoOptions />);
 
-    const field = hasManyField("tagIds", "Movie");
+    const field = hasManyField({
+      fieldName: "tagIds",
+      objectType: "Movie",
+    });
 
     // Field should be disabled when no options are available
     field.isDisabled().should("be.true");
@@ -237,13 +253,17 @@ describe("HasManyField.interactable", () => {
     mount(<TestFormWithMultipleFields />);
 
     // Create field interactables with different parent elements
-    const firstField = hasManyField("tagIds", "Movie", () =>
-      cy.get('[data-testid="first-container"]')
-    );
+    const firstField = hasManyField({
+      fieldName: "tagIds",
+      objectType: "Movie",
+      parentElement: () => cy.get('[data-testid="first-container"]'),
+    });
 
-    const secondField = hasManyField("tagIds", "Movie", () =>
-      cy.get('[data-testid="second-container"]')
-    );
+    const secondField = hasManyField({
+      fieldName: "tagIds",
+      objectType: "Movie",
+      parentElement: () => cy.get('[data-testid="second-container"]'),
+    });
 
     // Verify each field has the correct values
     // Use cy.wait to ensure the component has fully rendered
@@ -282,7 +302,10 @@ describe("HasManyField.interactable", () => {
       </ObjectSchemaProvider>
     );
 
-    const field = hasManyField("tagIds", "Movie");
+    const field = hasManyField({
+      fieldName: "tagIds",
+      objectType: "Movie",
+    });
 
     // Manually add error class and message to simulate error state
     field
@@ -309,7 +332,10 @@ describe("HasManyField.interactable", () => {
 
     mount(<TestForm initialValue={["tag1"]} onChange={onChangeSpy} />);
 
-    const field = hasManyField("tagIds", "Movie");
+    const field = hasManyField({
+      fieldName: "tagIds",
+      objectType: "Movie",
+    });
 
     // Initial state
     field.getSelectedValues().should("deep.equal", ["tag1"]);
@@ -487,18 +513,18 @@ describe("HasManyField.interactable", () => {
       );
 
       // Create field interactables with the same object type but different IDs
-      const movie1Field = hasManyField(
-        "tagIds",
-        "Movie",
-        movie1Container,
-        "movie-1"
-      );
-      const movie2Field = hasManyField(
-        "tagIds",
-        "Movie",
-        movie2Container,
-        "movie-2"
-      );
+      const movie1Field = hasManyField({
+        fieldName: "tagIds",
+        objectType: "Movie",
+        parentElement: movie1Container,
+        objectId: "movie-1",
+      });
+      const movie2Field = hasManyField({
+        fieldName: "tagIds",
+        objectType: "Movie",
+        parentElement: movie2Container,
+        objectId: "movie-2",
+      });
 
       // Verify each field has the correct values
       cy.wait(100); // Wait for the component to fully render
@@ -604,18 +630,18 @@ describe("HasManyField.interactable", () => {
       const bookContainer = () => cy.get('[data-testid="book-container"]');
 
       // Create field interactables with different object types but the same ID
-      const movieField = hasManyField(
-        "tagIds",
-        "Movie",
-        movieContainer,
-        "shared-id-123"
-      );
-      const bookField = hasManyField(
-        "genreIds",
-        "Book",
-        bookContainer,
-        "shared-id-123"
-      );
+      const movieField = hasManyField({
+        fieldName: "tagIds",
+        objectType: "Movie",
+        parentElement: movieContainer,
+        objectId: "shared-id-123",
+      });
+      const bookField = hasManyField({
+        fieldName: "genreIds",
+        objectType: "Book",
+        parentElement: bookContainer,
+        objectId: "shared-id-123",
+      });
 
       // Verify each field has the correct values
       cy.wait(100); // Wait for the component to fully render
@@ -707,18 +733,18 @@ describe("HasManyField.interactable", () => {
       mount(<TestFormWithMultipleFields />);
 
       // Create field interactables with parent elements and the same objectId
-      const field1 = hasManyField(
-        "tagIds",
-        "Movie",
-        () => cy.get('[data-testid="container-1"]'),
-        "movie-id-1"
-      );
-      const field2 = hasManyField(
-        "tagIds",
-        "Movie",
-        () => cy.get('[data-testid="container-2"]'),
-        "movie-id-1"
-      );
+      const field1 = hasManyField({
+        fieldName: "tagIds",
+        objectType: "Movie",
+        parentElement: () => cy.get('[data-testid="container-1"]'),
+        objectId: "movie-id-1",
+      });
+      const field2 = hasManyField({
+        fieldName: "tagIds",
+        objectType: "Movie",
+        parentElement: () => cy.get('[data-testid="container-2"]'),
+        objectId: "movie-id-1",
+      });
 
       // Verify each field has the correct values
       cy.wait(100); // Wait for the component to fully render

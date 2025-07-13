@@ -1,4 +1,4 @@
-import { FormInputInteractable } from "../AutoForm/FormInput.interactable";
+import { FormInputInteractableOptions } from "../AutoForm/FormInput.interactable";
 import { Listable, Selectable } from "../interfaces/Listable";
 import { Loadable } from "../interfaces/Loadable";
 import { Openable } from "../interfaces/Openable";
@@ -6,14 +6,38 @@ import { Typeable } from "../interfaces/Typeable";
 import { Validatable } from "../interfaces/Validatable";
 import { AutocompleteInteractable } from "../MaterialUI/Autocomplete.interactable";
 import { ChipInteractable } from "../MaterialUI/Chip.interactable";
+import { ObjectSelectorInteractable } from "../ObjectSelector/ObjectSelector.interactable";
 
 /**
  * ReferenceFieldInteractable class uses composition to delegate to AutocompleteInteractable
  * while extending FormInputInteractable for form field functionality.
  * ReferenceField can be either single-select or multi-select based on the multiple prop.
  */
+/**
+ * Options for ReferenceFieldInteractable
+ */
+export interface ReferenceFieldInteractableOptions
+  extends FormInputInteractableOptions {
+  /**
+   * The type of object this reference field is for (e.g., "User", "Post")
+   */
+  objectType: string;
+
+  /**
+   * Optional object ID to further scope the field
+   */
+  objectId?: string;
+
+  /**
+   * Optional index for when multiple fields with the same name exist
+   */
+  index?: number;
+
+  multiple?: boolean;
+}
+
 export class ReferenceFieldInteractable
-  extends FormInputInteractable<string | string[]>
+  extends ObjectSelectorInteractable
   implements Openable, Listable, Selectable, Typeable, Validatable, Loadable
 {
   /**
@@ -28,29 +52,42 @@ export class ReferenceFieldInteractable
 
   /**
    * Constructor for ReferenceFieldInteractable
-   * @param fieldName The name of the field
-   * @param objectType The type of object this reference field is for
-   * @param parentElement Optional parent element to scope the field within
-   * @param objectId Optional object ID to further scope the field
-   * @param index Optional index for when multiple fields with the same name exist
+   * @param options Options for creating the reference field interactable
    */
-  constructor(
-    fieldName: string,
-    objectType: string,
-    parentElement?: () => Cypress.Chainable<JQuery<HTMLElement>>,
-    objectId?: string,
-    index?: number
-  ) {
-    super({ fieldName, parentElement });
-    this.objectType = objectType;
+  constructor(options: ReferenceFieldInteractableOptions) {
+    super(options);
+    this.objectType = options.objectType;
 
     // Create internal AutocompleteInteractable instance
     this.autocomplete = new AutocompleteInteractable({
       componentName: "Autocomplete",
-      dataTestId: fieldName,
-      parentElement: parentElement,
-      index: index,
+      fieldName: options.fieldName,
+      parentElement: options.parentElement,
+      index: options.index,
     });
+  }
+
+  selector() {
+    let selector = "";
+
+    if (this.htmlElementType) {
+      selector += `${this.htmlElementType}`;
+    }
+
+    if (this.dataTestId) {
+      selector += `[data-testid="${this.dataTestId}"]`;
+    }
+
+    if (this.fieldName) {
+      selector += `[data-field-name="${this.fieldName}"]`;
+    }
+
+    if (!selector) {
+      // This should never happen due to the validation in the constructor
+      throw new Error("Not enough selectors to find components");
+    }
+
+    return selector;
   }
 
   /**
@@ -61,13 +98,11 @@ export class ReferenceFieldInteractable
     if (Array.isArray(value)) {
       // For multiple selection, we need to select each value
       value.forEach((val) => {
-        this.autocomplete.open();
         this.autocomplete.select(val);
       });
       return this.get();
     } else {
       // For single selection
-      this.autocomplete.open();
       this.autocomplete.select(value);
       return this.get();
     }
@@ -256,27 +291,13 @@ export class ReferenceFieldInteractable
 
 /**
  * Factory function to create a ReferenceField interactable
- * @param fieldName The name of the field
- * @param objectType The type of object this reference field is for
- * @param parentElement Optional parent element to scope the field within
- * @param objectId Optional object ID to further scope the field
- * @param index Optional index for when multiple fields with the same name exist
+ * @param options Options for creating the reference field interactable
  * @returns A ReferenceField interactable
  */
 export function referenceField(
-  fieldName: string,
-  objectType: string,
-  parentElement?: () => Cypress.Chainable<JQuery<HTMLElement>>,
-  objectId?: string,
-  index?: number
+  options: ReferenceFieldInteractableOptions
 ): ReferenceFieldInteractable {
-  return new ReferenceFieldInteractable(
-    fieldName,
-    objectType,
-    parentElement,
-    objectId,
-    index
-  );
+  return new ReferenceFieldInteractable(options);
 }
 
 // Export the factory function and class

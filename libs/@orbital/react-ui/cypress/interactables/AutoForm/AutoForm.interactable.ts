@@ -83,7 +83,10 @@ class AutoFormInteractable<
           return undefined;
         }
 
-        return inputField(prop as string, () => this.get());
+        return inputField({
+          fieldName: prop as string,
+          parentElement: () => this.get(),
+        });
       },
     });
 

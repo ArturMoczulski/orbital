@@ -3,54 +3,39 @@
 
 /// <reference types="cypress" />
 
-import { ObjectSelectorInteractable } from "../ObjectSelector/ObjectSelector.interactable";
+import {
+  ReferenceFieldInteractable,
+  ReferenceFieldInteractableOptions,
+} from "./ReferenceField.interactable";
 
 /**
  * HasManyFieldInteractable class extends ObjectSelectorInteractable
  * to provide specific functionality for HasManyField components.
  */
-export class HasManyFieldInteractable extends ObjectSelectorInteractable {
+/**
+ * Options for HasManyFieldInteractable
+ */
+export interface HasManyFieldInteractableOptions
+  extends ReferenceFieldInteractableOptions {
   /**
    * The type of object this selector is for (e.g., "World", "Area")
    */
-  protected objectType: string;
+  objectType: string;
+}
 
+export class HasManyFieldInteractable extends ReferenceFieldInteractable {
   /**
    * Constructor for HasManyFieldInteractable
-   * @param fieldName The name of the field
-   * @param objectType The type of object this selector is for
-   * @param parentElement Optional parent element to scope the field within
+   * @param options Options for creating the HasManyField interactable
    */
-  constructor(
-    fieldName: string,
-    objectType: string,
-    parentElement?: () => Cypress.Chainable<JQuery<HTMLElement>>,
-    objectId?: string,
-    index?: number
-  ) {
-    // Construct a data-testid that includes the field type and name
-    const dataTestId = `HasManyField`;
-
+  constructor(options: HasManyFieldInteractableOptions) {
     // Pass all required parameters to the ObjectSelectorInteractable constructor
-    super(
-      dataTestId,
-      parentElement,
-      "", // prefix
-      true, // multiple (HasMany fields are multi-select)
-      objectType,
-      objectId,
-      index
-    );
-
-    this.objectType = objectType;
-  }
-
-  /**
-   * Override the selector to use both data-testid and data-field-name attributes
-   * This ensures we can uniquely identify a specific HasManyField when multiple exist
-   */
-  selector() {
-    return `[data-testid="HasManyField"][data-field-name="${this.fieldName}"]`;
+    super({
+      ...options,
+      fieldName: options.fieldName,
+      dataTestId: "HasManyField",
+      multiple: true, // HasMany fields are multi-select
+    });
   }
 
   /**
@@ -63,25 +48,13 @@ export class HasManyFieldInteractable extends ObjectSelectorInteractable {
 
 /**
  * Factory function to create a HasManyField interactable
- * @param fieldName The name of the field
- * @param objectType The type of object this reference field is for
- * @param parentElement Optional parent element to scope the field within
+ * @param options Options for creating the HasManyField interactable
  * @returns A HasManyField interactable
  */
 export function hasManyField(
-  fieldName: string,
-  objectType: string,
-  parentElement?: () => Cypress.Chainable<JQuery<HTMLElement>>,
-  objectId?: string,
-  index?: number
+  options: HasManyFieldInteractableOptions
 ): HasManyFieldInteractable {
-  return new HasManyFieldInteractable(
-    fieldName,
-    objectType,
-    parentElement,
-    objectId,
-    index
-  );
+  return new HasManyFieldInteractable(options);
 }
 
 // Export the factory function and class

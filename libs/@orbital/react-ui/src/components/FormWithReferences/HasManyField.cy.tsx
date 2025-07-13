@@ -93,7 +93,10 @@ describe("HasManyField Component", () => {
       const onChangeSpy = cy.spy().as("onChange");
       mount(<TestForm onChange={onChangeSpy} />);
 
-      const field = hasManyField("tagIds", "Post");
+      const field = hasManyField({
+        fieldName: "tagIds",
+        objectType: "Post",
+      });
       field.open();
       field.select("Technology");
 
@@ -119,7 +122,10 @@ describe("HasManyField Component", () => {
       const onChangeSpy = cy.spy().as("onChange");
       mount(<TestForm onChange={onChangeSpy} />);
 
-      const field = hasManyField("tagIds", "Post");
+      const field = hasManyField({
+        fieldName: "tagIds",
+        objectType: "Post",
+      });
 
       // Select first value
       field.open();
@@ -370,7 +376,10 @@ describe("HasManyField Component", () => {
       mount(<TestPostFormWithRedux />);
 
       // Get the field using the interactable pattern
-      const field = hasManyField("tagIds", "Post");
+      const field = hasManyField({
+        fieldName: "tagIds",
+        objectType: "Post",
+      });
 
       // Verify that the initial values from Redux are properly displayed
       field
@@ -503,7 +512,10 @@ describe("HasManyField Component", () => {
       mount(<TestPostFormWithRedux />);
 
       // Get the field using the interactable pattern
-      const field = hasManyField("tagIds", "Post");
+      const field = hasManyField({
+        fieldName: "tagIds",
+        objectType: "Post",
+      });
 
       // Verify that the initial values from Redux are properly displayed
       field

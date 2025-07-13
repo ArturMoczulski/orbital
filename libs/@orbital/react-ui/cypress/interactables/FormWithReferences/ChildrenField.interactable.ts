@@ -1,4 +1,18 @@
-import { ObjectSelectorInteractable } from "../ObjectSelector/ObjectSelector.interactable";
+import {
+  ObjectSelectorInteractable,
+  ObjectSelectorInteractableOptions,
+} from "../ObjectSelector/ObjectSelector.interactable";
+
+/**
+ * Interface for ChildrenFieldInteractable options
+ */
+export interface ChildrenFieldInteractableOptions
+  extends ObjectSelectorInteractableOptions {
+  /**
+   * The type of object this children field is for (e.g., "Node", "Category")
+   */
+  objectType: string;
+}
 
 /**
  * ChildrenFieldInteractable class extends ObjectSelectorInteractable directly
@@ -13,56 +27,30 @@ export class ChildrenFieldInteractable extends ObjectSelectorInteractable {
 
   /**
    * Constructor for ChildrenFieldInteractable
-   * @param fieldName The name of the field
-   * @param objectType The type of object this selector is for
-   * @param parentElement Optional parent element to scope the field within
+   * @param options Options for creating the children field interactable
    */
-  constructor(
-    fieldName: string,
-    objectType: string,
-    parentElement?: () => Cypress.Chainable<JQuery<HTMLElement>>,
-    objectId?: string,
-    index?: number
-  ) {
-    // Construct a data-testid that includes the field type and name
-    const dataTestId = `ChildrenField-${fieldName}`;
-
+  constructor(options: ChildrenFieldInteractableOptions) {
     // Pass all required parameters to the ObjectSelectorInteractable constructor
-    super(
-      dataTestId,
-      parentElement,
-      "", // prefix
-      true, // multiple (children fields are multi-select)
-      objectType,
-      objectId,
-      index
-    );
+    super({
+      ...options,
+      dataTestId: `ChildrenField-${options.fieldName}`,
+      prefix: "",
+      multiple: true, // children fields are multi-select
+    });
 
-    this.objectType = objectType;
+    this.objectType = options.objectType;
   }
 }
 
 /**
  * Factory function to create a ChildrenField interactable
- * @param fieldName The name of the field
- * @param objectType The type of object this reference field is for
- * @param parentElement Optional parent element to scope the field within
+ * @param options Options for creating the children field interactable
  * @returns A ChildrenField interactable
  */
 export function childrenField(
-  fieldName: string,
-  objectType: string,
-  parentElement?: () => Cypress.Chainable<JQuery<HTMLElement>>,
-  objectId?: string,
-  index?: number
+  options: ChildrenFieldInteractableOptions
 ): ChildrenFieldInteractable {
-  return new ChildrenFieldInteractable(
-    fieldName,
-    objectType,
-    parentElement,
-    objectId,
-    index
-  );
+  return new ChildrenFieldInteractable(options);
 }
 
 // Export the factory function and class

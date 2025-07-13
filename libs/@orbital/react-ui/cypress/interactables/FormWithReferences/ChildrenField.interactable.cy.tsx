@@ -99,7 +99,10 @@ describe("ChildrenField.interactable", () => {
 
     mount(<TestForm onChange={onChangeSpy} />);
 
-    const field = childrenField("childrenIds", "Node");
+    const field = childrenField({
+      fieldName: "childrenIds",
+      objectType: "Node",
+    });
 
     field.selectById(["node2", "node3"]);
 
@@ -120,7 +123,10 @@ describe("ChildrenField.interactable", () => {
   it("should handle disabled state", () => {
     mount(<TestForm disabled={true} initialValue={["node1", "node2"]} />);
 
-    const field = childrenField("childrenIds", "Node");
+    const field = childrenField({
+      fieldName: "childrenIds",
+      objectType: "Node",
+    });
 
     field.isDisabled().should("be.true");
     field.getSelectedValues().should("deep.equal", ["node1", "node2"]);
@@ -143,7 +149,10 @@ describe("ChildrenField.interactable", () => {
   it("should handle required state", () => {
     mount(<TestForm required={true} />);
 
-    const field = childrenField("childrenIds", "Node");
+    const field = childrenField({
+      fieldName: "childrenIds",
+      objectType: "Node",
+    });
 
     field.isRequired().should("be.true");
   });
@@ -155,7 +164,10 @@ describe("ChildrenField.interactable", () => {
       <TestForm initialValue={["node1", "node2"]} onChange={onChangeSpy} />
     );
 
-    const field = childrenField("childrenIds", "Node");
+    const field = childrenField({
+      fieldName: "childrenIds",
+      objectType: "Node",
+    });
 
     field.getSelectedValues().should("deep.equal", ["node1", "node2"]);
 
@@ -180,7 +192,10 @@ describe("ChildrenField.interactable", () => {
     // Mount with currentNodeId to simulate filtering out the current node
     mount(<TestForm currentNodeId="node1" />);
 
-    const field = childrenField("childrenIds", "Node");
+    const field = childrenField({
+      fieldName: "childrenIds",
+      objectType: "Node",
+    });
 
     // Open the dropdown and verify node1 is not in the options
     field.openDropdown();
@@ -218,7 +233,10 @@ describe("ChildrenField.interactable", () => {
 
     mount(<TestFormNoOptions />);
 
-    const field = childrenField("childrenIds", "Node");
+    const field = childrenField({
+      fieldName: "childrenIds",
+      objectType: "Node",
+    });
 
     // Field should be disabled when no options are available
     field.isDisabled().should("be.true");
@@ -267,13 +285,17 @@ describe("ChildrenField.interactable", () => {
     mount(<TestFormWithMultipleFields />);
 
     // Create field interactables with different parent elements
-    const firstField = childrenField("childrenIds", "Node", () =>
-      cy.get('[data-testid="first-container"]')
-    );
+    const firstField = childrenField({
+      fieldName: "childrenIds",
+      objectType: "Node",
+      parentElement: () => cy.get('[data-testid="first-container"]'),
+    });
 
-    const secondField = childrenField("childrenIds", "Node", () =>
-      cy.get('[data-testid="second-container"]')
-    );
+    const secondField = childrenField({
+      fieldName: "childrenIds",
+      objectType: "Node",
+      parentElement: () => cy.get('[data-testid="second-container"]'),
+    });
 
     // Verify each field has the correct values
     firstField
@@ -308,7 +330,10 @@ describe("ChildrenField.interactable", () => {
       </ObjectSchemaProvider>
     );
 
-    const field = childrenField("childrenIds", "Node");
+    const field = childrenField({
+      fieldName: "childrenIds",
+      objectType: "Node",
+    });
 
     // Manually add error class and message to simulate error state
     field
@@ -438,18 +463,18 @@ describe("Multiple ChildrenFields on the same page", () => {
     const node2Container = () => cy.get('[data-testid="node2-container"]');
 
     // Create field interactables with the same object type but different IDs
-    const node1Field = childrenField(
-      "childrenIds",
-      "Node",
-      node1Container,
-      "node-1"
-    );
-    const node2Field = childrenField(
-      "childrenIds",
-      "Node",
-      node2Container,
-      "node-2"
-    );
+    const node1Field = childrenField({
+      fieldName: "childrenIds",
+      objectType: "Node",
+      parentElement: node1Container,
+      objectId: "node-1",
+    });
+    const node2Field = childrenField({
+      fieldName: "childrenIds",
+      objectType: "Node",
+      parentElement: node2Container,
+      objectId: "node-2",
+    });
 
     // Verify each field has the correct values
     cy.wait(100); // Wait for the component to fully render
@@ -557,18 +582,18 @@ describe("Multiple ChildrenFields on the same page", () => {
     const areaContainer = () => cy.get('[data-testid="area-container"]');
 
     // Create field interactables with different object types but the same ID
-    const nodeField = childrenField(
-      "childrenIds",
-      "Node",
-      nodeContainer,
-      "shared-id-123"
-    );
-    const areaField = childrenField(
-      "childrenIds",
-      "Area",
-      areaContainer,
-      "shared-id-123"
-    );
+    const nodeField = childrenField({
+      fieldName: "childrenIds",
+      objectType: "Node",
+      parentElement: nodeContainer,
+      objectId: "shared-id-123",
+    });
+    const areaField = childrenField({
+      fieldName: "childrenIds",
+      objectType: "Area",
+      parentElement: areaContainer,
+      objectId: "shared-id-123",
+    });
 
     // Verify each field has the correct values
     cy.wait(100); // Wait for the component to fully render
@@ -683,18 +708,18 @@ describe("Multiple ChildrenFields on the same page", () => {
     mount(<TestFormWithMultipleFields />);
 
     // Create field interactables with parent elements and the same objectId
-    const field1 = childrenField(
-      "childrenIds",
-      "Node",
-      () => cy.get('[data-testid="container-1"]'),
-      "node-id-1"
-    );
-    const field2 = childrenField(
-      "childrenIds",
-      "Node",
-      () => cy.get('[data-testid="container-2"]'),
-      "node-id-1"
-    );
+    const field1 = childrenField({
+      fieldName: "childrenIds",
+      objectType: "Node",
+      parentElement: () => cy.get('[data-testid="container-1"]'),
+      objectId: "node-id-1",
+    });
+    const field2 = childrenField({
+      fieldName: "childrenIds",
+      objectType: "Node",
+      parentElement: () => cy.get('[data-testid="container-2"]'),
+      objectId: "node-id-1",
+    });
 
     // Verify each field has the correct values
     cy.wait(100); // Wait for the component to fully render
@@ -799,20 +824,20 @@ describe("Multiple ChildrenFields on the same page", () => {
     mount(<TestFormWithDuplicateFields />);
 
     // Create field interactables with the same object type and ID but different indices
-    const field1 = childrenField(
-      "childrenIds",
-      "Node",
-      () => cy.get('[data-testid="field-1"]'),
-      "duplicate-id",
-      0
-    );
-    const field2 = childrenField(
-      "childrenIds",
-      "Node",
-      () => cy.get('[data-testid="field-2"]'),
-      "duplicate-id",
-      0
-    );
+    const field1 = childrenField({
+      fieldName: "childrenIds",
+      objectType: "Node",
+      parentElement: () => cy.get('[data-testid="field-1"]'),
+      objectId: "duplicate-id",
+      index: 0,
+    });
+    const field2 = childrenField({
+      fieldName: "childrenIds",
+      objectType: "Node",
+      parentElement: () => cy.get('[data-testid="field-2"]'),
+      objectId: "duplicate-id",
+      index: 0,
+    });
 
     // Verify each field has the correct values
     field1
@@ -913,12 +938,11 @@ describe("Multiple ChildrenFields on the same page", () => {
 
     // Try to create a field interactable without an index
     // This should throw an error because multiple elements match
-    const field = childrenField(
-      "childrenIds",
-      "Node",
-      undefined,
-      "duplicate-id"
-    );
+    const field = childrenField({
+      fieldName: "childrenIds",
+      objectType: "Node",
+      objectId: "duplicate-id",
+    });
 
     // Attempt to interact with the field, which should trigger the error
     field.getElement();

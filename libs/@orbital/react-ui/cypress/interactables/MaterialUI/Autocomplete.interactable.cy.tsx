@@ -17,6 +17,15 @@ const options = [
   "Last option",
 ];
 
+// Options with IDs for testing ID-based selection
+const optionsWithIds = [
+  { id: "id1", label: "Option with ID 1" },
+  { id: "id2", label: "Option with ID 2" },
+  { id: "id3", label: "Option with ID 3" },
+  { id: "id4", label: "Another option with ID" },
+  { id: "id5", label: "Last option with ID" },
+];
+
 // Async options for testing
 const asyncOptions = [
   "Async Option 1",
@@ -54,6 +63,10 @@ const TestAutocompletePageComponent = () => {
 
   // Large options autocomplete
   const [largeValue, setLargeValue] = useState<string | null>(null);
+
+  // Options with IDs autocomplete states
+  const [singleIdValue, setSingleIdValue] = useState<any>(null);
+  const [multipleIdValue, setMultipleIdValue] = useState<any[]>([]);
 
   // Function to simulate async loading
   const loadAsyncOptions = () => {
@@ -254,6 +267,61 @@ const TestAutocompletePageComponent = () => {
         />
         <Box sx={{ mt: 1 }}>
           <Typography>Large selected value: {largeValue || "None"}</Typography>
+        </Box>
+      </Box>
+
+      {/* Single selection autocomplete with options that have IDs */}
+      <Box sx={{ my: 2 }}>
+        <Typography variant="h6">Single Selection with IDs</Typography>
+        <Autocomplete
+          data-testid="id-single-autocomplete"
+          options={optionsWithIds}
+          getOptionLabel={(option) => option.label}
+          value={singleIdValue}
+          onChange={(_, newValue) => setSingleIdValue(newValue)}
+          renderInput={(params) => (
+            <TextField {...params} label="Select an option with ID" />
+          )}
+          renderOption={(props, option) => (
+            <li {...props} key={option.id} data-id={option.id}>
+              {option.label}
+            </li>
+          )}
+        />
+        <Box sx={{ mt: 1 }}>
+          <Typography>
+            Selected value with ID:{" "}
+            {singleIdValue ? singleIdValue.label : "None"}
+          </Typography>
+        </Box>
+      </Box>
+
+      {/* Multiple selection autocomplete with options that have IDs */}
+      <Box sx={{ my: 2 }}>
+        <Typography variant="h6">Multiple Selection with IDs</Typography>
+        <Autocomplete
+          data-testid="id-multiple-autocomplete"
+          multiple
+          options={optionsWithIds}
+          getOptionLabel={(option) => option.label}
+          value={multipleIdValue}
+          onChange={(_, newValue) => setMultipleIdValue(newValue)}
+          renderInput={(params) => (
+            <TextField {...params} label="Select multiple options with IDs" />
+          )}
+          renderOption={(props, option) => (
+            <li {...props} key={option.id} data-id={option.id}>
+              {option.label}
+            </li>
+          )}
+        />
+        <Box sx={{ mt: 1 }}>
+          <Typography>
+            Selected values with IDs:{" "}
+            {multipleIdValue.length
+              ? multipleIdValue.map((v) => v.label).join(", ")
+              : "None"}
+          </Typography>
         </Box>
       </Box>
     </Box>
@@ -865,6 +933,75 @@ describe("AutocompleteInteractable", () => {
 
       // The label should be empty string since there's no label
       noLabelAutocomplete.label().should("eq", "");
+    });
+  });
+
+  describe("ID-based selection functionality", () => {
+    it("should find an option by ID", () => {
+      const autocomplete = new TestAutocompleteInteractable(
+        "id-single-autocomplete"
+      );
+
+      // Open the autocomplete
+      autocomplete.open();
+
+      // Check that itemById can find the option
+      autocomplete.itemById("id2").should("exist");
+      autocomplete.itemById("id2").should("contain", "Option with ID 2");
+    });
+
+    it("should select an option by ID in single selection mode", () => {
+      const autocomplete = new TestAutocompleteInteractable(
+        "id-single-autocomplete"
+      );
+
+      // Select by ID
+      autocomplete.selectById("id3");
+
+      // Verify the selection was successful
+      cy.contains("Selected value with ID: Option with ID 3").should("exist");
+
+      // Autocomplete should be closed after selection
+      autocomplete.isClosed().should("be.true");
+    });
+
+    it("should select multiple options by ID in multiple selection mode", () => {
+      const autocomplete = new TestAutocompleteInteractable(
+        "id-multiple-autocomplete"
+      );
+
+      // Select multiple options by ID
+      autocomplete.selectById(["id1", "id4", "id5"]);
+
+      // Verify the selections were successful
+      cy.contains(
+        "Selected values with IDs: Option with ID 1, Another option with ID, Last option with ID"
+      ).should("exist");
+    });
+
+    it("should handle multiple autocompletes with ID-based selection independently", () => {
+      const singleIdAutocomplete = new TestAutocompleteInteractable(
+        "id-single-autocomplete"
+      );
+      const multipleIdAutocomplete = new TestAutocompleteInteractable(
+        "id-multiple-autocomplete"
+      );
+
+      // Select from single selection autocomplete
+      singleIdAutocomplete.selectById("id2");
+      cy.contains("Selected value with ID: Option with ID 2").should("exist");
+
+      // Select from multiple selection autocomplete
+      multipleIdAutocomplete.selectById(["id3", "id5"]);
+      cy.contains(
+        "Selected values with IDs: Option with ID 3, Last option with ID"
+      ).should("exist");
+
+      // Verify both selections are maintained
+      cy.contains("Selected value with ID: Option with ID 2").should("exist");
+      cy.contains(
+        "Selected values with IDs: Option with ID 3, Last option with ID"
+      ).should("exist");
     });
   });
 });

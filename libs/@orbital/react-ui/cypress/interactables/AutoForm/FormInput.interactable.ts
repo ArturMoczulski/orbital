@@ -3,35 +3,31 @@
 
 /// <reference types="cypress" />
 
-import { CypressInteractable } from "../Cypress.interactable";
+import {
+  CypressInteractable,
+  CypressInteractableOptions,
+} from "../Cypress.interactable";
 
 /**
  * Base class for all form input interactables
  */
+/**
+ * Options for FormInputInteractable
+ */
+export interface FormInputInteractableOptions
+  extends CypressInteractableOptions {
+  /**
+   * The name of the form field
+   */
+  fieldName?: string;
+}
+
 export abstract class FormInputInteractable<T> extends CypressInteractable {
   protected fieldName?: string;
 
-  constructor(
-    fieldNameOrOptions?:
-      | string
-      | {
-          fieldName: string;
-          dataTestId?: string;
-          parentElement?: () => Cypress.Chainable<JQuery<HTMLElement>>;
-        },
-    parentElement?: () => Cypress.Chainable<JQuery<HTMLElement>>
-  ) {
-    // Handle string parameter for backward compatibility
-    if (typeof fieldNameOrOptions === "string") {
-      super({
-        dataTestId: fieldNameOrOptions,
-        parentElement,
-      });
-      this.fieldName = fieldNameOrOptions;
-    } else {
-      super(fieldNameOrOptions || {});
-      this.fieldName = fieldNameOrOptions?.fieldName;
-    }
+  constructor(options: FormInputInteractableOptions) {
+    super(options);
+    this.fieldName = options.fieldName;
   }
 
   selector() {
@@ -175,6 +171,9 @@ export abstract class FormInputInteractable<T> extends CypressInteractable {
  * Text input interactable
  */
 export class TextInputInteractable extends FormInputInteractable<string> {
+  constructor(options: FormInputInteractableOptions) {
+    super(options);
+  }
   /**
    * Set a value on the text input
    */
@@ -187,6 +186,9 @@ export class TextInputInteractable extends FormInputInteractable<string> {
  * Number input interactable
  */
 export class NumberInputInteractable extends FormInputInteractable<number> {
+  constructor(options: FormInputInteractableOptions) {
+    super(options);
+  }
   /**
    * Set a value on the number input
    */
@@ -199,6 +201,9 @@ export class NumberInputInteractable extends FormInputInteractable<number> {
  * Checkbox input interactable
  */
 export class CheckboxInputInteractable extends FormInputInteractable<boolean> {
+  constructor(options: FormInputInteractableOptions) {
+    super(options);
+  }
   /**
    * Set a value on the checkbox
    */
@@ -229,6 +234,9 @@ export class CheckboxInputInteractable extends FormInputInteractable<boolean> {
  * Radio input interactable
  */
 export class RadioInputInteractable extends FormInputInteractable<string> {
+  constructor(options: FormInputInteractableOptions) {
+    super(options);
+  }
   /**
    * Set a value on the radio button
    */
@@ -241,6 +249,9 @@ export class RadioInputInteractable extends FormInputInteractable<string> {
  * Select input interactable
  */
 export class SelectInputInteractable extends FormInputInteractable<string> {
+  constructor(options: FormInputInteractableOptions) {
+    super(options);
+  }
   /**
    * Set a value on the select dropdown
    */
@@ -260,33 +271,26 @@ export class SelectInputInteractable extends FormInputInteractable<string> {
 
 /**
  * Factory function to create an input field interactable based on the input type
- * @param fieldName The name of the field
- * @param parentElement Optional parent element to scope the field within
- * @param customInteractable Optional custom interactable constructor to use instead of auto-detection
- * @returns A specialized input field interactable based on the input type
- */
-/**
- * Factory function to create an input field interactable based on the input type
- * @param fieldName The name of the field
- * @param parentElement Optional parent element to scope the field within
+ * @param options Options for creating the input field interactable
  * @param customInteractable Optional custom interactable constructor to use instead of auto-detection
  * @returns A specialized input field interactable based on the input type
  */
 export function inputField<
   T extends FormInputInteractable<any> = FormInputInteractable<any>,
 >(
-  fieldName: string,
-  parentElement?: () => Cypress.Chainable<JQuery<HTMLElement>>,
-  customInteractable?: new (
-    fieldName: string,
-    parentElement?: () => Cypress.Chainable<JQuery<HTMLElement>>
-  ) => T
+  options: FormInputInteractableOptions,
+  customInteractable?: new (options: FormInputInteractableOptions) => T
 ): Cypress.Chainable<T> {
   // If a custom interactable constructor is provided, use it
   if (customInteractable) {
-    return cy.wrap(
-      new customInteractable(fieldName, parentElement)
-    ) as Cypress.Chainable<T>;
+    return cy.wrap(new customInteractable(options)) as Cypress.Chainable<T>;
+  }
+
+  const fieldName = options.fieldName;
+  const parentElement = options.parentElement;
+
+  if (!fieldName) {
+    throw new Error("fieldName is required for inputField");
   }
 
   // Create a simple selector to find the element
@@ -328,6 +332,10 @@ export function createInteractableFromInput<
   fieldName: string,
   parentElement?: () => Cypress.Chainable<JQuery<HTMLElement>>
 ): Cypress.Chainable<T> {
+  const options: FormInputInteractableOptions = {
+    fieldName,
+    parentElement,
+  };
   // Check for data-testid on the element itself
   let dataTestId = $el.attr("data-testid");
   let objectType: string = "";
@@ -353,7 +361,11 @@ export function createInteractableFromInput<
       BelongsToFieldInteractable,
     } = require("./../FormWithReferences/BelongsToField.interactable");
     return cy.wrap(
-      new BelongsToFieldInteractable(fieldName, objectType, parentElement)
+      new BelongsToFieldInteractable({
+        fieldName,
+        objectType,
+        parentElement,
+      })
     ) as unknown as Cypress.Chainable<T>;
   }
 
@@ -362,7 +374,11 @@ export function createInteractableFromInput<
       HasManyFieldInteractable,
     } = require("./../FormWithReferences/HasManyField.interactable");
     return cy.wrap(
-      new HasManyFieldInteractable(fieldName, objectType, parentElement)
+      new HasManyFieldInteractable({
+        fieldName,
+        objectType,
+        parentElement,
+      })
     ) as unknown as Cypress.Chainable<T>;
   }
 
@@ -371,7 +387,10 @@ export function createInteractableFromInput<
   const inputType = $el.attr("type")?.toLowerCase();
 
   if (tagName === "select") {
-    const interactable = new SelectInputInteractable(fieldName, parentElement);
+    const interactable = new SelectInputInteractable({
+      fieldName,
+      parentElement,
+    });
     return cy.wrap(interactable) as unknown as Cypress.Chainable<T>;
   }
 
@@ -379,23 +398,29 @@ export function createInteractableFromInput<
     let interactable: FormInputInteractable<any>;
     switch (inputType) {
       case "checkbox":
-        interactable = new CheckboxInputInteractable(fieldName, parentElement);
+        interactable = new CheckboxInputInteractable({
+          fieldName,
+          parentElement,
+        });
         break;
       case "radio":
-        interactable = new RadioInputInteractable(fieldName, parentElement);
+        interactable = new RadioInputInteractable({ fieldName, parentElement });
         break;
       case "number":
-        interactable = new NumberInputInteractable(fieldName, parentElement);
+        interactable = new NumberInputInteractable({
+          fieldName,
+          parentElement,
+        });
         break;
       default:
-        interactable = new TextInputInteractable(fieldName, parentElement);
+        interactable = new TextInputInteractable({ fieldName, parentElement });
         break;
     }
     return cy.wrap(interactable) as unknown as Cypress.Chainable<T>;
   }
 
   // Default to text input for other element types
-  const interactable = new TextInputInteractable(fieldName, parentElement);
+  const interactable = new TextInputInteractable({ fieldName, parentElement });
   return cy.wrap(interactable) as unknown as Cypress.Chainable<T>;
 }
 

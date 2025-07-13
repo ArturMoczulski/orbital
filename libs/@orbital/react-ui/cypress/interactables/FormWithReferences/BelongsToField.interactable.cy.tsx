@@ -95,7 +95,10 @@ describe("BelongsToField.interactable", () => {
 
     mount(<TestForm onChange={onChangeSpy} />);
 
-    const field = belongsToField("worldId", "World");
+    const field = belongsToField({
+      fieldName: "worldId",
+      objectType: "World",
+    });
 
     // Try selecting by visible text instead of ID
     field.select("Test World 2");
@@ -107,7 +110,10 @@ describe("BelongsToField.interactable", () => {
   it("should handle required state", () => {
     mount(<TestForm required={true} />);
 
-    const field = belongsToField("worldId", "World");
+    const field = belongsToField({
+      fieldName: "worldId",
+      objectType: "World",
+    });
 
     field.isRequired().should("be.true");
   });
@@ -117,7 +123,10 @@ describe("BelongsToField.interactable", () => {
 
     mount(<TestForm initialValue="world1" onChange={onChangeSpy} />);
 
-    const field = belongsToField("worldId", "World");
+    const field = belongsToField({
+      fieldName: "worldId",
+      objectType: "World",
+    });
 
     field.getValue().should("eq", "Test World 1");
 
@@ -149,7 +158,10 @@ describe("BelongsToField.interactable", () => {
 
     mount(<TestFormNoOptions />);
 
-    const field = belongsToField("worldId", "World");
+    const field = belongsToField({
+      fieldName: "worldId",
+      objectType: "World",
+    });
 
     // When there are no options, the field should be disabled and show a helper text
     field.isDisabled().should("be.true");
@@ -200,13 +212,17 @@ describe("BelongsToField.interactable", () => {
     mount(<TestFormWithMultipleFields />);
 
     // Create field interactables with different parent elements
-    const firstField = belongsToField("worldId", "World", () =>
-      cy.get('[data-testid="first-container"]')
-    );
+    const firstField = belongsToField({
+      fieldName: "worldId",
+      objectType: "World",
+      parentElement: () => cy.get('[data-testid="first-container"]'),
+    });
 
-    const secondField = belongsToField("worldId", "World", () =>
-      cy.get('[data-testid="second-container"]')
-    );
+    const secondField = belongsToField({
+      fieldName: "worldId",
+      objectType: "World",
+      parentElement: () => cy.get('[data-testid="second-container"]'),
+    });
 
     // Verify each field has the correct value
     firstField.getValue().should("eq", "Test World 1");
@@ -216,7 +232,10 @@ describe("BelongsToField.interactable", () => {
   it("should handle error state", () => {
     mount(<TestForm error={true} errorMessage="Invalid world" />);
 
-    const field = belongsToField("worldId", "World");
+    const field = belongsToField({
+      fieldName: "worldId",
+      objectType: "World",
+    });
 
     field.hasError().should("be.true");
     // Use getError() instead of getErrorMessage() to avoid the .MuiFormControl-root selector issue

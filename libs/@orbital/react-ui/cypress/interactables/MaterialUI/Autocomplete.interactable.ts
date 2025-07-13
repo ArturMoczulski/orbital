@@ -46,17 +46,16 @@ export class AutocompleteInteractable
     });
 
     const popperOptions = {
-      triggerElement: undefined,
+      triggerElement: options.triggerElement,
     } as PopperInteractableOptions;
 
-    if (!options.triggerElement) {
+    if (!popperOptions.triggerElement) {
       popperOptions.triggerElement = () => {
         return this.get().find("input") as unknown as Cypress.Chainable<
           JQuery<HTMLElement>
         >;
       };
     }
-
     // Create internal PopperInteractable instance
     this.popper = new PopperInteractable({
       ...popperOptions,
@@ -198,6 +197,45 @@ export class AutocompleteInteractable
   }
 
   /**
+   * Gets a specific option element by its ID attribute
+   * @param id - The ID to search for
+   * @returns Cypress.Chainable<JQuery<HTMLElement>> - the found option element
+   */
+  itemById(id: string): Cypress.Chainable<JQuery<HTMLElement>> {
+    // Create a new promise that will resolve to the correct type
+    return cy.wrap(
+      new Cypress.Promise<JQuery<HTMLElement>>((resolve) => {
+        this.items().then((items) => {
+          // First try to find by data-id attribute
+          const byDataId = items.filter(`[data-id="${id}"]`);
+          if (byDataId.length > 0) {
+            resolve(byDataId.first());
+            return;
+          }
+
+          // Then try to find by id attribute
+          const byId = items.filter(`[id="${id}"]`);
+          if (byId.length > 0) {
+            resolve(byId.first());
+            return;
+          }
+
+          // Finally try to find by value attribute
+          const byValue = items.filter(`[value="${id}"]`);
+          if (byValue.length > 0) {
+            resolve(byValue.first());
+            return;
+          }
+
+          // If no match found, log a warning and resolve with an empty jQuery object
+          cy.log(`Warning: No option with ID "${id}" found`);
+          resolve(Cypress.$());
+        });
+      })
+    );
+  }
+
+  /**
    * Selects an option or multiple options from the autocomplete by text content
    * @param text - The text content of the option(s) to select (string or array of strings)
    * @returns this - for method chaining
@@ -234,6 +272,72 @@ export class AutocompleteInteractable
             this.textField().blur();
           }
         });
+      });
+    }
+
+    return this;
+  }
+
+  /**
+   * Selects an option or multiple options from the autocomplete by ID
+   * @param id - The ID of the option(s) to select (string or array of strings)
+   * @returns this - for method chaining
+   */
+  selectById(id: string | string[]): this {
+    if (Array.isArray(id)) {
+      // Handle multiple selections
+      id.forEach((itemId) => {
+        this.open(); // Make sure the dropdown is open for each selection
+
+        // Check if the element exists before clicking
+        this.itemById(itemId).then(($el) => {
+          if ($el && $el.length > 0) {
+            // Element exists, click it
+            cy.wrap($el).click();
+            cy.wait(100); // Wait for the selection to be processed
+          } else {
+            // Element doesn't exist, log a warning
+            cy.log(`Warning: Cannot select non-existent ID "${itemId}"`);
+            // Close the dropdown since we're not selecting anything
+            this.close();
+          }
+        });
+      });
+    } else {
+      // Handle single selection
+      this.open(); // Make sure the dropdown is open
+
+      // Check if the element exists before clicking
+      this.itemById(id).then(($el) => {
+        if ($el && $el.length > 0) {
+          // Element exists, click it
+          cy.wrap($el).click();
+          cy.wait(100); // Wait for the selection to be processed
+
+          // For single selection, check if the field is focused before blurring
+          cy.document().then((doc) => {
+            this.textField().then(($field) => {
+              // Check if any element in the field is the active element
+              const activeElement = doc.activeElement;
+              const fieldElements = $field.toArray();
+
+              // Type-safe check if the field is focused
+              const isFieldFocused = fieldElements.some(
+                (el) => el === activeElement
+              );
+
+              if (isFieldFocused) {
+                // Only blur if the field is focused
+                this.textField().blur();
+              }
+            });
+          });
+        } else {
+          // Element doesn't exist, log a warning
+          cy.log(`Warning: Cannot select non-existent ID "${id}"`);
+          // Close the dropdown since we're not selecting anything
+          this.close();
+        }
       });
     }
 
@@ -295,60 +399,42 @@ export class AutocompleteInteractable
    * @returns Cypress.Chainable<string | string[]> - chainable that resolves to the selected text or array of selected texts
    */
   selected(): Cypress.Chainable<string | string[]> {
-    // Create a new chainable that will resolve to either a string or string[]
-    return cy.wrap(null).then(() => {
-      // Check if this is a multiple selection autocomplete
-      return this.isMultipleSelection().then((isMultiple) => {
-        if (isMultiple) {
-          // For multiple selection, check if we've just cleared the selection
-          return this.get().then(($el) => {
-            // Check if there are any chips
-            const hasChips = $el.find(".MuiChip-root").length > 0;
-
-            // If no chips are found, return an empty array
-            if (!hasChips) {
-              // This is critical for the "should clear all selections in multiple selection mode" test
-              // We must return an empty array, not an empty string or a wrapped array
-              return [] as string[];
-            }
-
-            // Otherwise, get all chips and collect their labels
-            return this.chips().then((chips) => {
-              if (chips.length === 0) {
-                // Return an empty array with explicit type assertion
-                return [] as string[];
+    // Use a completely different approach with explicit Promise
+    return cy.wrap(
+      new Cypress.Promise<string | string[]>((resolve) => {
+        // First determine if this is a multiple selection
+        this.isMultipleSelection().then((isMultiple) => {
+          if (isMultiple) {
+            // For multiple selection
+            this.get().then(($el) => {
+              // Check if there are any chips
+              if ($el.find(".MuiChip-root").length === 0) {
+                resolve([]);
+                return;
               }
-              return this.chipLabels(chips);
-            });
-          });
-        } else {
-          // For single selection, get the input value
-          return this.getTriggerElement().then(($input) => {
-            const inputValue = $input.val();
 
-            // Log the input value for debugging
-            cy.log(`Autocomplete input value: ${JSON.stringify(inputValue)}`);
+              // Get all chips and their labels
+              this.chips().then((chips) => {
+                if (chips.length === 0) {
+                  resolve([]);
+                  return;
+                }
 
-            // If the input has no value, try to get the displayed text from the component
-            if (
-              !inputValue ||
-              (Array.isArray(inputValue) && inputValue.length === 0)
-            ) {
-              // Try to get the displayed text from the component
-              return this.get()
-                .find(".MuiAutocomplete-input")
-                .then(($el) => {
-                  const displayText = $el.text();
-                  cy.log(`Autocomplete display text: ${displayText}`);
-                  return displayText || "";
+                this.chipLabels(chips).then((labels) => {
+                  resolve(labels);
                 });
-            }
-
-            return inputValue as string;
-          });
-        }
-      });
-    }) as unknown as Cypress.Chainable<string | string[]>;
+              });
+            });
+          } else {
+            // For single selection
+            this.getTriggerElement().then(($input) => {
+              const value = $input.val();
+              resolve(value ? (value as string) : "");
+            });
+          }
+        });
+      })
+    );
   }
 
   /**

@@ -3,7 +3,10 @@
 
 /// <reference types="cypress" />
 
-import { ReferenceFieldInteractable } from "./ReferenceField.interactable";
+import {
+  ReferenceFieldInteractable,
+  ReferenceFieldInteractableOptions,
+} from "./ReferenceField.interactable";
 
 /**
  * BelongsToFieldInteractable class represents a BelongsToField component
@@ -12,57 +15,38 @@ import { ReferenceFieldInteractable } from "./ReferenceField.interactable";
  * Since BelongsToField is a wrapper around ReferenceField with multiple=false,
  * this interactable extends ReferenceFieldInteractable with minimal overrides.
  */
+/**
+ * Options for BelongsToFieldInteractable
+ */
+export interface BelongsToFieldInteractableOptions
+  extends ReferenceFieldInteractableOptions {
+  // No additional options needed for BelongsToField, it inherits all from ReferenceField
+}
+
 export class BelongsToFieldInteractable extends ReferenceFieldInteractable {
   /**
    * Constructor for BelongsToFieldInteractable
-   * Passes "BelongsToField" as the dataTestId to the parent constructor
-   * This matches the data-testid attribute set on the component
+   * @param options Options for creating the BelongsToField interactable
    */
-  constructor(
-    fieldName: string,
-    objectType: string,
-    parentElement?: () => Cypress.Chainable<JQuery<HTMLElement>>,
-    objectId?: string,
-    index?: number
-  ) {
-    // Call parent constructor with the fixed dataTestId
-    super("BelongsToField", objectType, parentElement, objectId, index);
-  }
-
-  /**
-   * Override the selector to use both data-testid and data-field-name attributes
-   * This ensures we can uniquely identify a specific BelongsToField when multiple exist
-   */
-  selector() {
-    return `[data-testid="BelongsToField"][data-field-name="${this.fieldName}"]`;
+  constructor(options: BelongsToFieldInteractableOptions) {
+    // Call parent constructor with the options
+    super({
+      ...options,
+      fieldName: options.fieldName,
+      dataTestId: "BelongsToField", // Override dataTestId with fixed value
+    });
   }
 }
 
 /**
  * Factory function to create a BelongsToField interactable
- * @param fieldName The name of the field
- * @param objectType The type of object this reference field is for
- * @param parentElement Optional parent element to scope the field within
- * @param objectId Optional object ID to further scope the field
- * @param index Optional index for when multiple fields with the same name exist
+ * @param options Options for creating the BelongsToField interactable
  * @returns A BelongsToField interactable
  */
 export function belongsToField(
-  fieldName: string,
-  objectType: string,
-  parentElement?: () => Cypress.Chainable<JQuery<HTMLElement>>,
-  objectId?: string,
-  index?: number
+  options: BelongsToFieldInteractableOptions
 ): BelongsToFieldInteractable {
-  // We still pass the fieldName to the constructor even though it's not used for the selector
-  // This maintains the API compatibility and the fieldName might be used for other purposes
-  return new BelongsToFieldInteractable(
-    fieldName,
-    objectType,
-    parentElement,
-    objectId,
-    index
-  );
+  return new BelongsToFieldInteractable(options);
 }
 
 // Export the factory function and class

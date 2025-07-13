@@ -130,21 +130,26 @@ class FormWithReferencesInteractable<
                         cy.log(
                           `Creating ReferenceSingleFieldInteractable for "${prop}"`
                         );
-                        interactable = belongsToField(
-                          prop,
-                          this.objectType,
-                          () => this.get({})
-                        );
+                        interactable = belongsToField({
+                          fieldName: prop,
+                          objectType: this.objectType,
+                          parentElement: () => this.get({}),
+                        });
                       } else if (isArrayRef) {
                         cy.log(
                           `Creating ReferenceArrayFieldInteractable for "${prop}"`
                         );
-                        interactable = hasManyField(prop, this.objectType, () =>
-                          this.get({})
-                        );
+                        interactable = hasManyField({
+                          fieldName: prop,
+                          objectType: this.objectType,
+                          parentElement: () => this.get({}),
+                        });
                       } else {
                         cy.log(`Creating standard input field for "${prop}"`);
-                        interactable = inputField(prop, () => this.get({}));
+                        interactable = inputField({
+                          fieldName: prop,
+                          parentElement: () => this.get({}),
+                        });
                       }
 
                       // Call the method on the interactable with the provided arguments

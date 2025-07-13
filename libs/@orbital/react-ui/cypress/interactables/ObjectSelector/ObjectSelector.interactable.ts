@@ -3,7 +3,10 @@
 
 /// <reference types="cypress" />
 
-import { FormInputInteractable } from "../AutoForm/FormInput.interactable";
+import {
+  FormInputInteractable,
+  FormInputInteractableOptions,
+} from "../AutoForm/FormInput.interactable";
 import { Listable, Selectable } from "../interfaces/Listable";
 import { Loadable } from "../interfaces/Loadable";
 import { Openable } from "../interfaces/Openable";
@@ -16,6 +19,37 @@ import { ChipInteractable } from "../MaterialUI/Chip.interactable";
  * ObjectSelectorInteractable class extends FormInputInteractable
  * and delegates to AutocompleteInteractable for functionality.
  */
+/**
+ * Options for ObjectSelectorInteractable
+ */
+export interface ObjectSelectorInteractableOptions
+  extends FormInputInteractableOptions {
+  /**
+   * Optional prefix for the data-testid
+   */
+  prefix?: string;
+
+  /**
+   * Flag indicating if this is a multi-select field
+   */
+  multiple?: boolean;
+
+  /**
+   * Optional type of object this selector is for
+   */
+  objectType?: string;
+
+  /**
+   * Optional ID of the object this selector is for
+   */
+  objectId?: string;
+
+  /**
+   * Optional index to use when multiple elements match the selector
+   */
+  index?: number;
+}
+
 export class ObjectSelectorInteractable
   extends FormInputInteractable<string | string[]>
   implements Openable, Listable, Selectable, Typeable, Validatable, Loadable
@@ -27,34 +61,15 @@ export class ObjectSelectorInteractable
 
   /**
    * Constructor for ObjectSelectorInteractable
-   * @param fieldName The name of the field or data-testid attribute of the component
-   * @param parentElement Optional parent element to scope the field within
-   * @param prefix Optional prefix for the data-testid (default: "")
-   * @param multiple Optional flag indicating if this is a multi-select field (default: false)
-   * @param objectType Optional type of object this selector is for
-   * @param objectId Optional ID of the object this selector is for
-   * @param index Optional index to use when multiple elements match the selector
+   * @param options Options for creating the object selector interactable
    */
-  constructor(
-    fieldName: string,
-    parentElement?: () => Cypress.Chainable<JQuery<HTMLElement>>,
-    prefix: string = "",
-    multiple: boolean = false,
-    objectType?: string,
-    objectId?: string,
-    index?: number
-  ) {
-    super(fieldName, parentElement);
-
-    // Construct the data-testid based on the parameters
-    const dataTestId = prefix ? `${prefix}-${fieldName}` : fieldName;
+  constructor(options: ObjectSelectorInteractableOptions) {
+    super(options);
 
     // Create internal AutocompleteInteractable instance
     this.autocomplete = new AutocompleteInteractable({
+      ...options,
       componentName: "Autocomplete",
-      dataTestId,
-      parentElement,
-      index,
     });
   }
 
@@ -213,26 +228,13 @@ export class ObjectSelectorInteractable
 
 /**
  * Factory function to create an ObjectSelector interactable
- * @param dataTestId The data-testid attribute of the component
- * @param parentElement Optional parent element to scope the field within
- * @param index Optional index to use when multiple elements match the selector
+ * @param options Options for creating the object selector interactable
  * @returns An ObjectSelector interactable
  */
 export function objectSelector(
-  dataTestId: string,
-  parentElement?: () => Cypress.Chainable<JQuery<HTMLElement>>,
-  index?: number
+  options: ObjectSelectorInteractableOptions
 ): ObjectSelectorInteractable {
-  // Use the new constructor with default values for the additional parameters
-  return new ObjectSelectorInteractable(
-    dataTestId,
-    parentElement,
-    "",
-    false,
-    undefined,
-    undefined,
-    index
-  );
+  return new ObjectSelectorInteractable(options);
 }
 
 // Export the factory function and class

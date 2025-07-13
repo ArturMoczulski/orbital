@@ -137,14 +137,20 @@ describe("ReferenceField", () => {
     it("should use provided label when available", () => {
       mount(<SingleSelectTestComponent customLabel="Custom User Label" />);
 
-      const field = referenceField("ParentField", "Blog");
+      const field = referenceField({
+        fieldName: "ParentField",
+        objectType: "Blog",
+      });
       field.label().should("contain", "Custom User Label");
     });
 
     it("should use reference name when no label is provided", () => {
       mount(<SingleSelectTestComponent />);
 
-      const field = referenceField("ParentField", "Blog");
+      const field = referenceField({
+        fieldName: "ParentField",
+        objectType: "Blog",
+      });
       field.label().should("contain", "User");
     });
 
@@ -221,7 +227,10 @@ describe("ReferenceField", () => {
       const onChangeSpy = cy.spy().as("onChange");
       mount(<SingleSelectTestComponent onChange={onChangeSpy} />);
 
-      const field = referenceField("ParentField", "Blog");
+      const field = referenceField({
+        fieldName: "ParentField",
+        objectType: "Blog",
+      });
       field.open();
       field.select("John Doe");
 
@@ -236,7 +245,10 @@ describe("ReferenceField", () => {
       const onChangeSpy = cy.spy().as("onChange");
       mount(<MultiSelectTestComponent onChange={onChangeSpy} />);
 
-      const field = referenceField("ChildrenField", "Blog");
+      const field = referenceField({
+        fieldName: "ChildrenField",
+        objectType: "Blog",
+      });
       field.select("First Post");
 
       // Check that onChange was called with the correct value (array)
@@ -265,7 +277,10 @@ describe("ReferenceField", () => {
         />
       );
 
-      const field = referenceField("ParentField", "Blog");
+      const field = referenceField({
+        fieldName: "ParentField",
+        objectType: "Blog",
+      });
       field.clearSelection();
 
       // Check that onChange was called with empty string
@@ -284,7 +299,10 @@ describe("ReferenceField", () => {
         />
       );
 
-      const field = referenceField("ChildrenField", "Blog");
+      const field = referenceField({
+        fieldName: "ChildrenField",
+        objectType: "Blog",
+      });
       field.clearSelection();
 
       // Check that onChange was called with empty array
@@ -301,7 +319,10 @@ describe("ReferenceField", () => {
     it("should display options from reference", () => {
       mount(<SingleSelectTestComponent />);
 
-      const field = referenceField("ParentField", "Blog");
+      const field = referenceField({
+        fieldName: "ParentField",
+        objectType: "Blog",
+      });
       field.open();
 
       // Check that all user options are displayed
@@ -417,7 +438,10 @@ describe("ReferenceField", () => {
       // The test components already use ObjectSchemaProvider, so this is already tested
       mount(<SingleSelectTestComponent />);
 
-      const field = referenceField("ParentField", "Blog");
+      const field = referenceField({
+        fieldName: "ParentField",
+        objectType: "Blog",
+      });
       field.label().should("contain", "User");
     });
   });
@@ -426,14 +450,20 @@ describe("ReferenceField", () => {
     it("should pass disabled prop to ObjectSelector", () => {
       mount(<SingleSelectTestComponent disabled={true} />);
 
-      const field = referenceField("ParentField", "Blog");
+      const field = referenceField({
+        fieldName: "ParentField",
+        objectType: "Blog",
+      });
       field.isDisabled().should("be.true");
     });
 
     it("should pass required prop to ObjectSelector", () => {
       mount(<SingleSelectTestComponent required={true} />);
 
-      const field = referenceField("ParentField", "Blog");
+      const field = referenceField({
+        fieldName: "ParentField",
+        objectType: "Blog",
+      });
       field.isRequired().should("be.true");
     });
 
