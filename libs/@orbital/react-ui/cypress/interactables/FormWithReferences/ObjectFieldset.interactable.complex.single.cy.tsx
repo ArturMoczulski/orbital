@@ -719,6 +719,478 @@ describe("Complex Object with Multiple References", () => {
     });
   });
 
+  it("works with combined BelongsTo and HasMany relationships (Organization with HQ, Parent, Departments, Employees)", () => {
+    // Create schemas with references for a complex organization
+    const locationSchema = z
+      .object({
+        id: z.string().uuid().describe("ID"),
+        name: z.string().describe("Name"),
+        address: z.string().describe("Address"),
+        country: z.string().describe("Country"),
+      })
+      .describe("Location");
+
+    const companySchema = z
+      .object({
+        id: z.string().uuid().describe("ID"),
+        name: z.string().describe("Name"),
+        industry: z.string().describe("Industry"),
+        foundedYear: z.number().describe("Founded Year"),
+      })
+      .describe("Company");
+
+    const departmentSchema = z
+      .object({
+        id: z.string().uuid().describe("ID"),
+        name: z.string().describe("Name"),
+        code: z.string().describe("Department Code"),
+        budget: z.number().optional().describe("Budget"),
+      })
+      .describe("Department");
+
+    const employeeSchema = z
+      .object({
+        id: z.string().uuid().describe("ID"),
+        name: z.string().describe("Name"),
+        position: z.string().describe("Position"),
+        email: z.string().email().optional().describe("Email"),
+      })
+      .describe("Employee");
+
+    const partnerSchema = z
+      .object({
+        id: z.string().uuid().describe("ID"),
+        name: z.string().describe("Name"),
+        type: z.string().describe("Partnership Type"),
+        contactPerson: z.string().optional().describe("Contact Person"),
+      })
+      .describe("Partner");
+
+    // Organization schema with both BelongsTo and HasMany references
+    const organizationSchema = z
+      .object({
+        name: z.string().describe("Organization Name"),
+        description: z.string().describe("Description"),
+        foundedYear: z.number().describe("Founded Year"),
+        website: z.string().describe("Website"),
+        // BelongsTo relationships
+        headquarterId: z
+          .string()
+          .uuid()
+          .reference({
+            type: RelationshipType.BELONGS_TO,
+            schema: locationSchema,
+            name: "headquarter",
+          })
+          .describe("Headquarters"),
+        parentCompanyId: z
+          .string()
+          .uuid()
+          .reference({
+            type: RelationshipType.BELONGS_TO,
+            schema: companySchema,
+            name: "parentCompany",
+          })
+          .describe("Parent Company"),
+        // HasMany relationships
+        departmentIds: z
+          .array(z.string().uuid())
+          .reference({
+            type: RelationshipType.HAS_MANY,
+            schema: departmentSchema,
+            name: "departments",
+          })
+          .describe("Departments"),
+        employeeIds: z
+          .array(z.string().uuid())
+          .reference({
+            type: RelationshipType.HAS_MANY,
+            schema: employeeSchema,
+            name: "employees",
+          })
+          .describe("Key Employees"),
+        partnerIds: z
+          .array(z.string().uuid())
+          .reference({
+            type: RelationshipType.HAS_MANY,
+            schema: partnerSchema,
+            name: "partners",
+          })
+          .describe("Partners"),
+      })
+      .describe("Organization");
+
+    // Create a bridge with references
+    const refBridge = new ZodReferencesBridge({
+      schema: organizationSchema,
+      dependencies: {
+        headquarter: [
+          {
+            id: "123e4567-e89b-12d3-a456-426614174020",
+            name: "New York Office",
+            address: "123 Broadway, New York, NY",
+            country: "USA",
+          },
+          {
+            id: "223e4567-e89b-12d3-a456-426614174020",
+            name: "London Office",
+            address: "456 Oxford Street, London",
+            country: "UK",
+          },
+          {
+            id: "323e4567-e89b-12d3-a456-426614174020",
+            name: "Tokyo Office",
+            address: "789 Shibuya, Tokyo",
+            country: "Japan",
+          },
+        ],
+        parentCompany: [
+          {
+            id: "123e4567-e89b-12d3-a456-426614174021",
+            name: "Global Holdings Inc.",
+            industry: "Conglomerate",
+            foundedYear: 1980,
+          },
+          {
+            id: "223e4567-e89b-12d3-a456-426614174021",
+            name: "Tech Ventures Ltd.",
+            industry: "Technology",
+            foundedYear: 1995,
+          },
+          {
+            id: "323e4567-e89b-12d3-a456-426614174021",
+            name: "Innovation Group",
+            industry: "Research",
+            foundedYear: 2005,
+          },
+        ],
+        departments: [
+          {
+            id: "123e4567-e89b-12d3-a456-426614174022",
+            name: "Research & Development",
+            code: "RND",
+            budget: 5000000,
+          },
+          {
+            id: "223e4567-e89b-12d3-a456-426614174022",
+            name: "Marketing",
+            code: "MKT",
+            budget: 3000000,
+          },
+          {
+            id: "323e4567-e89b-12d3-a456-426614174022",
+            name: "Human Resources",
+            code: "HR",
+            budget: 1500000,
+          },
+          {
+            id: "423e4567-e89b-12d3-a456-426614174022",
+            name: "Finance",
+            code: "FIN",
+            budget: 2000000,
+          },
+        ],
+        employees: [
+          {
+            id: "123e4567-e89b-12d3-a456-426614174023",
+            name: "Emma Johnson",
+            position: "CEO",
+            email: "emma@organization.com",
+          },
+          {
+            id: "223e4567-e89b-12d3-a456-426614174023",
+            name: "Michael Chen",
+            position: "CTO",
+            email: "michael@organization.com",
+          },
+          {
+            id: "323e4567-e89b-12d3-a456-426614174023",
+            name: "Sophia Rodriguez",
+            position: "CFO",
+            email: "sophia@organization.com",
+          },
+          {
+            id: "423e4567-e89b-12d3-a456-426614174023",
+            name: "James Wilson",
+            position: "COO",
+            email: "james@organization.com",
+          },
+        ],
+        partners: [
+          {
+            id: "123e4567-e89b-12d3-a456-426614174024",
+            name: "Acme Suppliers",
+            type: "Supplier",
+            contactPerson: "John Smith",
+          },
+          {
+            id: "223e4567-e89b-12d3-a456-426614174024",
+            name: "TechCorp Solutions",
+            type: "Technology Provider",
+            contactPerson: "Lisa Brown",
+          },
+          {
+            id: "323e4567-e89b-12d3-a456-426614174024",
+            name: "Global Logistics",
+            type: "Distribution",
+            contactPerson: "David Lee",
+          },
+          {
+            id: "423e4567-e89b-12d3-a456-426614174024",
+            name: "Marketing Experts",
+            type: "Marketing",
+            contactPerson: "Sarah Johnson",
+          },
+        ],
+      },
+    });
+
+    const initialOrganizationData = {
+      name: "Orbital Innovations",
+      description: "Leading technology solutions provider",
+      foundedYear: 2010,
+      website: "https://orbitalinnovations.com",
+      // Initial BelongsTo relationships
+      headquarterId: "123e4567-e89b-12d3-a456-426614174020", // New York Office
+      parentCompanyId: "123e4567-e89b-12d3-a456-426614174021", // Global Holdings Inc.
+      // Initial HasMany relationships
+      departmentIds: ["123e4567-e89b-12d3-a456-426614174022"], // Initially has R&D
+      employeeIds: ["123e4567-e89b-12d3-a456-426614174023"], // Initially has CEO
+      partnerIds: ["123e4567-e89b-12d3-a456-426614174024"], // Initially has Acme Suppliers
+    };
+
+    // Create a wrapper component that displays the current data
+    function TestOrganizationForm() {
+      // Use useState to track the current data
+      const [organizationData, setOrganizationData] = useState(
+        initialOrganizationData
+      );
+
+      // This function will be called when updateObjectData is called
+      const handleUpdate = (
+        key: string,
+        newData: Record<string, any>,
+        merge = true
+      ) => {
+        setOrganizationData((prevData) => {
+          if (merge) {
+            return {
+              ...prevData,
+              ...newData,
+            } as typeof initialOrganizationData;
+          }
+          return {
+            ...initialOrganizationData,
+            ...newData,
+          } as typeof initialOrganizationData;
+        });
+      };
+
+      return (
+        <div>
+          <ObjectProvider
+            schema={refBridge}
+            objectType="Organization"
+            data={organizationData}
+            onUpdate={handleUpdate}
+          >
+            <ObjectFieldset />
+            {/* Display the current reference IDs for verification */}
+            <div data-testid="current-headquarterId">
+              {organizationData.headquarterId}
+            </div>
+            <div data-testid="current-parentCompanyId">
+              {organizationData.parentCompanyId}
+            </div>
+            <div data-testid="current-departmentIds">
+              {JSON.stringify(organizationData.departmentIds)}
+            </div>
+            <div data-testid="current-employeeIds">
+              {JSON.stringify(organizationData.employeeIds)}
+            </div>
+            <div data-testid="current-partnerIds">
+              {JSON.stringify(organizationData.partnerIds)}
+            </div>
+          </ObjectProvider>
+        </div>
+      );
+    }
+
+    // Mount the test component
+    mount(<TestOrganizationForm />);
+
+    const organizationFieldset = objectFieldset("Organization");
+
+    // Verify the fieldset exists
+    organizationFieldset.should("exist");
+
+    // Verify it has all the expected fields
+    organizationFieldset.hasField("name").should("be.true");
+    organizationFieldset.hasField("description").should("be.true");
+    organizationFieldset.hasField("foundedYear").should("be.true");
+    organizationFieldset.hasField("website").should("be.true");
+    organizationFieldset.hasField("headquarterId").should("be.true");
+    organizationFieldset.hasField("parentCompanyId").should("be.true");
+    organizationFieldset.hasField("departmentIds").should("be.true");
+    organizationFieldset.hasField("employeeIds").should("be.true");
+    organizationFieldset.hasField("partnerIds").should("be.true");
+
+    // Verify field values
+    organizationFieldset
+      .getFieldValue("name")
+      .should("equal", "Orbital Innovations");
+    organizationFieldset.getFieldValue("foundedYear").should("equal", "2010");
+
+    // Test BelongsTo fields
+    // Get the BelongsToField for headquarter and interact with it
+    const headquarterField =
+      organizationFieldset.field<BelongsToFieldInteractable>("headquarterId");
+    headquarterField.then((field) => {
+      // Verify initial selection
+      field.textField().should("have.value", "New York Office");
+
+      // Open the dropdown
+      field.open();
+
+      // Verify dropdown is open
+      field.isOpened().should("be.true");
+
+      // Select a different headquarter
+      field.select("Tokyo Office");
+
+      // Verify the new selection
+      field.textField().should("have.value", "Tokyo Office");
+
+      // Verify the data model was updated with the correct ID
+      cy.get('[data-testid="current-headquarterId"]').should(
+        "contain",
+        "323e4567-e89b-12d3-a456-426614174020"
+      );
+    });
+
+    // Get the BelongsToField for parent company and interact with it
+    const parentCompanyField =
+      organizationFieldset.field<BelongsToFieldInteractable>("parentCompanyId");
+    parentCompanyField.then((field) => {
+      // Verify initial selection
+      field.textField().should("have.value", "Global Holdings Inc.");
+
+      // Open the dropdown
+      field.open();
+
+      // Verify dropdown is open
+      field.isOpened().should("be.true");
+
+      // Select a different parent company
+      field.select("Tech Ventures Ltd.");
+
+      // Verify the new selection
+      field.textField().should("have.value", "Tech Ventures Ltd.");
+
+      // Verify the data model was updated with the correct ID
+      cy.get('[data-testid="current-parentCompanyId"]').should(
+        "contain",
+        "223e4567-e89b-12d3-a456-426614174021"
+      );
+    });
+
+    // Test HasMany fields
+    // Get the HasManyField for departments and interact with it
+    const departmentsField =
+      organizationFieldset.field<HasManyFieldInteractable>("departmentIds");
+    departmentsField.then((field) => {
+      // Verify initial selection (should have R&D)
+      field.selected().should("include", "Research & Development");
+
+      // Open the dropdown
+      field.open();
+
+      // Verify dropdown is open
+      field.isOpened().should("be.true");
+
+      // Select multiple departments at once (adding 3 more)
+      field.select("Marketing");
+      field.select("Human Resources");
+      field.select("Finance");
+
+      // Verify the data model was updated with all the correct IDs
+      cy.get('[data-testid="current-departmentIds"]').should((el) => {
+        const departmentIds = JSON.parse(el.text());
+        expect(departmentIds).to.include(
+          "123e4567-e89b-12d3-a456-426614174022"
+        ); // R&D
+        expect(departmentIds).to.include(
+          "223e4567-e89b-12d3-a456-426614174022"
+        ); // Marketing
+        expect(departmentIds).to.include(
+          "323e4567-e89b-12d3-a456-426614174022"
+        ); // HR
+        expect(departmentIds).to.include(
+          "423e4567-e89b-12d3-a456-426614174022"
+        ); // Finance
+        expect(departmentIds).to.have.length(4);
+      });
+    });
+
+    // Get the HasManyField for employees and interact with it
+    const employeesField =
+      organizationFieldset.field<HasManyFieldInteractable>("employeeIds");
+    employeesField.then((field) => {
+      // Verify initial selection (should have CEO)
+      field.selected().should("include", "Emma Johnson");
+
+      // Open the dropdown
+      field.open();
+
+      // Verify dropdown is open
+      field.isOpened().should("be.true");
+
+      // Select multiple employees at once (adding 3 more)
+      field.select("Michael Chen");
+      field.select("Sophia Rodriguez");
+      field.select("James Wilson");
+
+      // Verify the data model was updated with all the correct IDs
+      cy.get('[data-testid="current-employeeIds"]').should((el) => {
+        const employeeIds = JSON.parse(el.text());
+        expect(employeeIds).to.include("123e4567-e89b-12d3-a456-426614174023"); // CEO
+        expect(employeeIds).to.include("223e4567-e89b-12d3-a456-426614174023"); // CTO
+        expect(employeeIds).to.include("323e4567-e89b-12d3-a456-426614174023"); // CFO
+        expect(employeeIds).to.include("423e4567-e89b-12d3-a456-426614174023"); // COO
+        expect(employeeIds).to.have.length(4);
+      });
+    });
+
+    // Get the HasManyField for partners and interact with it
+    const partnersField =
+      organizationFieldset.field<HasManyFieldInteractable>("partnerIds");
+    partnersField.then((field) => {
+      // Verify initial selection (should have Acme Suppliers)
+      field.selected().should("include", "Acme Suppliers");
+
+      // Open the dropdown
+      field.open();
+
+      // Verify dropdown is open
+      field.isOpened().should("be.true");
+
+      // Select multiple partners at once (adding 3 more)
+      field.select("TechCorp Solutions");
+      field.select("Global Logistics");
+      field.select("Marketing Experts");
+
+      // Verify the data model was updated with all the correct IDs
+      cy.get('[data-testid="current-partnerIds"]').should((el) => {
+        const partnerIds = JSON.parse(el.text());
+        expect(partnerIds).to.include("123e4567-e89b-12d3-a456-426614174024"); // Acme Suppliers
+        expect(partnerIds).to.include("223e4567-e89b-12d3-a456-426614174024"); // TechCorp Solutions
+        expect(partnerIds).to.include("323e4567-e89b-12d3-a456-426614174024"); // Global Logistics
+        expect(partnerIds).to.include("423e4567-e89b-12d3-a456-426614174024"); // Marketing Experts
+        expect(partnerIds).to.have.length(4);
+      });
+    });
+  });
+
   describe("With Redux", () => {
     it("works with multiple BelongsTo relationships (Product with Category, Supplier, Manufacturer)", () => {
       // Create schemas with references for a complex product
