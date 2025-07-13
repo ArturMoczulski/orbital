@@ -59,3 +59,14 @@ export {
 
 // Export testing utilities
 export { createMockStore, ReduxProvider } from "./testing/redux-mock-store";
+
+// Export form components
+export {
+  FormWithReferences,
+  type FormWithReferencesProps,
+} from "./components/FormWithReferences/FormWithReferences";
+export {
+  ObjectForm,
+  type ObjectFormProps,
+  type SchemaWithObjects,
+} from "./components/ObjectForm";

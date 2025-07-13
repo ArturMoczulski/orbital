@@ -74,7 +74,6 @@ function BelongsToField({
   // Use context data if available, otherwise fall back to prop value
   // This ensures we're always using the most up-to-date value
   const finalValue = contextData !== undefined ? contextData : value;
-  console.log(`[BelongsToField] finalValue:`, finalValue);
 
   // Create a wrapper for onChange that can handle both string and string[] values
   // but will only pass string values to the original onChange function
