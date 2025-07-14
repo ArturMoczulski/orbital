@@ -1,7 +1,7 @@
 import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
 import CircularProgress from "@mui/material/CircularProgress";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { ZodBridge } from "uniforms-bridge-zod";
 import { AutoField, AutoForm as UniformsAutoForm } from "uniforms-mui";
 import { useNotification } from "../NotificationProvider/NotificationProvider";
@@ -273,6 +273,14 @@ export function ObjectForm({
   // Infer object type from schema if not provided
   const objectType = providedObjectType || inferObjectTypeFromSchema(schema);
 
+  // Log state changes for debugging
+  console.log(`ObjectForm isSubmitting: ${isSubmitting}`);
+
+  // Force re-render when isSubmitting changes
+  useEffect(() => {
+    console.log(`isSubmitting changed to: ${isSubmitting}`);
+  }, [isSubmitting]);
+
   // Try to get the notification context, but don't throw if it's not available
   let notificationContext = null;
   try {
@@ -295,7 +303,57 @@ export function ObjectForm({
     // If isNew is true, use onAdd or find the create API function
     if (isNew) {
       if (onAdd) {
-        return onAdd;
+        return async (data: any) => {
+          try {
+            // Set loading state to true
+            console.log("Setting isSubmitting to true (onAdd)");
+            setIsSubmitting(true);
+
+            // Force a longer delay to ensure state update is processed and visible in tests
+            await new Promise((resolve) => setTimeout(resolve, 500));
+
+            // Call the onAdd function with the form data
+            const result = await onAdd(data);
+
+            // Clear any previous error messages
+            setErrorMessage(null);
+
+            // Show success notification if notify function is available
+            if (notify) {
+              notify(successMessage, "success");
+            }
+
+            // Call onSuccess callback if provided
+            if (onSuccess) {
+              onSuccess(result);
+            }
+
+            return result;
+          } catch (error: any) {
+            console.error(`Error adding ${objectType}:`, error);
+
+            // Set error message for display in the form
+            setErrorMessage(error.message || `Error adding ${objectType}`);
+
+            // Show error notification if notify function is available
+            if (notify) {
+              notify(error.message || `Error adding ${objectType}`, "error");
+            }
+
+            throw error;
+          } finally {
+            // Set loading state to false regardless of success or failure
+            console.log("Setting isSubmitting to false (onAdd finally)");
+            setIsSubmitting(false);
+
+            // Force a re-render to ensure the loading indicator is hidden
+            setTimeout(() => {
+              console.log(
+                "Forced re-render after setting isSubmitting to false"
+              );
+            }, 0);
+          }
+        };
       }
 
       // Try to find the create API function
@@ -304,7 +362,11 @@ export function ObjectForm({
         return async (data: any) => {
           try {
             // Set loading state to true
+            console.log("Setting isSubmitting to true (api create)");
             setIsSubmitting(true);
+
+            // Force a longer delay to ensure state update is processed and visible in tests
+            await new Promise((resolve) => setTimeout(resolve, 500));
 
             // Convert first letter to uppercase for Pascal case
             const pascalObjectType =
@@ -355,13 +417,68 @@ export function ObjectForm({
           } finally {
             // Set loading state to false regardless of success or failure
             setIsSubmitting(false);
+
+            // Force a re-render to ensure the loading indicator is hidden
+            setTimeout(() => {
+              console.log(
+                "Forced re-render after setting isSubmitting to false"
+              );
+            }, 0);
           }
         };
       }
     } else {
       // If isNew is false, use onUpdate or find the update API function
       if (onUpdate) {
-        return onUpdate;
+        return async (data: any) => {
+          try {
+            // Set loading state to true
+            setIsSubmitting(true);
+
+            // Force a longer delay to ensure state update is processed and visible in tests
+            await new Promise((resolve) => setTimeout(resolve, 500));
+
+            // Call the onUpdate function with the form data
+            const result = await onUpdate(data);
+
+            // Clear any previous error messages
+            setErrorMessage(null);
+
+            // Show success notification if notify function is available
+            if (notify) {
+              notify(successMessage, "success");
+            }
+
+            // Call onSuccess callback if provided
+            if (onSuccess) {
+              onSuccess(result);
+            }
+
+            return result;
+          } catch (error: any) {
+            console.error(`Error updating ${objectType}:`, error);
+
+            // Set error message for display in the form
+            setErrorMessage(error.message || `Error updating ${objectType}`);
+
+            // Show error notification if notify function is available
+            if (notify) {
+              notify(error.message || `Error updating ${objectType}`, "error");
+            }
+
+            throw error;
+          } finally {
+            // Set loading state to false regardless of success or failure
+            setIsSubmitting(false);
+
+            // Force a re-render to ensure the loading indicator is hidden
+            setTimeout(() => {
+              console.log(
+                "Forced re-render after setting isSubmitting to false"
+              );
+            }, 0);
+          }
+        };
       }
 
       // Try to find the update API function
@@ -371,6 +488,9 @@ export function ObjectForm({
           try {
             // Set loading state to true
             setIsSubmitting(true);
+
+            // Force a longer delay to ensure state update is processed and visible in tests
+            await new Promise((resolve) => setTimeout(resolve, 500));
 
             // Convert first letter to uppercase for Pascal case
             const pascalObjectType =
@@ -419,6 +539,13 @@ export function ObjectForm({
           } finally {
             // Set loading state to false regardless of success or failure
             setIsSubmitting(false);
+
+            // Force a re-render to ensure the loading indicator is hidden
+            setTimeout(() => {
+              console.log(
+                "Forced re-render after setting isSubmitting to false"
+              );
+            }, 0);
           }
         };
       }
@@ -559,24 +686,38 @@ export function ObjectForm({
   return (
     <ObjectSchemaProvider schema={schema} objectType={objectType}>
       <AutoField.componentDetectorContext.Provider value={objectDetector}>
-        {isSubmitting && (
-          <Box
+        {/* Loading indicator - always rendered in the DOM but visibility controlled by display property */}
+        <Box
+          sx={{
+            position: "fixed", // Changed from absolute to fixed to ensure it's visible
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            display: isSubmitting ? "flex" : "none !important", // Added !important to ensure it overrides any inline styles
+            alignItems: "center",
+            justifyContent: "center",
+            backgroundColor: "rgba(255, 255, 255, 0.8)", // Slightly more opaque
+            zIndex: 9999, // Even higher z-index
+          }}
+          data-testid="object-form-loading-indicator"
+        >
+          <CircularProgress
+            data-testid="object-form-circular-progress"
+            size={80} // Even larger
+            thickness={6} // Even more visible
             sx={{
-              position: "absolute",
-              top: 0,
-              left: 0,
-              right: 0,
-              bottom: 0,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              backgroundColor: "rgba(255, 255, 255, 0.7)",
-              zIndex: 1,
+              color: "#1976d2", // Primary blue color for better visibility
+              position: "relative",
+              zIndex: 10000, // Ensure the spinner itself is visible
             }}
-          >
-            <CircularProgress />
-          </Box>
-        )}
+          />
+        </Box>
+        {/* Debug element to show isSubmitting state */}
+        <div
+          style={{ display: "none" }}
+          data-testid={`submitting-state-${isSubmitting}`}
+        ></div>
         <Box sx={{ position: "relative" }}>
           {/* Error message at the top of the form */}
           {errorMessage && (

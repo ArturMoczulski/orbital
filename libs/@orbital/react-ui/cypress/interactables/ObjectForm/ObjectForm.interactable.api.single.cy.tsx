@@ -124,7 +124,12 @@ const initialUser = {
 
 describe("ObjectForm API Integration Tests", () => {
   // Mock RTK Query API with mutation hooks
-  const createMockApi = () => {
+  const createMockApi = (
+    options: { isLoading?: boolean; delay?: number } = {
+      isLoading: false,
+      delay: 0,
+    }
+  ) => {
     // Create the mutation functions directly
     const createMutation = (data: any) => {
       // Extract the actual data from the wrapper object
@@ -134,23 +139,34 @@ describe("ObjectForm API Integration Tests", () => {
       // Log the data being received for debugging
       cy.log("Create mutation data:", JSON.stringify(data));
 
-      // Dispatch action to Redux store
-      store.dispatch(
-        userAdded({
-          id: "new-user-1",
-          name: userData.name || "",
-          email: userData.email || "",
-          isActive: userData.isActive !== undefined ? userData.isActive : true,
-        })
-      );
+      // Create a promise that resolves after the specified delay
+      return new Cypress.Promise((resolve) => {
+        // Force a longer delay for the loading test to ensure the loading state is visible
+        const actualDelay = options.delay || 0;
 
-      return Promise.resolve({
-        data: {
-          id: "new-user-1",
-          name: userData.name || "",
-          email: userData.email || "",
-          isActive: userData.isActive !== undefined ? userData.isActive : true,
-        },
+        // Simulate a longer running API call
+        setTimeout(() => {
+          // Dispatch action to Redux store
+          store.dispatch(
+            userAdded({
+              id: "new-user-1",
+              name: userData.name || "",
+              email: userData.email || "",
+              isActive:
+                userData.isActive !== undefined ? userData.isActive : true,
+            })
+          );
+
+          resolve({
+            data: {
+              id: "new-user-1",
+              name: userData.name || "",
+              email: userData.email || "",
+              isActive:
+                userData.isActive !== undefined ? userData.isActive : true,
+            },
+          });
+        }, actualDelay);
       });
     };
 
@@ -158,25 +174,32 @@ describe("ObjectForm API Integration Tests", () => {
       // Extract the actual data from the wrapper object
       const userData = data.updateUserDto || data;
 
-      // Dispatch action to Redux store
-      store.dispatch(
-        userUpdated({
-          id: data._id || "user-1",
-          ...userData,
-        })
-      );
-      return Promise.resolve({ data: userData });
+      // Create a promise that resolves after the specified delay
+      return new Cypress.Promise((resolve) => {
+        const actualDelay = options.delay || 0;
+
+        setTimeout(() => {
+          // Dispatch action to Redux store
+          store.dispatch(
+            userUpdated({
+              id: data._id || "user-1",
+              ...userData,
+            })
+          );
+          resolve({ data: userData });
+        }, actualDelay);
+      });
     };
 
     // Create the mock API object
     const mockApi: ObjectFormApiInterface = {
       useUsersControllerCreateMutation: () => [
-        createMutation,
-        { isLoading: false },
+        createMutation as unknown as (data: any) => Promise<any>,
+        { isLoading: options.isLoading ?? false },
       ],
       useUsersControllerUpdateMutation: () => [
-        updateMutation,
-        { isLoading: false },
+        updateMutation as unknown as (data: any) => Promise<any>,
+        { isLoading: options.isLoading ?? false },
       ],
     };
 
@@ -267,6 +290,322 @@ describe("ObjectForm API Integration Tests", () => {
       // We've already verified these above, so the test is successful
       // The Redux state verification is complex and prone to timing issues,
       // so we'll rely on the success notification as proof that the mutation worked
+    }
+  );
+
+  it(
+    "should use onAdd prop override when provided",
+    { defaultCommandTimeout: 10000 },
+    () => {
+      // Create a spy for the onAdd callback that returns a promise
+      const onAddSpy = cy
+        .spy(() => {
+          return Promise.resolve({
+            id: "custom-user-1",
+            name: "Custom Add User",
+            email: "custom@example.com",
+            isActive: true,
+          });
+        })
+        .as("onAddSpy");
+
+      // Reset the Redux store to initial state before the test
+      store.dispatch({ type: "RESET_STATE" });
+
+      // Create a mock API object
+      const mockApi = createMockApi();
+
+      // Create a spy for the onSuccess callback
+      const onSuccessSpy = cy.spy().as("onSuccessSpy");
+
+      // Mount the component with NotificationProvider
+      mount(
+        <Provider store={store}>
+          <NotificationProvider>
+            <ObjectForm
+              schema={userBridge}
+              objectType="User"
+              isNew={true}
+              api={mockApi}
+              onAdd={onAddSpy}
+              onSuccess={onSuccessSpy}
+              successMessage="User added successfully"
+            />
+          </NotificationProvider>
+        </Provider>
+      );
+
+      const form = objectForm({ objectType: "User" });
+
+      // Fill out the form
+      form.field("name").then((f) => f.setValue("Custom Add User"));
+      form.field("email").then((f) => f.setValue("custom@example.com"));
+
+      // Submit the form
+      form.submit();
+
+      // Verify the onAdd callback was called
+      cy.get("@onAddSpy").should("have.been.calledOnce");
+
+      // Check that onAddSpy was called with an object containing these properties
+      // (but may also contain other properties like id)
+      // Use Cypress's sinon matchers to verify the call arguments
+      cy.get("@onAddSpy").should("have.been.calledWithMatch", {
+        name: "Custom Add User",
+        email: "custom@example.com",
+        isActive: true,
+      });
+
+      // Wait for the form submission to complete
+      // We'll use the success notification as an indicator
+      cy.get(".notistack-MuiContent-success", {
+        timeout: 5000,
+      }).should("contain", "User added successfully");
+
+      // Verify the onSuccess callback was called
+      cy.get("@onSuccessSpy").should("have.been.calledOnce");
+    }
+  );
+
+  it(
+    "should update existing object with onUpdate prop override",
+    { defaultCommandTimeout: 10000 },
+    () => {
+      // Create a spy for the onUpdate callback
+      const onUpdateSpy = cy.spy().as("onUpdateSpy");
+
+      // Reset the Redux store to initial state before the test
+      store.dispatch({ type: "RESET_STATE" });
+
+      // Create a mock API object
+      const mockApi = createMockApi();
+
+      // Create a spy for the onSuccess callback
+      const onSuccessSpy = cy.spy().as("onSuccessSpy");
+
+      // Mount the component with NotificationProvider
+      mount(
+        <Provider store={store}>
+          <NotificationProvider>
+            <ObjectForm
+              schema={userBridge}
+              objectType="User"
+              isNew={false}
+              model={initialUser}
+              api={mockApi}
+              onUpdate={onUpdateSpy}
+              onSuccess={onSuccessSpy}
+              successMessage="User updated successfully"
+            />
+          </NotificationProvider>
+        </Provider>
+      );
+
+      const form = objectForm({ objectType: "User" });
+
+      // Update the form fields
+      form.field("name").then((f) => f.setValue("Updated User"));
+      form.field("email").then((f) => f.setValue("updated@example.com"));
+
+      // Submit the form
+      form.submit();
+
+      // Verify the onUpdate callback was called
+      cy.get("@onUpdateSpy").should("have.been.calledOnce");
+      // Use calledWithMatch instead of calledWith to check for inclusion of expected properties
+      // rather than exact match, since the actual object includes the id field
+      cy.get("@onUpdateSpy").should("have.been.calledWithMatch", {
+        name: "Updated User",
+        email: "updated@example.com",
+        isActive: true,
+      });
+
+      // Wait for the form submission to complete
+      cy.get(".notistack-MuiContent-success", {
+        timeout: 5000,
+      }).should("contain", "User updated successfully");
+
+      // Verify the onSuccess callback was called
+      cy.get("@onSuccessSpy").should("have.been.calledOnce");
+    }
+  );
+
+  it(
+    "should update existing object with api object update mutation",
+    { defaultCommandTimeout: 10000 },
+    () => {
+      // Create a spy for the onSuccess callback
+      const onSuccessSpy = cy.spy().as("onSuccessSpy");
+
+      // Reset the Redux store to initial state before the test
+      store.dispatch({ type: "RESET_STATE" });
+
+      // Use the original createMockApi function which creates real functions
+      // that dispatch to the Redux store - no spies needed
+      const mockApi = createMockApi();
+
+      // Mount the component with NotificationProvider
+      mount(
+        <Provider store={store}>
+          <NotificationProvider>
+            <ObjectForm
+              schema={userBridge}
+              objectType="User"
+              isNew={false}
+              model={initialUser}
+              api={mockApi}
+              onSuccess={onSuccessSpy}
+              successMessage="User updated successfully"
+            />
+          </NotificationProvider>
+        </Provider>
+      );
+
+      const form = objectForm({ objectType: "User" });
+
+      // Update the form fields
+      form.field("name").then((f) => f.setValue("API Updated User"));
+      form.field("email").then((f) => f.setValue("api-updated@example.com"));
+
+      // Submit the form
+      form.submit();
+
+      // Wait for the form submission to complete
+      // We'll use the success notification as an indicator
+      cy.get(".notistack-MuiContent-success", {
+        timeout: 5000,
+      }).should("contain", "User updated successfully");
+
+      // Verify the onSuccess callback was called
+      cy.get("@onSuccessSpy").should("have.been.calledOnce");
+
+      // For this test, we'll focus on verifying that:
+      // 1. The form submission was successful (notification displayed)
+      // 2. The onSuccess callback was called
+      //
+      // We've already verified these above, so the test is successful
+      // The Redux state verification is complex and prone to timing issues,
+      // so we'll rely on the success notification as proof that the mutation worked
+    }
+  );
+
+  it(
+    "should display loading indicator while api functions are running",
+    { defaultCommandTimeout: 30000 },
+    () => {
+      // Reset the Redux store to initial state before the test
+      store.dispatch({ type: "RESET_STATE" });
+
+      // Create a mock API with a delay to ensure we can see the loading state
+      const mockApi = createMockApi({ isLoading: false, delay: 2000 });
+
+      // Add a spy to track when console.log is called
+      cy.window().then((win) => {
+        cy.spy(win.console, "log").as("consoleLog");
+      });
+
+      // Mount the component with a unique test ID
+      cy.mount(
+        <Provider store={store}>
+          <NotificationProvider>
+            <ObjectForm
+              schema={userBridge}
+              objectType="User"
+              isNew={true}
+              api={mockApi}
+              successMessage="User created successfully"
+              data-testid="LoadingTestForm"
+            />
+          </NotificationProvider>
+        </Provider>
+      );
+
+      // Fill out the form
+      cy.get('[data-testid="LoadingTestForm"]').within(() => {
+        cy.get('input[name="name"]').clear().type("Loading Test User");
+        cy.get('input[name="email"]').clear().type("loading@example.com");
+      });
+
+      // Submit the form
+      cy.get('[data-testid="LoadingTestForm"]').find('[type="submit"]').click();
+
+      // Check for the loading indicator
+
+      // First check that the loading indicator exists
+      cy.get('[data-testid="object-form-loading-indicator"]').should("exist");
+
+      // Then check that the CircularProgress exists
+      cy.get('[data-testid="object-form-circular-progress"]').should("exist");
+
+      // Check that the loading indicator is visible
+      cy.get('[data-testid="object-form-loading-indicator"]').should(
+        "be.visible"
+      );
+
+      // Wait for the form submission to complete
+      cy.get(".notistack-MuiContent-success", { timeout: 10000 }).should(
+        "contain",
+        "User created successfully"
+      );
+
+      // Log the submitting state after completion
+      cy.log("Checking submitting state after completion");
+      cy.get('[data-testid^="submitting-state-"]')
+        .invoke("attr", "data-testid")
+        .then((testId) => {
+          cy.log(`Current submitting state: ${testId}`);
+        });
+
+      // Check that the loading indicator is no longer visible (display: none)
+      // Use a retry approach with a longer timeout
+      cy.get('[data-testid="object-form-loading-indicator"]', { timeout: 5000 })
+        .should("exist") // It should still exist in the DOM
+        .should("have.css", "display", "none"); // But should be hidden
+    }
+  );
+
+  it(
+    "should display api errors in the error component",
+    { defaultCommandTimeout: 10000 },
+    () => {
+      // Reset the Redux store to initial state before the test
+      store.dispatch({ type: "RESET_STATE" });
+
+      // Use the error API that throws an error
+      const errorApi = createErrorApi();
+
+      // Mount the component with NotificationProvider
+      mount(
+        <Provider store={store}>
+          <NotificationProvider>
+            <ObjectForm
+              schema={userBridge}
+              objectType="User"
+              isNew={true}
+              api={errorApi}
+              successMessage="User created successfully"
+            />
+          </NotificationProvider>
+        </Provider>
+      );
+
+      const form = objectForm({ objectType: "User" });
+
+      // Fill out the form
+      form.field("name").then((f) => f.setValue("Error Test User"));
+      form.field("email").then((f) => f.setValue("error@example.com"));
+
+      // Submit the form
+      form.submit();
+
+      // Check that the error message is displayed
+      cy.get(".MuiAlert-root").should("be.visible");
+      cy.get(".MuiAlert-root").should("contain", "API Error: Failed to create");
+
+      // Check that the error notification is displayed
+      cy.get(".notistack-MuiContent-error", {
+        timeout: 5000,
+      }).should("contain", "API Error: Failed to create");
     }
   );
 });
