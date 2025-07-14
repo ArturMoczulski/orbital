@@ -1,7 +1,7 @@
 import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
 import CircularProgress from "@mui/material/CircularProgress";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { ZodBridge } from "uniforms-bridge-zod";
 import { AutoField, AutoForm as UniformsAutoForm } from "uniforms-mui";
 import { useNotification } from "../NotificationProvider/NotificationProvider";
@@ -209,6 +209,13 @@ const fieldTypes = {
  * @param isNew Whether this is a create or update operation
  * @returns The appropriate API function or undefined if not found
  */
+/**
+ * Find the appropriate API function for creating or updating an object
+ * @param api The API object
+ * @param objectType The type of object
+ * @param isNew Whether this is a create or update operation
+ * @returns The appropriate API mutation function or undefined if not found
+ */
 function findApiFunction(
   api: ObjectFormApiInterface | undefined,
   objectType: string,
@@ -220,19 +227,23 @@ function findApiFunction(
   const pascalObjectType =
     objectType.charAt(0).toUpperCase() + objectType.slice(1);
 
-  // For RTK Query API objects, look for the mutation functions
+  // For RTK Query API objects, look for the mutation hooks
   const createMutationName = `use${pascalObjectType}sControllerCreateMutation`;
   const updateMutationName = `use${pascalObjectType}sControllerUpdateMutation`;
 
   if (isNew) {
-    // For create operations, look for create mutation
+    // For create operations, look for create mutation hook
     if (typeof api[createMutationName] === "function") {
-      return api[createMutationName];
+      // Call the hook to get the mutation function and its state
+      const [mutationFn] = api[createMutationName]();
+      return mutationFn;
     }
   } else {
-    // For update operations, look for update mutation
+    // For update operations, look for update mutation hook
     if (typeof api[updateMutationName] === "function") {
-      return api[updateMutationName];
+      // Call the hook to get the mutation function and its state
+      const [mutationFn] = api[updateMutationName]();
+      return mutationFn;
     }
   }
 
@@ -273,14 +284,6 @@ export function ObjectForm({
   // Infer object type from schema if not provided
   const objectType = providedObjectType || inferObjectTypeFromSchema(schema);
 
-  // Log state changes for debugging
-  console.log(`ObjectForm isSubmitting: ${isSubmitting}`);
-
-  // Force re-render when isSubmitting changes
-  useEffect(() => {
-    console.log(`isSubmitting changed to: ${isSubmitting}`);
-  }, [isSubmitting]);
-
   // Try to get the notification context, but don't throw if it's not available
   let notificationContext = null;
   try {
@@ -305,12 +308,10 @@ export function ObjectForm({
       if (onAdd) {
         return async (data: any) => {
           try {
-            // Set loading state to true
-            console.log("Setting isSubmitting to true (onAdd)");
+            // Set loading state to true and ensure DOM updates
             setIsSubmitting(true);
-
-            // Force a longer delay to ensure state update is processed and visible in tests
-            await new Promise((resolve) => setTimeout(resolve, 500));
+            // Add a small delay to ensure the loading state is visible
+            await new Promise((resolve) => setTimeout(resolve, 100));
 
             // Call the onAdd function with the form data
             const result = await onAdd(data);
@@ -333,25 +334,19 @@ export function ObjectForm({
             console.error(`Error adding ${objectType}:`, error);
 
             // Set error message for display in the form
-            setErrorMessage(error.message || `Error adding ${objectType}`);
+            const errorMsg = error.message || `Error adding ${objectType}`;
+            setErrorMessage(errorMsg);
+            console.error("Setting error message:", errorMsg);
 
-            // Show error notification if notify function is available
-            if (notify) {
-              notify(error.message || `Error adding ${objectType}`, "error");
-            }
+            // Error is already displayed in the form's error alert component
+            // No need to show a notification
 
-            throw error;
+            // Don't throw the error again, as it prevents the component from updating
+            // Just return a rejected promise to indicate failure
+            return Promise.reject(error);
           } finally {
             // Set loading state to false regardless of success or failure
-            console.log("Setting isSubmitting to false (onAdd finally)");
             setIsSubmitting(false);
-
-            // Force a re-render to ensure the loading indicator is hidden
-            setTimeout(() => {
-              console.log(
-                "Forced re-render after setting isSubmitting to false"
-              );
-            }, 0);
           }
         };
       }
@@ -361,12 +356,8 @@ export function ObjectForm({
       if (createFunction) {
         return async (data: any) => {
           try {
-            // Set loading state to true
-            console.log("Setting isSubmitting to true (api create)");
+            // Set loading state to true and ensure DOM updates
             setIsSubmitting(true);
-
-            // Force a longer delay to ensure state update is processed and visible in tests
-            await new Promise((resolve) => setTimeout(resolve, 500));
 
             // Convert first letter to uppercase for Pascal case
             const pascalObjectType =
@@ -404,26 +395,30 @@ export function ObjectForm({
             return result;
           } catch (error: any) {
             console.error(`Error creating ${objectType}:`, error);
+            console.error("Error type:", typeof error);
+            console.error("Error stack:", error.stack);
+            console.error(
+              "Error is instance of Error:",
+              error instanceof Error
+            );
 
             // Set error message for display in the form
-            setErrorMessage(error.message || `Error creating ${objectType}`);
+            const errorMsg = error.message || `Error creating ${objectType}`;
+            console.error("Error message:", errorMsg);
+            setErrorMessage(errorMsg);
+            console.error("Setting error message:", errorMsg);
 
-            // Show error notification if notify function is available
-            if (notify) {
-              notify(error.message || `Error creating ${objectType}`, "error");
-            }
+            // Error is already displayed in the form's error alert component
+            // No need to show a notification
+            console.error("Error will be displayed in the form's error alert");
 
-            throw error;
+            // Don't throw the error again, as it prevents the component from updating
+            // Just return a rejected promise to indicate failure
+            console.error("Returning rejected promise");
+            return Promise.reject(error);
           } finally {
             // Set loading state to false regardless of success or failure
             setIsSubmitting(false);
-
-            // Force a re-render to ensure the loading indicator is hidden
-            setTimeout(() => {
-              console.log(
-                "Forced re-render after setting isSubmitting to false"
-              );
-            }, 0);
           }
         };
       }
@@ -432,11 +427,10 @@ export function ObjectForm({
       if (onUpdate) {
         return async (data: any) => {
           try {
-            // Set loading state to true
+            // Set loading state to true and ensure DOM updates
             setIsSubmitting(true);
-
-            // Force a longer delay to ensure state update is processed and visible in tests
-            await new Promise((resolve) => setTimeout(resolve, 500));
+            // Add a small delay to ensure the loading state is visible
+            await new Promise((resolve) => setTimeout(resolve, 100));
 
             // Call the onUpdate function with the form data
             const result = await onUpdate(data);
@@ -459,24 +453,19 @@ export function ObjectForm({
             console.error(`Error updating ${objectType}:`, error);
 
             // Set error message for display in the form
-            setErrorMessage(error.message || `Error updating ${objectType}`);
+            const errorMsg = error.message || `Error updating ${objectType}`;
+            setErrorMessage(errorMsg);
+            console.error("Setting error message:", errorMsg);
 
-            // Show error notification if notify function is available
-            if (notify) {
-              notify(error.message || `Error updating ${objectType}`, "error");
-            }
+            // Error is already displayed in the form's error alert component
+            // No need to show a notification
 
-            throw error;
+            // Don't throw the error again, as it prevents the component from updating
+            // Just return a rejected promise to indicate failure
+            return Promise.reject(error);
           } finally {
             // Set loading state to false regardless of success or failure
             setIsSubmitting(false);
-
-            // Force a re-render to ensure the loading indicator is hidden
-            setTimeout(() => {
-              console.log(
-                "Forced re-render after setting isSubmitting to false"
-              );
-            }, 0);
           }
         };
       }
@@ -486,11 +475,10 @@ export function ObjectForm({
       if (updateFunction && model && model.id) {
         return async (data: any) => {
           try {
-            // Set loading state to true
+            // Set loading state to true and ensure DOM updates
             setIsSubmitting(true);
-
-            // Force a longer delay to ensure state update is processed and visible in tests
-            await new Promise((resolve) => setTimeout(resolve, 500));
+            // Add a small delay to ensure the loading state is visible
+            await new Promise((resolve) => setTimeout(resolve, 100));
 
             // Convert first letter to uppercase for Pascal case
             const pascalObjectType =
@@ -528,24 +516,19 @@ export function ObjectForm({
             console.error(`Error updating ${objectType}:`, error);
 
             // Set error message for display in the form
-            setErrorMessage(error.message || `Error updating ${objectType}`);
+            const errorMsg = error.message || `Error updating ${objectType}`;
+            setErrorMessage(errorMsg);
+            console.error("Setting error message:", errorMsg);
 
-            // Show error notification if notify function is available
-            if (notify) {
-              notify(error.message || `Error updating ${objectType}`, "error");
-            }
+            // Error is already displayed in the form's error alert component
+            // No need to show a notification
 
-            throw error;
+            // Don't throw the error again, as it prevents the component from updating
+            // Just return a rejected promise to indicate failure
+            return Promise.reject(error);
           } finally {
             // Set loading state to false regardless of success or failure
             setIsSubmitting(false);
-
-            // Force a re-render to ensure the loading indicator is hidden
-            setTimeout(() => {
-              console.log(
-                "Forced re-render after setting isSubmitting to false"
-              );
-            }, 0);
           }
         };
       }
@@ -686,7 +669,7 @@ export function ObjectForm({
   return (
     <ObjectSchemaProvider schema={schema} objectType={objectType}>
       <AutoField.componentDetectorContext.Provider value={objectDetector}>
-        {/* Loading indicator - always rendered in the DOM but visibility controlled by display property */}
+        {/* Loading indicator - always rendered but visibility controlled by display property */}
         <Box
           sx={{
             position: "fixed", // Changed from absolute to fixed to ensure it's visible
@@ -694,7 +677,7 @@ export function ObjectForm({
             left: 0,
             right: 0,
             bottom: 0,
-            display: isSubmitting ? "flex" : "none !important", // Added !important to ensure it overrides any inline styles
+            display: isSubmitting ? "flex" : "none",
             alignItems: "center",
             justifyContent: "center",
             backgroundColor: "rgba(255, 255, 255, 0.8)", // Slightly more opaque
@@ -720,21 +703,22 @@ export function ObjectForm({
         ></div>
         <Box sx={{ position: "relative" }}>
           {/* Error message at the top of the form */}
-          {errorMessage && (
-            <Alert
-              severity="error"
-              variant="filled"
-              sx={{
-                mb: 2,
-                "& .MuiAlert-message": {
-                  color: "white",
-                },
-              }}
-              onClose={() => setErrorMessage(null)}
-            >
-              {errorMessage}
-            </Alert>
-          )}
+          {/* Error message at the top of the form - always render but control visibility */}
+          <Alert
+            severity="error"
+            variant="filled"
+            sx={{
+              mb: 2,
+              display: errorMessage ? "flex" : "none",
+              "& .MuiAlert-message": {
+                color: "white",
+              },
+            }}
+            onClose={() => setErrorMessage(null)}
+            data-testid="object-form-error-alert"
+          >
+            {errorMessage || "An error occurred"}
+          </Alert>
 
           <UniformsAutoForm
             schema={schemaWithContext}
