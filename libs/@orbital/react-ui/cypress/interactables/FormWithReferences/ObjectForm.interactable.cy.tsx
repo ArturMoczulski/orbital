@@ -301,7 +301,7 @@ describe("ObjectForm.interactable", () => {
     // Verify a field is readonly using the form's field method
     form.field("name").then((field) => {
       // Check if the field has readonly attribute or aria-readonly attribute
-      field.should((el: JQuery<HTMLElement>) => {
+      cy.wrap(field).should((el: JQuery<HTMLElement>) => {
         const $el = Cypress.$(el);
         const hasReadOnly =
           $el.attr("readonly") !== undefined ||
@@ -328,11 +328,11 @@ describe("ObjectForm.interactable", () => {
 
     const form = objectForm({ objectType: "User" });
 
-    // Use direct field access and check values
-    form.field("hobbies").should("exist");
-    // For array fields, we need to check the DOM more directly
-    form.get().find('[name="hobbies"]').should("contain.value", "Reading");
-    form.get().find('[name="hobbies"]').should("contain.value", "Cycling");
+    // For array fields, we need to check individual array items
+    form.field("hobbies.0").should("exist");
+    form.field("hobbies.0").should("have.value", "Reading");
+    form.field("hobbies.1").should("exist");
+    form.field("hobbies.1").should("have.value", "Cycling");
   });
 
   it("should update Redux state when form is submitted", () => {
