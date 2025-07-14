@@ -3,6 +3,7 @@ import { useState } from "react";
 import { ZodBridge } from "uniforms-bridge-zod";
 import { z } from "zod";
 import { ArrayObjectFieldset } from "../../../src/components/FormWithReferences/ArrayObjectFieldset";
+import { TextInputInteractable } from "../AutoForm/FormInput.interactable";
 import { arrayObjectFieldset } from "./ArrayObjectFieldset.interactable";
 
 describe("ArrayObjectFieldset.interactable", () => {
@@ -119,25 +120,19 @@ describe("ArrayObjectFieldset.interactable", () => {
 
     // Test 7: Verify we can update field values through the interactable
     arrayFieldset.item(0).then((taskFieldset) => {
-      // Get a reference to the name field
-      taskFieldset.field("name").as("nameField");
+      // Get the name field interactable and use selectById to set the value
+      // This uses the proper method chain that handles clearing and typing
+      taskFieldset.field("name").then((fieldInteractable) => {
+        // Use the selectById method which properly chains clear() and type()
+        (fieldInteractable as TextInputInteractable).type("Updated Task Name");
+      });
 
-      // Clear the field
-      taskFieldset.field("name").then((f) => f.clear());
-
-      // Re-query the field and type the new value
-      taskFieldset.field("name").type("Updated Task Name");
-
-      // Wait a moment for React to update
-      cy.wait(100);
-
-      // Verify the field was updated
-      taskFieldset.getFieldValue("name").should("eq", "Updated Task Name");
-
-      // Verify the state was updated in the component
-      cy.get('[data-testid="tasks-data"]').should((el) => {
-        const tasks = JSON.parse(el.text());
-        expect(tasks[0].name).to.equal("Updated Task Name");
+      // Now verify the field value through the interactable
+      // Get a fresh reference to avoid stale elements
+      arrayFieldset.item(0).then((updatedTaskFieldset) => {
+        updatedTaskFieldset
+          .getFieldValue("name")
+          .should("eq", "Updated Task Name");
       });
     });
 

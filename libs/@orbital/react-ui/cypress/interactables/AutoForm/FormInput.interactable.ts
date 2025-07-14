@@ -188,9 +188,22 @@ export class TextInputInteractable extends FormInputInteractable<string> {
   }
   /**
    * Set a value on the text input
+   * This implementation handles React re-renders by breaking the chain
    */
   selectById(value: string): Cypress.Chainable<JQuery<HTMLElement>> {
-    return this.get().clear().type(value);
+    // First clear the input
+    this.clear();
+
+    // Wait a small amount of time for any React re-renders
+    cy.wait(100);
+
+    // Then get a fresh reference to the element and type the value
+    return this.get().type(value, { force: true });
+  }
+
+  type(text: string) {
+    this.get().clear();
+    this.get().type(text);
   }
 
   clear() {
@@ -207,9 +220,17 @@ export class NumberInputInteractable extends FormInputInteractable<number> {
   }
   /**
    * Set a value on the number input
+   * This implementation handles React re-renders by breaking the chain
    */
   selectById(value: number): Cypress.Chainable<JQuery<HTMLElement>> {
-    return this.get().clear().type(String(value));
+    // First clear the input
+    this.clear();
+
+    // Wait a small amount of time for any React re-renders
+    cy.wait(100);
+
+    // Then get a fresh reference to the element and type the value
+    return this.get().type(String(value), { force: true });
   }
 
   clear() {
