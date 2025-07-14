@@ -127,7 +127,7 @@ describe("ObjectForm API Integration Tests", () => {
   const createMockApi = (
     options: { isLoading?: boolean; delay?: number } = {
       isLoading: false,
-      delay: 0,
+      delay: 1000,
     }
   ) => {
     // Create the mutation functions directly
@@ -259,6 +259,9 @@ describe("ObjectForm API Integration Tests", () => {
     );
 
     const form = objectForm({ objectType: "User" });
+
+    // Verify that the id field is not displayed when isNew is true
+    cy.get('[data-field-name="id"]').should("not.exist");
 
     // Fill out the form using the interactable
     form.setFieldValue("name", "New User");

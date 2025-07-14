@@ -742,7 +742,7 @@ export function ObjectForm({
             display: isSubmitting ? "flex" : "none",
             alignItems: "center",
             justifyContent: "center",
-            backgroundColor: "rgba(255, 255, 255, 0.8)", // Slightly more opaque
+            backgroundColor: "rgba(255, 255, 255, 0.5)", // Slightly more opaque
             zIndex: 9999, // Even higher z-index
           }}
           data-testid="object-form-loading-indicator"
