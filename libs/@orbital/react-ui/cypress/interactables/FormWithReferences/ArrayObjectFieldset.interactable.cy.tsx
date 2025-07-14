@@ -374,8 +374,22 @@ describe("ArrayObjectFieldset.interactable", () => {
       // Verify the Redux state was updated correctly
       expect(store.getState().arrayData.tasks.items.length).to.equal(1);
 
+      // Verify the correct item was removed (the second one with id "task-2")
+      const remainingItems = store.getState().arrayData.tasks.items;
+      expect(remainingItems[0].id).to.equal("task-1"); // First item should remain
+      expect(remainingItems.find((item) => item.id === "task-2")).to.be
+        .undefined; // Second item should be gone
+
       // Check the tasks-count element which directly reflects the Redux state
       cy.get('[data-testid="tasks-count"]').should("contain", "1");
+
+      // Check the tasks-data element to verify the correct item remains
+      cy.get('[data-testid="tasks-data"]').then(($el) => {
+        const tasksData = JSON.parse($el.text());
+        expect(tasksData.length).to.equal(1);
+        expect(tasksData[0].id).to.equal("task-1");
+        expect(tasksData[0].name).to.equal("First Task");
+      });
 
       // Force a re-render by clicking somewhere else
       cy.get("body").click();
@@ -383,6 +397,12 @@ describe("ArrayObjectFieldset.interactable", () => {
       // Now check the UI after forcing a re-render
       cy.wait(100).then(() => {
         arrayFieldset.getItemCount().should("eq", 1);
+
+        // Verify the remaining item in the UI is the first task
+        arrayFieldset.item(0).then((taskFieldset) => {
+          taskFieldset.getFieldValue("name").should("eq", "First Task");
+          taskFieldset.getFieldValue("priority").should("eq", "1");
+        });
       });
     });
   });
