@@ -1,6 +1,10 @@
+import Alert from "@mui/material/Alert";
+import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import Card from "@mui/material/Card";
+import CardActions from "@mui/material/CardActions";
 import CardContent from "@mui/material/CardContent";
+import Paper from "@mui/material/Paper";
 import Typography from "@mui/material/Typography";
 import { ZodBridge } from "uniforms-bridge-zod";
 import { z } from "zod";
@@ -180,74 +184,97 @@ export function ArrayObjectFieldset({
     };
 
     return (
-      <div data-testid={dataTestId || "ArrayObjectFieldset"}>
-        {label && <Typography variant="h6">{label}</Typography>}
+      <Box data-testid={dataTestId || "ArrayObjectFieldset"}>
+        {/* Array management container */}
+        <Paper variant="outlined" sx={{ p: 2, mb: 2 }}>
+          {/* Header section */}
+          <Box sx={{ mb: 2 }}>
+            {label && <Typography variant="h6">{label}</Typography>}
+          </Box>
 
-        {error && errorMessage && (
-          <Typography color="error">{errorMessage}</Typography>
-        )}
+          {/* Array items section */}
+          <Box sx={{ mb: 2 }}>
+            {finalItems.map((item, index) => (
+              <Card key={index} variant="outlined" sx={{ mb: 2 }}>
+                <CardContent>
+                  <ObjectProvider
+                    schema={finalSchema}
+                    objectType={finalObjectType}
+                    data={item}
+                    objectId={`${finalObjectType}-${index}`}
+                    onUpdate={(key, data) => {
+                      if (key === "main") {
+                        handleItemChange(index, data);
+                      }
+                    }}
+                    // Pass Redux integration props for individual objects
+                    dispatch={objectDispatch}
+                    createUpdateAction={objectCreateUpdateAction}
+                    dataSelector={
+                      objectDataSelector
+                        ? () =>
+                            objectDataSelector(
+                              finalObjectType,
+                              `${finalObjectType}-${index}`
+                            )
+                        : undefined
+                    }
+                    // Pass array index for context
+                    arrayIndex={index}
+                  >
+                    <ObjectFieldset
+                      header={(data, type) => `${type} ${index + 1}`}
+                    />
+                  </ObjectProvider>
 
-        {/* Render each item in the array */}
-        {finalItems.map((item, index) => (
-          <Card key={index} variant="outlined" style={{ marginBottom: "16px" }}>
-            <CardContent>
-              <ObjectProvider
-                schema={finalSchema}
-                objectType={finalObjectType}
-                data={item}
-                objectId={`${finalObjectType}-${index}`}
-                onUpdate={(key, data) => {
-                  if (key === "main") {
-                    handleItemChange(index, data);
-                  }
-                }}
-                // Pass Redux integration props for individual objects
-                dispatch={objectDispatch}
-                createUpdateAction={objectCreateUpdateAction}
-                dataSelector={
-                  objectDataSelector
-                    ? () =>
-                        objectDataSelector(
-                          finalObjectType,
-                          `${finalObjectType}-${index}`
-                        )
-                    : undefined
-                }
-                // Pass array index for context
-                arrayIndex={index}
+                  {!disabled && !readOnly && (
+                    <Button
+                      variant="outlined"
+                      color="error"
+                      onClick={() => handleRemoveItem(index)}
+                      style={{ marginTop: "8px" }}
+                      data-object-id={`${finalObjectType}-${index}`}
+                      data-testid="RemoveItem"
+                    >
+                      {removeButtonLabel}
+                    </Button>
+                  )}
+                </CardContent>
+              </Card>
+            ))}
+          </Box>
+
+          {/* Error message section */}
+          {error && errorMessage && (
+            <Alert
+              severity="error"
+              variant="filled"
+              sx={{
+                mb: 2,
+                "& .MuiAlert-message": {
+                  color: "white",
+                },
+              }}
+            >
+              {errorMessage}
+            </Alert>
+          )}
+
+          {/* Array action buttons section */}
+          <CardActions sx={{ justifyContent: "flex-start", p: 0 }}>
+            {!disabled && !readOnly && (
+              <Button
+                variant="contained"
+                color="primary"
+                onClick={handleAddItem}
+                data-testid="AddItem"
               >
-                <ObjectFieldset
-                  header={(data, type) => `${type} ${index + 1}`}
-                />
-              </ObjectProvider>
-
-              {!disabled && !readOnly && (
-                <Button
-                  variant="outlined"
-                  color="error"
-                  onClick={() => handleRemoveItem(index)}
-                  style={{ marginTop: "8px" }}
-                  data-object-id={`${finalObjectType}-${index}`}
-                  data-testid="RemoveItem"
-                >
-                  {removeButtonLabel}
-                </Button>
-              )}
-            </CardContent>
-          </Card>
-        ))}
-
-        {!disabled && !readOnly && (
-          <Button
-            variant="contained"
-            color="primary"
-            onClick={handleAddItem}
-            data-testid="AddItem"
-          >
-            {addButtonLabel || `Add ${finalObjectType}`}
-          </Button>
-        )}
-      </div>
+                {addButtonLabel || `Add ${finalObjectType}`}
+              </Button>
+            )}
+          </CardActions>
+        </Paper>
+      </Box>
     );
   };
 
