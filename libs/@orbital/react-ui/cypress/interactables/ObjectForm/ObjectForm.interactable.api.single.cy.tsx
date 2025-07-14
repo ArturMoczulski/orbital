@@ -232,55 +232,51 @@ describe("ObjectForm API Integration Tests", () => {
     return errorApi;
   };
 
-  it.only(
-    "should use the create mutation when isNew is true and update Redux state",
-    { defaultCommandTimeout: 10000 },
-    () => {
-      // Create a spy for the onSuccess callback
-      const onSuccessSpy = cy.spy().as("onSuccessSpy");
+  it("should use the create mutation when isNew is true and update Redux state", () => {
+    // Create a spy for the onSuccess callback
+    const onSuccessSpy = cy.spy().as("onSuccessSpy");
 
-      // Reset the Redux store to initial state before the test
-      store.dispatch({ type: "RESET_STATE" });
+    // Reset the Redux store to initial state before the test
+    store.dispatch({ type: "RESET_STATE" });
 
-      // Use the original createMockApi function which creates real functions
-      // that dispatch to the Redux store
-      const mockApi = createMockApi();
+    // Use the original createMockApi function which creates real functions
+    // that dispatch to the Redux store
+    const mockApi = createMockApi();
 
-      // Mount the component with NotificationProvider
-      mount(
-        <Provider store={store}>
-          <NotificationProvider>
-            <ObjectForm
-              schema={userBridge}
-              objectType="User"
-              isNew={true}
-              api={mockApi}
-              onSuccess={onSuccessSpy}
-              successMessage="User created successfully"
-            />
-          </NotificationProvider>
-        </Provider>
-      );
+    // Mount the component with NotificationProvider
+    mount(
+      <Provider store={store}>
+        <NotificationProvider>
+          <ObjectForm
+            schema={userBridge}
+            objectType="User"
+            isNew={true}
+            api={mockApi}
+            onSuccess={onSuccessSpy}
+            successMessage="User created successfully"
+          />
+        </NotificationProvider>
+      </Provider>
+    );
 
-      const form = objectForm({ objectType: "User" });
+    const form = objectForm({ objectType: "User" });
 
-      // Fill out the form using the interactable
-      form.setFieldValue("name", "New User");
-      form.setFieldValue("email", "new@example.com");
+    // Fill out the form using the interactable
+    form.setFieldValue("name", "New User");
+    form.setFieldValue("email", "new@example.com");
 
-      // Submit the form using the interactable
-      form.submit();
+    // Submit the form using the interactable
+    form.submit();
 
-      // Wait for the form submission to complete
-      // We'll use the success notification as an indicator
-      cy.get(".notistack-MuiContent-success", {
-        timeout: 5000,
-      }).should("contain", "User created successfully");
+    // Wait for the form submission to complete
+    // We'll use the success notification as an indicator
+    cy.get(".notistack-MuiContent-success", {
+      timeout: 5000,
+    }).should("contain", "User created successfully");
 
-      // Verify the success callback was called
-      cy.get("@onSuccessSpy").should("have.been.calledOnce");
-    }
-  );
+    // Verify the success callback was called
+    cy.get("@onSuccessSpy").should("have.been.calledOnce");
+  });
 
   it(
     "should use onAdd prop override when provided",
@@ -464,118 +460,108 @@ describe("ObjectForm API Integration Tests", () => {
     }
   );
 
-  it(
-    "should display loading indicator while api functions are running",
-    { defaultCommandTimeout: 30000 },
-    () => {
-      // Reset the Redux store to initial state before the test
-      store.dispatch({ type: "RESET_STATE" });
+  it("should display loading indicator while api functions are running", () => {
+    // Reset the Redux store to initial state before the test
+    store.dispatch({ type: "RESET_STATE" });
 
-      // Create a mock API with a longer delay (5s) to ensure we can see the loading state
-      const mockApi = createMockApi({ isLoading: false, delay: 5000 });
+    // Create a mock API with a longer delay (5s) to ensure we can see the loading state
+    const mockApi = createMockApi({ isLoading: false, delay: 500 });
 
-      // Mount the component with a unique test ID
-      cy.mount(
-        <Provider store={store}>
-          <NotificationProvider>
-            <ObjectForm
-              schema={userBridge}
-              objectType="User"
-              isNew={true}
-              api={mockApi}
-              successMessage="User created successfully"
-              data-testid="LoadingTestForm"
-            />
-          </NotificationProvider>
-        </Provider>
-      );
+    // Mount the component with a unique test ID
+    cy.mount(
+      <Provider store={store}>
+        <NotificationProvider>
+          <ObjectForm
+            schema={userBridge}
+            objectType="User"
+            isNew={true}
+            api={mockApi}
+            successMessage="User created successfully"
+          />
+        </NotificationProvider>
+      </Provider>
+    );
 
-      // For forms with custom data-testid, we need to use the parent element approach
-      const form = objectForm({
-        objectType: "User",
-        parentElement: () => cy.get('[data-testid="LoadingTestForm"]'),
-      });
+    // For forms with custom data-testid, we need to use the parent element approach
+    const form = objectForm({
+      objectType: "User",
+    });
 
-      // Fill out the form using the interactable
-      form.setFieldValue("name", "Loading Test User");
-      form.setFieldValue("email", "loading@example.com");
+    // Fill out the form using the interactable
+    form.setFieldValue("name", "Loading Test User");
+    form.setFieldValue("email", "loading@example.com");
 
-      // Submit the form using the interactable
-      form.submit();
+    // Submit the form using the interactable
+    form.submit();
 
-      // Check for the loading indicator
-      cy.get('[data-testid="object-form-loading-indicator"]').should("exist");
-      cy.get('[data-testid="object-form-circular-progress"]').should("exist");
-      cy.get('[data-testid="object-form-loading-indicator"]').should(
-        "be.visible"
-      );
+    // Check for the loading indicator
+    cy.get('[data-testid="object-form-loading-indicator"]').should("exist");
+    cy.get('[data-testid="object-form-circular-progress"]').should("exist");
+    cy.get('[data-testid="object-form-loading-indicator"]').should(
+      "be.visible"
+    );
 
-      // Wait for the form submission to complete
-      cy.get(".notistack-MuiContent-success", { timeout: 10000 }).should(
-        "contain",
-        "User created successfully"
-      );
+    // Wait for the form submission to complete
+    cy.get(".notistack-MuiContent-success", { timeout: 10000 }).should(
+      "contain",
+      "User created successfully"
+    );
 
-      // Check that the loading indicator is no longer visible (display: none)
-      cy.get('[data-testid="object-form-loading-indicator"]')
-        .should("exist") // It should still exist in the DOM
-        .should("have.css", "display", "none"); // But should be hidden
-    }
-  );
+    // Check that the loading indicator is no longer visible (display: none)
+    cy.get('[data-testid="object-form-loading-indicator"]')
+      .should("exist") // It should still exist in the DOM
+      .should("have.css", "display", "none"); // But should be hidden
+  });
 
-  it.only(
-    "should display api errors in the error component",
-    { defaultCommandTimeout: 10000 },
-    () => {
-      // Reset the Redux store to initial state before the test
-      store.dispatch({ type: "RESET_STATE" });
+  it("should display api errors in the error component", () => {
+    // Reset the Redux store to initial state before the test
+    store.dispatch({ type: "RESET_STATE" });
 
-      // Add a spy on console.error to see if errors are being caught
-      cy.window().then((win) => {
-        cy.spy(win.console, "error").as("consoleError");
-      });
+    // Add a spy on console.error to see if errors are being caught
+    cy.window().then((win) => {
+      cy.spy(win.console, "error").as("consoleError");
+    });
 
-      // Use the error API that throws an error
-      const errorApi = createErrorApi();
+    // Use the error API that throws an error
+    const errorApi = createErrorApi();
 
-      // Mount the component with NotificationProvider
-      cy.mount(
-        <Provider store={store}>
-          <NotificationProvider>
-            <ObjectForm
-              schema={userBridge}
-              objectType="User"
-              isNew={true}
-              api={errorApi}
-              successMessage="User created successfully"
-            />
-          </NotificationProvider>
-        </Provider>
-      );
+    // Mount the component with NotificationProvider
+    cy.mount(
+      <Provider store={store}>
+        <NotificationProvider>
+          <ObjectForm
+            schema={userBridge}
+            objectType="User"
+            isNew={true}
+            api={errorApi}
+            successMessage="User created successfully"
+          />
+        </NotificationProvider>
+      </Provider>
+    );
 
-      // Use the standard objectForm interactable
-      const form = objectForm({
-        objectType: "User",
-      });
+    // Use the standard objectForm interactable
+    const form = objectForm({
+      objectType: "User",
+    });
 
-      // Fill out the form using the interactable
-      form.setFieldValue("name", "Error Test User");
-      form.setFieldValue("email", "error@example.com");
+    // Fill out the form using the interactable
+    form.setFieldValue("name", "Error Test User");
+    form.setFieldValue("email", "error@example.com");
 
-      // Submit the form using the interactable
-      form.submit();
+    // Submit the form using the interactable
+    form.submit();
 
-      // Wait for the error to be processed
-      cy.wait(1000);
+    // Wait for the error to be processed
+    cy.wait(1000);
 
-      // Verify console.error was called (this indicates the error was caught)
-      cy.get("@consoleError").should("be.called");
+    // Verify console.error was called (this indicates the error was caught)
+    cy.get("@consoleError").should("be.called");
 
-      // Check for the error alert with the data-testid and verify it contains the error text
-      cy.get('[data-testid="object-form-error-alert"]')
-        .should("exist")
-        .and("be.visible")
-        .and("contain", "API Error: Failed to create");
-    }
-  );
+    // Check for the error alert with the data-testid and verify it contains the error text
+    cy.get('[data-testid="object-form-error-alert"]')
+      .should("exist")
+      .and("be.visible")
+      .and("contain", "API Error: Failed to create");
+  });
 });
