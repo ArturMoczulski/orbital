@@ -16,7 +16,7 @@ export const ArrayObjectIdContext = createContext<string | null>(null);
 // Type for Redux selector function
 type SelectorFunction<T> = () => T;
 
-type ArrayObjectProviderProps = {
+export type ArrayObjectProviderProps = {
   children: React.ReactNode;
   // Schema props
   schema: z.ZodType<any> | ZodBridge<any> | ZodReferencesBridge<any>;
@@ -34,6 +34,7 @@ type ArrayObjectProviderProps = {
     objectId: string,
     data: Record<string, any>
   ) => any;
+  createRemoveAction?: (key: string, index: number) => any;
   // Redux integration props for individual objects (optional)
   objectDispatch?: (action: any) => void;
   objectCreateUpdateAction?: (
@@ -72,6 +73,7 @@ export function ArrayObjectProvider({
   itemsSelector,
   dispatch,
   createUpdateAction,
+  createRemoveAction,
   // Redux integration props for individual objects
   objectDispatch,
   objectCreateUpdateAction,
@@ -102,6 +104,7 @@ export function ArrayObjectProvider({
             itemsSelector={itemsSelector}
             dispatch={dispatch}
             createUpdateAction={createUpdateAction}
+            createRemoveAction={createRemoveAction}
             // Testing callback
             onUpdate={onUpdate}
           >

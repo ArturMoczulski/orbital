@@ -51,6 +51,7 @@ type ArrayObjectDataProviderProps = {
     objectId: string,
     data: Record<string, any>
   ) => any;
+  createRemoveAction?: (key: string, index: number) => any;
   // Optional callback for data updates (for testing)
   onUpdate?: (items: ArrayItemData[]) => void;
 };
@@ -135,20 +136,13 @@ export function ArrayObjectDataProvider({
   itemsSelector,
   dispatch,
   createUpdateAction,
+  createRemoveAction,
   // Callbacks for testing
   onUpdate,
 }: ArrayObjectDataProviderProps) {
-  // Use React's useState to track the latest data from Redux
-  const [reduxItems, setReduxItems] = React.useState(
-    itemsSelector ? itemsSelector() : undefined
-  );
-
-  // Initialize state with data from selectors
-  React.useEffect(() => {
-    if (itemsSelector) {
-      setReduxItems(itemsSelector());
-    }
-  }, [itemsSelector]);
+  // Get the latest data directly from the selector on each render
+  // This ensures we always have the most up-to-date data from Redux
+  const reduxItems = itemsSelector ? itemsSelector() : undefined;
 
   // Combine data from props and Redux
   const finalItems = reduxItems || items || [];
@@ -229,6 +223,9 @@ export function ArrayObjectDataProvider({
 
   // Function to remove an item at a specific index
   const removeItem = (index: number) => {
+    console.log("ArrayObjectDataContext.removeItem called with index:", index);
+    console.log("finalItems:", finalItems);
+
     if (index < 0 || index >= finalItems.length) {
       console.error(
         `Invalid index ${index} for array of length ${finalItems.length}`
@@ -238,23 +235,46 @@ export function ArrayObjectDataProvider({
 
     const newItems = [...finalItems];
     newItems.splice(index, 1);
+    console.log("newItems after splice:", newItems);
 
     // If Redux integration is enabled, dispatch an action
     if (dispatch && objectType && arrayId) {
-      // Dispatch a specific remove item action
-      dispatch(createRemoveArrayItemAction(objectType, arrayId, index));
+      console.log("Using Redux integration");
+      console.log("dispatch:", dispatch);
+      console.log("objectType:", objectType);
+      console.log("arrayId:", arrayId);
+      console.log("createRemoveAction:", createRemoveAction);
+
+      // Use custom remove action if provided, otherwise use default
+      if (createRemoveAction) {
+        console.log("Using custom remove action");
+        const action = createRemoveAction(arrayId, index);
+        console.log("Action created:", action);
+        dispatch(action);
+        console.log("Action dispatched");
+      } else {
+        // Dispatch a specific remove item action
+        console.log("Using default remove action");
+        const action = createRemoveArrayItemAction(objectType, arrayId, index);
+        console.log("Action created:", action);
+        dispatch(action);
+        console.log("Action dispatched");
+      }
     } else {
       // Otherwise just call the onChange callback
+      console.log("Using onChange callback");
       onChange(newItems);
     }
 
     // If testing callback is provided, call it
     if (onUpdate) {
+      console.log("Calling onUpdate callback");
       onUpdate(newItems);
     }
   };
 
   // Create the context value
+  // Include all dependencies that might change to ensure the context updates
   const contextValue = useMemo(
     () => ({
       items: finalItems,
@@ -263,7 +283,7 @@ export function ArrayObjectDataProvider({
       updateItem,
       removeItem,
     }),
-    [finalItems]
+    [finalItems, dispatch, objectType, arrayId, onChange, onUpdate]
   );
 
   return (

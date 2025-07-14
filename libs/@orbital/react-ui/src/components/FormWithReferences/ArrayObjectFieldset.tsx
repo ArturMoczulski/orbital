@@ -60,6 +60,7 @@ export interface ArrayObjectFieldsetProps {
     objectId: string,
     data: Record<string, any>
   ) => any;
+  createRemoveAction?: (key: string, index: number) => any;
 
   // Redux integration props for individual objects
   objectDispatch?: (action: any) => void;
@@ -108,6 +109,7 @@ export function ArrayObjectFieldset({
   itemsSelector,
   dispatch,
   createUpdateAction,
+  createRemoveAction,
 
   // Redux integration props for individual objects
   objectDispatch,
@@ -133,8 +135,10 @@ export function ArrayObjectFieldset({
     const finalSchema = contextSchema;
     const finalObjectType = contextObjectType;
 
-    // Use items from context
-    const finalItems = contextItems;
+    // Use items from context or from itemsSelector if available
+    // This ensures we're always using the latest data from Redux
+    const reduxItems = itemsSelector ? itemsSelector() : undefined;
+    const finalItems = reduxItems || contextItems;
 
     // Function to handle changes to an individual item
     const handleItemChange = (index: number, newData: any) => {
@@ -155,8 +159,34 @@ export function ArrayObjectFieldset({
 
     // Function to remove an item
     const handleRemoveItem = (index: number) => {
-      // Use the context method
-      removeItem(index);
+      console.log("handleRemoveItem called with index:", index);
+      console.log("dispatch:", dispatch);
+      console.log("createRemoveAction:", createRemoveAction);
+      console.log("arrayId:", arrayId);
+      console.log("finalObjectType:", finalObjectType);
+
+      // Create a new array with the item removed
+      const newItems = [...finalItems];
+      newItems.splice(index, 1);
+
+      // If we have a Redux action creator for removing items, use it
+      if (dispatch && createRemoveAction) {
+        console.log("Using Redux action creator");
+        const action = createRemoveAction(arrayId || finalObjectType, index);
+        console.log("Action created:", action);
+        dispatch(action);
+        console.log("Action dispatched");
+
+        // Always call onChange to ensure the UI updates immediately
+        onChange(newItems);
+
+        // Don't call removeItem when using Redux to avoid double dispatch
+        // The Redux action should handle the state update
+      } else {
+        // Otherwise use the context method
+        console.log("Using context method");
+        removeItem(index);
+      }
     };
 
     return (
@@ -243,6 +273,7 @@ export function ArrayObjectFieldset({
       itemsSelector={itemsSelector}
       dispatch={dispatch}
       createUpdateAction={createUpdateAction}
+      createRemoveAction={createRemoveAction}
       // Pass object-level Redux integration props if available
       objectDispatch={objectDispatch}
       objectCreateUpdateAction={objectCreateUpdateAction}
@@ -377,6 +408,7 @@ export function createArrayObjectsComponentDetector(
             // Array-level Redux props
             dispatch,
             createUpdateAction,
+            createRemoveAction,
             itemsSelector,
             // Object-level Redux props
             objectDispatch,
@@ -394,6 +426,7 @@ export function createArrayObjectsComponentDetector(
               // Pass array-level Redux integration props if available
               dispatch={dispatch}
               createUpdateAction={createUpdateAction}
+              createRemoveAction={createRemoveAction}
               itemsSelector={itemsSelector}
               // Pass object-level Redux integration props if available
               objectDispatch={objectDispatch}

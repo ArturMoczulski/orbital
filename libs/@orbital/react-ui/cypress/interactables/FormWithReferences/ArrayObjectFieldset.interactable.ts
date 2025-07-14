@@ -154,7 +154,14 @@ export class ArrayObjectFieldsetInteractable extends CypressInteractable {
    * @param indexOrId The index or object ID of the item to remove
    */
   removeItem(indexOrId: number | string): this {
-    this.removeButton(indexOrId as any).click();
+    console.log(
+      "ArrayObjectFieldset.interactable.removeItem called with:",
+      indexOrId
+    );
+    const button = this.removeButton(indexOrId as any);
+    console.log("Found remove button:", button);
+    button.click();
+    console.log("Button clicked");
     return this;
   }
 

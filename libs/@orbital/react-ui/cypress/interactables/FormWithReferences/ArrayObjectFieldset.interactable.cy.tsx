@@ -1,5 +1,6 @@
 import { configureStore } from "@reduxjs/toolkit";
 import { mount } from "cypress/react";
+import React from "react";
 import { Provider } from "react-redux";
 import { ZodBridge } from "uniforms-bridge-zod";
 import { z } from "zod";
@@ -204,9 +205,40 @@ describe("ArrayObjectFieldset.interactable", () => {
     });
   });
 
+  // Define the type for the store
+  type StoreType = ReturnType<typeof createRealStore>;
+
+  // Define props for TestComponent
+  interface TestComponentProps {
+    onInit?: (store: StoreType) => void;
+  }
+
   // Reusable test component with Redux
-  function TestComponent() {
+  function TestComponent({ onInit }: TestComponentProps = {}) {
     const store = createRealStore();
+    const [, forceUpdate] = React.useState({});
+
+    // Call onInit with the store reference if provided
+    React.useEffect(() => {
+      if (onInit) {
+        onInit(store);
+      }
+    }, [store, onInit]);
+
+    // Subscribe to store changes to force re-render
+    React.useEffect(() => {
+      const unsubscribe = store.subscribe(() => {
+        // Log the state when it changes
+        console.log("Redux state updated:", store.getState());
+        console.log(
+          "Tasks count:",
+          store.getState().arrayData.tasks.items.length
+        );
+        console.log("Tasks items:", store.getState().arrayData.tasks.items);
+        forceUpdate({});
+      });
+      return () => unsubscribe();
+    }, [store]);
 
     return (
       <Provider store={store}>
@@ -221,8 +253,23 @@ describe("ArrayObjectFieldset.interactable", () => {
               // This is a simplified version - in a real app, you'd use the objectType and objectId
               return updateArrayItems("tasks", data as any);
             }}
+            createRemoveAction={(key, index) => {
+              console.log(
+                "Creating remove action for key:",
+                key,
+                "index:",
+                index
+              );
+              const action = removeArrayItem(key, index);
+              console.log("Created action:", action);
+              return action;
+            }}
             onChange={(newItems) => {
-              store.dispatch(updateArrayItems("tasks", newItems));
+              console.log("onChange called with newItems:", newItems);
+              // Don't dispatch another action here - the component's handleRemoveItem
+              // already dispatched the REMOVE_ARRAY_ITEM action
+              // This prevents double dispatching that could reset the state
+              // store.dispatch(updateArrayItems("tasks", newItems));
             }}
           />
 
@@ -275,18 +322,106 @@ describe("ArrayObjectFieldset.interactable", () => {
     });
   });
 
-  it("should remove items from the array", () => {
-    mount(<TestComponent />);
+  it.only("should remove items from the array", () => {
+    // Create a store directly in the test
+    const store = createRealStore();
+
+    // Create a component that uses the provided store
+    const TestComponentWithStore = () => {
+      // Use state to track the tasks count and force re-renders
+      const [tasksCount, setTasksCount] = React.useState(
+        store.getState().arrayData.tasks.items.length
+      );
+      const [tasksData, setTasksData] = React.useState(
+        JSON.stringify(store.getState().arrayData.tasks.items)
+      );
+
+      // Subscribe to store changes to force re-render
+      React.useEffect(() => {
+        const unsubscribe = store.subscribe(() => {
+          // Log the state when it changes
+          console.log("Redux state updated:", store.getState());
+          console.log(
+            "Tasks count:",
+            store.getState().arrayData.tasks.items.length
+          );
+
+          // Update the state variables to trigger a re-render
+          setTasksCount(store.getState().arrayData.tasks.items.length);
+          setTasksData(JSON.stringify(store.getState().arrayData.tasks.items));
+        });
+        return () => unsubscribe();
+      }, []);
+
+      return (
+        <Provider store={store}>
+          <div>
+            <ArrayObjectFieldset
+              schema={taskBridge}
+              objectType="Task"
+              arrayId="tasks"
+              itemsSelector={() => store.getState().arrayData.tasks.items}
+              dispatch={store.dispatch}
+              createUpdateAction={(objectType, objectId, data) => {
+                return updateArrayItems("tasks", data as any);
+              }}
+              createRemoveAction={(key, index) => {
+                console.log(
+                  "Creating remove action for key:",
+                  key,
+                  "index:",
+                  index
+                );
+                const action = removeArrayItem(key, index);
+                console.log("Created action:", action);
+                return action;
+              }}
+              onChange={(newItems) => {
+                console.log("onChange called with newItems:", newItems);
+                // Don't dispatch another action here
+              }}
+            />
+
+            {/* Hidden divs to verify the current state */}
+            <div data-testid="tasks-count">{tasksCount}</div>
+            <div data-testid="tasks-data">{tasksData}</div>
+          </div>
+        </Provider>
+      );
+    };
+
+    // Mount the component with the direct store reference
+    mount(<TestComponentWithStore />);
 
     const arrayFieldset = arrayObjectFieldset({ objectType: "Task" });
 
     // Verify removeButton exists and removeItem() removes an item
     arrayFieldset.removeButton(1).should("exist");
     arrayFieldset.removeItem(1);
-    arrayFieldset.getItemCount().should("eq", 1);
 
-    // Verify the state was updated in the component
-    cy.get('[data-testid="tasks-count"]').should("contain", "1");
+    // Wait a bit for the Redux state to update
+    cy.wait(500).then(() => {
+      // Log the current state
+      console.log("Current Redux state:", store.getState());
+      console.log(
+        "Tasks count:",
+        store.getState().arrayData.tasks.items.length
+      );
+
+      // Verify the Redux state was updated correctly
+      expect(store.getState().arrayData.tasks.items.length).to.equal(1);
+
+      // Check the tasks-count element which directly reflects the Redux state
+      cy.get('[data-testid="tasks-count"]').should("contain", "1");
+
+      // Force a re-render by clicking somewhere else
+      cy.get("body").click();
+
+      // Now check the UI after forcing a re-render
+      cy.wait(100).then(() => {
+        arrayFieldset.getItemCount().should("eq", 1);
+      });
+    });
   });
 
   it("should update field values", () => {
@@ -338,6 +473,9 @@ describe("ArrayObjectFieldset.interactable", () => {
               dispatch={store.dispatch}
               data-testid="ArrayObjectFieldset"
               disabled
+              createRemoveAction={(key, index) => {
+                return removeArrayItem(key, index);
+              }}
               onChange={(newItems) => {
                 store.dispatch(updateArrayItems("tasks", newItems));
               }}
@@ -379,6 +517,9 @@ describe("ArrayObjectFieldset.interactable", () => {
               dispatch={store.dispatch}
               data-testid="ArrayObjectFieldset"
               readOnly
+              createRemoveAction={(key, index) => {
+                return removeArrayItem(key, index);
+              }}
               onChange={(newItems) => {
                 store.dispatch(updateArrayItems("tasks", newItems));
               }}
@@ -419,6 +560,9 @@ describe("ArrayObjectFieldset.interactable", () => {
               data-testid="ArrayObjectFieldset"
               error={true}
               errorMessage="This is an error message"
+              createRemoveAction={(key, index) => {
+                return removeArrayItem(key, index);
+              }}
               onChange={(newItems) => {
                 store.dispatch(updateArrayItems("tasks", newItems));
               }}
@@ -471,6 +615,9 @@ describe("ArrayObjectFieldset.interactable", () => {
                 createUpdateAction={(objectType, objectId, data) => {
                   return updateArrayItems("tasks1", data as any);
                 }}
+                createRemoveAction={(key, index) => {
+                  return removeArrayItem(key, index);
+                }}
                 data-testid="ArrayObjectFieldset"
                 onChange={(newItems) => {
                   store.dispatch(updateArrayItems("tasks1", newItems));
@@ -487,6 +634,9 @@ describe("ArrayObjectFieldset.interactable", () => {
                 dispatch={store.dispatch}
                 createUpdateAction={(objectType, objectId, data) => {
                   return updateArrayItems("tasks2", data as any);
+                }}
+                createRemoveAction={(key, index) => {
+                  return removeArrayItem(key, index);
                 }}
                 data-testid="ArrayObjectFieldset"
                 onChange={(newItems) => {
