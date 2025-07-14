@@ -159,23 +159,14 @@ export function ArrayObjectFieldset({
 
     // Function to remove an item
     const handleRemoveItem = (index: number) => {
-      console.log("handleRemoveItem called with index:", index);
-      console.log("dispatch:", dispatch);
-      console.log("createRemoveAction:", createRemoveAction);
-      console.log("arrayId:", arrayId);
-      console.log("finalObjectType:", finalObjectType);
-
       // Create a new array with the item removed
       const newItems = [...finalItems];
       newItems.splice(index, 1);
 
       // If we have a Redux action creator for removing items, use it
       if (dispatch && createRemoveAction) {
-        console.log("Using Redux action creator");
         const action = createRemoveAction(arrayId || finalObjectType, index);
-        console.log("Action created:", action);
         dispatch(action);
-        console.log("Action dispatched");
 
         // Always call onChange to ensure the UI updates immediately
         onChange(newItems);
@@ -184,7 +175,6 @@ export function ArrayObjectFieldset({
         // The Redux action should handle the state update
       } else {
         // Otherwise use the context method
-        console.log("Using context method");
         removeItem(index);
       }
     };

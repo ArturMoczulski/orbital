@@ -217,6 +217,12 @@ describe("ArrayObjectFieldset.interactable", () => {
   function TestComponent({ onInit }: TestComponentProps = {}) {
     const store = createRealStore();
     const [, forceUpdate] = React.useState({});
+    const [tasksCount, setTasksCount] = React.useState(
+      store.getState().arrayData.tasks.items.length
+    );
+    const [tasksData, setTasksData] = React.useState(
+      JSON.stringify(store.getState().arrayData.tasks.items)
+    );
 
     // Call onInit with the store reference if provided
     React.useEffect(() => {
@@ -228,13 +234,9 @@ describe("ArrayObjectFieldset.interactable", () => {
     // Subscribe to store changes to force re-render
     React.useEffect(() => {
       const unsubscribe = store.subscribe(() => {
-        // Log the state when it changes
-        console.log("Redux state updated:", store.getState());
-        console.log(
-          "Tasks count:",
-          store.getState().arrayData.tasks.items.length
-        );
-        console.log("Tasks items:", store.getState().arrayData.tasks.items);
+        // Update state variables to trigger re-render
+        setTasksCount(store.getState().arrayData.tasks.items.length);
+        setTasksData(JSON.stringify(store.getState().arrayData.tasks.items));
         forceUpdate({});
       });
       return () => unsubscribe();
@@ -250,36 +252,20 @@ describe("ArrayObjectFieldset.interactable", () => {
             itemsSelector={() => store.getState().arrayData.tasks.items}
             dispatch={store.dispatch}
             createUpdateAction={(objectType, objectId, data) => {
-              // This is a simplified version - in a real app, you'd use the objectType and objectId
               return updateArrayItems("tasks", data as any);
             }}
             createRemoveAction={(key, index) => {
-              console.log(
-                "Creating remove action for key:",
-                key,
-                "index:",
-                index
-              );
-              const action = removeArrayItem(key, index);
-              console.log("Created action:", action);
-              return action;
+              return removeArrayItem(key, index);
             }}
             onChange={(newItems) => {
-              console.log("onChange called with newItems:", newItems);
               // Don't dispatch another action here - the component's handleRemoveItem
               // already dispatched the REMOVE_ARRAY_ITEM action
-              // This prevents double dispatching that could reset the state
-              // store.dispatch(updateArrayItems("tasks", newItems));
             }}
           />
 
           {/* Hidden divs to verify the current state */}
-          <div data-testid="tasks-count">
-            {store.getState().arrayData.tasks.items.length}
-          </div>
-          <div data-testid="tasks-data">
-            {JSON.stringify(store.getState().arrayData.tasks.items)}
-          </div>
+          <div data-testid="tasks-count">{tasksCount}</div>
+          <div data-testid="tasks-data">{tasksData}</div>
         </div>
       </Provider>
     );
@@ -339,13 +325,6 @@ describe("ArrayObjectFieldset.interactable", () => {
       // Subscribe to store changes to force re-render
       React.useEffect(() => {
         const unsubscribe = store.subscribe(() => {
-          // Log the state when it changes
-          console.log("Redux state updated:", store.getState());
-          console.log(
-            "Tasks count:",
-            store.getState().arrayData.tasks.items.length
-          );
-
           // Update the state variables to trigger a re-render
           setTasksCount(store.getState().arrayData.tasks.items.length);
           setTasksData(JSON.stringify(store.getState().arrayData.tasks.items));
@@ -366,18 +345,9 @@ describe("ArrayObjectFieldset.interactable", () => {
                 return updateArrayItems("tasks", data as any);
               }}
               createRemoveAction={(key, index) => {
-                console.log(
-                  "Creating remove action for key:",
-                  key,
-                  "index:",
-                  index
-                );
-                const action = removeArrayItem(key, index);
-                console.log("Created action:", action);
-                return action;
+                return removeArrayItem(key, index);
               }}
               onChange={(newItems) => {
-                console.log("onChange called with newItems:", newItems);
                 // Don't dispatch another action here
               }}
             />
@@ -399,15 +369,8 @@ describe("ArrayObjectFieldset.interactable", () => {
     arrayFieldset.removeButton(1).should("exist");
     arrayFieldset.removeItem(1);
 
-    // Wait a bit for the Redux state to update
+    // Wait for the Redux state to update
     cy.wait(500).then(() => {
-      // Log the current state
-      console.log("Current Redux state:", store.getState());
-      console.log(
-        "Tasks count:",
-        store.getState().arrayData.tasks.items.length
-      );
-
       // Verify the Redux state was updated correctly
       expect(store.getState().arrayData.tasks.items.length).to.equal(1);
 
