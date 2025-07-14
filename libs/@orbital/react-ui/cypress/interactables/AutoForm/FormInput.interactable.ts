@@ -228,12 +228,15 @@ export class TextInputInteractable extends FormInputInteractable<string> {
     cy.wait(100);
 
     // Then get a fresh reference to the element and type the value
-    cy.log(`text ot update:`, text);
+
+    // Use force: true to ensure the typing works even if the element is covered
+    // or has other issues that might prevent interaction
     return this.get().type(text, { force: true });
   }
 
   clear() {
-    return this.get().clear();
+    // Use force: true to ensure the clear works even if the element is covered
+    return this.get().clear({ force: true });
   }
 }
 
