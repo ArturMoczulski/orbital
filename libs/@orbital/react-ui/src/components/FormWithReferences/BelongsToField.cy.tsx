@@ -11,7 +11,7 @@ import { Provider } from "react-redux";
 import { ZodBridge } from "uniforms-bridge-zod";
 import { AutoForm } from "uniforms-mui";
 import { z } from "zod";
-import { belongsToField } from "../../../cypress/interactables/FormWithReferences/BelongsToField.interactable";
+import { belongsToField } from "../../../cypress/interactables/ObjectForm/BelongsToField.interactable";
 import BelongsToField from "./BelongsToField";
 import { ObjectProvider } from "./ObjectProvider";
 import { ObjectSchemaProvider } from "./ObjectSchemaContext";

@@ -2,7 +2,7 @@ import { RelationshipType, z } from "@orbital/core";
 import { mount } from "cypress/react";
 import React from "react";
 import { AutoField } from "uniforms-mui";
-import { formWithReferences } from "../../../cypress/interactables/FormWithReferences/FormWithReferences.interactable";
+import { formWithReferences } from "../../../cypress/interactables/ObjectForm/FormWithReferences.interactable";
 import { FormWithReferences, ZodReferencesBridge } from "./index";
 
 describe("FormWithReferences Component", () => {

@@ -11,7 +11,7 @@ import { Provider } from "react-redux";
 import { ZodBridge } from "uniforms-bridge-zod";
 import { AutoForm } from "uniforms-mui";
 import { z } from "zod";
-import { hasManyField } from "../../../cypress/interactables/FormWithReferences/HasManyField.interactable";
+import { hasManyField } from "../../../cypress/interactables/ObjectForm/HasManyField.interactable";
 import HasManyField from "./HasManyField";
 import { ObjectProvider } from "./ObjectProvider";
 import { ObjectSchemaProvider } from "./ObjectSchemaContext";
