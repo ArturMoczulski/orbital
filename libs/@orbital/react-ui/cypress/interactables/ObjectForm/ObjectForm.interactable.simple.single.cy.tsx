@@ -382,5 +382,7 @@ describe("ObjectForm.interactable", () => {
     cy.wait(500).then(() => {
       expect(store.getState().objectData.user.data.name).to.equal("Jane Smith");
     });
+
+    // API functionality tests have been moved to ObjectForm.interactable.api.single.cy.tsx
   });
 });

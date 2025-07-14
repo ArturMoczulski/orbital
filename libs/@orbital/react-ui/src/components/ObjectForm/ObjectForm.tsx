@@ -4,6 +4,7 @@ import CircularProgress from "@mui/material/CircularProgress";
 import { useMemo, useState } from "react";
 import { ZodBridge } from "uniforms-bridge-zod";
 import { AutoField, AutoForm as UniformsAutoForm } from "uniforms-mui";
+import { useNotification } from "../NotificationProvider/NotificationProvider";
 import { createArrayObjectsComponentDetector } from "./ArrayObjectFieldset";
 import BelongsToField from "./BelongsToField";
 import HasManyField from "./HasManyField";
@@ -244,7 +245,7 @@ export function ObjectForm({
   onAdd,
   onUpdate,
   onSuccess,
-  notify,
+  notify: notifyProp,
   successMessage = "Form submitted successfully",
   isNew = false,
   api,
@@ -271,6 +272,18 @@ export function ObjectForm({
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   // Infer object type from schema if not provided
   const objectType = providedObjectType || inferObjectTypeFromSchema(schema);
+
+  // Try to get the notification context, but don't throw if it's not available
+  let notificationContext = null;
+  try {
+    notificationContext = useNotification();
+  } catch (error) {
+    // Notification context is not available, will use notify prop if provided
+  }
+
+  // Use the notify function from props if provided, otherwise use the one from context
+  const notify =
+    notifyProp || (notificationContext && notificationContext.notify);
 
   // Create the submit handler based on the provided props
   const handleSubmit = useMemo(() => {
@@ -316,7 +329,7 @@ export function ObjectForm({
             // Clear any previous error messages
             setErrorMessage(null);
 
-            // Show success notification if notify function is provided
+            // Show success notification if notify function is available
             if (notify) {
               notify(successMessage, "success");
             }
@@ -333,7 +346,7 @@ export function ObjectForm({
             // Set error message for display in the form
             setErrorMessage(error.message || `Error creating ${objectType}`);
 
-            // Show error notification if notify function is provided
+            // Show error notification if notify function is available
             if (notify) {
               notify(error.message || `Error creating ${objectType}`, "error");
             }
@@ -380,7 +393,7 @@ export function ObjectForm({
               );
             }
 
-            // Show success notification if notify function is provided
+            // Show success notification if notify function is available
             if (notify) {
               notify(successMessage, "success");
             }
@@ -397,7 +410,7 @@ export function ObjectForm({
             // Set error message for display in the form
             setErrorMessage(error.message || `Error updating ${objectType}`);
 
-            // Show error notification if notify function is provided
+            // Show error notification if notify function is available
             if (notify) {
               notify(error.message || `Error updating ${objectType}`, "error");
             }
