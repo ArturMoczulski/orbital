@@ -69,10 +69,56 @@ export class ObjectFieldsetInteractable extends CypressInteractable {
   // The get() method from CypressInteractable already handles the index
 
   /**
-   * Get a field within the fieldset by name
-   * @param fieldName The name of the field to get
-   * @returns A FormInputInteractable for the field
+   * Get all fields within the fieldset as FormInputInteractable instances
+   * @returns A chainable that resolves to an array of FormInputInteractable instances
    */
+  fields<
+    T extends FormInputInteractable<any> = FormInputInteractable<any>,
+  >(): Cypress.Chainable<T[]> {
+    return this.get({}).then(($fieldset) => {
+      const interactables: T[] = [];
+      const fieldNames: string[] = [];
+
+      // Find all input elements with a name attribute
+      $fieldset
+        .find("input[name], select[name], textarea[name]")
+        .each((_, el) => {
+          const name = Cypress.$(el).attr("name");
+          if (name && !fieldNames.includes(name)) {
+            fieldNames.push(name);
+          }
+        });
+
+      // Also check for special components like ObjectSelector
+      $fieldset.find("[data-field-name]").each((_, el) => {
+        const name = Cypress.$(el).attr("data-field-name");
+        if (name && !fieldNames.includes(name)) {
+          fieldNames.push(name);
+        }
+      });
+
+      // Create a parent element function that returns the fieldset element
+      const parentElement = () => this.get({});
+
+      // Create an interactable for each field
+      fieldNames.forEach((fieldName) => {
+        // Use the inputField factory to create the appropriate field interactable
+        // We need to wrap this in a function to avoid Cypress command issues
+        const createInteractable = () => {
+          return inputField<T>({
+            fieldName,
+            parentElement,
+          });
+        };
+
+        // Push a function that will create the interactable when called
+        interactables.push(createInteractable() as unknown as T);
+      });
+
+      return cy.wrap(interactables);
+    });
+  }
+
   /**
    * Get a field within the fieldset by name
    * @param fieldName The name of the field to get
@@ -101,29 +147,32 @@ export class ObjectFieldsetInteractable extends CypressInteractable {
    * @returns A chainable that resolves to an array of field names
    */
   getFieldNames(): Cypress.Chainable<string[]> {
-    return this.get({}).then(($fieldset) => {
-      // Find all input elements with a name attribute
-      const inputNames: string[] = [];
+    // First get all fields using the fields() method
+    return this.fields().then((fields) => {
+      // Create an array to collect field names
+      const fieldNames: string[] = [];
 
-      // Check for standard input elements
-      $fieldset
-        .find("input[name], select[name], textarea[name]")
-        .each((_, el) => {
-          const name = Cypress.$(el).attr("name");
-          if (name && !inputNames.includes(name)) {
-            inputNames.push(name);
-          }
-        });
-
-      // Also check for special components like ObjectSelector
-      $fieldset.find("[data-field-name]").each((_, el) => {
-        const name = Cypress.$(el).attr("data-field-name");
-        if (name && !inputNames.includes(name)) {
-          inputNames.push(name);
+      // Process each field sequentially
+      const processFields = (index: number): Cypress.Chainable<string[]> => {
+        // If we've processed all fields, return the result
+        if (index >= fields.length) {
+          return cy.wrap(fieldNames);
         }
-      });
 
-      return cy.wrap(inputNames);
+        // Get the name of the current field
+        return fields[index].getFieldName().then((name) => {
+          // Add the name to our collection if it's defined
+          if (name !== undefined) {
+            fieldNames.push(name);
+          }
+
+          // Process the next field
+          return processFields(index + 1);
+        });
+      };
+
+      // Start processing with the first field
+      return processFields(0);
     });
   }
 
@@ -149,42 +198,13 @@ export class ObjectFieldsetInteractable extends CypressInteractable {
   }
 
   /**
-   * Set a value on a field within the fieldset
-   * @param fieldName The name of the field to set
-   * @param value The value to set
-   * @returns The fieldset interactable for chaining
-   */
-  setFieldValue(fieldName: string, value: any): this {
-    this.field(fieldName).then((field) => {
-      field.selectById(value);
-    });
-    return this;
-  }
-
-  /**
    * Get the value of a field within the fieldset
    * @param fieldName The name of the field to get the value of
    * @returns A chainable that resolves to the field value
    */
   getFieldValue(fieldName: string): Cypress.Chainable<any> {
-    // Get the field element
-    return this.get({})
-      .find(
-        [
-          `input[name="${fieldName}"]`,
-          `select[name="${fieldName}"]`,
-          `textarea[name="${fieldName}"]`,
-        ].join(", ")
-      )
-      .then(($field) => {
-        if ($field.length === 0) {
-          // If not found as a standard input, try to use the field interactable
-          return this.field(fieldName).then((field) => field.getValue());
-        }
-
-        // For standard inputs, get the value directly
-        return cy.wrap($field.val());
-      });
+    // Delegate to the field interactable's getValue method
+    return this.field(fieldName).then((field) => field.getValue());
   }
 
   /**

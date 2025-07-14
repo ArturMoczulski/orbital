@@ -181,7 +181,8 @@ export function ArrayObjectFieldset({
                 color="error"
                 onClick={() => handleRemoveItem(index)}
                 style={{ marginTop: "8px" }}
-                data-testid={`remove-item-${index}`}
+                data-object-id={`${objectType}-${index}`}
+                data-testid="RemoveItem"
               >
                 {removeButtonLabel}
               </Button>
@@ -195,7 +196,7 @@ export function ArrayObjectFieldset({
           variant="contained"
           color="primary"
           onClick={handleAddItem}
-          data-testid="add-item"
+          data-testid="AddItem"
         >
           {addButtonLabel || `Add ${objectType}`}
         </Button>

@@ -60,6 +60,14 @@ export abstract class FormInputInteractable<T> extends CypressInteractable {
   }
 
   /**
+   * Get the field name
+   * @returns The name of the field
+   */
+  getFieldName(): Cypress.Chainable<string | undefined> {
+    return cy.wrap(this.fieldName);
+  }
+
+  /**
    * Clear the input
    */
   clear(): Cypress.Chainable<JQuery<HTMLElement>> {

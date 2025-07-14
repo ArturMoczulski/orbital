@@ -52,7 +52,7 @@ export class ArrayObjectFieldsetInteractable extends CypressInteractable {
    * Get the add item button
    */
   get addButton() {
-    return this.get().find("[data-testid=add-item]");
+    return this.get().find("[data-testid=AddItem]");
   }
 
   /**
@@ -60,7 +60,9 @@ export class ArrayObjectFieldsetInteractable extends CypressInteractable {
    * @param index The index of the item
    */
   removeButton(index: number) {
-    return this.get().find(`[data-testid=remove-item-${index}]`);
+    return this.get().find(
+      `[data-object-id="${this.objectType}-${index}"][data-testid=RemoveItem]`
+    );
   }
 
   /**
@@ -128,7 +130,7 @@ export class ArrayObjectFieldsetInteractable extends CypressInteractable {
   isDisabled(): Cypress.Chainable<boolean> {
     return this.get().then(($el) => {
       // Check for the add button - if it doesn't exist, the fieldset is likely disabled
-      const addButtonExists = $el.find("[data-testid=add-item]").length > 0;
+      const addButtonExists = $el.find("[data-testid=AddItem]").length > 0;
       return cy.wrap(!addButtonExists);
     });
   }
