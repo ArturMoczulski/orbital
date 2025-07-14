@@ -1,4 +1,7 @@
-import { useMemo } from "react";
+import Alert from "@mui/material/Alert";
+import Box from "@mui/material/Box";
+import CircularProgress from "@mui/material/CircularProgress";
+import { useMemo, useState } from "react";
 import { ZodBridge } from "uniforms-bridge-zod";
 import { AutoField, AutoForm as UniformsAutoForm } from "uniforms-mui";
 import { createArrayObjectsComponentDetector } from "./ArrayObjectFieldset";
@@ -15,6 +18,35 @@ import {
   inferObjectTypeFromSchema,
   ZodReferencesBridge,
 } from "./ZodReferencesBridge";
+
+/**
+ * Interface for API objects that can be used with ObjectForm
+ *
+ * This interface defines the expected structure of API objects that can be
+ * passed to the ObjectForm component. It is generic to support different
+ * object types.
+ *
+ * @template T The object type (e.g., "Area", "World")
+ */
+export interface ObjectFormApiInterface {
+  /**
+   * RTK Query mutation hooks for creating and updating objects
+   *
+   * The keys follow the pattern:
+   * - use{ObjectType}sControllerCreateMutation - for creating objects
+   * - use{ObjectType}sControllerUpdateMutation - for updating objects
+   *
+   * Both create and update mutations are optional, but at least one should be
+   * provided if the api prop is used.
+   *
+   * Example:
+   * {
+   *   useAreasControllerCreateMutation: Function,
+   *   useAreasControllerUpdateMutation: Function
+   * }
+   */
+  [key: string]: Function | undefined;
+}
 
 /**
  * Type for schemas that may contain references to other objects
@@ -37,6 +69,24 @@ export interface ObjectFormOverlay {
  */
 export interface ObjectFormProps {
   /**
+   * Function to call when the form submission is successful
+   * This is called after onAdd/onUpdate/api call succeeds
+   */
+  onSuccess?: (result: any) => void;
+
+  /**
+   * Function to show notifications
+   */
+  notify?: (
+    message: string,
+    type: "success" | "error" | "warning" | "info"
+  ) => void;
+
+  /**
+   * Success message to show when form is submitted successfully
+   */
+  successMessage?: string;
+  /**
    * The schema for the form
    */
   schema: SchemaWithObjects;
@@ -44,11 +94,39 @@ export interface ObjectFormProps {
   /**
    * Function to handle form submission
    */
-  onSubmit: (data: any) => void | Promise<void>;
+  onSubmit?: (data: any) => void | Promise<void>;
+
+  /**
+   * Function to handle adding a new object
+   * Used when isNew is true
+   */
+  onAdd?: (data: any) => Promise<any>;
+
+  /**
+   * Function to handle updating an existing object
+   * Used when isNew is false
+   */
+  onUpdate?: (data: any) => Promise<any>;
+
+  /**
+   * Whether this form is for creating a new object (true) or updating an existing one (false)
+   * @default false
+   */
+  isNew?: boolean;
+
+  /**
+   * API object that contains RTK Query mutation hooks for CRUD operations
+   * If provided, the appropriate create/update function will be inferred based on objectType
+   *
+   * This should be an object that implements ObjectFormApiInterface with RTK Query
+   * mutation hooks following the naming convention.
+   */
+  api?: ObjectFormApiInterface;
 
   /**
    * The type of object this form is for (e.g., "Area", "World")
    * This is used to generate data-testid attributes for reference fields
+   * and to find the appropriate API functions if api is provided
    */
   objectType?: string;
 
@@ -123,9 +201,53 @@ const fieldTypes = {
  * - For single object references, it uses ObjectFieldset
  * - For array fields of objects, it uses ArrayObjectFieldset
  */
+/**
+ * Find the appropriate API function for creating or updating an object
+ * @param api The API object
+ * @param objectType The type of object
+ * @param isNew Whether this is a create or update operation
+ * @returns The appropriate API function or undefined if not found
+ */
+function findApiFunction(
+  api: ObjectFormApiInterface | undefined,
+  objectType: string,
+  isNew: boolean
+): Function | undefined {
+  if (!api || !objectType) return undefined;
+
+  // Convert first letter to uppercase for Pascal case
+  const pascalObjectType =
+    objectType.charAt(0).toUpperCase() + objectType.slice(1);
+
+  // For RTK Query API objects, look for the mutation functions
+  const createMutationName = `use${pascalObjectType}sControllerCreateMutation`;
+  const updateMutationName = `use${pascalObjectType}sControllerUpdateMutation`;
+
+  if (isNew) {
+    // For create operations, look for create mutation
+    if (typeof api[createMutationName] === "function") {
+      return api[createMutationName];
+    }
+  } else {
+    // For update operations, look for update mutation
+    if (typeof api[updateMutationName] === "function") {
+      return api[updateMutationName];
+    }
+  }
+
+  return undefined;
+}
+
 export function ObjectForm({
   schema,
   onSubmit,
+  onAdd,
+  onUpdate,
+  onSuccess,
+  notify,
+  successMessage = "Form submitted successfully",
+  isNew = false,
+  api,
   model,
   objectType: providedObjectType,
   showInlineError = true,
@@ -143,8 +265,174 @@ export function ObjectForm({
   overlay = {},
   ...props
 }: ObjectFormProps) {
+  // State to track loading status during form submission
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  // State to track error messages
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   // Infer object type from schema if not provided
   const objectType = providedObjectType || inferObjectTypeFromSchema(schema);
+
+  // Create the submit handler based on the provided props
+  const handleSubmit = useMemo(() => {
+    // If onSubmit is provided, use it directly
+    if (onSubmit) {
+      return onSubmit;
+    }
+
+    // If isNew is true, use onAdd or find the create API function
+    if (isNew) {
+      if (onAdd) {
+        return onAdd;
+      }
+
+      // Try to find the create API function
+      const createFunction = findApiFunction(api, objectType, true);
+      if (createFunction) {
+        return async (data: any) => {
+          try {
+            // Set loading state to true
+            setIsSubmitting(true);
+
+            // Convert first letter to uppercase for Pascal case
+            const pascalObjectType =
+              objectType.charAt(0).toUpperCase() + objectType.slice(1);
+
+            // Call the API function with the form data
+            const result = await createFunction({
+              [`create${pascalObjectType}Dto`]: data,
+            });
+
+            // If objectDispatch and objectCreateUpdateAction are provided, update Redux
+            if (objectDispatch && objectCreateUpdateAction) {
+              objectDispatch(
+                objectCreateUpdateAction(
+                  objectType.toLowerCase(),
+                  result.data || data,
+                  false
+                )
+              );
+            }
+
+            // Clear any previous error messages
+            setErrorMessage(null);
+
+            // Show success notification if notify function is provided
+            if (notify) {
+              notify(successMessage, "success");
+            }
+
+            // Call onSuccess callback if provided
+            if (onSuccess) {
+              onSuccess(result);
+            }
+
+            return result;
+          } catch (error: any) {
+            console.error(`Error creating ${objectType}:`, error);
+
+            // Set error message for display in the form
+            setErrorMessage(error.message || `Error creating ${objectType}`);
+
+            // Show error notification if notify function is provided
+            if (notify) {
+              notify(error.message || `Error creating ${objectType}`, "error");
+            }
+
+            throw error;
+          } finally {
+            // Set loading state to false regardless of success or failure
+            setIsSubmitting(false);
+          }
+        };
+      }
+    } else {
+      // If isNew is false, use onUpdate or find the update API function
+      if (onUpdate) {
+        return onUpdate;
+      }
+
+      // Try to find the update API function
+      const updateFunction = findApiFunction(api, objectType, false);
+      if (updateFunction && model && model.id) {
+        return async (data: any) => {
+          try {
+            // Set loading state to true
+            setIsSubmitting(true);
+
+            // Convert first letter to uppercase for Pascal case
+            const pascalObjectType =
+              objectType.charAt(0).toUpperCase() + objectType.slice(1);
+
+            // Call the API function with the ID and form data
+            const result = await updateFunction({
+              _id: model.id,
+              [`update${pascalObjectType}Dto`]: data,
+            });
+
+            // If objectDispatch and objectCreateUpdateAction are provided, update Redux
+            if (objectDispatch && objectCreateUpdateAction) {
+              objectDispatch(
+                objectCreateUpdateAction(
+                  objectType.toLowerCase(),
+                  result.data || data,
+                  true
+                )
+              );
+            }
+
+            // Show success notification if notify function is provided
+            if (notify) {
+              notify(successMessage, "success");
+            }
+
+            // Call onSuccess callback if provided
+            if (onSuccess) {
+              onSuccess(result);
+            }
+
+            return result;
+          } catch (error: any) {
+            console.error(`Error updating ${objectType}:`, error);
+
+            // Set error message for display in the form
+            setErrorMessage(error.message || `Error updating ${objectType}`);
+
+            // Show error notification if notify function is provided
+            if (notify) {
+              notify(error.message || `Error updating ${objectType}`, "error");
+            }
+
+            throw error;
+          } finally {
+            // Set loading state to false regardless of success or failure
+            setIsSubmitting(false);
+          }
+        };
+      }
+    }
+
+    // If no handler is found, log a warning and return a no-op function
+    console.warn(
+      `No submit handler found for ${isNew ? "creating" : "updating"} ${objectType}. Please provide onSubmit, on${isNew ? "Add" : "Update"}, or api.`
+    );
+    return (data: any) => {
+      console.warn("Form submitted but no handler was provided:", data);
+      return Promise.resolve();
+    };
+  }, [
+    onSubmit,
+    onAdd,
+    onUpdate,
+    onSuccess,
+    notify,
+    successMessage,
+    isNew,
+    api,
+    objectType,
+    model,
+    objectDispatch,
+    objectCreateUpdateAction,
+  ]);
 
   // Create a component detector that distinguishes between object, array object, and reference fields
   const objectDetector = useMemo(() => {
@@ -258,17 +546,54 @@ export function ObjectForm({
   return (
     <ObjectSchemaProvider schema={schema} objectType={objectType}>
       <AutoField.componentDetectorContext.Provider value={objectDetector}>
-        <UniformsAutoForm
-          schema={schemaWithContext}
-          model={model}
-          onSubmit={onSubmit}
-          disabled={disabled}
-          readOnly={readOnly}
-          showInlineError={showInlineError}
-          submitField={showSubmitButton ? undefined : () => null}
-          data-testid={props["data-testid"] || "ObjectForm"}
-          {...formProps}
-        />
+        {isSubmitting && (
+          <Box
+            sx={{
+              position: "absolute",
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              backgroundColor: "rgba(255, 255, 255, 0.7)",
+              zIndex: 1,
+            }}
+          >
+            <CircularProgress />
+          </Box>
+        )}
+        <Box sx={{ position: "relative" }}>
+          {/* Error message at the top of the form */}
+          {errorMessage && (
+            <Alert
+              severity="error"
+              variant="filled"
+              sx={{
+                mb: 2,
+                "& .MuiAlert-message": {
+                  color: "white",
+                },
+              }}
+              onClose={() => setErrorMessage(null)}
+            >
+              {errorMessage}
+            </Alert>
+          )}
+
+          <UniformsAutoForm
+            schema={schemaWithContext}
+            model={model}
+            onSubmit={handleSubmit}
+            disabled={disabled || isSubmitting}
+            readOnly={readOnly || isSubmitting}
+            showInlineError={showInlineError}
+            submitField={showSubmitButton ? undefined : () => null}
+            data-testid={props["data-testid"] || "ObjectForm"}
+            {...formProps}
+          />
+        </Box>
       </AutoField.componentDetectorContext.Provider>
     </ObjectSchemaProvider>
   );

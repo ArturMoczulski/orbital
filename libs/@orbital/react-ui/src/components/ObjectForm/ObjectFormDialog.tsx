@@ -14,6 +14,10 @@ export interface ObjectFormDialogProps
   extends Omit<
     ObjectFormProps,
     | "onSubmit"
+    | "onAdd"
+    | "onUpdate"
+    | "isNew"
+    | "api"
     | "arrayDispatch"
     | "arrayCreateUpdateAction"
     | "arrayCreateRemoveAction"
@@ -39,6 +43,18 @@ export interface ObjectFormDialogProps
    * Can return a Promise or void
    */
   onSubmit: (data: any) => Promise<any> | any;
+
+  /**
+   * Whether this form is for creating a new object (true) or updating an existing one (false)
+   * @default false
+   */
+  isNew?: boolean;
+
+  /**
+   * API object that contains controller functions for CRUD operations
+   * If provided, the appropriate create/update function will be inferred based on objectType
+   */
+  api?: any;
 
   /**
    * Function to show notifications (optional)
@@ -86,6 +102,8 @@ export function ObjectFormDialog({
   onClose,
   title,
   onSubmit,
+  isNew = false,
+  api,
   notify,
   actions,
   successMessage = "Form submitted successfully",
@@ -105,27 +123,10 @@ export function ObjectFormDialog({
   "data-testid": dataTestId,
   ...props
 }: ObjectFormDialogProps) {
-  // Handle form submission
-  const handleSubmit = async (data: any) => {
-    try {
-      await onSubmit(data);
-
-      // Show success notification if notify function is provided
-      if (notify) {
-        notify(successMessage, "success");
-      }
-
-      // Close the dialog
-      onClose();
-    } catch (error: any) {
-      // Show error notification if notify function is provided
-      if (notify) {
-        notify(error.message || "An error occurred", "error");
-      }
-
-      // Log the error
-      console.error("Form submission error:", error);
-    }
+  // Handle successful form submission
+  const handleSuccess = (result: any) => {
+    // Close the dialog
+    onClose();
   };
 
   return (
@@ -147,7 +148,12 @@ export function ObjectFormDialog({
         <Box sx={{ py: 2 }}>
           <ObjectForm
             schema={schema}
-            onSubmit={handleSubmit}
+            onSubmit={onSubmit}
+            onSuccess={handleSuccess}
+            notify={notify}
+            successMessage={successMessage}
+            isNew={isNew}
+            api={api}
             model={model}
             objectType={objectType}
             showInlineError={showInlineError}

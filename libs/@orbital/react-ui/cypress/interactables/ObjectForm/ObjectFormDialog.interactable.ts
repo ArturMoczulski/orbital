@@ -71,14 +71,16 @@ export class ObjectFormDialogInteractable extends DialogInteractable {
    * Fill and submit the form
    * @param data The data to fill the form with
    */
-  submit(data: Record<string, any>): this {
+  submit(data?: Record<string, any>): this {
     // Fill the form fields
-    Object.entries(data).forEach(([key, value]) => {
-      this.form().setFieldValue(key, value);
-    });
+    if (data) {
+      Object.entries(data).forEach(([key, value]) => {
+        this.form().setFieldValue(key, value);
+      });
+    }
 
-    // Submit the form
-    this.form().submit();
+    // Click the submit button in the dialog actions
+    this.get({}).contains("button", "Submit").click();
 
     // Wait for the dialog to close
     this.waitForClose();

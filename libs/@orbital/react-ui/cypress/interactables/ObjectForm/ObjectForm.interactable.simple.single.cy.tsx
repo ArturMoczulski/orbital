@@ -5,6 +5,7 @@ import { Provider } from "react-redux";
 import { ZodBridge } from "uniforms-bridge-zod";
 import { z } from "zod";
 import { ObjectForm } from "../../../src/components/ObjectForm/ObjectForm";
+import { TextInputInteractable } from "../AutoForm/FormInput.interactable";
 import { objectForm } from "./ObjectForm.interactable";
 
 describe("ObjectForm.interactable", () => {
@@ -254,10 +255,10 @@ describe("ObjectForm.interactable", () => {
     const form = objectForm({ objectType: "User" });
 
     // Use direct field access and check values
-    form.field("name").should("have.value", "John Doe");
-    form.field("email").should("have.value", "john@example.com");
-    form.field("age").should("have.value", "30");
-    form.field("isActive").should("be.checked");
+    form.getFieldValue("name").should("eq", "John Doe");
+    form.getFieldValue("email").should("eq", "john@example.com");
+    form.getFieldValue("age").should("eq", 30);
+    form.getFieldValue("isActive").should("eq", true);
   });
 
   it("should handle form submission", () => {
@@ -266,7 +267,9 @@ describe("ObjectForm.interactable", () => {
     const form = objectForm({ objectType: "User" });
 
     // Change a field value using direct Cypress commands
-    form.field("name").clear().type("Jane Smith");
+    form
+      .field<TextInputInteractable>("name")
+      .then((f) => f.setValue("Jane Smith"));
 
     // Submit the form
     form.submit();
@@ -284,10 +287,7 @@ describe("ObjectForm.interactable", () => {
     form.isDisabled().should("eq", true);
 
     // Verify a field is disabled using the form's field method
-    form.field("name").then((field) => {
-      // Check if the field has disabled attribute
-      cy.wrap(field).should("have.attr", "disabled");
-    });
+    form.field("name").then((f) => f.isDisabled().should("be.true"));
   });
 
   it("should handle readonly state", () => {
@@ -299,17 +299,7 @@ describe("ObjectForm.interactable", () => {
     form.isReadOnly().should("eq", true);
 
     // Verify a field is readonly using the form's field method
-    form.field("name").then((field) => {
-      // Check if the field has readonly attribute or aria-readonly attribute
-      cy.wrap(field).should((el: JQuery<HTMLElement>) => {
-        const $el = Cypress.$(el);
-        const hasReadOnly =
-          $el.attr("readonly") !== undefined ||
-          $el.prop("readonly") === true ||
-          $el.closest("[aria-readonly='true']").length > 0;
-        expect(hasReadOnly).to.be.true;
-      });
-    });
+    form.field("name").then((f) => f.get().should("have.attr", "readonly"));
   });
 
   it("should handle nested object fields", () => {
@@ -319,8 +309,8 @@ describe("ObjectForm.interactable", () => {
 
     // Use direct field access and check values
     form.field("address.street").should("exist");
-    form.field("address.street").should("have.value", "123 Main St");
-    form.field("address.city").should("have.value", "Anytown");
+    form.getFieldValue("address.street").should("eq", "123 Main St");
+    form.getFieldValue("address.city").should("eq", "Anytown");
   });
 
   it("should handle array fields", () => {
@@ -330,9 +320,9 @@ describe("ObjectForm.interactable", () => {
 
     // For array fields, we need to check individual array items
     form.field("hobbies.0").should("exist");
-    form.field("hobbies.0").should("have.value", "Reading");
+    form.getFieldValue("hobbies.0").should("eq", "Reading");
     form.field("hobbies.1").should("exist");
-    form.field("hobbies.1").should("have.value", "Cycling");
+    form.getFieldValue("hobbies.1").should("eq", "Cycling");
   });
 
   it("should update Redux state when form is submitted", () => {
