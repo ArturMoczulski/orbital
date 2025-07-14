@@ -1,3 +1,4 @@
+import Box from "@mui/material/Box";
 import { ReferenceMetadata } from "@orbital/core/src/zod/reference/reference";
 import { connectField } from "uniforms";
 import { ZodBridge } from "uniforms-bridge-zod";
@@ -120,29 +121,34 @@ function BelongsToField({
   const finalObjectType = objectType || contextObjectType;
 
   return (
-    <ReferenceField
-      disabled={disabled}
-      error={error}
-      errorMessage={errorMessage}
-      id={id}
-      label={label}
-      name={name}
-      onChange={handleChange}
-      placeholder={placeholder}
-      readOnly={readOnly}
-      required={required}
-      value={finalValue}
-      // Add a key prop to force re-render when finalValue changes
-      key={`belongsto-${name}-${finalValue}`}
-      reference={reference}
-      objectType={finalObjectType}
-      schema={schema}
-      multiple={false}
-      idField="id" // Explicitly set idField to match the structure of our options
-      data-testid="BelongsToField"
-      objectId={objectId}
-    />
+    <Box sx={{ pt: 2, pb: 2 }}>
+      <ReferenceField
+        disabled={disabled}
+        error={error}
+        errorMessage={errorMessage}
+        id={id}
+        label={label}
+        name={name}
+        onChange={handleChange}
+        placeholder={placeholder}
+        readOnly={readOnly}
+        required={required}
+        value={finalValue}
+        // Add a key prop to force re-render when finalValue changes
+        key={`belongsto-${name}-${finalValue}`}
+        reference={reference}
+        objectType={finalObjectType}
+        schema={schema}
+        multiple={false}
+        idField="id" // Explicitly set idField to match the structure of our options
+        data-testid="BelongsToField"
+        objectId={objectId}
+      />
+    </Box>
   );
 }
 
-export default connectField(BelongsToField);
+export default connectField(BelongsToField, {
+  kind: "leaf",
+  initialValue: false,
+});

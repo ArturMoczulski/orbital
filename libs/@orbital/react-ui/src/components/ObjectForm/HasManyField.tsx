@@ -1,3 +1,4 @@
+import Box from "@mui/material/Box";
 import { ReferenceMetadata } from "@orbital/core/src/zod/reference/reference";
 import { connectField } from "uniforms";
 import { ZodBridge } from "uniforms-bridge-zod";
@@ -116,25 +117,27 @@ function HasManyField({
   const finalObjectType = objectType || contextObjectType;
 
   return (
-    <ReferenceField
-      disabled={disabled}
-      error={error}
-      errorMessage={errorMessage}
-      id={id}
-      label={label}
-      name={name}
-      onChange={handleChange}
-      placeholder={placeholder}
-      readOnly={readOnly}
-      required={required}
-      value={finalValue}
-      reference={reference}
-      objectType={finalObjectType}
-      schema={schema}
-      multiple={true}
-      data-testid="HasManyField"
-      objectId={objectId}
-    />
+    <Box sx={{ mb: 2 }}>
+      <ReferenceField
+        disabled={disabled}
+        error={error}
+        errorMessage={errorMessage}
+        id={id}
+        label={label}
+        name={name}
+        onChange={handleChange}
+        placeholder={placeholder}
+        readOnly={readOnly}
+        required={required}
+        value={finalValue}
+        reference={reference}
+        objectType={finalObjectType}
+        schema={schema}
+        multiple={true}
+        data-testid="HasManyField"
+        objectId={objectId}
+      />
+    </Box>
   );
 }
 
