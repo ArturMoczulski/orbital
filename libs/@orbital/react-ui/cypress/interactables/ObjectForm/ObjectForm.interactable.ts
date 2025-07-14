@@ -1,15 +1,12 @@
 import {
+  FormInputInteractable,
+  FormInputInteractableOptions,
+  inputField,
+} from "../AutoForm/FormInput.interactable";
+import {
   CypressInteractable,
   CypressInteractableOptions,
 } from "../Cypress.interactable";
-import {
-  arrayObjectFieldset,
-  ArrayObjectFieldsetInteractable,
-} from "./ArrayObjectFieldset.interactable";
-import {
-  objectFieldset,
-  ObjectFieldsetInteractable,
-} from "./ObjectFieldset.interactable";
 
 /**
  * Options for ObjectFormInteractable
@@ -66,122 +63,23 @@ export class ObjectFormInteractable extends CypressInteractable {
     return this;
   }
 
-  /**
-   * Get all object fieldsets within the form
-   */
-  objectFieldsets(): Cypress.Chainable<ObjectFieldsetInteractable[]> {
-    return this.get().then(($form) => {
-      const fieldsets: ObjectFieldsetInteractable[] = [];
+  field<T extends FormInputInteractable<any> = FormInputInteractable<any>>(
+    fieldName: string,
+    customInteractable?: new (options: FormInputInteractableOptions) => T
+  ): Cypress.Chainable<T> {
+    // Create a parent element function that returns the fieldset element
+    const parentElement = () => {
+      return this.get();
+    };
 
-      // Find all ObjectFieldset elements
-      $form.find('[data-testid="ObjectFieldset"]').each((index, element) => {
-        const $element = Cypress.$(element);
-        const objectType = $element.attr("data-object-type") || this.objectType;
-        const objectId = $element.attr("data-object-id");
-
-        fieldsets.push(objectFieldset(objectType, undefined, objectId, index));
-      });
-
-      return cy.wrap(fieldsets);
-    });
-  }
-
-  /**
-   * Get a specific object fieldset by index or object ID
-   */
-  objectFieldset(
-    indexOrId: number | string
-  ): Cypress.Chainable<ObjectFieldsetInteractable> {
-    if (typeof indexOrId === "number") {
-      // If a number is provided, use it as an index
-      return cy.wrap(
-        objectFieldset(this.objectType, () => this.get(), undefined, indexOrId)
-      );
-    } else {
-      // If a string is provided, use it as an ID
-      return cy.wrap(
-        objectFieldset(this.objectType, () => this.get(), indexOrId)
-      );
-    }
-  }
-
-  /**
-   * Get all array object fieldsets within the form
-   */
-  arrayObjectFieldsets(): Cypress.Chainable<ArrayObjectFieldsetInteractable[]> {
-    return this.get().then(($form) => {
-      const fieldsets: ArrayObjectFieldsetInteractable[] = [];
-
-      // Find all ArrayObjectFieldset elements
-      $form.find('[data-testid="ArrayObjectFieldset"]').each((index) => {
-        fieldsets.push(
-          arrayObjectFieldset({
-            objectType: this.objectType,
-            parentElement: () => this.get(),
-            index,
-          })
-        );
-      });
-
-      return cy.wrap(fieldsets);
-    });
-  }
-
-  /**
-   * Get a specific array object fieldset by index
-   */
-  arrayObjectFieldset(
-    index: number
-  ): Cypress.Chainable<ArrayObjectFieldsetInteractable> {
-    return cy.wrap(
-      arrayObjectFieldset({
-        objectType: this.objectType,
-        parentElement: () => this.get(),
-        index,
-      })
+    // Use the inputField factory to create the appropriate field interactable
+    return inputField<T>(
+      {
+        fieldName,
+        parentElement,
+      },
+      customInteractable
     );
-  }
-
-  /**
-   * Get a field within the form by name
-   * This will search all fieldsets for the field
-   */
-  field(fieldName: string): Cypress.Chainable<any> {
-    return this.get().then(($form) => {
-      // Look for the field in the form
-      const $field = $form.find(
-        `[name="${fieldName}"], [data-field-name="${fieldName}"]`
-      );
-
-      if ($field.length > 0) {
-        // If found directly in the form, return it
-        return cy.wrap($field);
-      } else {
-        // Otherwise, search in all fieldsets
-        return this.objectFieldsets().then((fieldsets) => {
-          // Create a promise chain to check each fieldset
-          const checkFieldsets = (index: number): Cypress.Chainable<any> => {
-            if (index >= fieldsets.length) {
-              // If we've checked all fieldsets and found nothing, return null
-              return cy.wrap(null);
-            }
-
-            // Check if the current fieldset has the field
-            return fieldsets[index].hasField(fieldName).then((hasField) => {
-              if (hasField) {
-                // If it has the field, return the field
-                return fieldsets[index].field(fieldName);
-              } else {
-                // Otherwise, check the next fieldset
-                return checkFieldsets(index + 1);
-              }
-            });
-          };
-
-          return checkFieldsets(0);
-        });
-      }
-    });
   }
 
   /**

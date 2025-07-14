@@ -211,6 +211,25 @@ export class ObjectSelectorInteractable
   }
 
   /**
+   * Implementation of setValue from FormInputInteractable
+   * Delegates to the select method of AutocompleteInteractable
+   * @param value The value(s) to set
+   */
+  setValue(value: string | string[]): Cypress.Chainable<JQuery<HTMLElement>> {
+    if (Array.isArray(value)) {
+      // For multiple selection, we need to select each value
+      value.forEach((val) => {
+        this.autocomplete.selectById(val);
+      });
+      return this.get();
+    } else {
+      // For single selection
+      this.autocomplete.selectById(value);
+      return this.get();
+    }
+  }
+
+  /**
    * Override getValue to return the actual value (ID) of the selected option
    * This ensures we get the correct value from the form field
    */

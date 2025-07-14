@@ -46,32 +46,19 @@ export abstract class FormInputInteractable<T> extends CypressInteractable {
    * Set a value on the input field
    * This method will be implemented by subclasses
    */
-  abstract selectById(value: T): Cypress.Chainable<JQuery<HTMLElement>>;
+  /**
+   * Set a value on the input field
+   * This method will be implemented by subclasses based on their input type
+   * @param value The value to set
+   */
+  abstract setValue(value: any): Cypress.Chainable<JQuery<HTMLElement>>;
 
   /**
    * Get the current value of the input field
+   * This method will be implemented by subclasses based on their input type
    * @returns A chainable that resolves to the field value
    */
-  getValue(): Cypress.Chainable<any> {
-    return this.get().then(($el) => {
-      // For standard inputs, get the value directly
-      const value = $el.val();
-
-      // Debug log to see what type of value we're getting
-      cy.log(`getValue: ${typeof value}, value: ${JSON.stringify(value)}`);
-
-      // Handle different value types
-      if (typeof value === "string") {
-        return cy.wrap(value);
-      } else if (Array.isArray(value) && value.length > 0) {
-        // If it's an array, return the full array, not just the first element
-        return cy.wrap(value);
-      } else {
-        // For other types, just wrap the value
-        return cy.wrap(value);
-      }
-    });
-  }
+  abstract getValue(): Cypress.Chainable<any>;
 
   /**
    * Get the field name
@@ -204,15 +191,23 @@ export class TextInputInteractable extends FormInputInteractable<string> {
    * Set a value on the text input
    * This implementation handles React re-renders by breaking the chain
    */
-  selectById(value: string): Cypress.Chainable<JQuery<HTMLElement>> {
-    // First clear the input
-    this.clear();
 
-    // Wait a small amount of time for any React re-renders
-    cy.wait(100);
+  /**
+   * Implementation of setValue for text inputs
+   * @param value The text value to set
+   */
+  setValue(value: string): Cypress.Chainable<JQuery<HTMLElement>> {
+    return this.type(value);
+  }
 
-    // Then get a fresh reference to the element and type the value
-    return this.get().type(value, { force: true });
+  /**
+   * Implementation of getValue for text inputs
+   */
+  getValue(): Cypress.Chainable<string> {
+    return this.get().then(($el) => {
+      const value = $el.val() as string;
+      return cy.wrap(value);
+    });
   }
 
   /**
@@ -251,7 +246,12 @@ export class NumberInputInteractable extends FormInputInteractable<number> {
    * Set a value on the number input
    * This implementation handles React re-renders by breaking the chain
    */
-  selectById(value: number): Cypress.Chainable<JQuery<HTMLElement>> {
+
+  /**
+   * Implementation of setValue for number inputs
+   * @param value The number value to set
+   */
+  setValue(value: number): Cypress.Chainable<JQuery<HTMLElement>> {
     // First clear the input
     this.clear();
 
@@ -260,6 +260,16 @@ export class NumberInputInteractable extends FormInputInteractable<number> {
 
     // Then get a fresh reference to the element and type the value
     return this.get().type(String(value), { force: true });
+  }
+
+  /**
+   * Implementation of getValue for number inputs
+   */
+  getValue(): Cypress.Chainable<number> {
+    return this.get().then(($el) => {
+      const value = parseFloat($el.val() as string);
+      return cy.wrap(value);
+    });
   }
 
   clear() {
@@ -277,12 +287,27 @@ export class CheckboxInputInteractable extends FormInputInteractable<boolean> {
   /**
    * Set a value on the checkbox
    */
-  selectById(value: boolean): Cypress.Chainable<JQuery<HTMLElement>> {
+
+  /**
+   * Implementation of setValue for checkbox inputs
+   * @param value The boolean value to set
+   */
+  setValue(value: boolean): Cypress.Chainable<JQuery<HTMLElement>> {
     if (value) {
       return this.check();
     } else {
       return this.uncheck();
     }
+  }
+
+  /**
+   * Implementation of getValue for checkbox inputs
+   */
+  getValue(): Cypress.Chainable<boolean> {
+    return this.get().then(($el) => {
+      const value = $el.prop("checked") as boolean;
+      return cy.wrap(value === true);
+    });
   }
 
   /**
@@ -314,8 +339,24 @@ export class RadioInputInteractable extends FormInputInteractable<string> {
   /**
    * Set a value on the radio button
    */
-  selectById(value: string): Cypress.Chainable<JQuery<HTMLElement>> {
+  /**
+   * Implementation of setValue for radio inputs
+   * @param value The value to select
+   */
+  setValue(value: string): Cypress.Chainable<JQuery<HTMLElement>> {
     return this.get().check(value);
+  }
+
+  /**
+   * Implementation of getValue for radio inputs
+   */
+  getValue(): Cypress.Chainable<string> {
+    return this.get().then(($el) => {
+      // For radio buttons, we need to find the checked one
+      const $checked = $el.filter(":checked");
+      const value = $checked.val() as string;
+      return cy.wrap(value);
+    });
   }
 
   clear() {
@@ -333,8 +374,22 @@ export class SelectInputInteractable extends FormInputInteractable<string> {
   /**
    * Set a value on the select dropdown
    */
-  selectById(value: string): Cypress.Chainable<JQuery<HTMLElement>> {
+  /**
+   * Implementation of setValue for select inputs
+   * @param value The value to select
+   */
+  setValue(value: string): Cypress.Chainable<JQuery<HTMLElement>> {
     return this.get().select(value);
+  }
+
+  /**
+   * Implementation of getValue for select inputs
+   */
+  getValue(): Cypress.Chainable<string | string[]> {
+    return this.get().then(($el) => {
+      const value = $el.val() as string | string[];
+      return cy.wrap(value);
+    });
   }
 
   /**
@@ -381,7 +436,8 @@ export function inputField<
   // Function to get the element using the parent if provided
   const getInputElement = () => {
     if (parentElement) {
-      return parentElement().find(inputSelector);
+      const parent = parentElement();
+      return parent.find(inputSelector);
     }
     return cy.get(inputSelector);
   };

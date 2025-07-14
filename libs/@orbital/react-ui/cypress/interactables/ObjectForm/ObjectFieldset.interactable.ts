@@ -130,7 +130,9 @@ export class ObjectFieldsetInteractable extends CypressInteractable {
     customInteractable?: new (options: FormInputInteractableOptions) => T
   ): Cypress.Chainable<T> {
     // Create a parent element function that returns the fieldset element
-    const parentElement = () => this.get({});
+    const parentElement = () => {
+      return this.get();
+    };
 
     // Use the inputField factory to create the appropriate field interactable
     return inputField<T>(

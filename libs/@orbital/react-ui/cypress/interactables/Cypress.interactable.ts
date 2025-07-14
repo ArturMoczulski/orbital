@@ -63,6 +63,7 @@ export abstract class CypressInteractable {
         Cypress.Shadow
     >
   ) {
+    cy.log(this.selector());
     if (!this.validateTarget()) {
       throw new Error(
         "CypressInteractable: At least one of htmlElementType or dataTestId must be provided"

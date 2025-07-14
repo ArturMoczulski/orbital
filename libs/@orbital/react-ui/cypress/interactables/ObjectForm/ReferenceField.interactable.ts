@@ -283,6 +283,15 @@ export class ReferenceFieldInteractable
   }
 
   /**
+   * Implementation of setValue from FormInputInteractable
+   * Delegates to the select method of AutocompleteInteractable
+   * @param value The value(s) to set
+   */
+  setValue(value: string | string[]): Cypress.Chainable<JQuery<HTMLElement>> {
+    return this.selectById(value);
+  }
+
+  /**
    * Override getValue to return the actual value (ID) of the selected option
    * This ensures we get the correct value from the form field
    */

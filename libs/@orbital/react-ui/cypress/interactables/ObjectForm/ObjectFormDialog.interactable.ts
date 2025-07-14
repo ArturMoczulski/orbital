@@ -62,7 +62,7 @@ export class ObjectFormDialogInteractable extends DialogInteractable {
     // Create and return the ObjectFormInteractable with the correct options
     return objectForm({
       dataTestId: "ObjectForm",
-      parentElement: () => this.get({}),
+      parentElement: () => this.get(),
       objectType: this.objectType,
     });
   }

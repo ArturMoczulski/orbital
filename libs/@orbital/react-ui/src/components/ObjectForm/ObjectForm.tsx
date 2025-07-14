@@ -256,22 +256,21 @@ export function ObjectForm({
   const showSubmitButton = overlay.SubmitField !== false;
 
   return (
-    <div data-testid={props["data-testid"] || "ObjectForm"}>
-      <ObjectSchemaProvider schema={schema} objectType={objectType}>
-        <AutoField.componentDetectorContext.Provider value={objectDetector}>
-          <UniformsAutoForm
-            schema={schemaWithContext}
-            model={model}
-            onSubmit={onSubmit}
-            disabled={disabled}
-            readOnly={readOnly}
-            showInlineError={showInlineError}
-            submitField={showSubmitButton ? undefined : () => null}
-            {...formProps}
-          />
-        </AutoField.componentDetectorContext.Provider>
-      </ObjectSchemaProvider>
-    </div>
+    <ObjectSchemaProvider schema={schema} objectType={objectType}>
+      <AutoField.componentDetectorContext.Provider value={objectDetector}>
+        <UniformsAutoForm
+          schema={schemaWithContext}
+          model={model}
+          onSubmit={onSubmit}
+          disabled={disabled}
+          readOnly={readOnly}
+          showInlineError={showInlineError}
+          submitField={showSubmitButton ? undefined : () => null}
+          data-testid={props["data-testid"] || "ObjectForm"}
+          {...formProps}
+        />
+      </AutoField.componentDetectorContext.Provider>
+    </ObjectSchemaProvider>
   );
 }
 

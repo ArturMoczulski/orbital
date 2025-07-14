@@ -167,6 +167,10 @@ describe("ObjectFormDialog.interactable", () => {
 
     // Verify form fields exist and have correct values
     dialog.form().field("name").should("exist");
+    dialog
+      .form()
+      .field("name")
+      .then((f) => f.getValue().should("eq", "John Doe"));
     dialog.form().field("departmentId").should("exist");
     dialog.form().field("projectIds").should("exist");
   });
