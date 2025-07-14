@@ -22,6 +22,17 @@ import {
 export type SchemaWithObjects = ZodBridge<any> | ZodReferencesBridge<any>;
 
 /**
+ * Configuration for which components should be shown in the ObjectForm
+ */
+export interface ObjectFormOverlay {
+  /**
+   * Whether to show the SubmitField component
+   * @default true
+   */
+  SubmitField?: boolean;
+}
+
+/**
  * Props for the ObjectForm component
  */
 export interface ObjectFormProps {
@@ -89,6 +100,12 @@ export interface ObjectFormProps {
   ) => Record<string, any>;
 
   /**
+   * Configuration for which components should be shown
+   * @default All components are shown
+   */
+  overlay?: ObjectFormOverlay;
+
+  /**
    * Additional props to pass to the form
    */
   [key: string]: any;
@@ -123,6 +140,7 @@ export function ObjectForm({
   objectDispatch,
   objectCreateUpdateAction,
   objectDataSelector,
+  overlay = {},
   ...props
 }: ObjectFormProps) {
   // Infer object type from schema if not provided
@@ -234,6 +252,9 @@ export function ObjectForm({
     return schemaProxy;
   }, [schema, formContext]);
 
+  // Determine if the submit button should be shown
+  const showSubmitButton = overlay.SubmitField !== false;
+
   return (
     <div data-testid={props["data-testid"] || "ObjectForm"}>
       <ObjectSchemaProvider schema={schema} objectType={objectType}>
@@ -245,6 +266,7 @@ export function ObjectForm({
             disabled={disabled}
             readOnly={readOnly}
             showInlineError={showInlineError}
+            submitField={showSubmitButton ? undefined : () => null}
             {...formProps}
           />
         </AutoField.componentDetectorContext.Provider>

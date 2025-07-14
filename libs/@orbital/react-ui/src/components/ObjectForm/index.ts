@@ -21,6 +21,7 @@ export { ObjectDataProvider, useObjectData } from "./ObjectDataContext";
 export { ObjectFieldset } from "./ObjectFieldset";
 export {
   ObjectForm,
+  type ObjectFormOverlay,
   type ObjectFormProps,
   type SchemaWithObjects,
 } from "./ObjectForm";

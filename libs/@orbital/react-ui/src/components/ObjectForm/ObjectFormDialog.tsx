@@ -5,7 +5,7 @@ import DialogActions from "@mui/material/DialogActions";
 import DialogContent from "@mui/material/DialogContent";
 import DialogTitle from "@mui/material/DialogTitle";
 import { ReactNode } from "react";
-import { ObjectForm, ObjectFormProps } from "./ObjectForm";
+import ObjectForm, { ObjectFormProps } from "./ObjectForm";
 
 /**
  * Props for the ObjectFormDialog component
@@ -102,6 +102,7 @@ export function ObjectFormDialog({
   objectDispatch,
   objectCreateUpdateAction,
   objectDataSelector,
+  "data-testid": dataTestId,
   ...props
 }: ObjectFormDialogProps) {
   // Handle form submission
@@ -133,7 +134,7 @@ export function ObjectFormDialog({
       onClose={onClose}
       fullWidth={fullWidth}
       maxWidth={maxWidth}
-      data-testid="ObjectFormDialog"
+      data-testid={dataTestId || "ObjectFormDialog"}
       PaperProps={{
         sx: {
           ...(paperSx || {}),
@@ -156,8 +157,11 @@ export function ObjectFormDialog({
             objectDispatch={objectDispatch}
             objectCreateUpdateAction={objectCreateUpdateAction}
             objectDataSelector={objectDataSelector}
-            data-testid="ObjectForm"
-            {...props}
+            // Hide the submit button in the form since we have our own in the dialog actions
+            overlay={{ SubmitField: false }}
+            {...Object.fromEntries(
+              Object.entries(props).filter(([key]) => key !== "data-testid")
+            )}
           />
         </Box>
       </DialogContent>
