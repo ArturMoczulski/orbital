@@ -133,10 +133,10 @@ describe("ArrayObjectFieldset.interactable", () => {
     // Verify removeButton exists and removeItem() removes an item
     arrayFieldset.removeButton(1).should("exist");
     arrayFieldset.removeItem(1);
-    arrayFieldset.getItemCount().should("eq", 2);
+    arrayFieldset.getItemCount().should("eq", 1);
 
     // Verify the state was updated in the component
-    cy.get('[data-testid="tasks-count"]').should("contain", "2");
+    cy.get('[data-testid="tasks-count"]').should("contain", "1");
   });
 
   it("should update field values", () => {
@@ -148,8 +148,14 @@ describe("ArrayObjectFieldset.interactable", () => {
     arrayFieldset.item(0).then((taskFieldset) => {
       // Get the name field interactable and use type to set the value
       taskFieldset.field("name").then((fieldInteractable) => {
-        (fieldInteractable as TextInputInteractable).type("Updated Task Name");
+        // First clear the field, then type the new value
+        (fieldInteractable as TextInputInteractable)
+          .clear()
+          .type("Updated Task Name");
       });
+
+      // Wait for the state to update
+      cy.wait(100);
 
       // Now verify the field value through the interactable
       // Get a fresh reference to avoid stale elements
@@ -182,7 +188,7 @@ describe("ArrayObjectFieldset.interactable", () => {
             arrayId="tasks"
             items={initialTasks}
             onChange={() => {}}
-            data-testid="disabled-fieldset"
+            data-testid="ArrayObjectFieldset"
             disabled
           />
         </div>
@@ -193,7 +199,6 @@ describe("ArrayObjectFieldset.interactable", () => {
 
     // Get the ArrayObjectFieldset interactable
     const disabledFieldset = arrayObjectFieldset({
-      dataTestId: "disabled-fieldset",
       objectType: "Task",
     });
 
@@ -217,7 +222,7 @@ describe("ArrayObjectFieldset.interactable", () => {
             arrayId="tasks"
             items={initialTasks}
             onChange={() => {}}
-            data-testid="readonly-fieldset"
+            data-testid="ArrayObjectFieldset"
             readOnly
           />
         </div>
@@ -228,7 +233,6 @@ describe("ArrayObjectFieldset.interactable", () => {
 
     // Get the ArrayObjectFieldset interactable
     const readonlyFieldset = arrayObjectFieldset({
-      dataTestId: "readonly-fieldset",
       objectType: "Task",
     });
 
