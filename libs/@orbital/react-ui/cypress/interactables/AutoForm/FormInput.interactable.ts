@@ -55,7 +55,21 @@ export abstract class FormInputInteractable<T> extends CypressInteractable {
   getValue(): Cypress.Chainable<any> {
     return this.get().then(($el) => {
       // For standard inputs, get the value directly
-      return cy.wrap($el.val());
+      const value = $el.val();
+
+      // Debug log to see what type of value we're getting
+      cy.log(`getValue: ${typeof value}, value: ${JSON.stringify(value)}`);
+
+      // Handle different value types
+      if (typeof value === "string") {
+        return cy.wrap(value);
+      } else if (Array.isArray(value) && value.length > 0) {
+        // If it's an array, return the full array, not just the first element
+        return cy.wrap(value);
+      } else {
+        // For other types, just wrap the value
+        return cy.wrap(value);
+      }
     });
   }
 
@@ -201,9 +215,20 @@ export class TextInputInteractable extends FormInputInteractable<string> {
     return this.get().type(value, { force: true });
   }
 
-  type(text: string) {
-    this.get().clear();
-    this.get().type(text);
+  /**
+   * Type text into the input field
+   * This implementation handles React re-renders by breaking the chain
+   * @returns A chainable that resolves to the element
+   */
+  type(text: string): Cypress.Chainable<JQuery<HTMLElement>> {
+    // First clear the input
+    this.clear();
+
+    // Wait a small amount of time for any React re-renders
+    cy.wait(100);
+
+    // Then get a fresh reference to the element and type the value
+    return this.get().type(text, { force: true });
   }
 
   clear() {

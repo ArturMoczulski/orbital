@@ -53,40 +53,46 @@ describe("ArrayObjectFieldset.interactable", () => {
     });
   });
 
-  it.only("should correctly interact with ArrayObjectFieldset component", () => {
-    // Create a simple component with ArrayObjectFieldset
-    function TestComponent() {
-      const [tasks, setTasks] = useState(initialTasks);
+  // Reusable test component
+  function TestComponent() {
+    const [tasks, setTasks] = useState(initialTasks);
 
-      return (
-        <div>
-          <ArrayObjectFieldset
-            schema={taskBridge}
-            objectType="Task"
-            arrayId="tasks"
-            items={tasks}
-            onChange={(newItems) => setTasks(newItems as any)}
-          />
+    return (
+      <div>
+        <ArrayObjectFieldset
+          schema={taskBridge}
+          objectType="Task"
+          arrayId="tasks"
+          items={tasks}
+          onChange={(newItems) => setTasks(newItems as any)}
+        />
 
-          {/* Hidden divs to verify the current state */}
-          <div data-testid="tasks-count">{tasks.length}</div>
-          <div data-testid="tasks-data">{JSON.stringify(tasks)}</div>
-        </div>
-      );
-    }
+        {/* Hidden divs to verify the current state */}
+        <div data-testid="tasks-count">{tasks.length}</div>
+        <div data-testid="tasks-data">{JSON.stringify(tasks)}</div>
+      </div>
+    );
+  }
 
+  it("should render the component and verify item count", () => {
     mount(<TestComponent />);
 
     // Get the ArrayObjectFieldset interactable
     const arrayFieldset = arrayObjectFieldset({ objectType: "Task" });
 
-    // Test 1: Verify the interactable can find the component
+    // Verify the interactable can find the component
     arrayFieldset.should("exist");
 
-    // Test 2: Verify getItemCount returns the correct number of items
+    // Verify getItemCount returns the correct number of items
     arrayFieldset.getItemCount().should("eq", 2);
+  });
 
-    // Test 3: Verify item() returns an ObjectFieldset interactable for a specific item
+  it("should access and verify item fields", () => {
+    mount(<TestComponent />);
+
+    const arrayFieldset = arrayObjectFieldset({ objectType: "Task" });
+
+    // Verify item() returns an ObjectFieldset interactable for the first item
     arrayFieldset.item(0).then((taskFieldset) => {
       // Verify it can access fields
       taskFieldset.field("name").should("exist");
@@ -97,33 +103,51 @@ describe("ArrayObjectFieldset.interactable", () => {
       taskFieldset.getFieldValue("priority").should("eq", "1");
     });
 
-    // Test 4: Verify item() for the second item
+    // Verify item() for the second item
     arrayFieldset.item(1).then((taskFieldset) => {
       taskFieldset.should("exist");
       taskFieldset.getFieldValue("name").should("eq", "Second Task");
       taskFieldset.getFieldValue("completed").should("eq", "completed");
     });
+  });
 
-    // Test 5: Verify addButton exists and addItem() adds a new item
+  it("should add new items to the array", () => {
+    mount(<TestComponent />);
+
+    const arrayFieldset = arrayObjectFieldset({ objectType: "Task" });
+
+    // Verify addButton exists and addItem() adds a new item
     arrayFieldset.addButton.should("exist");
     arrayFieldset.addItem();
     arrayFieldset.getItemCount().should("eq", 3);
+
     // Verify the state was updated in the component
     cy.get('[data-testid="tasks-count"]').should("contain", "3");
+  });
 
-    // Test 6: Verify removeButton exists and removeItem() removes an item
+  it("should remove items from the array", () => {
+    mount(<TestComponent />);
+
+    const arrayFieldset = arrayObjectFieldset({ objectType: "Task" });
+
+    // Verify removeButton exists and removeItem() removes an item
     arrayFieldset.removeButton(1).should("exist");
     arrayFieldset.removeItem(1);
     arrayFieldset.getItemCount().should("eq", 2);
+
     // Verify the state was updated in the component
     cy.get('[data-testid="tasks-count"]').should("contain", "2");
+  });
 
-    // Test 7: Verify we can update field values through the interactable
+  it("should update field values", () => {
+    mount(<TestComponent />);
+
+    const arrayFieldset = arrayObjectFieldset({ objectType: "Task" });
+
+    // Verify we can update field values through the interactable
     arrayFieldset.item(0).then((taskFieldset) => {
-      // Get the name field interactable and use selectById to set the value
-      // This uses the proper method chain that handles clearing and typing
+      // Get the name field interactable and use type to set the value
       taskFieldset.field("name").then((fieldInteractable) => {
-        // Use the selectById method which properly chains clear() and type()
         (fieldInteractable as TextInputInteractable).type("Updated Task Name");
       });
 
@@ -135,8 +159,14 @@ describe("ArrayObjectFieldset.interactable", () => {
           .should("eq", "Updated Task Name");
       });
     });
+  });
 
-    // Test 8: Verify isDisabled and isReadOnly methods
+  it("should verify enabled state properties", () => {
+    mount(<TestComponent />);
+
+    const arrayFieldset = arrayObjectFieldset({ objectType: "Task" });
+
+    // Verify isDisabled and isReadOnly methods
     arrayFieldset.isDisabled().should("eq", false);
     arrayFieldset.isReadOnly().should("eq", false);
   });
