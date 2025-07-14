@@ -55,10 +55,28 @@ export interface ObjectFormApiInterface {
 export type SchemaWithObjects = ZodBridge<any> | ZodReferencesBridge<any>;
 
 /**
- * Configuration for which components should be shown in the ObjectForm
+ * Configuration for which components and fields should be shown in the ObjectForm
  */
 export interface ObjectFormOverlay {
   /**
+   * Array of field names that should not be rendered
+   * When isNew is true, '_id' and 'id' are automatically added to this list
+   */
+  fields?: string[];
+
+  /**
+   * Configuration for which components should be shown
+   */
+  components?: {
+    /**
+     * Whether to show the SubmitField component
+     * @default true
+     */
+    SubmitField?: boolean;
+  };
+
+  /**
+   * @deprecated Use components.SubmitField instead
    * Whether to show the SubmitField component
    * @default true
    */
@@ -303,6 +321,31 @@ export function ObjectForm({
   // Use the notify function from props if provided, otherwise use the one from context
   const notify =
     notifyProp || (notificationContext && notificationContext.notify);
+
+  // Process overlay configuration
+  const processedOverlay = useMemo(() => {
+    const result = {
+      fields: [...(overlay.fields || [])],
+      components: {
+        // Support both new and legacy structure for SubmitField
+        SubmitField:
+          overlay.components?.SubmitField !== false &&
+          overlay.SubmitField !== false,
+      },
+    };
+
+    // When creating a new object, automatically hide ID fields
+    if (isNew) {
+      if (!result.fields.includes("_id")) {
+        result.fields.push("_id");
+      }
+      if (!result.fields.includes("id")) {
+        result.fields.push("id");
+      }
+    }
+
+    return result;
+  }, [overlay, isNew]);
 
   // Create the submit handler based on the provided props
   const handleSubmit = useMemo(() => {
@@ -631,6 +674,17 @@ export function ObjectForm({
         return referenceResult;
       }
 
+      // Check if this field should be hidden based on overlay.fields
+      const dataFieldName = props["data-field-name"] || fieldName;
+
+      if (
+        processedOverlay.fields.includes(fieldName) ||
+        processedOverlay.fields.includes(dataFieldName)
+      ) {
+        // Return null component for fields that should be hidden
+        return () => null;
+      }
+
       // For other field types, use the default component
       return AutoField.defaultComponentDetector(props, uniforms);
     };
@@ -644,6 +698,7 @@ export function ObjectForm({
     objectDispatch,
     objectCreateUpdateAction,
     objectDataSelector,
+    processedOverlay,
   ]);
 
   // Create a context for the form
@@ -671,7 +726,7 @@ export function ObjectForm({
   }, [schema, formContext]);
 
   // Determine if the submit button should be shown
-  const showSubmitButton = overlay.SubmitField !== false;
+  const showSubmitButton = processedOverlay.components.SubmitField;
 
   return (
     <ObjectSchemaProvider schema={schema} objectType={objectType}>
