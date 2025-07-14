@@ -373,7 +373,7 @@ describe("ObjectForm.interactable", () => {
     const form = objectForm({ objectType: "User" });
 
     // Change a field value using direct Cypress commands
-    form.field("name").clear().type("Jane Smith");
+    form.field("name").then((f) => f.setValue("Jane Smith"));
 
     // Submit the form
     form.submit();
