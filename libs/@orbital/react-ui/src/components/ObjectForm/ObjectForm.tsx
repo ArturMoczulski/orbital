@@ -85,8 +85,10 @@ export interface ObjectFormProps {
 
   /**
    * Success message to show when form is submitted successfully
+   * Can be a string or a function that receives the response data and isNew flag
+   * If not provided, a default message will be generated based on objectType and isNew
    */
-  successMessage?: string;
+  successMessage?: string | ((data: any, isNew: boolean) => string);
   /**
    * The schema for the form
    */
@@ -257,7 +259,13 @@ export function ObjectForm({
   onUpdate,
   onSuccess,
   notify: notifyProp,
-  successMessage = "Form submitted successfully",
+  successMessage = (data: any, isNew: boolean) => {
+    // Generate a default message based on objectType and isNew
+    const action = isNew ? "created" : "updated";
+    return objectType
+      ? `${objectType} ${action} successfully`
+      : `Form submitted successfully`;
+  },
   isNew = false,
   api,
   model,
@@ -321,7 +329,11 @@ export function ObjectForm({
 
             // Show success notification if notify function is available
             if (notify) {
-              notify(successMessage, "success");
+              const message =
+                typeof successMessage === "function"
+                  ? successMessage(result, isNew)
+                  : successMessage;
+              notify(message, "success");
             }
 
             // Call onSuccess callback if provided
@@ -382,7 +394,11 @@ export function ObjectForm({
 
             // Show success notification if notify function is available
             if (notify) {
-              notify(successMessage, "success");
+              const message =
+                typeof successMessage === "function"
+                  ? successMessage(result, isNew)
+                  : successMessage;
+              notify(message, "success");
             }
 
             // Call onSuccess callback if provided
@@ -427,7 +443,11 @@ export function ObjectForm({
 
             // Show success notification if notify function is available
             if (notify) {
-              notify(successMessage, "success");
+              const message =
+                typeof successMessage === "function"
+                  ? successMessage(result, isNew)
+                  : successMessage;
+              notify(message, "success");
             }
 
             // Call onSuccess callback if provided
@@ -488,7 +508,11 @@ export function ObjectForm({
 
             // Show success notification if notify function is available
             if (notify) {
-              notify(successMessage, "success");
+              const message =
+                typeof successMessage === "function"
+                  ? successMessage(result, isNew)
+                  : successMessage;
+              notify(message, "success");
             }
 
             // Call onSuccess callback if provided

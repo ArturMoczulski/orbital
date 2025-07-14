@@ -253,7 +253,6 @@ describe("ObjectForm API Integration Tests", () => {
             isNew={true}
             api={mockApi}
             onSuccess={onSuccessSpy}
-            successMessage="User created successfully"
           />
         </NotificationProvider>
       </Provider>
@@ -273,6 +272,9 @@ describe("ObjectForm API Integration Tests", () => {
     cy.get(".notistack-MuiContent-success", {
       timeout: 5000,
     }).should("contain", "User created successfully");
+
+    // Wait for notification to fully display
+    cy.wait(500);
 
     // Verify the success callback was called
     cy.get("@onSuccessSpy").should("have.been.calledOnce");
@@ -314,7 +316,6 @@ describe("ObjectForm API Integration Tests", () => {
               api={mockApi}
               onAdd={onAddSpy}
               onSuccess={onSuccessSpy}
-              successMessage="User added successfully"
             />
           </NotificationProvider>
         </Provider>
@@ -342,7 +343,10 @@ describe("ObjectForm API Integration Tests", () => {
       // Wait for the form submission to complete
       cy.get(".notistack-MuiContent-success", {
         timeout: 5000,
-      }).should("contain", "User added successfully");
+      }).should("contain", "User created successfully");
+
+      // Wait for notification to fully display
+      cy.wait(500);
 
       // Verify the onSuccess callback was called
       cy.get("@onSuccessSpy").should("have.been.calledOnce");
@@ -377,7 +381,6 @@ describe("ObjectForm API Integration Tests", () => {
               api={mockApi}
               onUpdate={onUpdateSpy}
               onSuccess={onSuccessSpy}
-              successMessage="User updated successfully"
             />
           </NotificationProvider>
         </Provider>
@@ -404,6 +407,9 @@ describe("ObjectForm API Integration Tests", () => {
       cy.get(".notistack-MuiContent-success", {
         timeout: 5000,
       }).should("contain", "User updated successfully");
+
+      // Wait for notification to fully display
+      cy.wait(500);
 
       // Verify the onSuccess callback was called
       cy.get("@onSuccessSpy").should("have.been.calledOnce");
@@ -435,7 +441,6 @@ describe("ObjectForm API Integration Tests", () => {
               model={initialUser}
               api={mockApi}
               onSuccess={onSuccessSpy}
-              successMessage="User updated successfully"
             />
           </NotificationProvider>
         </Provider>
@@ -454,6 +459,9 @@ describe("ObjectForm API Integration Tests", () => {
       cy.get(".notistack-MuiContent-success", {
         timeout: 5000,
       }).should("contain", "User updated successfully");
+
+      // Wait for notification to fully display
+      cy.wait(500);
 
       // Verify the onSuccess callback was called
       cy.get("@onSuccessSpy").should("have.been.calledOnce");
@@ -476,7 +484,6 @@ describe("ObjectForm API Integration Tests", () => {
             objectType="User"
             isNew={true}
             api={mockApi}
-            successMessage="User created successfully"
           />
         </NotificationProvider>
       </Provider>
@@ -507,6 +514,9 @@ describe("ObjectForm API Integration Tests", () => {
       "User created successfully"
     );
 
+    // Wait for notification to fully display
+    cy.wait(500);
+
     // Check that the loading indicator is no longer visible (display: none)
     cy.get('[data-testid="object-form-loading-indicator"]')
       .should("exist") // It should still exist in the DOM
@@ -534,7 +544,6 @@ describe("ObjectForm API Integration Tests", () => {
             objectType="User"
             isNew={true}
             api={errorApi}
-            successMessage="User created successfully"
           />
         </NotificationProvider>
       </Provider>
