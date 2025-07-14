@@ -745,10 +745,10 @@ export function ObjectForm({
             backgroundColor: "rgba(255, 255, 255, 0.5)", // Slightly more opaque
             zIndex: 9999, // Even higher z-index
           }}
-          data-testid="object-form-loading-indicator"
+          data-testid="ObjectFormLoadingIndicator"
         >
           <CircularProgress
-            data-testid="object-form-circular-progress"
+            data-testid="ObjectFormCircularProgress"
             size={80} // Even larger
             thickness={6} // Even more visible
             sx={{
@@ -777,7 +777,7 @@ export function ObjectForm({
               },
             }}
             onClose={() => setErrorMessage(null)}
-            data-testid="object-form-error-alert"
+            data-testid="ObjectFormErrorAlert"
           >
             {errorMessage || "An error occurred"}
           </Alert>

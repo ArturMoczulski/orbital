@@ -505,11 +505,9 @@ describe("ObjectForm API Integration Tests", () => {
     form.submit();
 
     // Check for the loading indicator
-    cy.get('[data-testid="object-form-loading-indicator"]').should("exist");
-    cy.get('[data-testid="object-form-circular-progress"]').should("exist");
-    cy.get('[data-testid="object-form-loading-indicator"]').should(
-      "be.visible"
-    );
+    cy.get('[data-testid="ObjectFormLoadingIndicator"]').should("exist");
+    cy.get('[data-testid="ObjectFormCircularProgress"]').should("exist");
+    cy.get('[data-testid="ObjectFormLoadingIndicator"]').should("be.visible");
 
     // Wait for the form submission to complete
     cy.get(".notistack-MuiContent-success", { timeout: 10000 }).should(
@@ -521,7 +519,7 @@ describe("ObjectForm API Integration Tests", () => {
     cy.wait(500);
 
     // Check that the loading indicator is no longer visible (display: none)
-    cy.get('[data-testid="object-form-loading-indicator"]')
+    cy.get('[data-testid="ObjectFormLoadingIndicator"]')
       .should("exist") // It should still exist in the DOM
       .should("have.css", "display", "none"); // But should be hidden
   });
@@ -571,7 +569,7 @@ describe("ObjectForm API Integration Tests", () => {
     cy.get("@consoleError").should("be.called");
 
     // Check for the error alert with the data-testid and verify it contains the error text
-    cy.get('[data-testid="object-form-error-alert"]')
+    cy.get('[data-testid="ObjectFormErrorAlert"]')
       .should("exist")
       .and("be.visible")
       .and("contain", "API Error: Failed to create");
