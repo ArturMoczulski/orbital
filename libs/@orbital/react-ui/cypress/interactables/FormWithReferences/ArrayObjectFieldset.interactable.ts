@@ -190,9 +190,17 @@ export class ArrayObjectFieldsetInteractable extends CypressInteractable {
    */
   hasError(): Cypress.Chainable<boolean> {
     return this.get().then(($el) => {
-      // Check for error text
-      const hasErrorText = $el.find(".MuiTypography-colorError").length > 0;
-      return cy.wrap(hasErrorText);
+      // Check for error text - look for Typography with color="error" attribute
+      // This can appear in different ways in the DOM:
+      // 1. As a class .MuiTypography-colorError
+      // 2. As an attribute [color="error"]
+      // 3. Or the component might have the error prop set directly
+
+      const hasErrorClass = $el.find(".MuiTypography-colorError").length > 0;
+      const hasErrorAttr = $el.find('[color="error"]').length > 0;
+      const hasErrorProp = $el.attr("error") === "true";
+
+      return cy.wrap(hasErrorClass || hasErrorAttr || hasErrorProp);
     });
   }
 
@@ -201,8 +209,28 @@ export class ArrayObjectFieldsetInteractable extends CypressInteractable {
    */
   getErrorMessage(): Cypress.Chainable<string | null> {
     return this.get().then(($el) => {
+      // Look for error text in multiple possible locations
+      let errorText: string | null = null;
+
+      // Check for MUI error typography
       const $errorEl = $el.find(".MuiTypography-colorError");
-      const errorText = $errorEl.length > 0 ? $errorEl.text() : null;
+      if ($errorEl.length > 0) {
+        errorText = $errorEl.text();
+      }
+
+      // If not found, try finding by color="error" attribute
+      if (!errorText) {
+        const $errorAttrEl = $el.find('[color="error"]');
+        if ($errorAttrEl.length > 0) {
+          errorText = $errorAttrEl.text();
+        }
+      }
+
+      // If we have an error prop but no visible error message, return a default
+      if (!errorText && $el.attr("error") === "true") {
+        errorText = "Error";
+      }
+
       return cy.wrap(errorText);
     });
   }

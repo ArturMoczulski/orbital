@@ -228,6 +228,7 @@ export class TextInputInteractable extends FormInputInteractable<string> {
     cy.wait(100);
 
     // Then get a fresh reference to the element and type the value
+    cy.log(`text ot update:`, text);
     return this.get().type(text, { force: true });
   }
 
