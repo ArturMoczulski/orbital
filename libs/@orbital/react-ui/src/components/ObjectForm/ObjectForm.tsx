@@ -338,9 +338,10 @@ export function ObjectForm({
             // Error is already displayed in the form's error alert component
             // No need to show a notification
 
-            // Don't throw the error again, as it prevents the component from updating
-            // Just return a rejected promise to indicate failure
-            return Promise.reject(error);
+            // Don't return a rejected promise, as it causes Uniforms to display the error again
+            // Instead, just return a resolved promise with null to indicate completion
+            console.error("Error caught and displayed in UI");
+            return Promise.resolve(null);
           } finally {
             // Set loading state to false regardless of success or failure
             setIsSubmitting(false);
@@ -398,10 +399,10 @@ export function ObjectForm({
             // Error is already displayed in the form's error alert component
             // No need to show a notification
 
-            // Don't throw the error again, as it prevents the component from updating
-            // Just return a rejected promise to indicate failure
-            console.error("Returning rejected promise");
-            return Promise.reject(error);
+            // Don't return a rejected promise, as it causes Uniforms to display the error again
+            // Instead, just return a resolved promise with null to indicate completion
+            console.error("Error caught and displayed in UI");
+            return Promise.resolve(null);
           } finally {
             // Set loading state to false regardless of success or failure
             setIsSubmitting(false);
@@ -443,9 +444,10 @@ export function ObjectForm({
             // Error is already displayed in the form's error alert component
             // No need to show a notification
 
-            // Don't throw the error again, as it prevents the component from updating
-            // Just return a rejected promise to indicate failure
-            return Promise.reject(error);
+            // Don't return a rejected promise, as it causes Uniforms to display the error again
+            // Instead, just return a resolved promise with null to indicate completion
+            console.error("Error caught and displayed in UI");
+            return Promise.resolve(null);
           } finally {
             // Set loading state to false regardless of success or failure
             setIsSubmitting(false);
@@ -503,9 +505,10 @@ export function ObjectForm({
             // Error is already displayed in the form's error alert component
             // No need to show a notification
 
-            // Don't throw the error again, as it prevents the component from updating
-            // Just return a rejected promise to indicate failure
-            return Promise.reject(error);
+            // Don't return a rejected promise, as it causes Uniforms to display the error again
+            // Instead, just return a resolved promise with null to indicate completion
+            console.error("Error caught and displayed in UI");
+            return Promise.resolve(null);
           } finally {
             // Set loading state to false regardless of success or failure
             setIsSubmitting(false);
