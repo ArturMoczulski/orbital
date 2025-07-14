@@ -331,12 +331,9 @@ export function ObjectForm({
 
             return result;
           } catch (error: any) {
-            console.error(`Error adding ${objectType}:`, error);
-
             // Set error message for display in the form
             const errorMsg = error.message || `Error adding ${objectType}`;
             setErrorMessage(errorMsg);
-            console.error("Setting error message:", errorMsg);
 
             // Error is already displayed in the form's error alert component
             // No need to show a notification
@@ -394,23 +391,12 @@ export function ObjectForm({
 
             return result;
           } catch (error: any) {
-            console.error(`Error creating ${objectType}:`, error);
-            console.error("Error type:", typeof error);
-            console.error("Error stack:", error.stack);
-            console.error(
-              "Error is instance of Error:",
-              error instanceof Error
-            );
-
             // Set error message for display in the form
             const errorMsg = error.message || `Error creating ${objectType}`;
-            console.error("Error message:", errorMsg);
             setErrorMessage(errorMsg);
-            console.error("Setting error message:", errorMsg);
 
             // Error is already displayed in the form's error alert component
             // No need to show a notification
-            console.error("Error will be displayed in the form's error alert");
 
             // Don't throw the error again, as it prevents the component from updating
             // Just return a rejected promise to indicate failure
@@ -450,12 +436,9 @@ export function ObjectForm({
 
             return result;
           } catch (error: any) {
-            console.error(`Error updating ${objectType}:`, error);
-
             // Set error message for display in the form
             const errorMsg = error.message || `Error updating ${objectType}`;
             setErrorMessage(errorMsg);
-            console.error("Setting error message:", errorMsg);
 
             // Error is already displayed in the form's error alert component
             // No need to show a notification
@@ -513,12 +496,9 @@ export function ObjectForm({
 
             return result;
           } catch (error: any) {
-            console.error(`Error updating ${objectType}:`, error);
-
             // Set error message for display in the form
             const errorMsg = error.message || `Error updating ${objectType}`;
             setErrorMessage(errorMsg);
-            console.error("Setting error message:", errorMsg);
 
             // Error is already displayed in the form's error alert component
             // No need to show a notification

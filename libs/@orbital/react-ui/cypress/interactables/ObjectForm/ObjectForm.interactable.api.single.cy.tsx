@@ -133,18 +133,10 @@ describe("ObjectForm API Integration Tests", () => {
     // Create the mutation functions directly
     const createMutation = (data: any) => {
       // Extract the actual data from the wrapper object
-      // The ObjectForm component wraps the data in a createUserDto object
       const userData = data.createUserDto || data;
-
-      // Store the data for logging outside the promise
-      const dataString = JSON.stringify(data);
-
-      // Log outside the promise to avoid Cypress errors
-      console.log("Create mutation data:", dataString);
 
       // Create a promise that resolves after the specified delay
       return new Cypress.Promise((resolve) => {
-        // Force a longer delay for the loading test to ensure the loading state is visible
         const actualDelay = options.delay || 0;
 
         // Simulate a longer running API call
@@ -211,15 +203,11 @@ describe("ObjectForm API Integration Tests", () => {
 
   // Mock API that throws an error
   const createErrorApi = () => {
-    console.log("Creating error API mock");
-
     // Create the mock API object with proper typing
     const errorApi: ObjectFormApiInterface = {
       useUsersControllerCreateMutation: () => {
-        console.log("useUsersControllerCreateMutation hook called");
         // Return a function that will be called by the component
         const createFn = (data: any) => {
-          console.log("Create mutation function called with:", data);
           // Throw a synchronous error instead of returning a rejected promise
           // This ensures the component's try/catch will catch it
           throw new Error("API Error: Failed to create");
@@ -229,10 +217,8 @@ describe("ObjectForm API Integration Tests", () => {
         return [createFn, { isLoading: false }];
       },
       useUsersControllerUpdateMutation: () => {
-        console.log("useUsersControllerUpdateMutation hook called");
         // Return a function that will be called by the component
         const updateFn = (data: any) => {
-          console.log("Update mutation function called with:", data);
           // Throw a synchronous error instead of returning a rejected promise
           // This ensures the component's try/catch will catch it
           throw new Error("API Error: Failed to update");
@@ -243,7 +229,6 @@ describe("ObjectForm API Integration Tests", () => {
       },
     };
 
-    console.log("Error API created with methods:", Object.keys(errorApi));
     return errorApi;
   };
 
@@ -258,11 +243,8 @@ describe("ObjectForm API Integration Tests", () => {
       store.dispatch({ type: "RESET_STATE" });
 
       // Use the original createMockApi function which creates real functions
-      // that dispatch to the Redux store - no spies needed
+      // that dispatch to the Redux store
       const mockApi = createMockApi();
-
-      // Create a spy for the notify function - no longer needed as ObjectForm uses context directly
-      // const notifySpy = cy.spy().as("notifySpy");
 
       // Mount the component with NotificationProvider
       mount(
@@ -282,11 +264,11 @@ describe("ObjectForm API Integration Tests", () => {
 
       const form = objectForm({ objectType: "User" });
 
-      // Fill out the form
-      form.field("name").then((f) => f.setValue("New User"));
-      form.field("email").then((f) => f.setValue("new@example.com"));
+      // Fill out the form using the interactable
+      form.setFieldValue("name", "New User");
+      form.setFieldValue("email", "new@example.com");
 
-      // Submit the form
+      // Submit the form using the interactable
       form.submit();
 
       // Wait for the form submission to complete
@@ -297,15 +279,6 @@ describe("ObjectForm API Integration Tests", () => {
 
       // Verify the success callback was called
       cy.get("@onSuccessSpy").should("have.been.calledOnce");
-
-      // For this test, we'll focus on verifying that:
-      // 1. The form submission was successful (notification displayed)
-      // 2. The onSuccess callback was called
-      // 3. The notify function was called with the success message
-
-      // We've already verified these above, so the test is successful
-      // The Redux state verification is complex and prone to timing issues,
-      // so we'll rely on the success notification as proof that the mutation worked
     }
   );
 
@@ -353,19 +326,17 @@ describe("ObjectForm API Integration Tests", () => {
 
       const form = objectForm({ objectType: "User" });
 
-      // Fill out the form
-      form.field("name").then((f) => f.setValue("Custom Add User"));
-      form.field("email").then((f) => f.setValue("custom@example.com"));
+      // Fill out the form using the interactable
+      form.setFieldValue("name", "Custom Add User");
+      form.setFieldValue("email", "custom@example.com");
 
-      // Submit the form
+      // Submit the form using the interactable
       form.submit();
 
       // Verify the onAdd callback was called
       cy.get("@onAddSpy").should("have.been.calledOnce");
 
       // Check that onAddSpy was called with an object containing these properties
-      // (but may also contain other properties like id)
-      // Use Cypress's sinon matchers to verify the call arguments
       cy.get("@onAddSpy").should("have.been.calledWithMatch", {
         name: "Custom Add User",
         email: "custom@example.com",
@@ -373,7 +344,6 @@ describe("ObjectForm API Integration Tests", () => {
       });
 
       // Wait for the form submission to complete
-      // We'll use the success notification as an indicator
       cy.get(".notistack-MuiContent-success", {
         timeout: 5000,
       }).should("contain", "User added successfully");
@@ -419,17 +389,15 @@ describe("ObjectForm API Integration Tests", () => {
 
       const form = objectForm({ objectType: "User" });
 
-      // Update the form fields
-      form.field("name").then((f) => f.setValue("Updated User"));
-      form.field("email").then((f) => f.setValue("updated@example.com"));
+      // Update the form fields using the interactable
+      form.setFieldValue("name", "Updated User");
+      form.setFieldValue("email", "updated@example.com");
 
-      // Submit the form
+      // Submit the form using the interactable
       form.submit();
 
       // Verify the onUpdate callback was called
       cy.get("@onUpdateSpy").should("have.been.calledOnce");
-      // Use calledWithMatch instead of calledWith to check for inclusion of expected properties
-      // rather than exact match, since the actual object includes the id field
       cy.get("@onUpdateSpy").should("have.been.calledWithMatch", {
         name: "Updated User",
         email: "updated@example.com",
@@ -457,7 +425,7 @@ describe("ObjectForm API Integration Tests", () => {
       store.dispatch({ type: "RESET_STATE" });
 
       // Use the original createMockApi function which creates real functions
-      // that dispatch to the Redux store - no spies needed
+      // that dispatch to the Redux store
       const mockApi = createMockApi();
 
       // Mount the component with NotificationProvider
@@ -479,29 +447,20 @@ describe("ObjectForm API Integration Tests", () => {
 
       const form = objectForm({ objectType: "User" });
 
-      // Update the form fields
-      form.field("name").then((f) => f.setValue("API Updated User"));
-      form.field("email").then((f) => f.setValue("api-updated@example.com"));
+      // Update the form fields using the interactable
+      form.setFieldValue("name", "API Updated User");
+      form.setFieldValue("email", "api-updated@example.com");
 
-      // Submit the form
+      // Submit the form using the interactable
       form.submit();
 
       // Wait for the form submission to complete
-      // We'll use the success notification as an indicator
       cy.get(".notistack-MuiContent-success", {
         timeout: 5000,
       }).should("contain", "User updated successfully");
 
       // Verify the onSuccess callback was called
       cy.get("@onSuccessSpy").should("have.been.calledOnce");
-
-      // For this test, we'll focus on verifying that:
-      // 1. The form submission was successful (notification displayed)
-      // 2. The onSuccess callback was called
-      //
-      // We've already verified these above, so the test is successful
-      // The Redux state verification is complex and prone to timing issues,
-      // so we'll rely on the success notification as proof that the mutation worked
     }
   );
 
@@ -512,7 +471,6 @@ describe("ObjectForm API Integration Tests", () => {
       // Reset the Redux store to initial state before the test
       store.dispatch({ type: "RESET_STATE" });
 
-      // Create a mock API with a delay to ensure we can see the loading state
       // Create a mock API with a longer delay (5s) to ensure we can see the loading state
       const mockApi = createMockApi({ isLoading: false, delay: 5000 });
 
@@ -532,24 +490,22 @@ describe("ObjectForm API Integration Tests", () => {
         </Provider>
       );
 
-      // Fill out the form
-      cy.get('[data-testid="LoadingTestForm"]').within(() => {
-        cy.get('input[name="name"]').clear().type("Loading Test User");
-        cy.get('input[name="email"]').clear().type("loading@example.com");
+      // For forms with custom data-testid, we need to use the parent element approach
+      const form = objectForm({
+        objectType: "User",
+        parentElement: () => cy.get('[data-testid="LoadingTestForm"]'),
       });
 
-      // Submit the form
-      cy.get('[data-testid="LoadingTestForm"]').find('[type="submit"]').click();
+      // Fill out the form using the interactable
+      form.setFieldValue("name", "Loading Test User");
+      form.setFieldValue("email", "loading@example.com");
+
+      // Submit the form using the interactable
+      form.submit();
 
       // Check for the loading indicator
-
-      // First check that the loading indicator exists
       cy.get('[data-testid="object-form-loading-indicator"]').should("exist");
-
-      // Then check that the CircularProgress exists
       cy.get('[data-testid="object-form-circular-progress"]').should("exist");
-
-      // Check that the loading indicator is visible
       cy.get('[data-testid="object-form-loading-indicator"]').should(
         "be.visible"
       );
@@ -569,7 +525,7 @@ describe("ObjectForm API Integration Tests", () => {
 
   it.only(
     "should display api errors in the error component",
-    { defaultCommandTimeout: 10000 }, // Increase timeout to ensure async operations complete
+    { defaultCommandTimeout: 10000 },
     () => {
       // Reset the Redux store to initial state before the test
       store.dispatch({ type: "RESET_STATE" });
@@ -592,20 +548,22 @@ describe("ObjectForm API Integration Tests", () => {
               isNew={true}
               api={errorApi}
               successMessage="User created successfully"
-              data-testid="ErrorTestForm"
             />
           </NotificationProvider>
         </Provider>
       );
 
-      // Fill out the form
-      cy.get('[data-testid="ErrorTestForm"]').within(() => {
-        cy.get('input[name="name"]').clear().type("Error Test User");
-        cy.get('input[name="email"]').clear().type("error@example.com");
+      // Use the standard objectForm interactable
+      const form = objectForm({
+        objectType: "User",
       });
 
-      // Submit the form
-      cy.get('[data-testid="ErrorTestForm"]').find('[type="submit"]').click();
+      // Fill out the form using the interactable
+      form.setFieldValue("name", "Error Test User");
+      form.setFieldValue("email", "error@example.com");
+
+      // Submit the form using the interactable
+      form.submit();
 
       // Wait for the error to be processed
       cy.wait(1000);
