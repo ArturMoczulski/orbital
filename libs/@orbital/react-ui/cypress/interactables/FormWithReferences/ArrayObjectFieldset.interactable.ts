@@ -191,17 +191,20 @@ export class ArrayObjectFieldsetInteractable extends CypressInteractable {
    */
   hasError(): Cypress.Chainable<boolean> {
     return this.get().then(($el) => {
-      // Check for error text - look for Typography with color="error" attribute
-      // This can appear in different ways in the DOM:
-      // 1. As a class .MuiTypography-colorError
-      // 2. As an attribute [color="error"]
-      // 3. Or the component might have the error prop set directly
+      // Check for error Alert component with severity="error"
+      const hasAlertError =
+        $el.find(
+          ".MuiAlert-root.MuiAlert-standardError, .MuiAlert-root.MuiAlert-filledError"
+        ).length > 0;
 
+      // Also check for traditional error indicators as fallback
       const hasErrorClass = $el.find(".MuiTypography-colorError").length > 0;
       const hasErrorAttr = $el.find('[color="error"]').length > 0;
       const hasErrorProp = $el.attr("error") === "true";
 
-      return cy.wrap(hasErrorClass || hasErrorAttr || hasErrorProp);
+      return cy.wrap(
+        hasAlertError || hasErrorClass || hasErrorAttr || hasErrorProp
+      );
     });
   }
 
@@ -213,13 +216,23 @@ export class ArrayObjectFieldsetInteractable extends CypressInteractable {
       // Look for error text in multiple possible locations
       let errorText: string | null = null;
 
-      // Check for MUI error typography
-      const $errorEl = $el.find(".MuiTypography-colorError");
-      if ($errorEl.length > 0) {
-        errorText = $errorEl.text();
+      // First check for Alert component with severity="error"
+      const $alertEl = $el.find(
+        ".MuiAlert-root.MuiAlert-standardError, .MuiAlert-root.MuiAlert-filledError"
+      );
+      if ($alertEl.length > 0) {
+        errorText = $alertEl.text();
       }
 
-      // If not found, try finding by color="error" attribute
+      // If not found, check for MUI error typography (fallback)
+      if (!errorText) {
+        const $errorEl = $el.find(".MuiTypography-colorError");
+        if ($errorEl.length > 0) {
+          errorText = $errorEl.text();
+        }
+      }
+
+      // If not found, try finding by color="error" attribute (fallback)
       if (!errorText) {
         const $errorAttrEl = $el.find('[color="error"]');
         if ($errorAttrEl.length > 0) {

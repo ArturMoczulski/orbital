@@ -562,7 +562,7 @@ describe("ArrayObjectFieldset.interactable", () => {
     readonlyFieldset.addButton.should("not.exist");
   });
 
-  it.only("should handle error states", () => {
+  it("should handle error states", () => {
     // Create a component with ArrayObjectFieldset in error state
     function ErrorComponent() {
       const store = createRealStore();
