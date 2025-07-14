@@ -53,6 +53,8 @@ type ObjectDataProviderProps = {
       objectId?: string;
     }
   >;
+  // Array context (optional)
+  arrayIndex?: number;
   // Redux integration props
   dataSelector?: SelectorFunction<Record<string, any>>;
   objectIdSelector?: SelectorFunction<string | undefined>;
@@ -71,7 +73,8 @@ type ObjectDataProviderProps = {
   createUpdateAction?: (
     key: string,
     data: Record<string, any>,
-    merge?: boolean
+    merge?: boolean,
+    arrayIndex?: number
   ) => any;
   // Optional callback for data updates (for testing)
   onUpdate?: (key: string, data: Record<string, any>, merge?: boolean) => void;
@@ -89,6 +92,8 @@ export function ObjectDataProvider({
   data,
   objectId,
   additionalData = {},
+  // Array context
+  arrayIndex,
   // Redux integration props
   dataSelector,
   objectIdSelector,
@@ -162,7 +167,7 @@ export function ObjectDataProvider({
   ) => {
     // If Redux integration is enabled, dispatch an action
     if (dispatch && createUpdateAction) {
-      dispatch(createUpdateAction(key, newData, merge));
+      dispatch(createUpdateAction(key, newData, merge, arrayIndex));
 
       // Immediately update local state to reflect the change
       if (key === "main" && dataSelector) {
@@ -202,7 +207,7 @@ export function ObjectDataProvider({
   ) => {
     // If Redux integration is enabled, dispatch an action
     if (dispatch && createUpdateAction) {
-      dispatch(createUpdateAction(key, newData, false));
+      dispatch(createUpdateAction(key, newData, false, arrayIndex));
 
       // Immediately update local state to reflect the registration
       if (key === "main" && dataSelector) {
@@ -255,7 +260,8 @@ export const REGISTER_OBJECT_DATA = "REGISTER_OBJECT_DATA";
 export function createUpdateObjectDataAction(
   key: string,
   data: Record<string, any>,
-  merge = true
+  merge = true,
+  arrayIndex?: number
 ) {
   return {
     type: UPDATE_OBJECT_DATA,
@@ -263,6 +269,7 @@ export function createUpdateObjectDataAction(
       key,
       data,
       merge,
+      arrayIndex,
     },
   };
 }

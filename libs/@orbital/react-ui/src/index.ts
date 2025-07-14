@@ -69,4 +69,4 @@ export {
   ObjectForm,
   type ObjectFormProps,
   type SchemaWithObjects,
-} from "./components/ObjectForm";
+} from "./components/FormWithReferences/ObjectForm";

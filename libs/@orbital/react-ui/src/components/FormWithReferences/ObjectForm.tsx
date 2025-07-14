@@ -1,18 +1,15 @@
 import React from "react";
 import { ZodBridge } from "uniforms-bridge-zod";
 import { AutoForm as UniformsAutoForm } from "uniforms-mui";
-import BelongsToField from "../FormWithReferences/BelongsToField";
-import HasManyField from "../FormWithReferences/HasManyField";
-import { ObjectFieldset } from "../FormWithReferences/ObjectFieldset";
-import { ObjectProvider } from "../FormWithReferences/ObjectProvider";
-import {
-  BELONGS_TO_FIELD,
-  HAS_MANY_FIELD,
-} from "../FormWithReferences/ReferenceField";
+import BelongsToField from "./BelongsToField";
+import HasManyField from "./HasManyField";
+import { ObjectFieldset } from "./ObjectFieldset";
+import { ObjectProvider } from "./ObjectProvider";
+import { BELONGS_TO_FIELD, HAS_MANY_FIELD } from "./ReferenceField";
 import {
   inferObjectTypeFromSchema,
   ZodReferencesBridge,
-} from "../FormWithReferences/ZodReferencesBridge";
+} from "./ZodReferencesBridge";
 
 // Register custom field types with Uniforms
 const fieldTypes = {

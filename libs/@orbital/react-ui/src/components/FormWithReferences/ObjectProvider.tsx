@@ -27,6 +27,8 @@ type ObjectProviderProps = {
       objectId?: string;
     }
   >;
+  // Array context (optional)
+  arrayIndex?: number;
   // Redux integration props (optional)
   dataSelector?: SelectorFunction<Record<string, any>>;
   objectIdSelector?: SelectorFunction<string | undefined>;
@@ -43,7 +45,8 @@ type ObjectProviderProps = {
   createUpdateAction?: (
     key: string,
     data: Record<string, any>,
-    merge?: boolean
+    merge?: boolean,
+    arrayIndex?: number
   ) => any;
   // Optional callback for data updates (for testing)
   onUpdate?: (key: string, data: Record<string, any>, merge?: boolean) => void;
@@ -66,6 +69,8 @@ export function ObjectProvider({
   data,
   objectId,
   additionalData = {},
+  // Array context
+  arrayIndex,
   // Redux integration props
   dataSelector,
   objectIdSelector,
@@ -82,6 +87,8 @@ export function ObjectProvider({
         data={data}
         objectId={objectId}
         additionalData={additionalData}
+        // Array context
+        arrayIndex={arrayIndex}
         // Redux integration props
         dataSelector={dataSelector}
         objectIdSelector={objectIdSelector}
