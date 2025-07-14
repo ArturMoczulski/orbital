@@ -3,7 +3,6 @@ import { useState } from "react";
 import { ZodBridge } from "uniforms-bridge-zod";
 import { z } from "zod";
 import { ArrayObjectFieldset } from "../../../src/components/FormWithReferences/ArrayObjectFieldset";
-import { ArrayObjectProvider } from "../../../src/components/FormWithReferences/ArrayObjectProvider";
 import { arrayObjectFieldset } from "./ArrayObjectFieldset.interactable";
 
 describe("ArrayObjectFieldset.interactable", () => {
@@ -60,15 +59,13 @@ describe("ArrayObjectFieldset.interactable", () => {
 
       return (
         <div>
-          <ArrayObjectProvider
+          <ArrayObjectFieldset
             schema={taskBridge}
             objectType="Task"
-            objectId="tasks"
+            arrayId="tasks"
             items={tasks}
             onChange={(newItems) => setTasks(newItems as any)}
-          >
-            <ArrayObjectFieldset />
-          </ArrayObjectProvider>
+          />
 
           {/* Hidden divs to verify the current state */}
           <div data-testid="tasks-count">{tasks.length}</div>
@@ -122,9 +119,17 @@ describe("ArrayObjectFieldset.interactable", () => {
 
     // Test 7: Verify we can update field values through the interactable
     arrayFieldset.item(0).then((taskFieldset) => {
-      taskFieldset.field("name").then((field) => {
-        field.clear().type("Updated Task Name");
-      });
+      // Get a reference to the name field
+      taskFieldset.field("name").as("nameField");
+
+      // Clear the field
+      taskFieldset.field("name").then((f) => f.clear());
+
+      // Re-query the field and type the new value
+      taskFieldset.field("name").type("Updated Task Name");
+
+      // Wait a moment for React to update
+      cy.wait(100);
 
       // Verify the field was updated
       taskFieldset.getFieldValue("name").should("eq", "Updated Task Name");
@@ -146,15 +151,15 @@ describe("ArrayObjectFieldset.interactable", () => {
     function DisabledComponent() {
       return (
         <div>
-          <ArrayObjectProvider
+          <ArrayObjectFieldset
             schema={taskBridge}
             objectType="Task"
-            objectId="tasks"
+            arrayId="tasks"
             items={initialTasks}
             onChange={() => {}}
-          >
-            <ArrayObjectFieldset data-testid="disabled-fieldset" disabled />
-          </ArrayObjectProvider>
+            data-testid="disabled-fieldset"
+            disabled
+          />
         </div>
       );
     }
@@ -181,15 +186,15 @@ describe("ArrayObjectFieldset.interactable", () => {
     function ReadOnlyComponent() {
       return (
         <div>
-          <ArrayObjectProvider
+          <ArrayObjectFieldset
             schema={taskBridge}
             objectType="Task"
-            objectId="tasks"
+            arrayId="tasks"
             items={initialTasks}
             onChange={() => {}}
-          >
-            <ArrayObjectFieldset data-testid="readonly-fieldset" readOnly />
-          </ArrayObjectProvider>
+            data-testid="readonly-fieldset"
+            readOnly
+          />
         </div>
       );
     }
@@ -214,19 +219,16 @@ describe("ArrayObjectFieldset.interactable", () => {
     function ErrorComponent() {
       return (
         <div>
-          <ArrayObjectProvider
+          <ArrayObjectFieldset
             schema={taskBridge}
             objectType="Task"
-            objectId="tasks"
+            arrayId="tasks"
             items={initialTasks}
             onChange={() => {}}
-          >
-            <ArrayObjectFieldset
-              data-testid="error-fieldset"
-              error={true}
-              errorMessage="This is an error message"
-            />
-          </ArrayObjectProvider>
+            data-testid="error-fieldset"
+            error={true}
+            errorMessage="This is an error message"
+          />
         </div>
       );
     }
@@ -252,27 +254,25 @@ describe("ArrayObjectFieldset.interactable", () => {
       return (
         <div>
           <div className="first-container">
-            <ArrayObjectProvider
+            <ArrayObjectFieldset
               schema={taskBridge}
               objectType="Task"
-              objectId="tasks1"
+              arrayId="tasks1"
               items={initialTasks}
               onChange={() => {}}
-            >
-              <ArrayObjectFieldset data-testid="first-fieldset" />
-            </ArrayObjectProvider>
+              data-testid="first-fieldset"
+            />
           </div>
 
           <div className="second-container">
-            <ArrayObjectProvider
+            <ArrayObjectFieldset
               schema={taskBridge}
               objectType="Task"
-              objectId="tasks2"
+              arrayId="tasks2"
               items={[initialTasks[0]]}
               onChange={() => {}}
-            >
-              <ArrayObjectFieldset data-testid="second-fieldset" />
-            </ArrayObjectProvider>
+              data-testid="second-fieldset"
+            />
           </div>
         </div>
       );

@@ -153,16 +153,16 @@ export function ArrayObjectDataProvider({
   // Combine data from props and Redux
   const finalItems = reduxItems || items || [];
 
-  // Get the object type and ID from context
+  // Get the object type and array ID from context
   const objectType = React.useContext(ArrayObjectTypeContext);
-  const objectId = React.useContext(ArrayObjectIdContext);
+  const arrayId = React.useContext(ArrayObjectIdContext);
 
   // Function to update the entire array
   const setItems = (newItems: ArrayItemData[]) => {
     // If Redux integration is enabled, dispatch an action
-    if (dispatch && objectType && objectId) {
+    if (dispatch && objectType && arrayId) {
       // Dispatch a specific array update action
-      dispatch(createUpdateArrayItemsAction(objectType, objectId, newItems));
+      dispatch(createUpdateArrayItemsAction(objectType, arrayId, newItems));
     } else {
       // Otherwise just call the onChange callback
       onChange(newItems);
@@ -180,9 +180,9 @@ export function ArrayObjectDataProvider({
     const newItems = [...finalItems, newItem];
 
     // If Redux integration is enabled, dispatch an action
-    if (dispatch && objectType && objectId) {
+    if (dispatch && objectType && arrayId) {
       // Dispatch a specific add item action
-      dispatch(createAddArrayItemAction(objectType, objectId, newItem));
+      dispatch(createAddArrayItemAction(objectType, arrayId, newItem));
     } else {
       // Otherwise just call the onChange callback
       onChange(newItems);
@@ -211,10 +211,10 @@ export function ArrayObjectDataProvider({
     newItems[index] = merge ? { ...newItems[index], ...item } : item;
 
     // If Redux integration is enabled, dispatch an action
-    if (dispatch && objectType && objectId) {
+    if (dispatch && objectType && arrayId) {
       // Dispatch a specific update item action
       dispatch(
-        createUpdateArrayItemAction(objectType, objectId, index, item, merge)
+        createUpdateArrayItemAction(objectType, arrayId, index, item, merge)
       );
     } else {
       // Otherwise just call the onChange callback
@@ -240,9 +240,9 @@ export function ArrayObjectDataProvider({
     newItems.splice(index, 1);
 
     // If Redux integration is enabled, dispatch an action
-    if (dispatch && objectType && objectId) {
+    if (dispatch && objectType && arrayId) {
       // Dispatch a specific remove item action
-      dispatch(createRemoveArrayItemAction(objectType, objectId, index));
+      dispatch(createRemoveArrayItemAction(objectType, arrayId, index));
     } else {
       // Otherwise just call the onChange callback
       onChange(newItems);

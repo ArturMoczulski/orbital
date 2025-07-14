@@ -192,6 +192,10 @@ export class TextInputInteractable extends FormInputInteractable<string> {
   selectById(value: string): Cypress.Chainable<JQuery<HTMLElement>> {
     return this.get().clear().type(value);
   }
+
+  clear() {
+    return this.get().clear();
+  }
 }
 
 /**
@@ -206,6 +210,10 @@ export class NumberInputInteractable extends FormInputInteractable<number> {
    */
   selectById(value: number): Cypress.Chainable<JQuery<HTMLElement>> {
     return this.get().clear().type(String(value));
+  }
+
+  clear() {
+    return this.get().clear();
   }
 }
 
@@ -240,6 +248,10 @@ export class CheckboxInputInteractable extends FormInputInteractable<boolean> {
   uncheck(): Cypress.Chainable<JQuery<HTMLElement>> {
     return this.get().uncheck();
   }
+
+  clear() {
+    return this.get().uncheck();
+  }
 }
 
 /**
@@ -254,6 +266,10 @@ export class RadioInputInteractable extends FormInputInteractable<string> {
    */
   selectById(value: string): Cypress.Chainable<JQuery<HTMLElement>> {
     return this.get().check(value);
+  }
+
+  clear() {
+    return this.get().uncheck();
   }
 }
 

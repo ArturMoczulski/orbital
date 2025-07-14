@@ -56,13 +56,36 @@ export class ArrayObjectFieldsetInteractable extends CypressInteractable {
   }
 
   /**
-   * Get a remove button for a specific item
+   * Get a remove button for a specific item by index
    * @param index The index of the item
    */
-  removeButton(index: number) {
-    return this.get().find(
-      `[data-object-id="${this.objectType}-${index}"][data-testid=RemoveItem]`
-    );
+  removeButton(index: number): Cypress.Chainable<JQuery<HTMLElement>>;
+
+  /**
+   * Get a remove button for a specific item by object ID
+   * @param id The object ID of the item
+   */
+  removeButton(id: string): Cypress.Chainable<JQuery<HTMLElement>>;
+
+  /**
+   * Implementation of removeButton for both index and id overloads
+   * @param indexOrId The index or object ID of the item
+   */
+  removeButton(
+    indexOrId: number | string
+  ): Cypress.Chainable<JQuery<HTMLElement>> {
+    if (typeof indexOrId === "number") {
+      // When using index, find the nth ObjectFieldset and get its remove button
+      return this.get()
+        .find("[data-testid=ObjectFieldset]")
+        .eq(indexOrId)
+        .siblings("[data-testid=RemoveItem]");
+    } else {
+      // When using ID, find by data-object-id attribute
+      return this.get().find(
+        `[data-object-id="${indexOrId}"][data-testid=RemoveItem]`
+      );
+    }
   }
 
   /**
@@ -73,16 +96,13 @@ export class ArrayObjectFieldsetInteractable extends CypressInteractable {
       const interactables: ObjectFieldsetInteractable[] = [];
 
       for (let i = 0; i < count; i++) {
-        // Create a parent element function that returns the ArrayObjectFieldset itself
-        const parentElement = () => this.get();
-
-        // Create an ObjectFieldsetInteractable with the correct index
+        // Create an ObjectFieldsetInteractable for each item
         interactables.push(
           objectFieldset(
-            this.objectType,
-            parentElement,
-            undefined, // No objectId
-            i
+            this.objectType, // Object type is stored in data-object-type
+            undefined,
+            undefined, // Don't use objectId when using index
+            i // Use the index to find the correct ObjectFieldset
           )
         );
       }
@@ -100,18 +120,22 @@ export class ArrayObjectFieldsetInteractable extends CypressInteractable {
   ): Cypress.Chainable<ObjectFieldsetInteractable> {
     if (typeof indexOrId === "number") {
       // If a number is provided, use it as an index
-      return this.items().then((items) => items[indexOrId]);
-    } else {
-      // If a string is provided, use it as an ID
-      // Create a parent element function that returns the ArrayObjectFieldset itself
-      const parentElement = () => this.get();
-
-      // Create an ObjectFieldsetInteractable with the specific object ID
       return cy.wrap(
         objectFieldset(
-          this.objectType,
-          parentElement,
-          indexOrId // Use the string as the objectId
+          this.objectType, // Object type is stored in data-object-type
+          undefined,
+          undefined, // Don't use objectId when using index
+          indexOrId // Use the index to find the correct ObjectFieldset
+        )
+      );
+    } else {
+      // If a string is provided, use it as an ID
+      return cy.wrap(
+        objectFieldset(
+          this.objectType, // Object type is stored in data-object-type
+          undefined,
+          indexOrId, // Use the string as the objectId
+          undefined // Don't use index when using objectId
         )
       );
     }
@@ -126,11 +150,11 @@ export class ArrayObjectFieldsetInteractable extends CypressInteractable {
   }
 
   /**
-   * Remove an item
-   * @param index The index of the item to remove
+   * Remove an item by index or object ID
+   * @param indexOrId The index or object ID of the item to remove
    */
-  removeItem(index: number) {
-    this.removeButton(index).click();
+  removeItem(indexOrId: number | string): this {
+    this.removeButton(indexOrId as any).click();
     return this;
   }
 
@@ -138,7 +162,7 @@ export class ArrayObjectFieldsetInteractable extends CypressInteractable {
    * Get the number of items
    */
   getItemCount(): Cypress.Chainable<number> {
-    // Find all elements with data-testid="ObjectFieldset" within the ArrayObjectFieldset
+    // Find all ObjectFieldset elements within the ArrayObjectFieldset
     return this.get().find("[data-testid=ObjectFieldset]").its("length");
   }
 

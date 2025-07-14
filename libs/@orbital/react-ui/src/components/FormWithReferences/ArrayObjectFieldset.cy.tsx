@@ -5,7 +5,6 @@ import { ZodBridge } from "uniforms-bridge-zod";
 import { z } from "zod";
 import { arrayObjectFieldset } from "../../../cypress/interactables/FormWithReferences/ArrayObjectFieldset.interactable";
 import { ArrayObjectFieldset } from "./ArrayObjectFieldset";
-import { ArrayObjectProvider } from "./ArrayObjectProvider";
 
 // Define types for our Redux state and actions
 interface ArrayItemData {
@@ -380,10 +379,10 @@ describe("ArrayObjectFieldset", () => {
 
       return (
         <div>
-          <ArrayObjectProvider
+          <ArrayObjectFieldset
             schema={taskBridge}
             objectType="Task"
-            objectId="tasks"
+            arrayId="tasks"
             items={tasksState}
             onChange={(newItems) => {
               store.dispatch(updateArrayItems("Task", "tasks", newItems));
@@ -392,9 +391,7 @@ describe("ArrayObjectFieldset", () => {
             createUpdateAction={createUpdateAction}
             objectDispatch={store.dispatch}
             objectCreateUpdateAction={objectCreateUpdateAction}
-          >
-            <ArrayObjectFieldset />
-          </ArrayObjectProvider>
+          />
 
           {/* Hidden divs to verify the current state */}
           <div data-testid="tasks-count">{tasksState.length}</div>
@@ -511,10 +508,10 @@ describe("ArrayObjectFieldset", () => {
 
       return (
         <div>
-          <ArrayObjectProvider
+          <ArrayObjectFieldset
             schema={taskBridge}
             objectType="Task"
-            objectId="tasks"
+            arrayId="tasks"
             items={tasksState}
             onChange={(newItems) => {
               store.dispatch(updateArrayItems("Task", "tasks", newItems));
@@ -523,9 +520,7 @@ describe("ArrayObjectFieldset", () => {
             createUpdateAction={createUpdateAction}
             objectDispatch={store.dispatch}
             objectCreateUpdateAction={objectCreateUpdateAction}
-          >
-            <ArrayObjectFieldset />
-          </ArrayObjectProvider>
+          />
 
           {/* Hidden divs to verify the current state */}
           <div data-testid="tasks-count">{tasksState.length}</div>

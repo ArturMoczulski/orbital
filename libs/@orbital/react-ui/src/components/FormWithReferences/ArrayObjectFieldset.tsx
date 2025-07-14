@@ -33,9 +33,13 @@ export function useArrayObject() {
 }
 
 export interface ArrayObjectFieldsetProps {
+  // Schema props
+  schema: z.ZodType<any> | ZodBridge<any> | ZodReferencesBridge<any>;
+  objectType?: string;
+
   // Field props
   items?: any[]; // Optional override for items from context
-  onChange?: (items: any[]) => void; // Optional override for context methods
+  onChange: (items: any[]) => void; // Required for standalone usage
   label?: string;
   error?: boolean;
   errorMessage?: string;
@@ -46,6 +50,16 @@ export interface ArrayObjectFieldsetProps {
   addButtonLabel?: string;
   removeButtonLabel?: string;
   "data-testid"?: string;
+  arrayId?: string;
+
+  // Redux integration props for array operations
+  itemsSelector?: () => Record<string, any>[];
+  dispatch?: (action: any) => void;
+  createUpdateAction?: (
+    objectType: string,
+    objectId: string,
+    data: Record<string, any>
+  ) => any;
 
   // Redux integration props for individual objects
   objectDispatch?: (action: any) => void;
@@ -59,149 +73,185 @@ export interface ArrayObjectFieldsetProps {
     objectType: string,
     objectId?: string
   ) => Record<string, any>;
+
+  // Optional callback for data updates (for testing)
+  onUpdate?: (items: Record<string, any>[]) => void;
 }
 
 /**
  * A component that renders an array of objects, where each object is rendered
  * using an ObjectFieldset within an ObjectProvider.
  *
- * This component should be used within an ArrayObjectProvider.
+ * This component includes its own ArrayObjectProvider, so it can be used standalone.
  */
 export function ArrayObjectFieldset({
-  items: propItems,
+  // Schema props
+  schema,
+  objectType,
+
+  // Field props
+  items,
   onChange,
   label,
   error,
   errorMessage,
   disabled = false,
   readOnly = false,
+
+  // Additional props
   addButtonLabel,
   removeButtonLabel = "Remove",
   "data-testid": dataTestId,
+  arrayId,
+
+  // Redux integration props for array operations
+  itemsSelector,
+  dispatch,
+  createUpdateAction,
+
   // Redux integration props for individual objects
   objectDispatch,
   objectCreateUpdateAction,
   objectDataSelector,
+
+  // Optional callback for data updates
+  onUpdate,
 }: ArrayObjectFieldsetProps) {
-  // Get schema and data from context
-  const {
-    schema,
-    objectType,
-    items: contextItems,
-    addItem,
-    updateItem,
-    removeItem,
-  } = useArrayObject();
+  // Create a wrapper component that includes the ArrayObjectProvider
+  const FieldsetContent = () => {
+    // Get schema and data from context
+    const {
+      schema: contextSchema,
+      objectType: contextObjectType,
+      items: contextItems,
+      addItem,
+      updateItem,
+      removeItem,
+    } = useArrayObject();
 
-  // Use items from props if provided, otherwise use context
-  const items = propItems !== undefined ? propItems : contextItems;
+    // Use the schema and objectType from context
+    const finalSchema = contextSchema;
+    const finalObjectType = contextObjectType;
 
-  // Function to handle changes to an individual item
-  const handleItemChange = (index: number, newData: any) => {
-    if (onChange) {
-      // If onChange is provided, use it directly
-      const newItems = [...items];
-      newItems[index] = { ...newItems[index], ...newData };
-      onChange(newItems);
-    } else {
-      // Otherwise use the context method
+    // Use items from context
+    const finalItems = contextItems;
+
+    // Function to handle changes to an individual item
+    const handleItemChange = (index: number, newData: any) => {
+      // Use the context method
       updateItem(index, newData, true);
-    }
-  };
+    };
 
-  // Function to add a new item
-  const handleAddItem = () => {
-    const newItem =
-      schema instanceof ZodBridge && schema.getInitialModel
-        ? schema.getInitialModel()
-        : {};
+    // Function to add a new item
+    const handleAddItem = () => {
+      const newItem =
+        finalSchema instanceof ZodBridge && finalSchema.getInitialModel
+          ? finalSchema.getInitialModel()
+          : {};
 
-    if (onChange) {
-      // If onChange is provided, use it directly
-      onChange([...items, newItem]);
-    } else {
-      // Otherwise use the context method
+      // Use the context method
       addItem(newItem);
-    }
-  };
+    };
 
-  // Function to remove an item
-  const handleRemoveItem = (index: number) => {
-    if (onChange) {
-      // If onChange is provided, use it directly
-      const newItems = [...items];
-      newItems.splice(index, 1);
-      onChange(newItems);
-    } else {
-      // Otherwise use the context method
+    // Function to remove an item
+    const handleRemoveItem = (index: number) => {
+      // Use the context method
       removeItem(index);
-    }
+    };
+
+    return (
+      <div data-testid={dataTestId || "ArrayObjectFieldset"}>
+        {label && <Typography variant="h6">{label}</Typography>}
+
+        {error && errorMessage && (
+          <Typography color="error">{errorMessage}</Typography>
+        )}
+
+        {/* Render each item in the array */}
+        {finalItems.map((item, index) => (
+          <Card key={index} variant="outlined" style={{ marginBottom: "16px" }}>
+            <CardContent>
+              <ObjectProvider
+                schema={finalSchema}
+                objectType={finalObjectType}
+                data={item}
+                objectId={`${finalObjectType}-${index}`}
+                onUpdate={(key, data) => {
+                  if (key === "main") {
+                    handleItemChange(index, data);
+                  }
+                }}
+                // Pass Redux integration props for individual objects
+                dispatch={objectDispatch}
+                createUpdateAction={objectCreateUpdateAction}
+                dataSelector={
+                  objectDataSelector
+                    ? () =>
+                        objectDataSelector(
+                          finalObjectType,
+                          `${finalObjectType}-${index}`
+                        )
+                    : undefined
+                }
+                // Pass array index for context
+                arrayIndex={index}
+              >
+                <ObjectFieldset
+                  header={(data, type) => `${type} ${index + 1}`}
+                />
+              </ObjectProvider>
+
+              {!disabled && !readOnly && (
+                <Button
+                  variant="outlined"
+                  color="error"
+                  onClick={() => handleRemoveItem(index)}
+                  style={{ marginTop: "8px" }}
+                  data-object-id={`${finalObjectType}-${index}`}
+                  data-testid="RemoveItem"
+                >
+                  {removeButtonLabel}
+                </Button>
+              )}
+            </CardContent>
+          </Card>
+        ))}
+
+        {!disabled && !readOnly && (
+          <Button
+            variant="contained"
+            color="primary"
+            onClick={handleAddItem}
+            data-testid="AddItem"
+          >
+            {addButtonLabel || `Add ${finalObjectType}`}
+          </Button>
+        )}
+      </div>
+    );
   };
 
+  // Wrap the content with ArrayObjectProvider if not already in one
   return (
-    <div data-testid={dataTestId || "ArrayObjectFieldset"}>
-      {label && <Typography variant="h6">{label}</Typography>}
-
-      {error && errorMessage && (
-        <Typography color="error">{errorMessage}</Typography>
-      )}
-
-      {/* Render each item in the array */}
-      {items.map((item, index) => (
-        <Card key={index} variant="outlined" style={{ marginBottom: "16px" }}>
-          <CardContent>
-            <ObjectProvider
-              schema={schema}
-              objectType={objectType}
-              data={item}
-              objectId={`${objectType}-${index}`}
-              onUpdate={(key, data) => {
-                if (key === "main") {
-                  handleItemChange(index, data);
-                }
-              }}
-              // Pass Redux integration props for individual objects
-              dispatch={objectDispatch}
-              createUpdateAction={objectCreateUpdateAction}
-              dataSelector={
-                objectDataSelector
-                  ? () =>
-                      objectDataSelector(objectType, `${objectType}-${index}`)
-                  : undefined
-              }
-              // Pass array index for context
-              arrayIndex={index}
-            >
-              <ObjectFieldset header={(data, type) => `${type} ${index + 1}`} />
-            </ObjectProvider>
-
-            {!disabled && !readOnly && (
-              <Button
-                variant="outlined"
-                color="error"
-                onClick={() => handleRemoveItem(index)}
-                style={{ marginTop: "8px" }}
-                data-object-id={`${objectType}-${index}`}
-                data-testid="RemoveItem"
-              >
-                {removeButtonLabel}
-              </Button>
-            )}
-          </CardContent>
-        </Card>
-      ))}
-
-      {!disabled && !readOnly && (
-        <Button
-          variant="contained"
-          color="primary"
-          onClick={handleAddItem}
-          data-testid="AddItem"
-        >
-          {addButtonLabel || `Add ${objectType}`}
-        </Button>
-      )}
-    </div>
+    <ArrayObjectProvider
+      schema={schema}
+      objectType={objectType}
+      items={items}
+      onChange={onChange}
+      arrayId={arrayId}
+      // Pass array-level Redux integration props if available
+      itemsSelector={itemsSelector}
+      dispatch={dispatch}
+      createUpdateAction={createUpdateAction}
+      // Pass object-level Redux integration props if available
+      objectDispatch={objectDispatch}
+      objectCreateUpdateAction={objectCreateUpdateAction}
+      objectDataSelector={objectDataSelector}
+      // Pass testing callback
+      onUpdate={onUpdate}
+    >
+      <FieldsetContent />
+    </ArrayObjectProvider>
   );
 }
 
@@ -336,7 +386,7 @@ export function createArrayObjectsComponentDetector(
           } = fieldProps;
 
           return (
-            <ArrayObjectProvider
+            <ArrayObjectFieldset
               schema={itemSchema}
               objectType={itemObjectType}
               items={value}
@@ -349,9 +399,8 @@ export function createArrayObjectsComponentDetector(
               objectDispatch={objectDispatch}
               objectCreateUpdateAction={objectCreateUpdateAction}
               objectDataSelector={objectDataSelector}
-            >
-              <ArrayObjectFieldset {...rest} />
-            </ArrayObjectProvider>
+              {...rest}
+            />
           );
         };
       }

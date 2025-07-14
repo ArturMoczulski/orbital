@@ -9,7 +9,7 @@ import {
   inferObjectTypeFromSchema,
 } from "./ZodReferencesBridge";
 
-// Create contexts for objectType and objectId
+// Create contexts for objectType and arrayId
 export const ArrayObjectTypeContext = createContext<string | null>(null);
 export const ArrayObjectIdContext = createContext<string | null>(null);
 
@@ -24,8 +24,8 @@ type ArrayObjectProviderProps = {
   // Data props
   items?: Record<string, any>[];
   onChange: (items: Record<string, any>[]) => void;
-  // Object identification
-  objectId?: string;
+  // Array identification
+  arrayId?: string;
   // Redux integration props for array operations (optional)
   itemsSelector?: SelectorFunction<Record<string, any>[]>;
   dispatch?: (action: any) => void;
@@ -66,8 +66,8 @@ export function ArrayObjectProvider({
   // Data props
   items,
   onChange,
-  // Object identification
-  objectId,
+  // Array identification
+  arrayId,
   // Redux integration props for array operations
   itemsSelector,
   dispatch,
@@ -79,11 +79,11 @@ export function ArrayObjectProvider({
   // Testing callback
   onUpdate,
 }: ArrayObjectProviderProps) {
-  // Generate a default objectId if not provided
-  const finalObjectId =
-    objectId || `array-${Math.random().toString(36).substring(2, 9)}`;
+  // Generate a default arrayId if not provided
+  const finalArrayId =
+    arrayId || `array-${Math.random().toString(36).substring(2, 9)}`;
 
-  // Ensure we have an objectType
+  // Ensure we have an objectType by inferring it from the schema using zod registry
   const finalObjectType =
     objectType ||
     (schema instanceof ZodBridge || schema instanceof ZodReferencesBridge
@@ -93,7 +93,7 @@ export function ArrayObjectProvider({
   return (
     <ObjectSchemaProvider schema={schema} objectType={finalObjectType}>
       <ArrayObjectTypeContext.Provider value={finalObjectType}>
-        <ArrayObjectIdContext.Provider value={finalObjectId}>
+        <ArrayObjectIdContext.Provider value={finalArrayId}>
           <ArrayObjectDataProvider
             // Direct data props
             items={items}
