@@ -93,10 +93,28 @@ export class ArrayObjectFieldsetInteractable extends CypressInteractable {
 
   /**
    * Get an ObjectFieldset for a specific item
-   * @param index The index of the item
+   * @param indexOrId The index or ID of the item
    */
-  item(index: number): Cypress.Chainable<ObjectFieldsetInteractable> {
-    return this.items().then((items) => items[index]);
+  item(
+    indexOrId: number | string
+  ): Cypress.Chainable<ObjectFieldsetInteractable> {
+    if (typeof indexOrId === "number") {
+      // If a number is provided, use it as an index
+      return this.items().then((items) => items[indexOrId]);
+    } else {
+      // If a string is provided, use it as an ID
+      // Create a parent element function that returns the ArrayObjectFieldset itself
+      const parentElement = () => this.get();
+
+      // Create an ObjectFieldsetInteractable with the specific object ID
+      return cy.wrap(
+        objectFieldset(
+          this.objectType,
+          parentElement,
+          indexOrId // Use the string as the objectId
+        )
+      );
+    }
   }
 
   /**
