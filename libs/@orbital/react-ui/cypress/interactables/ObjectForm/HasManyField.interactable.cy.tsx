@@ -9,8 +9,8 @@ import { useState } from "react";
 import { ZodBridge } from "uniforms-bridge-zod";
 import { AutoForm } from "uniforms-mui";
 import { z } from "zod";
-import HasManyField from "../../../src/components/FormWithReferences/HasManyField";
-import { ObjectSchemaProvider } from "../../../src/components/FormWithReferences/ObjectSchemaContext";
+import HasManyField from "../../../src/components/ObjectForm/HasManyField";
+import { ObjectSchemaProvider } from "../../../src/components/ObjectForm/ObjectSchemaContext";
 import { hasManyField } from "./HasManyField.interactable";
 
 describe("HasManyField.interactable", () => {

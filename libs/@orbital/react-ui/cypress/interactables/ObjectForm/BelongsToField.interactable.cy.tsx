@@ -6,8 +6,8 @@ import { OnChange } from "uniforms";
 import { ZodBridge } from "uniforms-bridge-zod";
 import { AutoForm } from "uniforms-mui";
 import { z } from "zod";
-import BelongsToField from "../../../src/components/FormWithReferences/BelongsToField";
-import { ObjectSchemaProvider } from "../../../src/components/FormWithReferences/ObjectSchemaContext";
+import BelongsToField from "../../../src/components/ObjectForm/BelongsToField";
+import { ObjectSchemaProvider } from "../../../src/components/ObjectForm/ObjectSchemaContext";
 import { belongsToField } from "./BelongsToField.interactable";
 
 // Create a simple schema for the field

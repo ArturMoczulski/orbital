@@ -4,8 +4,8 @@ import { mount } from "cypress/react";
 import React, { useState } from "react";
 import { ZodBridge } from "uniforms-bridge-zod";
 import { z } from "zod";
-import { ObjectFieldset } from "../../../src/components/FormWithReferences/ObjectFieldset";
-import { ObjectProvider } from "../../../src/components/FormWithReferences/ObjectProvider";
+import { ObjectFieldset } from "../../../src/components/ObjectForm/ObjectFieldset";
+import { ObjectProvider } from "../../../src/components/ObjectForm/ObjectProvider";
 import { objectFieldset } from "./ObjectFieldset.interactable";
 
 // Define types for our Redux state and actions

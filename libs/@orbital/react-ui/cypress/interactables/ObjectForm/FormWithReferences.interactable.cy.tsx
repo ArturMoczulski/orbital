@@ -9,7 +9,7 @@ import { AutoForm } from "uniforms-mui";
 import {
   FormWithReferences,
   ZodReferencesBridge,
-} from "../../../src/components/FormWithReferences";
+} from "../../../src/components/ObjectForm";
 import { formWithReferences } from "./FormWithReferences.interactable";
 
 describe("FormWithReferences Interactable", () => {

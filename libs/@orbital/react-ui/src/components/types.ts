@@ -90,7 +90,7 @@ export interface TreeExplorerProps<T extends TreeNodeData> {
    */
   schema?:
     | import("uniforms-bridge-zod").ZodBridge<any>
-    | import("./FormWithReferences/ZodReferencesBridge").ZodReferencesBridge<any>;
+    | import("./ObjectForm/ZodReferencesBridge").ZodReferencesBridge<any>;
 
   /**
    * Optional callback function when a new object is added

@@ -9,8 +9,8 @@ import { useState } from "react";
 import { ZodBridge } from "uniforms-bridge-zod";
 import { AutoForm } from "uniforms-mui";
 import { z } from "zod";
-import ChildrenField from "../../../src/components/FormWithReferences/ChildrenField";
-import { ObjectSchemaProvider } from "../../../src/components/FormWithReferences/ObjectSchemaContext";
+import ChildrenField from "../../../src/components/ObjectForm/ChildrenField";
+import { ObjectSchemaProvider } from "../../../src/components/ObjectForm/ObjectSchemaContext";
 import { childrenField } from "./ChildrenField.interactable";
 
 describe("ChildrenField.interactable", () => {

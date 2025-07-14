@@ -4,7 +4,7 @@ import React from "react";
 import { Provider } from "react-redux";
 import { ZodBridge } from "uniforms-bridge-zod";
 import { z } from "zod";
-import { ArrayObjectFieldset } from "../../../src/components/FormWithReferences/ArrayObjectFieldset";
+import { ArrayObjectFieldset } from "../../../src/components/ObjectForm/ArrayObjectFieldset";
 import { arrayObjectFieldset } from "./ArrayObjectFieldset.interactable";
 
 describe("ArrayObjectFieldset.interactable", () => {

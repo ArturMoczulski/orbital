@@ -9,8 +9,8 @@ import { useState } from "react";
 import { ZodBridge } from "uniforms-bridge-zod";
 import { AutoForm } from "uniforms-mui";
 import { z } from "zod";
-import { ObjectSchemaProvider } from "../../../src/components/FormWithReferences/ObjectSchemaContext";
-import ReferenceField from "../../../src/components/FormWithReferences/ReferenceField";
+import { ObjectSchemaProvider } from "../../../src/components/ObjectForm/ObjectSchemaContext";
+import ReferenceField from "../../../src/components/ObjectForm/ReferenceField";
 import { autocomplete } from "../MaterialUI/Autocomplete.interactable";
 import { referenceField } from "./ReferenceField.interactable";
 

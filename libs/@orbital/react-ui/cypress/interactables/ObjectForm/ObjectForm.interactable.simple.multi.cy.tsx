@@ -4,7 +4,7 @@ import React from "react";
 import { Provider } from "react-redux";
 import { ZodBridge } from "uniforms-bridge-zod";
 import { z } from "zod";
-import { ObjectForm } from "../../../src/components/FormWithReferences/ObjectForm";
+import { ObjectForm } from "../../../src/components/ObjectForm/ObjectForm";
 import { objectForm } from "./ObjectForm.interactable";
 
 /**
