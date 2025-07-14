@@ -24,6 +24,10 @@ export {
   type ObjectFormProps,
   type SchemaWithObjects,
 } from "./ObjectForm";
+export {
+  ObjectFormDialog,
+  type ObjectFormDialogProps,
+} from "./ObjectFormDialog";
 export { ObjectProvider, useObject } from "./ObjectProvider";
 export { ObjectSchemaProvider, useObjectSchema } from "./ObjectSchemaContext";
 export { default as ParentField } from "./ParentField";

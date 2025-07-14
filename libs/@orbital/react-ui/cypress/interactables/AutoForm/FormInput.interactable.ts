@@ -437,7 +437,7 @@ export function createInteractableFromInput<
   if (dataTestId == "BelongsToField") {
     const {
       BelongsToFieldInteractable,
-    } = require("./../ObjectForm/BelongsToField.interactable");
+    } = require("../ObjectForm/BelongsToField.interactable");
     return cy.wrap(
       new BelongsToFieldInteractable({
         fieldName,
@@ -450,7 +450,7 @@ export function createInteractableFromInput<
   if (dataTestId == "HasManyField") {
     const {
       HasManyFieldInteractable,
-    } = require("./../ObjectForm/HasManyField.interactable");
+    } = require("../ObjectForm/HasManyField.interactable");
     return cy.wrap(
       new HasManyFieldInteractable({
         fieldName,

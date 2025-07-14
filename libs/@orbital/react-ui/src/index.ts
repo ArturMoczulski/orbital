@@ -16,8 +16,8 @@ export type {
 
 // Export interactables for testing
 export {
-  TreeExplorerInteractable,
   treeExplorer,
+  TreeExplorerInteractable,
   type ZodObjectSchema,
 } from "./components/TreeExplorer/TreeExplorer.interactable";
 export { TreeNodeInteractable } from "./components/TreeExplorer/TreeNode.interactable";
@@ -47,9 +47,9 @@ export {
 // Export context providers and hooks
 export {
   ObjectTypeProvider,
-  WorldProvider,
   useObjectType,
   useWorld,
+  WorldProvider,
   type ObjectType,
   type ObjectTypeContextValue,
   type ObjectTypeProviderProps,
@@ -58,7 +58,7 @@ export {
 } from "./contexts";
 
 // Export testing utilities
-export { ReduxProvider, createMockStore } from "./testing/redux-mock-store";
+export { createMockStore, ReduxProvider } from "./testing/redux-mock-store";
 
 // Export form components
 export {
@@ -70,3 +70,7 @@ export {
   type ObjectFormProps,
   type SchemaWithObjects,
 } from "./components/ObjectForm/ObjectForm";
+export {
+  ObjectFormDialog,
+  type ObjectFormDialogProps,
+} from "./components/ObjectForm/ObjectFormDialog";

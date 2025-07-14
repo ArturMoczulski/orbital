@@ -6,7 +6,11 @@ import BelongsToField from "./BelongsToField";
 import HasManyField from "./HasManyField";
 import { ObjectFieldset } from "./ObjectFieldset";
 import { ObjectSchemaProvider } from "./ObjectSchemaContext";
-import { BELONGS_TO_FIELD, HAS_MANY_FIELD } from "./ReferenceField";
+import {
+  BELONGS_TO_FIELD,
+  createReferenceFieldsComponentDetector,
+  HAS_MANY_FIELD,
+} from "./ReferenceField";
 import {
   inferObjectTypeFromSchema,
   ZodReferencesBridge,
@@ -124,7 +128,7 @@ export function ObjectForm({
   // Infer object type from schema if not provided
   const objectType = providedObjectType || inferObjectTypeFromSchema(schema);
 
-  // Create a component detector that distinguishes between object and array object fields
+  // Create a component detector that distinguishes between object, array object, and reference fields
   const objectDetector = useMemo(() => {
     return (props: any, uniforms: any) => {
       const fieldName = props.name;
@@ -177,6 +181,20 @@ export function ObjectForm({
         );
       }
 
+      // For reference fields (BelongsTo and HasMany), use the reference fields detector
+      const referenceDetector = createReferenceFieldsComponentDetector(
+        schema,
+        objectType
+      );
+      const referenceResult = referenceDetector(props, uniforms);
+
+      // If the reference detector returns a component, use it
+      if (
+        referenceResult !== AutoField.defaultComponentDetector(props, uniforms)
+      ) {
+        return referenceResult;
+      }
+
       // For other field types, use the default component
       return AutoField.defaultComponentDetector(props, uniforms);
     };
@@ -217,20 +235,21 @@ export function ObjectForm({
   }, [schema, formContext]);
 
   return (
-    <ObjectSchemaProvider schema={schema} objectType={objectType}>
-      <AutoField.componentDetectorContext.Provider value={objectDetector}>
-        <UniformsAutoForm
-          schema={schemaWithContext}
-          model={model}
-          onSubmit={onSubmit}
-          disabled={disabled}
-          readOnly={readOnly}
-          showInlineError={showInlineError}
-          data-testid="ObjectForm"
-          {...formProps}
-        />
-      </AutoField.componentDetectorContext.Provider>
-    </ObjectSchemaProvider>
+    <div data-testid={props["data-testid"] || "ObjectForm"}>
+      <ObjectSchemaProvider schema={schema} objectType={objectType}>
+        <AutoField.componentDetectorContext.Provider value={objectDetector}>
+          <UniformsAutoForm
+            schema={schemaWithContext}
+            model={model}
+            onSubmit={onSubmit}
+            disabled={disabled}
+            readOnly={readOnly}
+            showInlineError={showInlineError}
+            {...formProps}
+          />
+        </AutoField.componentDetectorContext.Provider>
+      </ObjectSchemaProvider>
+    </div>
   );
 }
 
