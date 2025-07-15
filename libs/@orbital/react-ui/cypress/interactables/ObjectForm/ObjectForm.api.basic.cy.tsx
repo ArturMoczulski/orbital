@@ -10,6 +10,7 @@ import {
   store,
   submitFormAndWaitForCompletion,
   verifyReduxStoreUpdate,
+  verifySpy,
 } from "./ObjectForm.api.utils";
 
 describe("ObjectForm Basic API Integration Tests", () => {
@@ -35,7 +36,7 @@ describe("ObjectForm Basic API Integration Tests", () => {
     });
 
     // Verify that the id field is not displayed when isNew is true
-    cy.get('[data-field-name="id"]').should("not.exist");
+    cy.get('[data-field-name="_id"]').should("not.exist");
 
     // Fill out the form
     fillBasicFields(form, "New User", "new@example.com");
@@ -44,10 +45,10 @@ describe("ObjectForm Basic API Integration Tests", () => {
     submitFormAndWaitForCompletion(form, "User created successfully");
 
     // Verify the create mutation was called
-    cy.get("@createMutationSpy").should("have.been.calledOnce");
+    verifySpy("createMutationSpy", "have.been.calledOnce");
 
     // Verify the dispatch was called
-    cy.get("@dispatchSpy").should("have.been.called");
+    verifySpy("dispatchSpy", "have.been.called");
 
     // Verify the Redux store was updated
     verifyReduxStoreUpdate("new-user-1", {
@@ -56,7 +57,7 @@ describe("ObjectForm Basic API Integration Tests", () => {
     });
 
     // Verify the success callback was called
-    cy.get("@onSuccessSpy").should("have.been.calledOnce");
+    verifySpy("onSuccessSpy", "have.been.calledOnce");
   });
 
   it(
@@ -84,7 +85,7 @@ describe("ObjectForm Basic API Integration Tests", () => {
       submitFormAndWaitForCompletion(form, "User updated successfully");
 
       // Verify the onSuccess callback was called
-      cy.get("@onSuccessSpy").should("have.been.calledOnce");
+      verifySpy("onSuccessSpy", "have.been.calledOnce");
     }
   );
 

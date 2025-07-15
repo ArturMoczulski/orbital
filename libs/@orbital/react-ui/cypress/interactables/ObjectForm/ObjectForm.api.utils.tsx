@@ -667,6 +667,13 @@ export const submitFormAndWaitForCompletion = (
 };
 
 /**
+ * Helper function to verify spy assertions without direct cy.get() calls
+ */
+export const verifySpy = (alias: string, assertion: string, ...args: any[]) => {
+  return cy.get(`@${alias}`).should(assertion, ...args);
+};
+
+/**
  * Verify the Redux store was updated with the expected values
  */
 export const verifyReduxStoreUpdate = (

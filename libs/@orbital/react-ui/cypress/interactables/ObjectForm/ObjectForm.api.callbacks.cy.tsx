@@ -7,6 +7,7 @@ import {
   initialUser,
   mountObjectForm,
   store,
+  verifySpy,
 } from "./ObjectForm.api.utils";
 
 describe("ObjectForm Custom Callback Tests", () => {
@@ -58,10 +59,10 @@ describe("ObjectForm Custom Callback Tests", () => {
       form.submit();
 
       // Verify the onAdd callback was called
-      cy.get("@onAddSpy").should("have.been.calledOnce");
+      verifySpy("onAddSpy", "have.been.calledOnce");
 
       // Check that onAddSpy was called with an object containing these properties
-      cy.get("@onAddSpy").should("have.been.calledWithMatch", {
+      verifySpy("onAddSpy", "have.been.calledWithMatch", {
         name: "Custom Add User",
         email: "custom@example.com",
         isActive: true,
@@ -79,7 +80,7 @@ describe("ObjectForm Custom Callback Tests", () => {
       );
 
       // Verify the onSuccess callback was called
-      cy.get("@onSuccessSpy").should("have.been.calledOnce");
+      verifySpy("onSuccessSpy", "have.been.calledOnce");
     }
   );
 
@@ -126,8 +127,8 @@ describe("ObjectForm Custom Callback Tests", () => {
       form.submit();
 
       // Verify the onUpdate callback was called
-      cy.get("@onUpdateSpy").should("have.been.calledOnce");
-      cy.get("@onUpdateSpy").should("have.been.calledWithMatch", {
+      verifySpy("onUpdateSpy", "have.been.calledOnce");
+      verifySpy("onUpdateSpy", "have.been.calledWithMatch", {
         name: "Updated User",
         email: "updated@example.com",
         isActive: true,
@@ -145,7 +146,7 @@ describe("ObjectForm Custom Callback Tests", () => {
       );
 
       // Verify the onSuccess callback was called
-      cy.get("@onSuccessSpy").should("have.been.calledOnce");
+      verifySpy("onSuccessSpy", "have.been.calledOnce");
     }
   );
 });

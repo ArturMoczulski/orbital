@@ -7,6 +7,7 @@ import {
   fillBasicFields,
   mountObjectForm,
   store,
+  verifySpy,
 } from "./ObjectForm.api.utils";
 
 describe("ObjectForm Reference Field Tests", () => {
@@ -85,10 +86,10 @@ describe("ObjectForm Reference Field Tests", () => {
     );
 
     // Verify the create mutation was called with the updated values
-    cy.get("@createMutationSpy").should("have.been.calledOnce");
+    verifySpy("createMutationSpy", "have.been.calledOnce");
 
     // Verify the create mutation was called with the correct data
-    cy.get("@createMutationSpy").should("have.been.calledWithMatch", {
+    verifySpy("createMutationSpy", "have.been.calledWithMatch", {
       createUserDto: {
         name: "Changed User",
         email: "changed@example.com",
@@ -101,7 +102,7 @@ describe("ObjectForm Reference Field Tests", () => {
     });
 
     // Verify the onSuccess callback was called
-    cy.get("@onSuccessSpy").should("have.been.calledOnce");
+    verifySpy("onSuccessSpy", "have.been.calledOnce");
   });
 
   it("should verify all fields including reference IDs are correctly passed to update API when values are changed", () => {
@@ -175,10 +176,10 @@ describe("ObjectForm Reference Field Tests", () => {
     );
 
     // Verify the update mutation was called with the updated values
-    cy.get("@updateMutationSpy").should("have.been.calledOnce");
+    verifySpy("updateMutationSpy", "have.been.calledOnce");
 
     // Verify the update mutation was called with the correct data
-    cy.get("@updateMutationSpy").should("have.been.calledWithMatch", {
+    verifySpy("updateMutationSpy", "have.been.calledWithMatch", {
       _id: "user-1",
       updateUserDto: {
         _id: "user-1",
@@ -193,6 +194,6 @@ describe("ObjectForm Reference Field Tests", () => {
     });
 
     // Verify the onSuccess callback was called
-    cy.get("@onSuccessSpy").should("have.been.calledOnce");
+    verifySpy("onSuccessSpy", "have.been.calledOnce");
   });
 });
