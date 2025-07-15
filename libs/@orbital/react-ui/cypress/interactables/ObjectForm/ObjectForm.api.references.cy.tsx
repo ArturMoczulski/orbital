@@ -20,9 +20,6 @@ describe("ObjectForm Reference Field Tests", () => {
     // Create a spy for the store.dispatch function
     const dispatchSpy = cy.spy(store, "dispatch").as("dispatchSpy");
 
-    // Setup mock API with create spy
-    const { mockApi, createMutationSpy } = createMockApiWithCreateSpy();
-
     // Define the initial model with reference fields
     const initialModel = {
       name: "Initial User",
@@ -37,6 +34,12 @@ describe("ObjectForm Reference Field Tests", () => {
     // Create a model state tracker for Redux integration
     const { modelState, objectDataSelector, objectCreateUpdateAction } =
       createModelStateTracker(initialModel);
+
+    // Setup mock API with create spy, passing the model state reference
+    const { mockApi, createMutationSpy } = createMockApiWithCreateSpy(
+      { delay: 100 },
+      modelState
+    );
 
     // Mount the form with Redux integration
     const form = mountObjectForm({
@@ -85,12 +88,15 @@ describe("ObjectForm Reference Field Tests", () => {
 
     // Verify the create mutation was called with the correct data
     cy.get("@createMutationSpy").should("have.been.calledWithMatch", {
-      name: "Changed User",
-      email: "changed@example.com",
-      departmentId: "dept-2",
-      roleId: "role-2",
-      projectIds: ["project-1", "project-3"],
-      skillIds: ["skill-2", "skill-3"],
+      createUserDto: {
+        name: "Changed User",
+        email: "changed@example.com",
+        isActive: true,
+        departmentId: "dept-2",
+        roleId: "role-2",
+        projectIds: ["project-1", "project-3"],
+        skillIds: ["skill-2", "skill-3"],
+      },
     });
   });
 
@@ -100,9 +106,6 @@ describe("ObjectForm Reference Field Tests", () => {
 
     // Create a spy for the store.dispatch function
     const dispatchSpy = cy.spy(store, "dispatch").as("dispatchSpy");
-
-    // Setup mock API with update spy
-    const { mockApi, updateMutationSpy } = createMockApiWithUpdateSpy();
 
     // Define the initial model with reference fields
     const initialModel = {
@@ -119,6 +122,12 @@ describe("ObjectForm Reference Field Tests", () => {
     // Create a model state tracker for Redux integration
     const { modelState, objectDataSelector, objectCreateUpdateAction } =
       createModelStateTracker(initialModel);
+
+    // Setup mock API with update spy, passing the model state reference
+    const { mockApi, updateMutationSpy } = createMockApiWithUpdateSpy(
+      { delay: 100 },
+      modelState
+    );
 
     // Mount the form with Redux integration
     const form = mountObjectForm({
@@ -168,12 +177,16 @@ describe("ObjectForm Reference Field Tests", () => {
     // Verify the update mutation was called with the correct data
     cy.get("@updateMutationSpy").should("have.been.calledWithMatch", {
       _id: "user-1",
-      name: "Changed User",
-      email: "changed@example.com",
-      departmentId: "dept-2",
-      roleId: "role-2",
-      projectIds: ["project-1", "project-3"],
-      skillIds: ["skill-2", "skill-3"],
+      updateUserDto: {
+        _id: "user-1",
+        name: "Changed User",
+        email: "changed@example.com",
+        isActive: true,
+        departmentId: "dept-2",
+        roleId: "role-2",
+        projectIds: ["project-1", "project-3"],
+        skillIds: ["skill-2", "skill-3"],
+      },
     });
   });
 });

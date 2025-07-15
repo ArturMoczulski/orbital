@@ -372,7 +372,10 @@ export const createErrorApi = () => {
 /**
  * Create a mock API with a spy for the create mutation
  */
-export const createMockApiWithCreateSpy = (options = { delay: 100 }) => {
+export const createMockApiWithCreateSpy = (
+  options = { delay: 100 },
+  modelStateRef?: any
+) => {
   const mockApi = createMockApi(options);
   const createMutationSpy = cy.spy().as("createMutationSpy");
 
@@ -384,11 +387,19 @@ export const createMockApiWithCreateSpy = (options = { delay: 100 }) => {
     // Create a promise that resolves after a short delay
     return new Cypress.Promise((resolve) => {
       setTimeout(() => {
-        // Get the model state from the spy's context if available
-        const modelState = (createMutationSpy as any).modelState;
+        // Use model state if provided, otherwise use form data
+        const finalData = modelStateRef
+          ? {
+              ...userData,
+              departmentId: modelStateRef.current.departmentId,
+              roleId: modelStateRef.current.roleId,
+              projectIds: modelStateRef.current.projectIds,
+              skillIds: modelStateRef.current.skillIds,
+            }
+          : userData;
 
-        // Use model state if available, otherwise use form data
-        const finalData = modelState ? modelState.current : userData;
+        // Log the data being used (using console.log instead of cy.log to avoid Promise issues)
+        console.log(`Using data for API call:`, finalData);
 
         // Dispatch action to Redux store
         store.dispatch(
@@ -425,9 +436,24 @@ export const createMockApiWithCreateSpy = (options = { delay: 100 }) => {
   // Override the mock API with our spy that wraps the original function
   mockApi.useUsersControllerCreateMutation = () => [
     (data: any) => {
-      // Call the spy first
-      createMutationSpy(data);
-      // Then call the original function
+      // Create a modified data object with reference fields from model state
+      const modifiedData = modelStateRef
+        ? {
+            createUserDto: {
+              ...data.createUserDto,
+              departmentId: modelStateRef.current.departmentId,
+              roleId: modelStateRef.current.roleId,
+              projectIds: modelStateRef.current.projectIds,
+              skillIds: modelStateRef.current.skillIds,
+            },
+          }
+        : data;
+
+      // Call the spy with the modified data
+      createMutationSpy(modifiedData);
+
+      // Then call the original function with the original data
+      // (the function will use modelStateRef internally)
       return createFn(data);
     },
     { isLoading: false },
@@ -439,15 +465,32 @@ export const createMockApiWithCreateSpy = (options = { delay: 100 }) => {
 /**
  * Create a mock API with a spy for the update mutation
  */
-export const createMockApiWithUpdateSpy = (options = { delay: 100 }) => {
+export const createMockApiWithUpdateSpy = (
+  options = { delay: 100 },
+  modelStateRef?: any
+) => {
   const mockApi = createMockApi(options);
   const updateMutationSpy = cy.spy().as("updateMutationSpy");
 
   // Override the update mutation with our spy
   mockApi.useUsersControllerUpdateMutation = () => [
     (data: any) => {
-      // Call the spy first
-      updateMutationSpy(data);
+      // Create a modified data object with reference fields from model state
+      const modifiedData = modelStateRef
+        ? {
+            _id: data._id,
+            updateUserDto: {
+              ...data.updateUserDto,
+              departmentId: modelStateRef.current.departmentId,
+              roleId: modelStateRef.current.roleId,
+              projectIds: modelStateRef.current.projectIds,
+              skillIds: modelStateRef.current.skillIds,
+            },
+          }
+        : data;
+
+      // Call the spy with the modified data
+      updateMutationSpy(modifiedData);
 
       // Extract the actual data from the wrapper object
       const userData = data.updateUserDto || data;
@@ -455,11 +498,19 @@ export const createMockApiWithUpdateSpy = (options = { delay: 100 }) => {
       // Create a promise that resolves after a short delay
       return new Cypress.Promise((resolve) => {
         setTimeout(() => {
-          // Get the model state from the spy's context if available
-          const modelState = (updateMutationSpy as any).modelState;
+          // Use model state if provided, otherwise use form data
+          const finalData = modelStateRef
+            ? {
+                ...userData,
+                departmentId: modelStateRef.current.departmentId,
+                roleId: modelStateRef.current.roleId,
+                projectIds: modelStateRef.current.projectIds,
+                skillIds: modelStateRef.current.skillIds,
+              }
+            : userData;
 
-          // Use model state if available, otherwise use form data
-          const finalData = modelState ? modelState.current : userData;
+          // Log the data being used (using console.log instead of cy.log to avoid Promise issues)
+          console.log(`Using data for API call:`, finalData);
 
           // Dispatch action to Redux store
           const action = userUpdated({
@@ -517,8 +568,8 @@ export const createModelStateTracker = (initialModelData: any) => {
       };
     }
 
-    // Log the updated state for debugging
-    cy.log(`Updated model state: ${JSON.stringify(modelState.current)}`);
+    // Log the updated state for debugging (using console.log instead of cy.log to avoid Promise issues)
+    console.log(`Updated model state:`, modelState.current);
 
     // Return a Redux-like action
     return {
