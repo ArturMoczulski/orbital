@@ -1,3 +1,5 @@
+import { circularProgress } from "../MaterialUI/CircularProgress.interactable";
+import { snackbar } from "../MaterialUI/Snackbar.interactable";
 import {
   createMockApiWithCreateSpy,
   createMockApiWithUpdateSpy,
@@ -71,6 +73,17 @@ describe("ObjectForm Reference Field Tests", () => {
     // Submit the form
     form.submit();
 
+    // Wait for the loading indicator to complete
+    circularProgress({
+      dataTestId: "ObjectFormLoadingIndicator",
+    }).waitForCompletion(5000);
+
+    // Check if the success notification is displayed
+    snackbar({ variant: "success" }).waitForMessage(
+      "User created successfully",
+      5000
+    );
+
     // Verify the create mutation was called with the updated values
     cy.get("@createMutationSpy").should("have.been.calledOnce");
 
@@ -86,6 +99,9 @@ describe("ObjectForm Reference Field Tests", () => {
         skillIds: ["skill-1", "skill-3"],
       },
     });
+
+    // Verify the onSuccess callback was called
+    cy.get("@onSuccessSpy").should("have.been.calledOnce");
   });
 
   it("should verify all fields including reference IDs are correctly passed to update API when values are changed", () => {
@@ -147,6 +163,17 @@ describe("ObjectForm Reference Field Tests", () => {
     // Submit the form
     form.submit();
 
+    // Wait for the loading indicator to complete
+    circularProgress({
+      dataTestId: "ObjectFormLoadingIndicator",
+    }).waitForCompletion(5000);
+
+    // Check if the success notification is displayed
+    snackbar({ variant: "success" }).waitForMessage(
+      "User updated successfully",
+      5000
+    );
+
     // Verify the update mutation was called with the updated values
     cy.get("@updateMutationSpy").should("have.been.calledOnce");
 
@@ -164,5 +191,8 @@ describe("ObjectForm Reference Field Tests", () => {
         skillIds: ["skill-1", "skill-3"],
       },
     });
+
+    // Verify the onSuccess callback was called
+    cy.get("@onSuccessSpy").should("have.been.calledOnce");
   });
 });
