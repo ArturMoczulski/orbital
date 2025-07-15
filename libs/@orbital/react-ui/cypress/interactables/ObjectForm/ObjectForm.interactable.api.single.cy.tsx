@@ -863,7 +863,41 @@ describe("ObjectForm API Integration Tests", () => {
       { isLoading: false },
     ];
 
-    // Mount the component with NotificationProvider
+    // Define the initial model with reference fields
+    const initialModel = {
+      name: "Test User",
+      email: "test@example.com",
+      isActive: true,
+      departmentId: "dept-2",
+      roleId: "role-2",
+      projectIds: ["project-1", "project-3"],
+      skillIds: ["skill-2", "skill-3"],
+    };
+
+    // Create an object data selector function for Redux integration
+    const objectDataSelector = (objectType: string, objectId?: string) => {
+      return initialModel;
+    };
+
+    // Create an action creator for updating object data in Redux
+    const objectCreateUpdateAction = (
+      key: string,
+      data: Record<string, any>,
+      merge = true
+    ) => {
+      // For testing purposes, we'll just return a simple action
+      // In a real app, this would create a proper Redux action
+      return {
+        type: "UPDATE_OBJECT_DATA",
+        payload: {
+          key,
+          data,
+          merge,
+        },
+      };
+    };
+
+    // Mount the component with NotificationProvider and proper Redux integration
     mount(
       <Provider store={store}>
         <NotificationProvider>
@@ -874,15 +908,11 @@ describe("ObjectForm API Integration Tests", () => {
             api={mockApi}
             onSuccess={onSuccessSpy}
             successMessage="User created successfully"
-            model={{
-              name: "Test User",
-              email: "test@example.com",
-              isActive: true,
-              departmentId: "dept-2",
-              roleId: "role-2",
-              projectIds: ["project-1", "project-3"],
-              skillIds: ["skill-2", "skill-3"],
-            }}
+            model={initialModel}
+            // Add Redux integration props
+            objectDispatch={store.dispatch}
+            objectCreateUpdateAction={objectCreateUpdateAction}
+            objectDataSelector={objectDataSelector}
           />
         </NotificationProvider>
       </Provider>
@@ -890,9 +920,19 @@ describe("ObjectForm API Integration Tests", () => {
 
     const form = objectForm({ objectType: "User" });
 
-    // Submit the form without changing values (using the initial model)
+    // Modify the reference fields to test that changes are properly tracked
+    // Update departmentId (BelongsTo field)
+    store.dispatch(
+      userUpdated({
+        _id: "user-1",
+        departmentId: "dept-2",
+        roleId: "role-2",
+        projectIds: ["project-1", "project-3"],
+        skillIds: ["skill-2", "skill-3"],
+      })
+    );
 
-    // Submit the form without changing values (using the initial model)
+    // Submit the form
     form.submit();
 
     // Wait for the loading indicator to complete
@@ -909,18 +949,28 @@ describe("ObjectForm API Integration Tests", () => {
     // Verify the createMutation was called with the correct data
     cy.get("@createMutationSpy").should("have.been.calledOnce");
     cy.get("@createMutationSpy").should("have.been.calledWithMatch", {
-      name: "Test User",
-      email: "test@example.com",
-      isActive: true,
-      departmentId: "dept-2",
-      roleId: "role-2",
-      projectIds: ["project-1", "project-3"],
-      skillIds: ["skill-2", "skill-3"],
+      createUserDto: {
+        name: "Test User",
+        email: "test@example.com",
+        isActive: true,
+        departmentId: "dept-2",
+        roleId: "role-2",
+        projectIds: ["project-1", "project-3"],
+        skillIds: ["skill-2", "skill-3"],
+      },
     });
 
-    // Verify the Redux store was updated correctly
-    cy.window().then((win) => {
+    // We already verified the createMutation call above, no need for a duplicate assertion
+
+    // Wait for the Redux store to be updated
+    cy.wait(300).then(() => {
+      // Verify the Redux store was updated correctly
       const state = store.getState();
+
+      // Check if new-user-1 exists in the store
+      expect(state.users.entities).to.have.property("new-user-1");
+
+      // Now verify all the properties
       expect(state.users.entities["new-user-1"].name).to.equal("Test User");
       expect(state.users.entities["new-user-1"].email).to.equal(
         "test@example.com"
@@ -979,7 +1029,28 @@ describe("ObjectForm API Integration Tests", () => {
       { isLoading: false },
     ];
 
-    // Mount the component with NotificationProvider
+    // Create an object data selector function for Redux integration
+    const objectDataSelector = (objectType: string, objectId?: string) => {
+      const state = store.getState();
+      return state.users.entities["user-1"];
+    };
+
+    // Create an action creator for updating object data in Redux
+    const objectCreateUpdateAction = (
+      key: string,
+      data: Record<string, any>,
+      merge = true
+    ) => {
+      if (key === "main") {
+        return userUpdated({
+          _id: "user-1",
+          ...data,
+        });
+      }
+      return { type: "UNKNOWN_ACTION" };
+    };
+
+    // Mount the component with NotificationProvider and proper Redux integration
     mount(
       <Provider store={store}>
         <NotificationProvider>
@@ -992,23 +1063,8 @@ describe("ObjectForm API Integration Tests", () => {
             successMessage="User updated successfully"
             // Add Redux integration props with correct prop names
             objectDispatch={store.dispatch}
-            objectCreateUpdateAction={(
-              key: string,
-              data: Record<string, any>,
-              merge?: boolean
-            ) => {
-              if (key === "main") {
-                return userUpdated({
-                  _id: "user-1",
-                  ...data,
-                });
-              }
-              return { type: "UNKNOWN_ACTION" };
-            }}
-            objectDataSelector={(objectType: string, objectId?: string) => {
-              const state = store.getState();
-              return state.users.entities["user-1"];
-            }}
+            objectCreateUpdateAction={objectCreateUpdateAction}
+            objectDataSelector={objectDataSelector}
           />
         </NotificationProvider>
       </Provider>
@@ -1020,17 +1076,10 @@ describe("ObjectForm API Integration Tests", () => {
     // Update basic fields
     form.setFieldValue("name", "Updated User");
     form.setFieldValue("email", "updated@example.com");
-
-    // Update basic fields first
-    form.setFieldValue("name", "Updated User");
-    form.setFieldValue("email", "updated@example.com");
     cy.wait(300);
 
-    // Instead of trying to interact with the UI components directly,
-    // we'll update the Redux store directly to simulate user selections
-    // This is more reliable in the test environment
-
-    // Update all reference fields at once through Redux
+    // Update reference fields through Redux
+    // This simulates user interaction with the reference fields
     store.dispatch(
       userUpdated({
         _id: "user-1",
@@ -1044,43 +1093,41 @@ describe("ObjectForm API Integration Tests", () => {
     );
 
     // Verify that the values have been updated in the Redux store
-    cy.window().then((win) => {
-      const stateAfterUpdate = store.getState();
+    const stateAfterUpdate = store.getState();
 
-      // Assert that the values have been updated in the Redux store
-      expect(stateAfterUpdate.users.entities["user-1"].departmentId).to.equal(
-        "dept-2"
-      );
-      expect(stateAfterUpdate.users.entities["user-1"].roleId).to.equal(
-        "role-2"
-      );
-      expect(
-        stateAfterUpdate.users.entities["user-1"].projectIds
-      ).to.deep.equal(["project-2", "project-3"]);
-      expect(stateAfterUpdate.users.entities["user-1"].skillIds).to.deep.equal([
-        "skill-1",
-        "skill-3",
-      ]);
-    });
+    // Assert that the values have been updated in the Redux store
+    expect(stateAfterUpdate.users.entities["user-1"].departmentId).to.equal(
+      "dept-2"
+    );
+    expect(stateAfterUpdate.users.entities["user-1"].roleId).to.equal("role-2");
+    expect(stateAfterUpdate.users.entities["user-1"].projectIds).to.deep.equal([
+      "project-2",
+      "project-3",
+    ]);
+    expect(stateAfterUpdate.users.entities["user-1"].skillIds).to.deep.equal([
+      "skill-1",
+      "skill-3",
+    ]);
 
     // Add a wait to ensure all state updates are complete
     cy.wait(500);
 
-    // Submit the form with a longer wait to ensure all state is synchronized
+    // Submit the form
     form.submit();
-    cy.wait(500); // Longer wait for form submission to complete
 
-    // Skip waiting for the loading indicator since it might not be visible
-    // Instead, wait for a fixed time and then check the final state
-    cy.wait(1000);
+    // Wait for the loading indicator to complete
+    circularProgress({
+      dataTestId: "ObjectFormLoadingIndicator",
+    }).waitForCompletion(5000);
 
-    // Verify the update mutation was called
-    cy.get("@updateMutationSpy").should("have.been.calledOnce");
-
-    // Verify the update mutation was called
-    cy.get("@updateMutationSpy").should("have.been.calledOnce");
+    // Check for the success notification
+    snackbar({ variant: "success" }).waitForMessage(
+      "User updated successfully",
+      5000
+    );
 
     // Verify the update mutation was called with all the correct field values
+    cy.get("@updateMutationSpy").should("have.been.calledOnce");
     cy.get("@updateMutationSpy").should("have.been.calledWithMatch", {
       _id: "user-1",
       updateUserDto: {
@@ -1094,27 +1141,22 @@ describe("ObjectForm API Integration Tests", () => {
       },
     });
 
-    // Check for the success notification
-    cy.get('[data-testid="Snackbar-success"]').should("exist");
-
     // Verify the Redux store was updated correctly
-    cy.window().then((win) => {
-      const state = store.getState();
+    const state = store.getState();
 
-      expect(state.users.entities["user-1"].name).to.equal("Updated User");
-      expect(state.users.entities["user-1"].email).to.equal(
-        "updated@example.com"
-      );
-      expect(state.users.entities["user-1"].departmentId).to.equal("dept-2");
-      expect(state.users.entities["user-1"].roleId).to.equal("role-2");
-      expect(state.users.entities["user-1"].projectIds).to.deep.equal([
-        "project-2",
-        "project-3",
-      ]);
-      expect(state.users.entities["user-1"].skillIds).to.deep.equal([
-        "skill-1",
-        "skill-3",
-      ]);
-    });
+    expect(state.users.entities["user-1"].name).to.equal("Updated User");
+    expect(state.users.entities["user-1"].email).to.equal(
+      "updated@example.com"
+    );
+    expect(state.users.entities["user-1"].departmentId).to.equal("dept-2");
+    expect(state.users.entities["user-1"].roleId).to.equal("role-2");
+    expect(state.users.entities["user-1"].projectIds).to.deep.equal([
+      "project-2",
+      "project-3",
+    ]);
+    expect(state.users.entities["user-1"].skillIds).to.deep.equal([
+      "skill-1",
+      "skill-3",
+    ]);
   });
 });
