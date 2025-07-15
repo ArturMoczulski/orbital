@@ -644,7 +644,7 @@ export const mountObjectForm = ({
 export const fillBasicFields = (form: any, name: string, email: string) => {
   form.setFieldValue("name", name);
   form.setFieldValue("email", email);
-  return cy.wait(300); // Wait for form updates to process
+  return cy.wait(200); // Wait for form updates to process
 };
 
 /**
@@ -680,7 +680,7 @@ export const verifyReduxStoreUpdate = (
   entityId: string,
   expectedValues: Record<string, any>
 ) => {
-  return cy.wait(300).then(() => {
+  return cy.wait(200).then(() => {
     const state = store.getState();
 
     // Check if entity exists in the store

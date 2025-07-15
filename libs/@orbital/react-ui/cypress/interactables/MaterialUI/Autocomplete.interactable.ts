@@ -270,7 +270,7 @@ export class AutocompleteInteractable
       text.forEach((item) => {
         this.open(); // Make sure the dropdown is open for each selection
         this.item(item).click();
-        cy.wait(100); // Wait for the selection to be processed
+        cy.wait(50); // Wait for the selection to be processed
       });
     } else {
       // Handle single selection
@@ -312,14 +312,14 @@ export class AutocompleteInteractable
       // Handle multiple selections
       id.forEach((itemId) => {
         this.open(); // Make sure the dropdown is open for each selection
-        cy.wait(100); // Wait for dropdown to fully open
+        cy.wait(50); // Wait for dropdown to fully open
 
         // Check if the element exists before clicking
         this.itemById(itemId).then(($el) => {
           if ($el && $el.length > 0) {
             // Element exists, click it
             cy.wrap($el).click({ force: true });
-            cy.wait(200); // Increased wait time for the selection to be processed
+            cy.wait(100); // Wait time for the selection to be processed
             this.get().trigger("change", { force: true });
           } else {
             // Element doesn't exist, try to select by typing and selecting the first option
@@ -329,13 +329,13 @@ export class AutocompleteInteractable
 
             // Type the ID to filter options
             this.textField().clear().type(itemId);
-            cy.wait(300); // Wait for filtering
+            cy.wait(150); // Wait for filtering
 
             // Try to select the first option
             this.items().then(($items) => {
               if ($items.length > 0) {
                 cy.wrap($items.first()).click({ force: true });
-                cy.wait(200); // Increased wait time
+                cy.wait(100); // Wait time
                 this.get().trigger("change", { force: true });
               } else {
                 cy.log(`Warning: No options found after typing "${itemId}"`);
@@ -351,23 +351,23 @@ export class AutocompleteInteractable
 
       // Final blur to ensure all selections are committed
       this.textField().blur();
-      cy.wait(200); // Wait for state to update
+      cy.wait(100); // Wait for state to update
     } else {
       // Handle single selection
       this.open(); // Make sure the dropdown is open
-      cy.wait(100); // Wait for dropdown to fully open
+      cy.wait(50); // Wait for dropdown to fully open
 
       // Check if the element exists before clicking
       this.itemById(id).then(($el) => {
         if ($el && $el.length > 0) {
           // Element exists, click it
           cy.wrap($el).click({ force: true });
-          cy.wait(300); // Increased wait time for the selection to be processed
+          cy.wait(150); // Wait time for the selection to be processed
           this.get().trigger("change", { force: true });
 
           // Force a change event to ensure the selection is registered
           this.textField().trigger("change", { force: true });
-          cy.wait(200); // Wait for change event to be processed
+          cy.wait(100); // Wait for change event to be processed
 
           // For single selection, check if the field is focused before blurring
           cy.document().then((doc) => {
@@ -385,7 +385,7 @@ export class AutocompleteInteractable
                 // Only blur if the field is focused
                 this.textField().blur();
               }
-              cy.wait(100); // Wait for blur to take effect
+              cy.wait(50); // Wait for blur to take effect
             });
           });
 
@@ -399,18 +399,18 @@ export class AutocompleteInteractable
 
           // Type the ID to filter options
           this.textField().clear().type(id);
-          cy.wait(300); // Wait for filtering
+          cy.wait(150); // Wait for filtering
 
           // Try to select the first option
           this.items().then(($items) => {
             if ($items.length > 0) {
               cy.wrap($items.first()).click({ force: true });
-              cy.wait(200); // Increased wait time
+              cy.wait(100); // Wait time
               this.get().trigger("change", { force: true });
 
               // Blur the field
               this.textField().blur();
-              cy.wait(100); // Wait for blur to take effect
+              cy.wait(50); // Wait for blur to take effect
 
               // Explicitly trigger change event
               this.textField().trigger("change", { force: true });
@@ -424,7 +424,7 @@ export class AutocompleteInteractable
     }
 
     // Wait for any state updates to complete
-    cy.wait(100);
+    cy.wait(50);
     return this;
   }
 
@@ -528,7 +528,7 @@ export class AutocompleteInteractable
   type(text: string): this {
     // Get the input field and type the text
     this.textField().clear().type(text);
-    cy.wait(100); // Wait for the typing to be processed
+    cy.wait(50); // Wait for the typing to be processed
     return this;
   }
 
@@ -606,7 +606,7 @@ export class AutocompleteInteractable
       }
     });
 
-    cy.wait(200); // Wait longer for the deselection to be processed
+    cy.wait(100); // Wait for the deselection to be processed
     return this;
   }
 
@@ -672,38 +672,38 @@ export class AutocompleteInteractable
           if (isMultiple) {
             // For multiple selection, click the clear indicator
             this.clearIndicator().click({ force: true });
-            cy.wait(200); // Increased wait time for the clearing to be processed
+            cy.wait(100); // Wait time for the clearing to be processed
 
             // For multiple selection mode, ensure chips are removed
             this.get().find(".MuiChip-root").should("not.exist");
 
             // Explicitly trigger change event to ensure it's captured
             this.textField().trigger("change", { force: true });
-            cy.wait(100); // Wait for change event to be processed
+            cy.wait(50); // Wait for change event to be processed
           } else {
             // For single selection, we need to:
             // 1. Focus the input field
             this.textField().click();
-            cy.wait(100); // Increased wait time
+            cy.wait(50); // Wait time
 
             // 2. Clear the input using Cypress clear() which simulates user interaction
             this.textField().clear();
-            cy.wait(100); // Increased wait time
+            cy.wait(50); // Wait time
 
             // 3. Click the clear indicator to ensure the selection is fully cleared
             this.clearIndicator().click({ force: true });
-            cy.wait(100); // Increased wait time
+            cy.wait(50); // Wait time
 
             // 4. Blur the field to ensure change events are triggered
             this.textField().blur();
-            cy.wait(100); // Increased wait time
+            cy.wait(50); // Wait time
 
             // 5. Set the input value to empty string explicitly and trigger events
             this.textField()
               .invoke("val", "")
               .trigger("input", { force: true })
               .trigger("change", { force: true });
-            cy.wait(100); // Increased wait time
+            cy.wait(50); // Wait time
 
             // 6. Verify the input is cleared
             this.textField().invoke("val").should("eq", "");
@@ -727,7 +727,7 @@ export class AutocompleteInteractable
                   // Only blur if the field is focused
                   this.textField().blur();
                 }
-                cy.wait(100);
+                cy.wait(50);
               });
             });
           } catch (error) {
@@ -739,7 +739,7 @@ export class AutocompleteInteractable
     });
 
     // Wait for any state updates to complete
-    cy.wait(100);
+    cy.wait(50);
     return this;
   }
 
