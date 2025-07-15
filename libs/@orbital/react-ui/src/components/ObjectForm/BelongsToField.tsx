@@ -68,7 +68,6 @@ function BelongsToField({
       updateObjectData("main", data, merge);
     };
   } catch (error) {
-    console.log(`[BelongsToField] Context not available:`, error);
     // Context not available, will use props only
   }
 
@@ -81,15 +80,9 @@ function BelongsToField({
   const handleChange = (newValue: string | string[] | null) => {
     let processedValue: string = "";
 
-    // If newValue is null or empty string and we have a finalValue,
-    // this is likely a blur event and we should keep the current value
-    if ((newValue === null || newValue === "") && finalValue) {
-      // Keep the current value
-      processedValue = finalValue;
-
-      // No need to call onChange or updateContextData since we're not changing anything
-      return;
-    } else if (Array.isArray(newValue)) {
+    // Handle intentional clearing of the field
+    // Don't return early when newValue is null or empty string, as this could be an intentional clear
+    if (Array.isArray(newValue)) {
       processedValue = newValue.length > 0 ? newValue[0] : "";
     } else {
       processedValue = newValue || "";

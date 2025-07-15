@@ -334,20 +334,12 @@ export function ObjectForm({
       },
     };
 
-    // When creating a new object, automatically hide ID fields
-    // For existing objects, hide id field but use _id as the default ID field
-    if (isNew) {
-      if (!result.fields.includes("_id")) {
-        result.fields.push("_id");
-      }
-      if (!result.fields.includes("id")) {
-        result.fields.push("id");
-      }
-    } else {
-      // For existing objects, hide the 'id' field by default as _id is the default ID field
-      if (!result.fields.includes("id")) {
-        result.fields.push("id");
-      }
+    // Always hide both _id and id fields regardless of isNew mode
+    if (!result.fields.includes("_id")) {
+      result.fields.push("_id");
+    }
+    if (!result.fields.includes("id")) {
+      result.fields.push("id");
     }
 
     return result;

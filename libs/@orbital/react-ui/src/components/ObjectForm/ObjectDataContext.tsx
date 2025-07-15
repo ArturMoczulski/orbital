@@ -167,7 +167,8 @@ export function ObjectDataProvider({
   ) => {
     // If Redux integration is enabled, dispatch an action
     if (dispatch && createUpdateAction) {
-      dispatch(createUpdateAction(key, newData, merge, arrayIndex));
+      const action = createUpdateAction(key, newData, merge, arrayIndex);
+      dispatch(action);
 
       // Immediately update local state to reflect the change
       if (key === "main" && dataSelector) {

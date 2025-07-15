@@ -149,9 +149,10 @@ export function ObjectSelector({
       const handleChange = (_: any, newValue: any) => {
         if (multiple) {
           // For multiple choice, map the selected option objects to their values
-          const selectedValues = newValue.map((option: any) =>
-            safeGetOptionValue(option)
-          );
+          const selectedValues = newValue.map((option: any) => {
+            const optionValue = safeGetOptionValue(option);
+            return optionValue;
+          });
           onChange(selectedValues);
         } else {
           // For single choice, map the selected option object to its value

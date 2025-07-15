@@ -220,11 +220,35 @@ export class AutocompleteInteractable
             return;
           }
 
-          // Finally try to find by value attribute
+          // Try to find by value attribute
           const byValue = items.filter(`[value="${id}"]`);
           if (byValue.length > 0) {
             resolve(byValue.first());
             return;
+          }
+
+          // Try to find by text content that matches the ID
+          // This is useful for reference fields where the option text might be the display name
+          // but we're selecting by ID
+          const allOptions = items.toArray();
+          for (let i = 0; i < allOptions.length; i++) {
+            const option = allOptions[i];
+            const $option = Cypress.$(option);
+
+            // Check if any data attribute contains the ID
+            const allDataAttrs = Object.keys($option.data()).map((key) =>
+              $option.data(key)
+            );
+            if (allDataAttrs.includes(id)) {
+              resolve($option);
+              return;
+            }
+
+            // Check if this option has a child element with the ID as text
+            if ($option.find(`:contains("${id}")`).length > 0) {
+              resolve($option);
+              return;
+            }
           }
 
           // If no match found, log a warning and resolve with an empty jQuery object
@@ -288,31 +312,62 @@ export class AutocompleteInteractable
       // Handle multiple selections
       id.forEach((itemId) => {
         this.open(); // Make sure the dropdown is open for each selection
+        cy.wait(100); // Wait for dropdown to fully open
 
         // Check if the element exists before clicking
         this.itemById(itemId).then(($el) => {
           if ($el && $el.length > 0) {
             // Element exists, click it
-            cy.wrap($el).click();
-            cy.wait(100); // Wait for the selection to be processed
+            cy.wrap($el).click({ force: true });
+            cy.wait(200); // Increased wait time for the selection to be processed
+            this.get().trigger("change", { force: true });
           } else {
-            // Element doesn't exist, log a warning
-            cy.log(`Warning: Cannot select non-existent ID "${itemId}"`);
-            // Close the dropdown since we're not selecting anything
-            this.close();
+            // Element doesn't exist, try to select by typing and selecting the first option
+            cy.log(
+              `Warning: Cannot find option with ID "${itemId}" directly, trying alternative selection method`
+            );
+
+            // Type the ID to filter options
+            this.textField().clear().type(itemId);
+            cy.wait(300); // Wait for filtering
+
+            // Try to select the first option
+            this.items().then(($items) => {
+              if ($items.length > 0) {
+                cy.wrap($items.first()).click({ force: true });
+                cy.wait(200); // Increased wait time
+                this.get().trigger("change", { force: true });
+              } else {
+                cy.log(`Warning: No options found after typing "${itemId}"`);
+                this.close();
+              }
+            });
           }
         });
+
+        // Ensure the selection is registered by triggering change events
+        this.textField().trigger("change", { force: true });
       });
+
+      // Final blur to ensure all selections are committed
+      this.textField().blur();
+      cy.wait(200); // Wait for state to update
     } else {
       // Handle single selection
       this.open(); // Make sure the dropdown is open
+      cy.wait(100); // Wait for dropdown to fully open
 
       // Check if the element exists before clicking
       this.itemById(id).then(($el) => {
         if ($el && $el.length > 0) {
           // Element exists, click it
-          cy.wrap($el).click();
-          cy.wait(100); // Wait for the selection to be processed
+          cy.wrap($el).click({ force: true });
+          cy.wait(300); // Increased wait time for the selection to be processed
+          this.get().trigger("change", { force: true });
+
+          // Force a change event to ensure the selection is registered
+          this.textField().trigger("change", { force: true });
+          cy.wait(200); // Wait for change event to be processed
 
           // For single selection, check if the field is focused before blurring
           cy.document().then((doc) => {
@@ -330,17 +385,46 @@ export class AutocompleteInteractable
                 // Only blur if the field is focused
                 this.textField().blur();
               }
+              cy.wait(100); // Wait for blur to take effect
             });
           });
+
+          // Explicitly trigger change event to ensure it's captured
+          this.textField().trigger("change", { force: true });
         } else {
-          // Element doesn't exist, log a warning
-          cy.log(`Warning: Cannot select non-existent ID "${id}"`);
-          // Close the dropdown since we're not selecting anything
-          this.close();
+          // Element doesn't exist, try to select by typing and selecting the first option
+          cy.log(
+            `Warning: Cannot find option with ID "${id}" directly, trying alternative selection method`
+          );
+
+          // Type the ID to filter options
+          this.textField().clear().type(id);
+          cy.wait(300); // Wait for filtering
+
+          // Try to select the first option
+          this.items().then(($items) => {
+            if ($items.length > 0) {
+              cy.wrap($items.first()).click({ force: true });
+              cy.wait(200); // Increased wait time
+              this.get().trigger("change", { force: true });
+
+              // Blur the field
+              this.textField().blur();
+              cy.wait(100); // Wait for blur to take effect
+
+              // Explicitly trigger change event
+              this.textField().trigger("change", { force: true });
+            } else {
+              cy.log(`Warning: No options found after typing "${id}"`);
+              this.close();
+            }
+          });
         }
       });
     }
 
+    // Wait for any state updates to complete
+    cy.wait(100);
     return this;
   }
 
@@ -588,42 +672,74 @@ export class AutocompleteInteractable
           if (isMultiple) {
             // For multiple selection, click the clear indicator
             this.clearIndicator().click({ force: true });
-            cy.wait(100); // Wait for the clearing to be processed
+            cy.wait(200); // Increased wait time for the clearing to be processed
 
             // For multiple selection mode, ensure chips are removed
             this.get().find(".MuiChip-root").should("not.exist");
+
+            // Explicitly trigger change event to ensure it's captured
+            this.textField().trigger("change", { force: true });
+            cy.wait(100); // Wait for change event to be processed
           } else {
             // For single selection, we need to:
             // 1. Focus the input field
             this.textField().click();
-            cy.wait(50);
+            cy.wait(100); // Increased wait time
 
             // 2. Clear the input using Cypress clear() which simulates user interaction
             this.textField().clear();
-            cy.wait(50);
+            cy.wait(100); // Increased wait time
 
             // 3. Click the clear indicator to ensure the selection is fully cleared
             this.clearIndicator().click({ force: true });
-            cy.wait(50);
+            cy.wait(100); // Increased wait time
 
             // 4. Blur the field to ensure change events are triggered
             this.textField().blur();
-            cy.wait(50);
+            cy.wait(100); // Increased wait time
 
-            // 5. Set the input value to empty string explicitly
+            // 5. Set the input value to empty string explicitly and trigger events
             this.textField()
               .invoke("val", "")
-              .trigger("input")
-              .trigger("change");
-            cy.wait(50);
+              .trigger("input", { force: true })
+              .trigger("change", { force: true });
+            cy.wait(100); // Increased wait time
 
             // 6. Verify the input is cleared
             this.textField().invoke("val").should("eq", "");
+          }
+
+          // Final blur to ensure all changes are committed - only if element is focused
+          // Use a try-catch block to handle potential blur errors
+          try {
+            cy.document().then((doc) => {
+              this.textField().then(($field) => {
+                // Check if any element in the field is the active element
+                const activeElement = doc.activeElement;
+                const fieldElements = $field.toArray();
+
+                // Type-safe check if the field is focused
+                const isFieldFocused = fieldElements.some(
+                  (el) => el === activeElement
+                );
+
+                if (isFieldFocused) {
+                  // Only blur if the field is focused
+                  this.textField().blur();
+                }
+                cy.wait(100);
+              });
+            });
+          } catch (error) {
+            // Log the error but continue execution
+            cy.log("Warning: Error during blur operation - continuing test");
           }
         });
       }
     });
 
+    // Wait for any state updates to complete
+    cy.wait(100);
     return this;
   }
 

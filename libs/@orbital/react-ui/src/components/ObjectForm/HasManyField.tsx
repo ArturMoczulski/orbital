@@ -78,13 +78,13 @@ function HasManyField({
 
   // Create a wrapper for onChange that can handle both string and string[] values
   // but will only pass string[] values to the original onChange function
-  const handleChange = (newValue: string | string[]) => {
+  const handleChange = (newValue: string | string[] | null) => {
     let processedValue: string[] = [];
 
     if (Array.isArray(newValue)) {
       processedValue = newValue;
-    } else if (newValue === "") {
-      // Empty string means no selection, so pass empty array
+    } else if (newValue === "" || newValue === null) {
+      // Empty string or null means no selection, so pass empty array
       processedValue = [];
     } else {
       // Single string value, convert to array with one item
