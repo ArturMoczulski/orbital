@@ -185,6 +185,14 @@ export class ObjectFormInteractable extends CypressInteractable {
             }
           });
 
+          // Remove any id field if present, as we only support _id now
+          if (formData.id) {
+            console.log(
+              "Found legacy id field in form data, removing it as only _id is supported"
+            );
+            delete formData.id;
+          }
+
           // Resolve the promise with the form data
           resolve(formData);
         });

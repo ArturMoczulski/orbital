@@ -12,21 +12,21 @@ describe("ObjectFormDialog.interactable", () => {
   // Define schemas for testing
   const departmentSchema = z
     .object({
-      id: z.string().describe("ID"),
+      _id: z.string().describe("ID"),
       name: z.string().describe("Department Name"),
     })
     .describe("Department");
 
   const projectSchema = z
     .object({
-      id: z.string().describe("ID"),
+      _id: z.string().describe("ID"),
       name: z.string().describe("Project Name"),
     })
     .describe("Project");
 
   const personSchema = z
     .object({
-      id: z.string().describe("ID"),
+      _id: z.string().describe("ID"),
       name: z.string().describe("Name"),
       departmentId: z
         .string()
@@ -50,21 +50,21 @@ describe("ObjectFormDialog.interactable", () => {
     schema: personSchema,
     dependencies: {
       department: [
-        { id: "dept-1", name: "Engineering" },
-        { id: "dept-2", name: "Marketing" },
-        { id: "dept-3", name: "Sales" },
+        { _id: "dept-1", name: "Engineering" },
+        { _id: "dept-2", name: "Marketing" },
+        { _id: "dept-3", name: "Sales" },
       ],
       projects: [
-        { id: "proj-1", name: "Website Redesign" },
-        { id: "proj-2", name: "Mobile App" },
-        { id: "proj-3", name: "API Integration" },
+        { _id: "proj-1", name: "Website Redesign" },
+        { _id: "proj-2", name: "Mobile App" },
+        { _id: "proj-3", name: "API Integration" },
       ],
     },
   });
 
   // Test data
   const initialPerson = {
-    id: "person-1",
+    _id: "person-1",
     name: "John Doe",
     departmentId: "dept-1",
     projectIds: ["proj-1", "proj-2"],
@@ -507,6 +507,7 @@ describe("ObjectFormDialog.interactable", () => {
 
     // Use the submit method with data
     const updatedData = {
+      _id: "person-1", // Include _id field
       name: "Bob Johnson",
       departmentId: "dept-3",
       projectIds: ["proj-3"],

@@ -12,7 +12,7 @@ import { objectForm } from "./ObjectForm.interactable";
 
 // Define action types and interfaces
 interface UserPayload {
-  id: string;
+  _id: string;
   name: string;
   email: string;
   isActive: boolean;
@@ -23,7 +23,7 @@ interface UserPayload {
 }
 
 interface UserUpdatePayload {
-  id: string;
+  _id: string;
   name?: string;
   email?: string;
   isActive?: boolean;
@@ -51,7 +51,7 @@ const initialState = {
   users: {
     entities: {
       "user-1": {
-        id: "user-1",
+        _id: "user-1",
         name: "John Doe",
         email: "john@example.com",
         isActive: true,
@@ -79,9 +79,9 @@ const store = configureStore({
           ...state,
           entities: {
             ...state.entities,
-            [userAction.payload.id]: userAction.payload,
+            [userAction.payload._id]: userAction.payload,
           },
-          ids: [...state.ids, userAction.payload.id],
+          ids: [...state.ids, userAction.payload._id],
         };
       }
       if (action.type === "users/userUpdated") {
@@ -90,8 +90,8 @@ const store = configureStore({
           ...state,
           entities: {
             ...state.entities,
-            [userAction.payload.id]: {
-              ...state.entities[userAction.payload.id],
+            [userAction.payload._id]: {
+              ...state.entities[userAction.payload._id],
               ...userAction.payload,
             },
           },
@@ -106,7 +106,7 @@ const store = configureStore({
 // Define additional schemas for references
 const departmentSchema = z
   .object({
-    id: z.string(),
+    _id: z.string(),
     name: z.string(),
     location: z.string(),
   })
@@ -114,7 +114,7 @@ const departmentSchema = z
 
 const roleSchema = z
   .object({
-    id: z.string(),
+    _id: z.string(),
     title: z.string(),
     level: z.number(),
   })
@@ -123,7 +123,7 @@ const roleSchema = z
 
 const projectSchema = z
   .object({
-    id: z.string(),
+    _id: z.string(),
     name: z.string(),
     deadline: z.string(),
   })
@@ -131,7 +131,7 @@ const projectSchema = z
 
 const skillSchema = z
   .object({
-    id: z.string(),
+    _id: z.string(),
     name: z.string(),
     level: z.number(),
   })
@@ -139,7 +139,7 @@ const skillSchema = z
 
 // Define the User schema with references
 const userSchema = z.object({
-  id: z.string().optional(),
+  _id: z.string().optional(),
   name: z.string().min(1, "Name is required"),
   email: z.string().email("Invalid email format"),
   isActive: z.boolean().default(true),
@@ -169,25 +169,25 @@ const userSchema = z.object({
 
 // Sample data for references
 const departments = [
-  { id: "dept-1", name: "Engineering", location: "Building A" },
-  { id: "dept-2", name: "Marketing", location: "Building B" },
+  { _id: "dept-1", name: "Engineering", location: "Building A" },
+  { _id: "dept-2", name: "Marketing", location: "Building B" },
 ];
 
 const roles = [
-  { id: "role-1", title: "Developer", level: 3 },
-  { id: "role-2", title: "Manager", level: 5 },
+  { _id: "role-1", title: "Developer", level: 3 },
+  { _id: "role-2", title: "Manager", level: 5 },
 ];
 
 const projects = [
-  { id: "project-1", name: "Website Redesign", deadline: "2023-12-31" },
-  { id: "project-2", name: "Mobile App", deadline: "2024-06-30" },
-  { id: "project-3", name: "API Integration", deadline: "2023-09-15" },
+  { _id: "project-1", name: "Website Redesign", deadline: "2023-12-31" },
+  { _id: "project-2", name: "Mobile App", deadline: "2024-06-30" },
+  { _id: "project-3", name: "API Integration", deadline: "2023-09-15" },
 ];
 
 const skills = [
-  { id: "skill-1", name: "JavaScript", level: 4 },
-  { id: "skill-2", name: "React", level: 3 },
-  { id: "skill-3", name: "Node.js", level: 5 },
+  { _id: "skill-1", name: "JavaScript", level: 4 },
+  { _id: "skill-2", name: "React", level: 3 },
+  { _id: "skill-3", name: "Node.js", level: 5 },
 ];
 
 // Create a bridge for the schema with dependencies
@@ -195,10 +195,10 @@ const userBridge = new ZodReferencesBridge({
   schema: userSchema,
   dependencies: {
     // The keys must match the schema names from the reference metadata
-    Department: departments.map((dept) => ({ ...dept, _id: dept.id })),
-    Role: roles.map((role) => ({ ...role, _id: role.id })),
-    Project: projects.map((project) => ({ ...project, _id: project.id })),
-    Skill: skills.map((skill) => ({ ...skill, _id: skill.id })),
+    Department: departments,
+    Role: roles,
+    Project: projects,
+    Skill: skills,
   },
 });
 
@@ -222,7 +222,7 @@ interface ObjectFormApiInterface {
 
 // Initial user data
 const initialUser = {
-  id: "user-1",
+  _id: "user-1",
   name: "John Doe",
   email: "john@example.com",
   isActive: true,
@@ -254,7 +254,7 @@ describe("ObjectForm API Integration Tests", () => {
           // Dispatch action to Redux store
           store.dispatch(
             userAdded({
-              id: "new-user-1",
+              _id: "new-user-1",
               name: userData.name || "",
               email: userData.email || "",
               isActive:
@@ -268,7 +268,7 @@ describe("ObjectForm API Integration Tests", () => {
 
           resolve({
             data: {
-              id: "new-user-1",
+              _id: "new-user-1",
               name: userData.name || "",
               email: userData.email || "",
               isActive:
@@ -295,7 +295,7 @@ describe("ObjectForm API Integration Tests", () => {
           // Dispatch action to Redux store
           store.dispatch(
             userUpdated({
-              id: data._id || "user-1",
+              _id: data._id || "user-1",
               ...userData,
             })
           );
@@ -382,7 +382,7 @@ describe("ObjectForm API Integration Tests", () => {
           // Dispatch action to Redux store
           store.dispatch(
             userAdded({
-              id: "new-user-1",
+              _id: "new-user-1",
               name: userData.name || "",
               email: userData.email || "",
               isActive:
@@ -398,7 +398,7 @@ describe("ObjectForm API Integration Tests", () => {
 
           resolve({
             data: {
-              id: "new-user-1",
+              _id: "new-user-1",
               name: userData.name || "",
               email: userData.email || "",
               isActive:
@@ -833,7 +833,7 @@ describe("ObjectForm API Integration Tests", () => {
           // Dispatch action to Redux store
           store.dispatch(
             userAdded({
-              id: "new-user-1",
+              _id: "new-user-1",
               name: userData.name || "",
               email: userData.email || "",
               isActive:
@@ -849,7 +849,7 @@ describe("ObjectForm API Integration Tests", () => {
 
           resolve({
             data: {
-              id: "new-user-1",
+              _id: "new-user-1",
               name: userData.name || "",
               email: userData.email || "",
               isActive:
@@ -1020,7 +1020,7 @@ describe("ObjectForm API Integration Tests", () => {
           // Dispatch action to Redux store
           store.dispatch(
             userUpdated({
-              id: data.id || data._id || "user-1",
+              _id: data._id || "user-1",
               name: userData.name || "",
               email: userData.email || "",
               isActive:
@@ -1036,7 +1036,7 @@ describe("ObjectForm API Integration Tests", () => {
 
           resolve({
             data: {
-              id: data.id || data._id || "user-1",
+              _id: data._id || "user-1",
               name: userData.name || "",
               email: userData.email || "",
               isActive:
@@ -1067,7 +1067,7 @@ describe("ObjectForm API Integration Tests", () => {
 
     // Initial user data with specific reference IDs
     const testUser = {
-      id: "user-1",
+      _id: "user-1",
       name: "John Doe",
       email: "john@example.com",
       isActive: true,
@@ -1100,7 +1100,7 @@ describe("ObjectForm API Integration Tests", () => {
     cy.log(
       "Initial model:",
       JSON.stringify({
-        id: "user-1",
+        _id: "user-1",
         name: "John Doe",
         email: "john@example.com",
         isActive: true,
@@ -1121,7 +1121,7 @@ describe("ObjectForm API Integration Tests", () => {
     cy.log(
       "Updated model:",
       JSON.stringify({
-        id: "user-1",
+        _id: "user-1",
         name: "Updated User",
         email: "john@example.com",
         isActive: true,
@@ -1176,9 +1176,9 @@ describe("ObjectForm API Integration Tests", () => {
         if (callData.updateUserDto) {
           // If data is wrapped in updateUserDto
           cy.get("@updateMutationSpy").should("have.been.calledWithMatch", {
-            _id: "user-1", // Note: API uses _id instead of id at the top level
+            _id: "user-1", // API uses _id at the top level
             updateUserDto: {
-              id: "user-1", // Include id in the DTO
+              _id: "user-1", // Use _id in the DTO
               name: "Updated User",
               email: "john@example.com",
               isActive: true,
@@ -1191,7 +1191,7 @@ describe("ObjectForm API Integration Tests", () => {
         } else {
           // If data is not wrapped
           cy.get("@updateMutationSpy").should("have.been.calledWithMatch", {
-            _id: "user-1", // Note: API uses _id instead of id
+            _id: "user-1", // API uses _id
             name: "Updated User",
             email: "john@example.com",
             isActive: true,

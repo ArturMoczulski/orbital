@@ -135,9 +135,9 @@ export function ObjectSelector({
           // Fallback to using the idField directly
           const idFieldValue = option[providerState.idField];
 
-          // If idField value is not found, try _id and id as fallbacks
+          // If idField value is not found, use _id as fallback
           if (idFieldValue === undefined) {
-            return option._id !== undefined ? option._id : option.id;
+            return option._id;
           }
 
           return idFieldValue;
@@ -193,10 +193,9 @@ export function ObjectSelector({
             return foundOption;
           }
 
-          // If we didn't find an option but have a value, try to find it by _id as well
-          // This is needed because some components use _id and others use id
+          // If we didn't find an option but have a value, try to find it by _id
           const foundByAltId = options.find(
-            (option: any) => option._id === value || option.id === value
+            (option: any) => option._id === value
           );
 
           return foundByAltId || null;

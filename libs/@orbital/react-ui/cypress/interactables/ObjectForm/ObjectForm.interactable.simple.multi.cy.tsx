@@ -26,7 +26,7 @@ describe("ObjectForm.interactable with array of objects", () => {
   // Define a schema for a task list
   const taskListSchema = z
     .object({
-      id: z.string().describe("ID"),
+      _id: z.string().describe("ID"),
       name: z.string().describe("List Name"),
       description: z.string().describe("Description"),
     })
@@ -47,17 +47,17 @@ describe("ObjectForm.interactable with array of objects", () => {
   const initialTaskLists = {
     lists: [
       {
-        id: "list-1",
+        _id: "list-1",
         name: "Work Tasks",
         description: "Tasks related to work projects",
       },
       {
-        id: "list-2",
+        _id: "list-2",
         name: "Personal Tasks",
         description: "Tasks for personal projects",
       },
       {
-        id: "list-3",
+        _id: "list-3",
         name: "Shopping List",
         description: "Items to buy",
       },

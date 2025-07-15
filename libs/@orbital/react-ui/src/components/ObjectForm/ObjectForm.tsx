@@ -335,10 +335,16 @@ export function ObjectForm({
     };
 
     // When creating a new object, automatically hide ID fields
+    // For existing objects, hide id field but use _id as the default ID field
     if (isNew) {
       if (!result.fields.includes("_id")) {
         result.fields.push("_id");
       }
+      if (!result.fields.includes("id")) {
+        result.fields.push("id");
+      }
+    } else {
+      // For existing objects, hide the 'id' field by default as _id is the default ID field
       if (!result.fields.includes("id")) {
         result.fields.push("id");
       }
@@ -584,7 +590,7 @@ export function ObjectForm({
 
       // Try to find the update API function
       const updateFunction = findApiFunction(api, objectType, false);
-      if (updateFunction && model && model.id) {
+      if (updateFunction && model && model._id) {
         return async (data: any) => {
           try {
             // Set loading state to true and ensure DOM updates
@@ -597,8 +603,9 @@ export function ObjectForm({
               objectType.charAt(0).toUpperCase() + objectType.slice(1);
 
             // Call the API function with the ID and form data
+            // Use model._id as the ID field
             const result = await updateFunction({
-              _id: model.id,
+              _id: model._id,
               [`update${pascalObjectType}Dto`]: data,
             });
 
@@ -836,14 +843,14 @@ export function ObjectForm({
       schema={schema}
       objectType={objectType}
       data={model || {}}
-      objectId={model?.id}
+      objectId={model?._id}
       additionalData={additionalData}
       // Pass Redux integration props
       dispatch={objectDispatch}
       createUpdateAction={objectCreateUpdateAction}
       dataSelector={
         objectDataSelector
-          ? () => objectDataSelector(objectType, model?.id)
+          ? () => objectDataSelector(objectType, model?._id)
           : undefined
       }
     >

@@ -12,7 +12,7 @@ describe("ObjectForm.interactable", () => {
   // Define a schema for testing
   const userSchema = z
     .object({
-      id: z.string().describe("ID"),
+      _id: z.string().describe("ID"),
       name: z.string().describe("Name"),
       email: z.string().email().describe("Email"),
       age: z.number().describe("Age"),
@@ -33,7 +33,7 @@ describe("ObjectForm.interactable", () => {
 
   // Test data
   const initialUser = {
-    id: "user-1",
+    _id: "user-1",
     name: "John Doe",
     email: "john@example.com",
     age: 30,
