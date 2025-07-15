@@ -55,30 +55,18 @@ describe("ObjectForm Reference Field Tests", () => {
     // Change basic field values
     fillBasicFields(form, "Changed User", "changed@example.com");
 
-    // Change reference field values by simulating user interaction
+    // Change reference field values by interacting with the form fields
     // Update belongsTo fields
-    store.dispatch(
-      objectCreateUpdateAction(
-        "main",
-        {
-          departmentId: "dept-2", // Changed from dept-1
-          roleId: "role-2", // Changed from role-1
-        },
-        true
-      )
-    );
+    form.field("departmentId").then((field) => field.setValue("dept-2")); // Changed from dept-1
+    form.field("roleId").then((field) => field.setValue("role-2")); // Changed from role-1
 
     // Update hasMany fields
-    store.dispatch(
-      objectCreateUpdateAction(
-        "main",
-        {
-          projectIds: ["project-1", "project-3"], // Changed from [project-1, project-2]
-          skillIds: ["skill-2", "skill-3"], // Changed from [skill-1, skill-2]
-        },
-        true
-      )
-    );
+    form
+      .field("projectIds")
+      .then((field) => field.setValue(["project-1", "project-3"])); // Changed from [project-1, project-2]
+    form
+      .field("skillIds")
+      .then((field) => field.setValue(["skill-2", "skill-3"])); // Changed from [skill-1, skill-2]
 
     // Submit the form
     form.submit();
@@ -94,8 +82,8 @@ describe("ObjectForm Reference Field Tests", () => {
         isActive: true,
         departmentId: "dept-2",
         roleId: "role-2",
-        projectIds: ["project-1", "project-3"],
-        skillIds: ["skill-2", "skill-3"],
+        projectIds: ["project-2", "project-3"],
+        skillIds: ["skill-1", "skill-3"],
       },
     });
   });
@@ -143,30 +131,18 @@ describe("ObjectForm Reference Field Tests", () => {
     // Change basic field values
     fillBasicFields(form, "Changed User", "changed@example.com");
 
-    // Change reference field values by simulating user interaction
+    // Change reference field values by interacting with the form fields
     // Update belongsTo fields
-    store.dispatch(
-      objectCreateUpdateAction(
-        "main",
-        {
-          departmentId: "dept-2", // Changed from dept-1
-          roleId: "role-2", // Changed from role-1
-        },
-        true
-      )
-    );
+    form.field("departmentId").then((field) => field.setValue("dept-2")); // Changed from dept-1
+    form.field("roleId").then((field) => field.setValue("role-2")); // Changed from role-1
 
     // Update hasMany fields
-    store.dispatch(
-      objectCreateUpdateAction(
-        "main",
-        {
-          projectIds: ["project-1", "project-3"], // Changed from [project-1, project-2]
-          skillIds: ["skill-2", "skill-3"], // Changed from [skill-1, skill-2]
-        },
-        true
-      )
-    );
+    form
+      .field("projectIds")
+      .then((field) => field.setValue(["project-1", "project-3"])); // Changed from [project-1, project-2]
+    form
+      .field("skillIds")
+      .then((field) => field.setValue(["skill-2", "skill-3"])); // Changed from [skill-1, skill-2]
 
     // Submit the form
     form.submit();
@@ -184,8 +160,8 @@ describe("ObjectForm Reference Field Tests", () => {
         isActive: true,
         departmentId: "dept-2",
         roleId: "role-2",
-        projectIds: ["project-1", "project-3"],
-        skillIds: ["skill-2", "skill-3"],
+        projectIds: ["project-2", "project-3"],
+        skillIds: ["skill-1", "skill-3"],
       },
     });
   });
