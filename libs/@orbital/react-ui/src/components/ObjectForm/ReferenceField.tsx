@@ -1,4 +1,6 @@
 import {
+  getDisplayField,
+  getDisplayValue,
   ReferenceMetadata,
   RelationshipType,
 } from "@orbital/core/src/zod/reference/reference";
@@ -47,18 +49,13 @@ export type ReferenceFieldProps = {
   // Display and behavior props
   multiple?: boolean; // Whether this is a multi-select field
   idField?: string; // Field to use as the ID/value (default: "_id")
-  displayField?: string; // Field to display (default: "name")
+  displayField?: string | ((obj: any) => string); // Field to display (default: "name") or function to get display value
 
   // Testing props
   "data-testid"?: string; // Allow passing a custom testid
   objectId?: string; // Optional prop to override the object ID from context
 };
 
-/**
- * ReferenceField is an abstraction component that sits between ObjectSelector and
- * the relationship field components (BelongsToField, HasManyField, ParentField, ChildrenField).
- * It handles common logic around object types, labels, and reference handling.
- */
 /**
  * ReferenceField is an abstraction component that sits between ObjectSelector and
  * the relationship field components (BelongsToField, HasManyField, ParentField, ChildrenField).
@@ -228,13 +225,29 @@ export function ReferenceField({
 
   // Get the foreign field to display and use as value
   const idField = customIdField || reference.foreignField || "_id";
-  const displayField = customDisplayField || "name"; // Assuming all referenced objects have a name field
+
+  // Get the display field or function from the reference schema
+  const displayFieldOrFn =
+    customDisplayField ||
+    (reference.schema ? getDisplayField(reference.schema) : "name");
+
+  // Create a function to get the display value for an option if displayField is a function
+  const getOptionDisplayValue =
+    typeof displayFieldOrFn === "function"
+      ? (option: any) => {
+          if (reference.schema) {
+            return getDisplayValue(reference.schema, option);
+          } else {
+            return displayFieldOrFn(option);
+          }
+        }
+      : displayFieldOrFn;
 
   return (
     <ObjectSelector
       multiple={multiple}
       disabled={disabled}
-      error={error}
+      error={typeof error === "boolean" ? error : !!error}
       errorMessage={errorMessage}
       id={id}
       label={getLabel()}
@@ -246,7 +259,7 @@ export function ReferenceField({
       value={value}
       options={referenceOptions}
       idField={idField}
-      displayField={displayField}
+      displayField={getOptionDisplayValue}
       data-testid={
         dataTestId || `${multiple ? "ChildrenField" : "ParentField"}`
       }
@@ -259,14 +272,6 @@ export function ReferenceField({
 
 export default ReferenceField;
 
-/**
- * Creates a component detector for reference fields
- * This can be used by both FormWithReferences and ObjectFieldset
- *
- * @param schema The schema for the form or object
- * @param objectType The type of object this form is for
- * @returns A component detector function compatible with AutoField.componentDetectorContext
- */
 /**
  * Creates a component detector for reference fields
  * This can be used by both FormWithReferences and ObjectFieldset

@@ -117,6 +117,11 @@ export function getSchemaName(schema: z.ZodType<any>): string {
 
 // Extend ZodStringDef and ZodArrayDef to include reference metadata
 declare module "zod" {
+  // Add displayField to ZodTypeDef for all Zod types
+  interface ZodTypeDef {
+    displayField?: string | ((obj: any) => string);
+  }
+
   interface ZodStringDef {
     reference?: ReferenceMetadata;
   }
@@ -136,6 +141,11 @@ declare module "zod" {
     Cardinality extends "many" | "atleastone" = "many",
   > {
     reference(options: ReferenceOptions): ZodArray<T, Cardinality>;
+  }
+
+  // Add displayName method to ZodType interface for all Zod types
+  interface ZodType<Output, Def extends ZodTypeDef, Input = Output> {
+    displayName(fieldNameOrFn: string | ((obj: Output) => string)): this;
   }
 }
 
@@ -213,6 +223,69 @@ z.ZodArray.prototype.reference = function (
 
 // Make sure these are exported
 export { z };
+
+/**
+ * Add displayName metadata to a ZodType
+ * @param zodType The ZodType to add displayName metadata to
+ * @param fieldNameOrFn The field name or function to use for display
+ * @returns A new ZodType with displayName metadata
+ */
+export function addDisplayName<T extends z.ZodTypeAny>(
+  zodType: T,
+  fieldNameOrFn: string | ((obj: any) => string)
+): T {
+  return new (zodType.constructor as any)({
+    ...zodType._def,
+    displayField: fieldNameOrFn,
+  });
+}
+
+// Add the displayName method to ZodType prototype
+// @ts-ignore - Ignore TypeScript errors for this method
+z.ZodType.prototype.displayName = function (
+  fieldNameOrFn: string | ((obj: any) => string)
+) {
+  return addDisplayName(this, fieldNameOrFn);
+};
+
+/**
+ * Get the display value for an object using the schema's display field or function
+ * @param schema The schema to get the display field from
+ * @param obj The object to get the display value for
+ * @returns The display value for the object
+ */
+export function getDisplayValue(schema: z.ZodTypeAny, obj: any): string {
+  const displayField = schema._def.displayField;
+
+  if (!displayField) {
+    // Default to "name" field if no display field is specified
+    return obj?.name || "";
+  }
+
+  if (typeof displayField === "function") {
+    // If displayField is a function, call it with the object
+    try {
+      return displayField(obj) || "";
+    } catch (error) {
+      console.error("Error calling display function:", error);
+      return "";
+    }
+  }
+
+  // Otherwise, use the field name
+  return obj?.[displayField] || "";
+}
+
+/**
+ * Get the display field name from a schema
+ * @param schema The schema to get the display field from
+ * @returns The display field name, or "name" if not specified
+ */
+export function getDisplayField(
+  schema: z.ZodTypeAny
+): string | ((obj: any) => string) {
+  return schema._def.displayField || "name";
+}
 
 /**
  * Check if a schema has reference metadata

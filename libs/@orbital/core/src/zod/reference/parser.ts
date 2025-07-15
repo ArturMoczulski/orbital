@@ -326,11 +326,28 @@ export function validateReferences(
       if (collection) {
         const foreignField = reference.foreignField;
 
+        // Try to find the item using both the specified foreign field and 'id'
+        // This handles cases where the data might use 'id' instead of '_id'
         const referencedItem = collection.find(
-          (item) => item[foreignField] === data
+          (item) =>
+            item[foreignField] === data ||
+            (foreignField === "_id" && item["id"] === data) ||
+            (foreignField === "id" && item["_id"] === data)
         );
 
         if (!referencedItem) {
+          // Log the available items for debugging
+          console.log(`Reference validation failed for ${reference.name}:`, {
+            lookingFor: data,
+            foreignField,
+            availableItems: collection.map((item) => ({
+              id: item.id,
+              _id: item._id,
+              [foreignField]: item[foreignField],
+              name: item.name || item.title,
+            })),
+          });
+
           issues.push({
             code: z.ZodIssueCode.custom,
             path: currentPath,

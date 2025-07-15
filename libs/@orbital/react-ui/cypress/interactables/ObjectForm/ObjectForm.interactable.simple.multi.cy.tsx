@@ -297,14 +297,14 @@ describe("ObjectForm.interactable with array of objects", () => {
   it("should directly access array fields using dot notation", () => {
     mount(<TestComponent />);
 
-    const form = objectForm({ objectType: "TaskList" });
+    const form = objectForm({ objectType: "TaskLists" });
 
     // Access array fields directly using dot notation
-    form.field("tasks.0.title").should("have.value", "First Task");
-    form.field("tasks.1.title").should("have.value", "Second Task");
+    form.field("lists.0.name").should("have.value", "Work Tasks");
+    form.field("lists.1.name").should("have.value", "Personal Tasks");
 
     // Modify a field using dot notation
-    form.field("tasks.0.title").clear().type("Modified via Dot Notation");
+    form.field("lists.0.name").clear().type("Modified via Dot Notation");
 
     // Submit the form
     form.submit();

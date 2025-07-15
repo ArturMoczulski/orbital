@@ -27,7 +27,7 @@ export type ObjectSelectorProps = {
   options?: any[]; // Static options
   fetchOptions?: (query?: string) => Promise<any[]>; // Async fetching function
   idField?: string; // Field to use as ID (default: "_id")
-  displayField?: string; // Field to display (default: "name")
+  displayField?: string | ((obj: any) => string); // Field to display (default: "name") or function to get display value
   onSearch?: (query: string) => void; // Optional callback for search events
   debounceTime?: number; // Debounce time for async search in ms
 
@@ -124,6 +124,7 @@ export function ObjectSelector({
         getOptionValue,
         setSearchQuery,
         searchOptions,
+        getDisplayValue,
       } = providerState;
 
       // Ensure getOptionValue is a function
@@ -213,15 +214,11 @@ export function ObjectSelector({
             // Handle both string and object options
             if (!option) return "";
 
-            // Ensure getOptionLabel is a function
-            if (typeof getOptionLabel !== "function") {
-              // Fallback to using the displayField directly
-              return typeof option === "string"
-                ? option
-                : String(option[providerState.displayField] || "");
-            }
+            // For string options, just return the string
+            if (typeof option === "string") return option;
 
-            return typeof option === "string" ? option : getOptionLabel(option);
+            // For object options, use getDisplayValue from provider state
+            return getDisplayValue(option);
           }}
           renderOption={(props, option) => {
             // Add data-id attribute to each option for easier testing
@@ -230,11 +227,7 @@ export function ObjectSelector({
 
             return (
               <li {...props} key={optionId} data-id={optionId}>
-                {typeof option === "string"
-                  ? option
-                  : typeof getOptionLabel === "function"
-                    ? getOptionLabel(option)
-                    : String(option[providerState.displayField] || "")}
+                {typeof option === "string" ? option : getDisplayValue(option)}
               </li>
             );
           }}

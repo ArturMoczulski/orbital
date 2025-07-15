@@ -11,7 +11,8 @@ export interface OptionsProviderState {
   setSearchQuery: (query: string) => void; // Update search query
   filteredOptions: any[]; // Filtered options based on search
   idField: string; // Field to use as ID
-  displayField: string; // Field to display
+  displayField: string | ((obj: any) => string); // Field to display or function to get display value
+  getDisplayValue: (option: any) => string; // Function to get display value from an option
 }
 
 /**
@@ -19,7 +20,7 @@ export interface OptionsProviderState {
  */
 export interface OptionsProviderProps {
   idField?: string; // Field to use as ID (default: "_id")
-  displayField?: string; // Field to display (default: "name")
+  displayField?: string | ((obj: any) => string); // Field to display (default: "name") or function to get display value
   children: (state: OptionsProviderState) => ReactNode;
 }
 
@@ -33,15 +34,33 @@ export abstract class OptionsProvider<
   constructor(props: P) {
     super(props);
 
+    const displayField = props.displayField || "name";
+
     this.state = {
       options: [],
       filteredOptions: [],
       isLoading: false,
       searchQuery: "",
       idField: props.idField || "_id",
-      displayField: props.displayField || "name",
+      displayField: displayField,
       setSearchQuery: this.setSearchQuery.bind(this),
+      getDisplayValue: this.getDisplayValue.bind(this),
     };
+  }
+
+  /**
+   * Get the display value for an option
+   */
+  getDisplayValue(option: any): string {
+    const { displayField } = this.state;
+
+    if (!option) return "";
+
+    if (typeof displayField === "function") {
+      return displayField(option);
+    }
+
+    return String(option[displayField] || "");
   }
 
   /**
@@ -58,7 +77,7 @@ export abstract class OptionsProvider<
    * This can be overridden by specific providers
    */
   filterOptions(): void {
-    const { options, searchQuery, displayField } = this.state;
+    const { options, searchQuery } = this.state;
 
     if (!searchQuery) {
       this.setState({ filteredOptions: options });
@@ -66,7 +85,7 @@ export abstract class OptionsProvider<
     }
 
     const filtered = options.filter((option) => {
-      const displayValue = option[displayField] || "";
+      const displayValue = this.getDisplayValue(option);
       return displayValue.toLowerCase().includes(searchQuery.toLowerCase());
     });
 

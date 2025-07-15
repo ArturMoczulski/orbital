@@ -2,10 +2,10 @@ import {
   getReference,
   getSchemaName,
   hasReference,
-  parseWithReferences,
   RelationshipType,
   z,
 } from "@orbital/core";
+import { parseWithReferences } from "@orbital/core/src/zod/reference/parser";
 import { camelCase, startCase } from "lodash";
 import { ZodBridge } from "uniforms-bridge-zod";
 
@@ -282,8 +282,22 @@ export class ZodReferencesBridge<T extends z.ZodType<any, any, any>> {
     return (model: Record<string, unknown>) => {
       // If we have dependencies, use parseWithReferences
       if (dependencies) {
-        const result = parseWithReferences(schema, model, { dependencies });
+        // Add maxDepth option to prevent excessive recursion
+        // and log dependencies for debugging
+        console.log(
+          "Validating with dependencies:",
+          Object.keys(dependencies).map(
+            (key) => `${key}: ${dependencies[key]?.length || 0} items`
+          )
+        );
+
+        const result = parseWithReferences(schema, model, {
+          dependencies,
+          maxDepth: 2, // Limit recursion depth to prevent excessive validation
+        });
+
         if (!result.success && result.error) {
+          console.error("Reference validation failed:", result.error);
           return result.error;
         }
         return null;
