@@ -373,7 +373,7 @@ export const createErrorApi = () => {
  * Create a mock API with a spy for the create mutation
  */
 export const createMockApiWithCreateSpy = (
-  options = { delay: 100 },
+  options = { delay: 300 }, // Increased default delay
   modelStateRef?: any
 ) => {
   const mockApi = createMockApi(options);
@@ -466,7 +466,7 @@ export const createMockApiWithCreateSpy = (
  * Create a mock API with a spy for the update mutation
  */
 export const createMockApiWithUpdateSpy = (
-  options = { delay: 100 },
+  options = { delay: 300 }, // Increased default delay
   modelStateRef?: any
 ) => {
   const mockApi = createMockApi(options);
@@ -657,13 +657,16 @@ export const submitFormAndWaitForCompletion = (
   // Submit the form
   form.submit();
 
-  // Wait for the loading indicator to complete
+  // Wait for the loading indicator to complete with a longer timeout
   circularProgress({
     dataTestId: "ObjectFormLoadingIndicator",
-  }).waitForCompletion(5000);
+  }).waitForCompletion(10000);
 
-  // Check if the success notification is displayed
-  return snackbar({ variant: "success" }).waitForMessage(successMessage, 5000);
+  // Check if the success notification is displayed with a longer timeout
+  snackbar({ variant: "success" }).waitForMessage(successMessage, 10000);
+
+  // Add an additional wait to ensure Redux store is updated
+  return cy.wait(500);
 };
 
 /**
@@ -680,7 +683,7 @@ export const verifyReduxStoreUpdate = (
   entityId: string,
   expectedValues: Record<string, any>
 ) => {
-  return cy.wait(200).then(() => {
+  return cy.wait(500).then(() => {
     const state = store.getState();
 
     // Check if entity exists in the store

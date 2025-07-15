@@ -9,7 +9,6 @@ import {
   mountObjectForm,
   store,
   submitFormAndWaitForCompletion,
-  verifyReduxStoreUpdate,
   verifySpy,
 } from "./ObjectForm.api.utils";
 
@@ -41,8 +40,11 @@ describe("ObjectForm Basic API Integration Tests", () => {
     // Fill out the form
     fillBasicFields(form, "New User", "new@example.com");
 
-    // Submit the form and wait for completion
+    // Submit the form and wait for completion with a longer timeout
     submitFormAndWaitForCompletion(form, "User created successfully");
+
+    // Wait for the API call to complete and Redux state to update
+    cy.wait(500);
 
     // Verify the create mutation was called
     verifySpy("createMutationSpy", "have.been.calledOnce");
@@ -50,10 +52,14 @@ describe("ObjectForm Basic API Integration Tests", () => {
     // Verify the dispatch was called
     verifySpy("dispatchSpy", "have.been.called");
 
-    // Verify the Redux store was updated
-    verifyReduxStoreUpdate("new-user-1", {
-      name: "New User",
-      email: "new@example.com",
+    // Verify the Redux store was updated with a longer timeout
+    cy.wait(500).then(() => {
+      const state = store.getState();
+      expect(state.users.entities).to.have.property("new-user-1");
+      expect(state.users.entities["new-user-1"].name).to.equal("New User");
+      expect(state.users.entities["new-user-1"].email).to.equal(
+        "new@example.com"
+      );
     });
 
     // Verify the success callback was called

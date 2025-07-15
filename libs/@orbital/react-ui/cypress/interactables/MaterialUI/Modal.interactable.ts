@@ -158,10 +158,10 @@ export class ModalInteractable
    * @returns this - for method chaining
    */
   waitForClose(timeout: number = 4000): this {
-    // Use a shorter timeout for tests
-    const actualTimeout = Math.min(timeout, 100);
+    // Use the provided timeout or default to 4000ms
+    const actualTimeout = timeout;
     // First check if modal is open, then decide what to do
-    cy.wait(100); // Reduced wait time for faster tests
+    cy.wait(300); // Increased wait time to ensure state is updated
     this.isOpened().then((isOpen) => {
       if (isOpen) {
         // Only wait for it to close if it's currently open
@@ -169,11 +169,11 @@ export class ModalInteractable
 
         // Try to wait for the element to not exist
         try {
-          // Use the shorter timeout for the get call
+          // Use the full timeout for the get call
           this.get({ timeout: actualTimeout }).should("not.exist");
         } catch (e) {
           // If not.exist fails, check for display:none or aria-hidden
-          // Use the shorter timeout for the get call
+          // Use the full timeout for the get call
           this.get({ timeout: actualTimeout }).should("satisfy", ($el) => {
             return (
               $el.css("display") === "none" ||

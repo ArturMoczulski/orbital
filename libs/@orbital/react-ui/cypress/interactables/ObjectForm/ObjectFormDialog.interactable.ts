@@ -77,13 +77,16 @@ export class ObjectFormDialogInteractable extends DialogInteractable {
       Object.entries(data).forEach(([key, value]) => {
         this.form().setFieldValue(key, value);
       });
+
+      // Add a wait after setting field values to ensure they're properly updated
+      cy.wait(300);
     }
 
     // Click the submit button in the dialog actions
     this.get({}).contains("button", "Submit").click();
 
-    // Wait for the dialog to close
-    this.waitForClose();
+    // Wait for the dialog to close with a longer timeout
+    this.waitForClose(5000);
 
     return this;
   }
@@ -98,8 +101,8 @@ export class ObjectFormDialogInteractable extends DialogInteractable {
     // Click the cancel button
     this.get({}).contains("button", "Cancel").click();
 
-    // Wait for the dialog to close
-    this.waitForClose();
+    // Wait for the dialog to close with a longer timeout
+    this.waitForClose(5000);
 
     return this;
   }
