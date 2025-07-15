@@ -607,8 +607,22 @@ describe("ObjectForm API Integration Tests", () => {
     "should update existing object with onUpdate prop override",
     { defaultCommandTimeout: 10000 },
     () => {
-      // Create a spy for the onUpdate callback
-      const onUpdateSpy = cy.spy().as("onUpdateSpy");
+      // Create a spy for the onUpdate callback that returns a promise with a delay
+      const onUpdateSpy = cy
+        .spy(() => {
+          // Add a delay to ensure the loading indicator has time to be rendered
+          return new Promise((resolve) => {
+            setTimeout(() => {
+              resolve({
+                id: "user-1",
+                name: "Updated User",
+                email: "updated@example.com",
+                isActive: true,
+              });
+            }, 500); // 500ms delay
+          });
+        })
+        .as("onUpdateSpy");
 
       // Reset the Redux store to initial state before the test
       store.dispatch({ type: "RESET_STATE" });
