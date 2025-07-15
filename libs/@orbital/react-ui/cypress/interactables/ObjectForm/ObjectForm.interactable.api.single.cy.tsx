@@ -6,6 +6,8 @@ import { z } from "zod";
 import { NotificationProvider } from "../../../../../../libs/@orbital/react-ui/src/components/NotificationProvider/NotificationProvider";
 import { ObjectForm } from "../../../../../../libs/@orbital/react-ui/src/components/ObjectForm/ObjectForm";
 import { ZodReferencesBridge } from "../../../../../../libs/@orbital/react-ui/src/components/ObjectForm/ZodReferencesBridge";
+import { circularProgress } from "../MaterialUI/CircularProgress.interactable";
+import { snackbar } from "../MaterialUI/Snackbar.interactable";
 import { objectForm } from "./ObjectForm.interactable";
 
 // Define action types and interfaces
@@ -348,7 +350,7 @@ describe("ObjectForm API Integration Tests", () => {
     return errorApi;
   };
 
-  it.only("should use the create mutation when isNew is true and update Redux state", () => {
+  it("should use the create mutation when isNew is true and update Redux state", () => {
     // Create a spy for the onSuccess callback
     const onSuccessSpy = cy.spy().as("onSuccessSpy");
 
@@ -460,13 +462,10 @@ describe("ObjectForm API Integration Tests", () => {
     form.submit();
 
     // Wait for the form submission to complete
-    // Wait for the loading indicator to disappear
-    cy.get('[data-testid="ObjectFormLoadingIndicator"]', {
-      timeout: 10000,
-    }).should("have.css", "display", "none");
-
-    // Add a longer wait to ensure the API call completes
-    cy.wait(1000);
+    // Wait for the loading indicator to appear and then disappear
+    circularProgress({
+      dataTestId: "ObjectFormLoadingIndicator",
+    }).waitForCompletion(10000);
 
     // Check if the createMutationSpy was called
     cy.get("@createMutationSpy").should("have.been.calledOnce");
@@ -474,13 +473,11 @@ describe("ObjectForm API Integration Tests", () => {
     // Check if the dispatch spy was called
     cy.get("@dispatchSpy").should("have.been.called");
 
-    // Check if the success notification is displayed
-    cy.get(".notistack-MuiContent-success", {
-      timeout: 5000,
-    }).should("contain", "User created successfully");
-
-    // Wait for notification to fully display
-    cy.wait(500);
+    // Check if the success notification is displayed using the snackbar interactable
+    snackbar({ variant: "success" }).waitForMessage(
+      "User created successfully",
+      5000
+    );
 
     // Simpler approach to check for userAdded action
     cy.log("Checking if userAdded action was dispatched");
@@ -519,14 +516,19 @@ describe("ObjectForm API Integration Tests", () => {
     "should use onAdd prop override when provided",
     { defaultCommandTimeout: 10000 },
     () => {
-      // Create a spy for the onAdd callback that returns a promise
+      // Create a spy for the onAdd callback that returns a promise with a delay
       const onAddSpy = cy
         .spy(() => {
-          return Promise.resolve({
-            id: "custom-user-1",
-            name: "Custom Add User",
-            email: "custom@example.com",
-            isActive: true,
+          // Add a delay to ensure the loading indicator has time to be rendered
+          return new Promise((resolve) => {
+            setTimeout(() => {
+              resolve({
+                id: "custom-user-1",
+                name: "Custom Add User",
+                email: "custom@example.com",
+                isActive: true,
+              });
+            }, 500); // 500ms delay
           });
         })
         .as("onAddSpy");
@@ -585,12 +587,16 @@ describe("ObjectForm API Integration Tests", () => {
       });
 
       // Wait for the form submission to complete
-      cy.get(".notistack-MuiContent-success", {
-        timeout: 5000,
-      }).should("contain", "User created successfully");
+      // First wait for loading indicator to complete its cycle
+      circularProgress({
+        dataTestId: "ObjectFormLoadingIndicator",
+      }).waitForCompletion(5000);
 
-      // Wait for notification to fully display
-      cy.wait(500);
+      // Then check for the success notification
+      snackbar({ variant: "success" }).waitForMessage(
+        "User created successfully",
+        5000
+      );
 
       // Verify the onSuccess callback was called
       cy.get("@onSuccessSpy").should("have.been.calledOnce");
@@ -648,12 +654,16 @@ describe("ObjectForm API Integration Tests", () => {
       });
 
       // Wait for the form submission to complete
-      cy.get(".notistack-MuiContent-success", {
-        timeout: 5000,
-      }).should("contain", "User updated successfully");
+      // First wait for loading indicator to complete its cycle
+      circularProgress({
+        dataTestId: "ObjectFormLoadingIndicator",
+      }).waitForCompletion(5000);
 
-      // Wait for notification to fully display
-      cy.wait(500);
+      // Then check for the success notification
+      snackbar({ variant: "success" }).waitForMessage(
+        "User updated successfully",
+        5000
+      );
 
       // Verify the onSuccess callback was called
       cy.get("@onSuccessSpy").should("have.been.calledOnce");
@@ -700,12 +710,16 @@ describe("ObjectForm API Integration Tests", () => {
       form.submit();
 
       // Wait for the form submission to complete
-      cy.get(".notistack-MuiContent-success", {
-        timeout: 5000,
-      }).should("contain", "User updated successfully");
+      // First wait for loading indicator to complete its cycle
+      circularProgress({
+        dataTestId: "ObjectFormLoadingIndicator",
+      }).waitForCompletion(5000);
 
-      // Wait for notification to fully display
-      cy.wait(500);
+      // Then check for the success notification
+      snackbar({ variant: "success" }).waitForMessage(
+        "User updated successfully",
+        5000
+      );
 
       // Verify the onSuccess callback was called
       cy.get("@onSuccessSpy").should("have.been.calledOnce");
@@ -755,23 +769,22 @@ describe("ObjectForm API Integration Tests", () => {
     form.submit();
 
     // Check for the loading indicator
-    cy.get('[data-testid="ObjectFormLoadingIndicator"]').should("exist");
-    cy.get('[data-testid="ObjectFormCircularProgress"]').should("exist");
-    cy.get('[data-testid="ObjectFormLoadingIndicator"]').should("be.visible");
+    circularProgress({ dataTestId: "ObjectFormLoadingIndicator" }).isVisible();
+    circularProgress({ dataTestId: "ObjectFormCircularProgress" }).isVisible();
 
-    // Wait for the form submission to complete
-    cy.get(".notistack-MuiContent-success", { timeout: 10000 }).should(
-      "contain",
-      "User created successfully"
+    // Wait for the loading indicator to complete its cycle
+    circularProgress({
+      dataTestId: "ObjectFormLoadingIndicator",
+    }).waitForCompletion(10000);
+
+    // Check for the success notification
+    snackbar({ variant: "success" }).waitForMessage(
+      "User created successfully",
+      10000
     );
 
-    // Wait for notification to fully display
-    cy.wait(500);
-
-    // Check that the loading indicator is no longer visible (display: none)
-    cy.get('[data-testid="ObjectFormLoadingIndicator"]')
-      .should("exist") // It should still exist in the DOM
-      .should("have.css", "display", "none"); // But should be hidden
+    // Verify the loading indicator is hidden after completion
+    circularProgress({ dataTestId: "ObjectFormLoadingIndicator" }).isHidden();
   });
 
   it("should display api errors in the error component", () => {
@@ -821,8 +834,10 @@ describe("ObjectForm API Integration Tests", () => {
     // Submit the form using the interactable
     form.submit();
 
-    // Wait for the error to be processed
-    cy.wait(1000);
+    // Wait for any loading indicators to disappear
+    circularProgress({
+      dataTestId: "ObjectFormLoadingIndicator",
+    }).waitForHidden(5000);
 
     // Verify console.error was called (this indicates the error was caught)
     cy.get("@consoleError").should("be.called");
