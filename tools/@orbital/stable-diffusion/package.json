@@ -1,0 +1,43 @@
+{
+  "name": "@orbital/stable-diffusion",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "watch": "tsc -w",
+    "build": "tsc",
+    "prepare": "npm run build",
+    "scrapeInstagram": "node dist/commands/scrapeInstagram.js",
+    "workflow": "node dist/commands/workflow.js",
+    "test": "npm run build && jest --config jest.config.cjs --runInBand"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.27.4",
+    "@babel/preset-env": "^7.27.2",
+    "@babel/preset-typescript": "^7.27.1",
+    "@jest/globals": "^29.5.0",
+    "@jest/types": "^29.5.0",
+    "@types/babel__core": "^7",
+    "@types/babel__preset-env": "^7",
+    "@types/figlet": "^1.5.5",
+    "@types/form-data": "^2.5.2",
+    "@types/inquirer": "^8.2.11",
+    "@types/jest": "^29.5.14",
+    "@types/node": "^18.0.0",
+    "babel-jest": "^30.0.0",
+    "jest": "^30.0.0",
+    "jest-util": "^29.7.0",
+    "ts-jest": "^29.1.0",
+    "ts-node": "^10.9.1",
+    "typescript": "^5.8.3"
+  },
+  "bin": "dist/src/index.js",
+  "dependencies": {
+    "axios": "^1.10.0",
+    "commander": "^14.0.0",
+    "figlet": "^1.6.0",
+    "form-data": "^4.0.3",
+    "inquirer": "^12.6.3",
+    "plop": "^4.0.1"
+  },
+  "license": "UNLICENSED"
+}
