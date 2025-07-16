@@ -17,7 +17,7 @@
 import { Face2FaceOptions } from "./common";
 
 // Single unified prompt template for both full-quality and preview modes
-const PROMPT_TEMPLATE = `studio head-and-shoulders portrait of a {PROMPT}, *even softbox lighting*, neutral grey background, symmetrical face, natural skin texture, 85 mm lens, f/4, Canon EOS R5, 4 k UHD, ultra-sharp focus`;
+const PROMPT_TEMPLATE = `studio head-and-shoulders portrait of {PROMPT}, *even softbox lighting*, neutral grey background, symmetrical face, natural skin texture, 85 mm lens, f/4, Canon EOS R5, 4 k UHD, ultra-sharp focus`;
 
 // Single unified negative prompt for both modes
 const NEGATIVE_PROMPT = `harsh shadows, dramatic lighting, spotlight, rim-light, top light, pattern light, high contrast, zebra pattern, cartoon, CGI, lowres, blurry, watermark, text, logo`;
@@ -76,7 +76,7 @@ export function createFace2faceWorkflow(
   const steps = options.steps || 28; // 28 steps recommended in the recipe
   const cfg = options.cfg || 7; // 7 CFG recommended in the recipe
   const seed = options.seed || 42;
-  const denoise = options.denoise || 0.7; // 0.7 is a good default for img2img
+  const denoise = options.denoise || 0.4; // 0.4 is better for preserving facial identity
   const upscale = options.upscale !== undefined ? options.upscale : true; // Enable upscale by default
   const upscaleDenoise = options.upscaleDenoise || 0.25; // 0.25 recommended in the recipe
 
@@ -162,6 +162,8 @@ export function createFace2faceWorkflow(
           cfg,
           denoise,
           seed,
+          add_noise: false, // Don't inject extra noise
+          noise_type: "original", // Reuse the source latent noise
         },
       },
 
@@ -214,6 +216,8 @@ export function createFace2faceWorkflow(
         cfg,
         denoise: upscaleDenoise, // 0.25 recommended in the recipe
         seed: seed + 1, // Different seed for variation
+        add_noise: false, // Don't inject extra noise
+        noise_type: "original", // Reuse the source latent noise
       },
     };
 
@@ -267,7 +271,7 @@ function createPreviewWorkflow(
   const steps = options.steps || 12; // 12 steps for preview
   const cfg = options.cfg || 5; // Lower CFG for faster convergence
   const seed = options.seed || 0; // Random seed (0) for variety
-  const denoise = options.denoise || 0.7; // Default denoise strength
+  const denoise = options.denoise || 0.4; // Lower denoise for better identity preservation
 
   // Create the workflow
   const workflow: any = {
@@ -345,6 +349,8 @@ function createPreviewWorkflow(
           cfg,
           denoise,
           seed,
+          add_noise: false, // Don't inject extra noise
+          noise_type: "original", // Reuse the source latent noise
         },
       },
 
