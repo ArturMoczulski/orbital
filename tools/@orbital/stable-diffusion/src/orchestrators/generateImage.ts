@@ -231,20 +231,30 @@ async function generateImageImpl<T>(
           highestNodeIndex = numericId;
         }
 
-        // Typically VAEDecode nodes output images
+        // Check for nodes that output images (VAEDecode, ImageUpscaleWithModel, etc.)
         const node = workflow.prompt[nodeId];
-        if (typeof node === "object" && node.class_type === "VAEDecode") {
-          lastImageNodeId = nodeId;
+        if (typeof node === "object") {
+          if (node.class_type === "ImageUpscaleWithModel") {
+            // Prefer ImageUpscaleWithModel as it's likely the final upscaled image
+            lastImageNodeId = nodeId;
+            debug(
+              `Found ImageUpscaleWithModel node at index ${nodeId}, using as image source`
+            );
+            break; // Prioritize this node if found
+          } else if (node.class_type === "VAEDecode") {
+            // VAEDecode nodes also output images
+            lastImageNodeId = nodeId;
+          }
         }
       }
 
-      // If we couldn't find a VAEDecode node, use the highest node as a fallback
+      // If we couldn't find an image output node, use the highest node as a fallback
       if (!lastImageNodeId) {
         lastImageNodeId = highestNodeIndex.toString();
         debug(
-          `No VAEDecode node found, using highest node ${lastImageNodeId} as image source`
+          `No image output node found, using highest node ${lastImageNodeId} as image source`
         );
-      } else {
+      } else if (workflow.prompt[lastImageNodeId].class_type === "VAEDecode") {
         debug(`Using VAEDecode node ${lastImageNodeId} as image source`);
       }
 
@@ -291,7 +301,10 @@ async function generateImageImpl<T>(
       console.log("Starting image generation...");
       outputs = await pollGenerationCompletion(promptId);
       console.log("Image generation completed successfully!");
-      debug("Outputs:", JSON.stringify(outputs, null, 2));
+      debug(
+        "Outputs:",
+        outputs ? JSON.stringify(outputs, null, 2) : "undefined"
+      );
     } catch (error: any) {
       console.error("Error submitting workflow to ComfyUI:", error.message);
       if (axios.isAxiosError(error) && error.response) {
@@ -305,19 +318,100 @@ async function generateImageImpl<T>(
     }
 
     // Check if we have valid outputs
-    debug("Checking outputs:", outputs);
-    if (
-      !outputs ||
-      !outputs[outputNodeId] ||
-      !outputs[outputNodeId].images ||
-      outputs[outputNodeId].images.length === 0
-    ) {
-      console.error("Output node ID:", outputNodeId);
-      console.error("Available output nodes:", Object.keys(outputs || {}));
-      throw new Error("No images were generated in the output");
+    debug(
+      "Checking outputs:",
+      outputs ? JSON.stringify(outputs, null, 2) : "undefined"
+    );
+
+    // Try to get the image directly from the ComfyUI output directory
+    // This is a fallback in case the API doesn't return the expected output structure
+    const comfyUIOutputDir = path.join(COMFY_ROOT, "output");
+    debug("Checking ComfyUI output directory:", comfyUIOutputDir);
+
+    // Find any node in the outputs that contains images
+    let imageInfo = null;
+    let usedNodeId = null;
+
+    if (outputs) {
+      // First try with the expected outputNodeId if provided
+      if (
+        outputNodeId &&
+        outputs[outputNodeId] &&
+        outputs[outputNodeId].images &&
+        outputs[outputNodeId].images.length > 0
+      ) {
+        imageInfo = outputs[outputNodeId].images[0];
+        usedNodeId = outputNodeId;
+        debug(`Using expected output node ID: ${outputNodeId}`);
+      } else {
+        // If that fails, search for any node that has images
+        debug("Searching for any node with image outputs...");
+
+        for (const nodeId of Object.keys(outputs)) {
+          if (
+            outputs[nodeId] &&
+            outputs[nodeId].images &&
+            outputs[nodeId].images.length > 0
+          ) {
+            imageInfo = outputs[nodeId].images[0];
+            usedNodeId = nodeId;
+            debug(`Found images in node ${nodeId}, using this as output node`);
+            break;
+          }
+        }
+      }
     }
 
-    const imageInfo = outputs[outputNodeId].images[0];
+    // If we still don't have images from the API response, check the output directory
+    if (!imageInfo && fs.existsSync(comfyUIOutputDir)) {
+      debug(
+        "No images found in API response, checking ComfyUI output directory"
+      );
+      const files = fs.readdirSync(comfyUIOutputDir);
+
+      // Sort files by modification time (newest first)
+      const sortedFiles = files
+        .filter(
+          (file) =>
+            file.endsWith(".png") ||
+            file.endsWith(".jpg") ||
+            file.endsWith(".jpeg")
+        )
+        .map((file) => {
+          const filePath = path.join(comfyUIOutputDir, file);
+          const stats = fs.statSync(filePath);
+          return { file, mtime: stats.mtime };
+        })
+        .sort((a, b) => b.mtime.getTime() - a.mtime.getTime());
+
+      debug(
+        "Files in ComfyUI output directory:",
+        sortedFiles.map((f) => f.file).join(", ")
+      );
+
+      // Use the most recently created image file
+      if (sortedFiles.length > 0) {
+        const newestFile = sortedFiles[0].file;
+        debug(`Using most recent file from output directory: ${newestFile}`);
+        imageInfo = { filename: newestFile };
+      }
+    }
+
+    // If we still don't have images, throw an error
+    if (!imageInfo) {
+      console.error("Expected output node ID:", outputNodeId);
+      console.error(
+        "Available output nodes:",
+        outputs ? Object.keys(outputs) : []
+      );
+      console.error(
+        "ComfyUI output directory contents:",
+        fs.existsSync(comfyUIOutputDir)
+          ? fs.readdirSync(comfyUIOutputDir).join(", ")
+          : "Directory not found"
+      );
+      throw new Error("No images were generated in any output node");
+    }
     const imageFilename = imageInfo.filename;
     const comfyUIImagePath = path.join(COMFY_ROOT, "output", imageFilename);
     const targetPath = path.join(
@@ -345,9 +439,16 @@ async function generateImageImpl<T>(
 
     // Ensure output directory exists
     const outputDir = path.join(DATA_ROOT, options.outputDirectory);
-    fs.mkdirSync(outputDir, {
-      recursive: true,
-    });
+    debug(`Ensuring output directory exists: ${outputDir}`);
+    try {
+      fs.mkdirSync(outputDir, {
+        recursive: true,
+      });
+      debug(`Output directory created/verified: ${outputDir}`);
+    } catch (error) {
+      console.error(`Error creating output directory: ${error}`);
+      throw new Error(`Failed to create output directory: ${error}`);
+    }
 
     // Check if the target file already exists and create a unique filename with increasing index
     const fileBaseName = path.basename(
