@@ -1,195 +1,198 @@
-import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import Dialog from "@mui/material/Dialog";
 import DialogActions from "@mui/material/DialogActions";
 import DialogContent from "@mui/material/DialogContent";
 import DialogTitle from "@mui/material/DialogTitle";
-import { ReactNode } from "react";
-import ObjectForm, { ObjectFormProps } from "./ObjectForm";
+import { useCallback, useState } from "react";
+import { ObjectForm, ObjectFormProps } from "./ObjectForm";
 
 /**
  * Props for the ObjectFormDialog component
+ * Extends ObjectFormProps and adds dialog-specific props
  */
-export interface ObjectFormDialogProps
-  extends Omit<
-    ObjectFormProps,
-    | "onSubmit"
-    | "onAdd"
-    | "onUpdate"
-    | "isNew"
-    | "api"
-    | "arrayDispatch"
-    | "arrayCreateUpdateAction"
-    | "arrayCreateRemoveAction"
-    | "arrayItemsSelector"
-  > {
+export interface ObjectFormDialogProps extends ObjectFormProps {
   /**
    * Whether the dialog is open
    */
   open: boolean;
 
   /**
-   * Function to close the dialog
+   * Function to call when the dialog is closed
    */
   onClose: () => void;
 
   /**
-   * The title of the dialog
+   * Title of the dialog
    */
-  title?: ReactNode;
+  title: string;
 
   /**
-   * Function to handle form submission
-   * Can return a Promise or void
+   * Text for the submit button
+   * @default "Submit"
    */
-  onSubmit: (data: any) => Promise<any> | any;
+  submitButtonText?: string;
 
   /**
-   * Whether this form is for creating a new object (true) or updating an existing one (false)
-   * @default false
+   * Text for the cancel button
+   * @default "Cancel"
    */
-  isNew?: boolean;
+  cancelButtonText?: string;
 
   /**
-   * API object that contains controller functions for CRUD operations
-   * If provided, the appropriate create/update function will be inferred based on objectType
+   * Whether to show the cancel button
+   * @default true
    */
-  api?: any;
+  showCancelButton?: boolean;
 
   /**
-   * Function to show notifications (optional)
+   * Whether to close the dialog on successful submission
+   * @default true
    */
-  notify?: (
-    message: string,
-    type: "success" | "error" | "warning" | "info"
-  ) => void;
+  closeOnSuccess?: boolean;
 
   /**
-   * Custom actions to display in the dialog footer (optional)
-   * If not provided, default Submit and Cancel buttons will be shown
-   */
-  actions?: ReactNode;
-
-  /**
-   * Success message to show when form is submitted successfully (optional)
-   */
-  successMessage?: string;
-
-  /**
-   * Dialog width (optional, default is "md")
+   * Maximum width of the dialog
+   * @default "sm"
    */
   maxWidth?: "xs" | "sm" | "md" | "lg" | "xl" | false;
 
   /**
-   * Whether the dialog should take up the full width (optional)
+   * Whether the dialog takes up the full width
+   * @default false
    */
   fullWidth?: boolean;
 
   /**
-   * Custom styles for the dialog paper (optional)
+   * Dialog-specific props that should not be passed to ObjectForm
+   * This is used internally to filter out dialog props
+   * @private
    */
-  paperSx?: Record<string, any>;
+  _dialogProps?: Array<string>;
 }
 
+// List of props that are specific to the dialog and should not be passed to ObjectForm
+const DIALOG_PROPS = [
+  "open",
+  "onClose",
+  "title",
+  "submitButtonText",
+  "cancelButtonText",
+  "showCancelButton",
+  "closeOnSuccess",
+  "maxWidth",
+  "fullWidth",
+  "_dialogProps",
+];
+
 /**
- * A dialog component that displays an ObjectForm
- *
- * This component combines Material UI Dialog with the ObjectForm component
- * to create a modal form for editing objects with reference support.
+ * A dialog component that wraps ObjectForm
+ * Provides a modal interface for creating or editing objects
  */
 export function ObjectFormDialog({
+  // Dialog-specific props
   open,
   onClose,
   title,
-  onSubmit,
-  isNew = false,
-  api,
-  notify,
-  actions,
-  successMessage = "Form submitted successfully",
-  maxWidth = "md",
-  fullWidth = true,
-  paperSx,
-  // ObjectForm props
-  schema,
-  model,
-  objectType,
-  showInlineError = true,
+  submitButtonText = "Submit",
+  cancelButtonText = "Cancel",
+  showCancelButton = true,
+  closeOnSuccess = true,
+  maxWidth = "sm",
+  fullWidth = false,
+
+  // ObjectForm props that need special handling
+  onSuccess,
+  overlay = {},
   disabled = false,
   readOnly = false,
-  objectDispatch,
-  objectCreateUpdateAction,
-  objectDataSelector,
-  "data-testid": dataTestId,
-  ...props
+
+  // All other props are passed to ObjectForm
+  ...objectFormProps
 }: ObjectFormDialogProps) {
-  // Handle successful form submission
-  const handleSuccess = (result: any) => {
-    // Close the dialog
-    onClose();
+  // State to track form submission
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Process overlay to hide the submit button
+  const processedOverlay = {
+    ...overlay,
+    components: {
+      ...overlay.components,
+      SubmitField: false,
+    },
   };
+
+  // Handle form submission via dialog action button
+  const handleSubmit = useCallback(() => {
+    // Find the form element and submit it programmatically
+    const formElement = document.querySelector(
+      '[data-testid="ObjectForm"] form'
+    ) as HTMLFormElement;
+
+    if (formElement) {
+      setIsSubmitting(true);
+      formElement.dispatchEvent(
+        new Event("submit", { bubbles: true, cancelable: true })
+      );
+    }
+  }, []);
+
+  // Handle successful form submission
+  const handleSuccess = useCallback(
+    (result: any) => {
+      setIsSubmitting(false);
+
+      // Call the original onSuccess if provided
+      if (onSuccess) {
+        onSuccess(result);
+      }
+
+      // Close the dialog if closeOnSuccess is true
+      if (closeOnSuccess) {
+        onClose();
+      }
+    },
+    [onSuccess, closeOnSuccess, onClose]
+  );
 
   return (
     <Dialog
       open={open}
       onClose={onClose}
-      fullWidth={fullWidth}
       maxWidth={maxWidth}
-      data-testid={dataTestId || "ObjectFormDialog"}
-      PaperProps={{
-        sx: {
-          ...(paperSx || {}),
-        },
-      }}
+      fullWidth={fullWidth}
+      data-testid="ObjectFormDialog"
     >
-      {title && <DialogTitle>{title}</DialogTitle>}
-
-      <DialogContent>
-        <Box sx={{ py: 2 }}>
-          <ObjectForm
-            schema={schema}
-            onSubmit={onSubmit}
-            onSuccess={handleSuccess}
-            notify={notify}
-            successMessage={successMessage}
-            isNew={isNew}
-            api={api}
-            model={model}
-            objectType={objectType}
-            showInlineError={showInlineError}
-            disabled={disabled}
-            readOnly={readOnly}
-            // Redux integration props for individual objects
-            objectDispatch={objectDispatch}
-            objectCreateUpdateAction={objectCreateUpdateAction}
-            objectDataSelector={objectDataSelector}
-            // Hide the submit button in the form since we have our own in the dialog actions
-            overlay={{ SubmitField: false }}
-            {...Object.fromEntries(
-              Object.entries(props).filter(([key]) => key !== "data-testid")
-            )}
-          />
-        </Box>
+      <DialogTitle data-testid="ObjectFormDialogTitle">{title}</DialogTitle>
+      <DialogContent data-testid="ObjectFormDialogContent">
+        <ObjectForm
+          {...objectFormProps}
+          overlay={processedOverlay}
+          onSuccess={handleSuccess}
+          disabled={disabled || isSubmitting}
+          readOnly={readOnly}
+        />
       </DialogContent>
-
-      {actions ? (
-        <DialogActions>{actions}</DialogActions>
-      ) : (
-        <DialogActions>
-          <Button onClick={onClose} color="primary">
-            Cancel
-          </Button>
+      <DialogActions data-testid="ObjectFormDialogActions">
+        {showCancelButton && (
           <Button
-            type="submit"
-            form="uniforms-auto-form"
+            onClick={onClose}
             color="primary"
-            variant="contained"
-            disabled={disabled}
+            disabled={disabled || isSubmitting}
+            data-testid="ObjectFormDialogCancelButton"
           >
-            Submit
+            {cancelButtonText}
           </Button>
-        </DialogActions>
-      )}
+        )}
+        <Button
+          onClick={handleSubmit}
+          color="primary"
+          variant="contained"
+          disabled={disabled || isSubmitting || readOnly}
+          data-testid="ObjectFormDialogSubmitButton"
+        >
+          {submitButtonText}
+        </Button>
+      </DialogActions>
     </Dialog>
   );
 }

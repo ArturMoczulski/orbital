@@ -1,117 +1,219 @@
-// ObjectFormDialog.interactable.ts
-// This file provides an interactable class for ObjectFormDialog in Cypress tests
-
-/// <reference types="cypress" />
-
-import { SchemaWithObjects } from "../../../src/components/ObjectForm/ObjectForm";
+import {
+  FormInputInteractable,
+  FormInputInteractableOptions,
+} from "../AutoForm/FormInput.interactable";
+import {
+  CypressInteractable,
+  CypressInteractableOptions,
+} from "../Cypress.interactable";
 import { DialogInteractable } from "../MaterialUI/Dialog.interactable";
-import { objectForm, ObjectFormInteractable } from "./ObjectForm.interactable";
+import { ObjectFormInteractable } from "./ObjectForm.interactable";
 
 /**
  * Options for ObjectFormDialogInteractable
  */
-export interface ObjectFormDialogInteractableOptions {
+export interface ObjectFormDialogInteractableOptions
+  extends CypressInteractableOptions {
   /**
-   * The data-testid of the dialog
+   * Optional index for when multiple dialogs with the same selector exist
    */
-  dataTestId?: string;
+  index?: number;
 
   /**
-   * The schema for the form
-   */
-  schema: SchemaWithObjects;
-
-  /**
-   * The type of object this form is for
+   * The type of object in the form
    */
   objectType: string;
 }
 
 /**
- * ObjectFormDialogInteractable class represents a dialog with an ObjectForm
- * and provides methods for interacting with the form
+ * Interactable for the ObjectFormDialog component
+ * Uses composition to delegate to DialogInteractable and ObjectFormInteractable
  */
-export class ObjectFormDialogInteractable extends DialogInteractable {
-  private readonly schema: SchemaWithObjects;
-  private readonly objectType: string;
+export class ObjectFormDialogInteractable extends CypressInteractable {
+  /**
+   * The object type for this form
+   */
+  protected objectType: string;
+
+  /**
+   * The DialogInteractable instance for dialog operations
+   */
+  protected dialogInteractable: DialogInteractable;
+
+  /**
+   * The ObjectFormInteractable instance for form operations
+   */
+  protected formInteractable: ObjectFormInteractable;
 
   /**
    * Constructor for ObjectFormDialogInteractable
-   * @param options The options for the ObjectFormDialogInteractable
+   * @param options Additional options for the interactable
    */
   constructor(options: ObjectFormDialogInteractableOptions) {
     super({
-      componentName: "Dialog",
-      dataTestId: options.dataTestId || "ObjectFormDialog",
+      dataTestId: "ObjectFormDialog",
+      index: options.index,
+      parentElement: options.parentElement,
     });
-    this.schema = options.schema;
+
+    // Store the object type
     this.objectType = options.objectType;
-  }
 
-  /**
-   * Get the form within the dialog as an ObjectFormInteractable
-   * @returns An ObjectFormInteractable instance for the form
-   */
-  form(): ObjectFormInteractable {
-    // Make sure the dialog is visible before trying to get the form
-    this.get({}).should("be.visible");
+    // Create the dialog interactable
+    this.dialogInteractable = new DialogInteractable({
+      index: options.index,
+      parentElement: options.parentElement,
+    });
 
-    // Verify the form exists within the dialog
-    this.get({}).find(`[data-testid="ObjectForm"]`).should("exist");
-
-    // Create and return the ObjectFormInteractable with the correct options
-    return objectForm({
-      dataTestId: "ObjectForm",
-      parentElement: () => this.get(),
-      objectType: this.objectType,
+    // Create the form interactable with the dialog content as parent
+    this.formInteractable = new ObjectFormInteractable({
+      objectType: options.objectType,
+      parentElement: () => this.getContent(),
     });
   }
 
   /**
-   * Fill and submit the form
-   * @param data The data to fill the form with
+   * Get the dialog element
+   * Delegates to the dialog interactable
    */
-  submit(data?: Record<string, any>): this {
-    // Fill the form fields
-    if (data) {
-      Object.entries(data).forEach(([key, value]) => {
-        this.form().setFieldValue(key, value);
-      });
+  get(options?: any): Cypress.Chainable<JQuery<HTMLElement>> {
+    return this.dialogInteractable.get(options);
+  }
 
-      // Add a wait after setting field values to ensure they're properly updated
-      cy.wait(300);
-    }
+  /**
+   * Get the content of the dialog
+   * Delegates to the dialog interactable
+   */
+  getContent(): Cypress.Chainable<JQuery<HTMLElement>> {
+    return this.dialogInteractable.getContent();
+  }
 
-    // Click the submit button in the dialog actions
-    this.get({}).contains("button", "Submit").click();
+  /**
+   * Get the title of the dialog
+   * Delegates to the dialog interactable
+   */
+  getTitle(): Cypress.Chainable<JQuery<HTMLElement>> {
+    return this.dialogInteractable.getTitle();
+  }
 
-    // Wait for the dialog to close with a longer timeout
-    this.waitForClose(5000);
+  /**
+   * Get the actions section of the dialog
+   * Delegates to the dialog interactable
+   */
+  getActions(): Cypress.Chainable<JQuery<HTMLElement>> {
+    return this.dialogInteractable.getActions();
+  }
 
+  /**
+   * Get the form interactable
+   */
+  getForm(): ObjectFormInteractable {
+    return this.formInteractable;
+  }
+
+  /**
+   * Get the submit button in the dialog actions
+   */
+  getSubmitButton(): Cypress.Chainable<JQuery<HTMLElement>> {
+    return this.get().find('[data-testid="ObjectFormDialogSubmitButton"]');
+  }
+
+  /**
+   * Get the cancel button in the dialog actions
+   */
+  getCancelButton(): Cypress.Chainable<JQuery<HTMLElement>> {
+    return this.get().find('[data-testid="ObjectFormDialogCancelButton"]');
+  }
+
+  /**
+   * Submit the form using the dialog's submit button
+   */
+  submit(): this {
+    this.getSubmitButton().click();
     return this;
   }
 
   /**
-   * Click the cancel button to close the dialog
+   * Cancel the form using the dialog's cancel button
    */
   cancel(): this {
-    // Make sure the dialog is visible
-    this.get({}).should("be.visible");
+    this.getCancelButton().click();
+    return this;
+  }
 
-    // Click the cancel button
-    this.get({}).contains("button", "Cancel").click();
+  /**
+   * Get a field within the form
+   * Delegates to the form interactable
+   */
+  field<T extends FormInputInteractable<any> = FormInputInteractable<any>>(
+    fieldName: string,
+    customInteractable?: new (options: FormInputInteractableOptions) => T
+  ): Cypress.Chainable<T> {
+    return this.formInteractable.field(fieldName, customInteractable);
+  }
 
-    // Wait for the dialog to close with a longer timeout
-    this.waitForClose(5000);
+  /**
+   * Get the value of a field within the form
+   * Delegates to the form interactable
+   */
+  getFieldValue(fieldName: string): Cypress.Chainable<any> {
+    return this.formInteractable.getFieldValue(fieldName);
+  }
+
+  /**
+   * Set the value of a field within the form
+   * Delegates to the form interactable
+   */
+  setFieldValue(fieldName: string, value: any): Cypress.Chainable<this> {
+    return this.formInteractable.setFieldValue(fieldName, value).then(() => {
+      return cy.wrap(this);
+    });
+  }
+
+  /**
+   * Check if the form is disabled
+   * Delegates to the form interactable
+   */
+  isDisabled(): Cypress.Chainable<boolean> {
+    return this.formInteractable.isDisabled();
+  }
+
+  /**
+   * Check if the form is in read-only mode
+   * Delegates to the form interactable
+   */
+  isReadOnly(): Cypress.Chainable<boolean> {
+    return this.formInteractable.isReadOnly();
+  }
+
+  /**
+   * Get the current form data
+   * Delegates to the form interactable
+   */
+  getFormData(): Cypress.Chainable<Record<string, any>> {
+    return this.formInteractable.getFormData();
+  }
+
+  /**
+   * Fill the form with the provided data and submit it
+   * @param data The data to fill the form with
+   */
+  fillAndSubmit(data: Record<string, any>): this {
+    // Fill each field in the form
+    Object.entries(data).forEach(([fieldName, value]) => {
+      this.setFieldValue(fieldName, value);
+    });
+
+    // Submit the form
+    this.submit();
 
     return this;
   }
 }
 
 /**
- * Factory function to create an ObjectFormDialogInteractable
- * @param options The options for the ObjectFormDialogInteractable
- * @returns An ObjectFormDialogInteractable instance
+ * Create an ObjectFormDialog interactable
+ * @param options Options for the interactable
  */
 export function objectFormDialog(
   options: ObjectFormDialogInteractableOptions
@@ -119,4 +221,5 @@ export function objectFormDialog(
   return new ObjectFormDialogInteractable(options);
 }
 
+// Export the factory function and class
 export default objectFormDialog;
