@@ -1,4 +1,5 @@
 import axios from "axios";
+import cliProgress from "cli-progress";
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
@@ -22,6 +23,15 @@ function debug(...args: any[]) {
   }
 }
 
+// Separate debug function that doesn't interfere with progress bar
+function silentDebug(...args: any[]) {
+  // When progress bar is active, store logs to display later or write to a different stream
+  if (DEBUG) {
+    // Using process.stderr doesn't interfere with the progress bar on stdout
+    process.stderr.write(`[DEBUG] ${args.join(" ")}\n`);
+  }
+}
+
 async function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
@@ -32,7 +42,24 @@ async function pollGenerationCompletion(promptId: string): Promise<any> {
   let attempts = 0;
   const maxAttempts = 30; // Maximum number of polling attempts
 
-  debug(`Starting to poll for completion of prompt ID: ${promptId}`);
+  // No debug logs during polling to keep progress bar on one line
+
+  // Create a new progress bar
+  const progressBar = new cliProgress.SingleBar({
+    format: "Image Generation Progress |{bar}| {percentage}% | {status}",
+    barCompleteChar: "\u2588",
+    barIncompleteChar: "\u2591",
+    hideCursor: true,
+    clearOnComplete: true,
+    forceRedraw: true,
+    stream: process.stdout,
+    noTTYOutput: false,
+  });
+
+  // Initialize the progress bar
+  progressBar.start(100, 0, {
+    status: "Initializing...",
+  });
 
   // First, check immediately in case it completed very quickly
   try {
@@ -40,18 +67,16 @@ async function pollGenerationCompletion(promptId: string): Promise<any> {
       `${comfyUIUrl}/history/${promptId}`
     );
 
-    debug(
-      "Immediate history response:",
-      JSON.stringify(immediateResponse.data, null, 2)
-    );
+    // Remove debug log during polling
 
     if (immediateResponse.data && immediateResponse.data[promptId]) {
       const promptResult = immediateResponse.data[promptId];
 
       if (promptResult.status && promptResult.status.completed) {
-        debug("Prompt completed immediately");
+        // Remove debug log during polling
         outputs = promptResult.outputs;
         completed = true;
+        progressBar.update(100, { status: "Completed" });
       }
     }
   } catch (error) {
@@ -68,32 +93,58 @@ async function pollGenerationCompletion(promptId: string): Promise<any> {
         `${comfyUIUrl}/history/${promptId}`
       );
 
-      debug(
-        `Poll attempt ${attempts}:`,
-        JSON.stringify(historyResponse.data, null, 2)
-      );
+      // No debug logs during polling to keep progress bar on one line
 
       if (historyResponse.data && historyResponse.data[promptId]) {
         const promptResult = historyResponse.data[promptId];
 
+        // Calculate progress percentage
+        let progressPercentage = Math.min(
+          Math.round((attempts / maxAttempts) * 100),
+          99
+        );
+        let statusMessage = `Processing (${attempts}/${maxAttempts})`;
+
+        // Check if ComfyUI provides progress information
+        if (
+          promptResult.status &&
+          typeof promptResult.status.progress === "number"
+        ) {
+          progressPercentage = Math.min(
+            Math.round(promptResult.status.progress * 100),
+            99
+          );
+        }
+
+        // Check for execution_cached status
+        if (promptResult.status && promptResult.status.execution_cached) {
+          statusMessage = "Using cached result";
+          progressPercentage = 95;
+        }
+
         if (promptResult.status && promptResult.status.completed) {
           outputs = promptResult.outputs;
           completed = true;
-          debug("Generation completed after", attempts, "attempts");
+          progressBar.update(100, { status: "Completed" });
+          // No debug logs during polling to keep progress bar on one line
         } else {
-          console.log(
-            `Generation in progress... (attempt ${attempts}/${maxAttempts})`
-          );
+          progressBar.update(progressPercentage, { status: statusMessage });
         }
       } else {
-        console.log(
-          `Waiting for ComfyUI to initialize generation... (attempt ${attempts}/${maxAttempts})`
+        progressBar.update(
+          Math.min(Math.round((attempts / maxAttempts) * 100), 99),
+          {
+            status: `Initializing (${attempts}/${maxAttempts})`,
+          }
         );
       }
     } catch (error) {
       console.error(`Error during polling (attempt ${attempts}):`, error);
     }
   }
+
+  // Stop the progress bar
+  progressBar.stop();
 
   if (!completed) {
     console.error(`Polling timed out after ${maxAttempts} attempts`);
@@ -237,9 +288,9 @@ async function generateImageImpl<T>(
         JSON.stringify(generateResponse.data, null, 2)
       );
 
-      debug("Polling for generation completion");
+      console.log("Starting image generation...");
       outputs = await pollGenerationCompletion(promptId);
-      debug("Generation completed");
+      console.log("Image generation completed successfully!");
       debug("Outputs:", JSON.stringify(outputs, null, 2));
     } catch (error: any) {
       console.error("Error submitting workflow to ComfyUI:", error.message);
