@@ -2,7 +2,7 @@
  * Face2Face workflow for generating portrait images using ComfyUI
  */
 
-export interface Face2FaceOptions {
+export interface Txt2FaceOptions {
   outputDirectory: string;
   prompt?: string; // Optional additional prompt
   negativePrompt?: string; // Optional additional negative prompt
@@ -14,16 +14,14 @@ export interface Face2FaceOptions {
 }
 
 // Default prompts for Realistic Vision v6
-const BASE_PROMPT =
-  "portrait photo of a person, highly detailed skin, 8k uhd, dslr, soft lighting, high quality, film grain";
-const BASE_NEGATIVE_PROMPT =
-  "blurry, distorted, deformed, bad anatomy, disfigured, poorly drawn face, mutation, mutated";
+const BASE_PROMPT_TEMPLATE = `RAW portrait photograph of {PROMPT}, symmetrical face, natural skin texture, 85 mm lens, f/1.8, shot on Canon EOS R5, soft golden-hour rim-light, shallow depth of field, cinematic lighting, 8 k UHD, Kodak Portra 400 colour science, ultra-sharp focus`;
+const BASE_NEGATIVE_PROMPT = `cartoon, illustration, painting, CGI, 3d render, low quality, lowres, blurry, grainy, jpeg artifacts, bad anatomy, disfigured, deformed, mutated, asymmetrical face, double face, extra limbs, fused fingers, extra fingers, poorly drawn hands, poorly drawn face, cloned face, cropped, out of frame, watermark, signature, text, logo`;
 
 /**
  * Creates a ComfyUI workflow for generating portrait images
  */
-export function createFace2faceWorkflow(
-  options: Face2FaceOptions,
+export function createTxt2faceWorkflow(
+  options: Txt2FaceOptions,
   models: { checkpoints: string[]; vaes: string[] }
 ) {
   // Use the first available checkpoint and VAE
@@ -61,9 +59,10 @@ export function createFace2faceWorkflow(
         class_type: "CLIPTextEncode",
         inputs: {
           clip: ["1", 1],
-          text: options.prompt
-            ? `${BASE_PROMPT}, ${options.prompt}`
-            : BASE_PROMPT,
+          text: BASE_PROMPT_TEMPLATE.replace(
+            "{PROMPT}",
+            options.prompt || "person"
+          ),
         },
       },
       "4": {
