@@ -1,6 +1,5 @@
 import { Command } from "commander";
 import fs from "fs";
-import inquirer from "inquirer";
 import _ from "lodash";
 import path from "path";
 import { fileURLToPath } from "url";
@@ -158,10 +157,7 @@ async function runWorkflow() {
       "<workflow>",
       `Workflow name (available: ${availableWorkflows.join(", ")})`
     )
-    .option(
-      "-o, --outputDirectory <dir>",
-      "Output directory for generated images"
-    )
+    // No specific output option, everything is passed through --options
     .option(
       "--options <json>",
       "JSON string of options to pass to the workflow"
@@ -174,6 +170,8 @@ async function runWorkflow() {
         options: any,
         command: any
       ) => {
+        console.log("Command-line options:", options);
+        console.log("Command object:", command);
         try {
           // Check if orchestrator exists
           if (!availableOrchestrators.includes(orchestratorName)) {
@@ -228,39 +226,70 @@ async function runWorkflow() {
           // Parse JSON options if provided
           if (options.options) {
             try {
-              const jsonOptions = JSON.parse(options.options);
+              console.log("Raw options string:", options.options);
+              console.log("Options type:", typeof options.options);
+
+              // Clean up the JSON string if needed
+              let jsonString = options.options;
+
+              // If the string is already an object, no need to parse
+              let jsonOptions;
+              if (typeof jsonString === "object") {
+                jsonOptions = jsonString;
+              } else {
+                // Try to parse the JSON string
+                try {
+                  jsonOptions = JSON.parse(jsonString);
+                } catch (parseError) {
+                  // If parsing fails, try to clean up the string
+                  // Remove any escape characters that might have been added by the shell
+                  jsonString = jsonString.replace(/\\"/g, '"');
+                  // If the string doesn't start with {, add it
+                  if (!jsonString.startsWith("{")) {
+                    jsonString = "{" + jsonString;
+                  }
+                  // If the string doesn't end with }, add it
+                  if (!jsonString.endsWith("}")) {
+                    jsonString = jsonString + "}";
+                  }
+
+                  console.log("Cleaned JSON string:", jsonString);
+                  jsonOptions = JSON.parse(jsonString);
+                }
+              }
+
+              console.log("Parsed JSON options:", jsonOptions);
+
               // Merge JSON options with parsed options
               _.merge(parsedOptions, jsonOptions);
+              console.log("Merged options:", parsedOptions);
             } catch (error: any) {
               console.error(`Error parsing JSON options: ${error.message}`);
+              console.error(`Raw options string: "${options.options}"`);
               process.exit(1);
             }
           }
 
-          // Ensure we have an output directory
-          if (!parsedOptions.outputDirectory) {
-            // If not provided, ask the user
-            const answers = await inquirer.prompt([
-              {
-                type: "input",
-                name: "outputDirectory",
-                message: "Enter output directory for generated images:",
-                default: `output/${orchestratorName}_${workflowName}_${Date.now()}`,
-              },
-            ]);
-
-            parsedOptions.outputDirectory = answers.outputDirectory;
+          // Set default output directory if not provided
+          if (!parsedOptions.output) {
+            parsedOptions.output = `output/${orchestratorName}_${workflowName}_${Date.now()}`;
+            console.log(
+              `Using default output directory: ${parsedOptions.output}`
+            );
           }
 
           debug("Running orchestrator:", orchestratorName);
           debug("With workflow:", workflowName);
           debug("With options:", parsedOptions);
 
-          // Ensure the parsedOptions has the required outputDirectory property
+          // Ensure the parsedOptions has the required output property
+          // Note: We're spreading parsedOptions first, then setting output to ensure it's not overwritten
           const workflowOptions = {
-            outputDirectory: parsedOptions.outputDirectory,
             ...parsedOptions,
+            output: parsedOptions.output,
           };
+
+          console.log("Final workflow options:", workflowOptions);
 
           // Run the orchestrator with the workflow
           // Pass empty string for outputNodeId to let the orchestrator determine it dynamically

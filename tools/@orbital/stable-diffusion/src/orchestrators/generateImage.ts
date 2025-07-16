@@ -162,7 +162,7 @@ async function pollGenerationCompletion(promptId: string): Promise<any> {
  */
 async function generateImageImpl<T>(
   options: T & {
-    outputDirectory: string;
+    output?: string;
     seed?: number;
   },
   createWorkflow: (
@@ -416,7 +416,7 @@ async function generateImageImpl<T>(
     const comfyUIImagePath = path.join(COMFY_ROOT, "output", imageFilename);
     const targetPath = path.join(
       DATA_ROOT,
-      options.outputDirectory,
+      options.output || "output",
       imageFilename
     );
 
@@ -438,7 +438,7 @@ async function generateImageImpl<T>(
     }
 
     // Ensure output directory exists
-    const outputDir = path.join(DATA_ROOT, options.outputDirectory);
+    const outputDir = path.join(DATA_ROOT, options.output || "output");
     debug(`Ensuring output directory exists: ${outputDir}`);
     try {
       fs.mkdirSync(outputDir, {
