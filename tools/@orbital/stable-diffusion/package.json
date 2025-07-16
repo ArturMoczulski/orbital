@@ -8,6 +8,12 @@
     "prepare": "npm run build",
     "scrapeInstagram": "node dist/commands/scrapeInstagram.js",
     "workflow": "node dist/commands/workflow.js",
+    "prepareFacialDataset": "node dist/commands/prepareFacialDataset.js",
+    "prepareFullDataset": "node dist/commands/prepareFullDataset.js",
+    "setup-canvas": "npm rebuild canvas --update-binary",
+    "setup-canvas-m1": "export PKG_CONFIG_PATH=\"/opt/homebrew/lib/pkgconfig:/opt/homebrew/opt/libffi/lib/pkgconfig\" && npm rebuild canvas --update-binary",
+    "download-face-api-models": "node scripts/download-face-api-models.js",
+    "setup-opencv-m1": "brew install cmake && npm i opencv-build && npm i opencv4nodejs",
     "test": "npm run build && jest --config jest.config.cjs --runInBand"
   },
   "devDependencies": {
@@ -24,6 +30,7 @@
     "@types/inquirer": "^8.2.11",
     "@types/jest": "^29.5.14",
     "@types/node": "^18.0.0",
+    "@types/sharp": "^0.32.0",
     "babel-jest": "^30.0.0",
     "jest": "^30.0.0",
     "jest-util": "^29.7.0",
@@ -33,13 +40,19 @@
   },
   "bin": "dist/src/index.js",
   "dependencies": {
+    "@napi-rs/canvas": "^0.1.44",
+    "@tensorflow/tfjs-node": "^4.17.0",
+    "@vladmandic/face-api": "^1.7.13",
     "axios": "^1.10.0",
     "cli-progress": "^3.12.0",
     "commander": "^14.0.0",
     "figlet": "^1.6.0",
     "form-data": "^4.0.3",
     "inquirer": "^12.6.3",
-    "plop": "^4.0.1"
+    "onnxruntime-node": "1.22.0-rev",
+    "opencv4nodejs": "^5.6.0",
+    "plop": "^4.0.1",
+    "sharp": "^0.34.3"
   },
   "license": "UNLICENSED"
 }
