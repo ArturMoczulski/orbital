@@ -112,6 +112,7 @@ async function pollGenerationCompletion(promptId: string): Promise<any> {
 async function generateImageImpl<T>(
   options: T & {
     outputDirectory: string;
+    seed?: number;
   },
   createWorkflow: (
     options: T,
@@ -120,7 +121,7 @@ async function generateImageImpl<T>(
       vaes: string[];
     }
   ) => { prompt: Record<string, any> },
-  outputNodeId: string = "8",
+  outputNodeId: string = "",
   workflowName: string = "generated"
 ): Promise<string | null> {
   try {
@@ -145,19 +146,61 @@ async function generateImageImpl<T>(
       throw new Error("No VAE models available in ComfyUI");
     }
 
+    // If no seed is provided, generate a random one to prevent caching
+    if (options.seed === undefined) {
+      (options as any).seed = Math.floor(Math.random() * 1000000);
+      debug(`No seed provided, using random seed: ${(options as any).seed}`);
+    }
+
     // Create workflow using the provided function
     const workflow = createWorkflow(options, { checkpoints, vaes });
 
-    // Add SaveImage node if not present
-    if (
-      !workflow.prompt["8"] ||
-      workflow.prompt["8"].class_type !== "SaveImage"
-    ) {
-      // Find the last node that outputs images
-      let lastImageNodeId = "7"; // Default to node 7 which is typically VAEDecode
+    // Find existing SaveImage node or add one
+    let saveImageNodeId = outputNodeId;
+    let foundSaveImageNode = false;
 
-      // Add SaveImage node with explicit output configuration
-      workflow.prompt["8"] = {
+    // First, check if there's already a SaveImage node in the workflow
+    for (const [nodeId, node] of Object.entries(workflow.prompt)) {
+      if (typeof node === "object" && node.class_type === "SaveImage") {
+        saveImageNodeId = nodeId;
+        foundSaveImageNode = true;
+        debug(`Found existing SaveImage node at index ${nodeId}`);
+        break;
+      }
+    }
+
+    if (!foundSaveImageNode) {
+      // Find the highest node index and the last node that outputs images
+      let highestNodeIndex = 0;
+      let lastImageNodeId = "";
+
+      for (const nodeId of Object.keys(workflow.prompt)) {
+        const numericId = parseInt(nodeId, 10);
+        if (!isNaN(numericId) && numericId > highestNodeIndex) {
+          highestNodeIndex = numericId;
+        }
+
+        // Typically VAEDecode nodes output images
+        const node = workflow.prompt[nodeId];
+        if (typeof node === "object" && node.class_type === "VAEDecode") {
+          lastImageNodeId = nodeId;
+        }
+      }
+
+      // If we couldn't find a VAEDecode node, use the highest node as a fallback
+      if (!lastImageNodeId) {
+        lastImageNodeId = highestNodeIndex.toString();
+        debug(
+          `No VAEDecode node found, using highest node ${lastImageNodeId} as image source`
+        );
+      } else {
+        debug(`Using VAEDecode node ${lastImageNodeId} as image source`);
+      }
+
+      // Add SaveImage node at the next available index
+      saveImageNodeId = (highestNodeIndex + 1).toString();
+
+      workflow.prompt[saveImageNodeId] = {
         class_type: "SaveImage",
         inputs: {
           images: [lastImageNodeId, 0],
@@ -166,8 +209,14 @@ async function generateImageImpl<T>(
         },
       };
 
-      debug("Added SaveImage node with configuration:", workflow.prompt["8"]);
+      debug(
+        `Added SaveImage node at index ${saveImageNodeId} with configuration:`,
+        workflow.prompt[saveImageNodeId]
+      );
     }
+
+    // Update the outputNodeId to match the SaveImage node
+    outputNodeId = saveImageNodeId;
 
     debug("Submitting workflow to ComfyUI");
     debug("Workflow:", JSON.stringify(workflow, null, 2));
@@ -244,13 +293,60 @@ async function generateImageImpl<T>(
     }
 
     // Ensure output directory exists
-    fs.mkdirSync(path.join(DATA_ROOT, options.outputDirectory), {
+    const outputDir = path.join(DATA_ROOT, options.outputDirectory);
+    fs.mkdirSync(outputDir, {
       recursive: true,
     });
-    fs.copyFileSync(comfyUIImagePath, targetPath);
 
-    console.log(`Generated image saved to ${targetPath}`);
-    return targetPath;
+    // Check if the target file already exists and create a unique filename with increasing index
+    const fileBaseName = path.basename(
+      imageFilename,
+      path.extname(imageFilename)
+    );
+    const fileExt = path.extname(imageFilename);
+
+    // Extract the base name without the index suffix (e.g., "face2face" from "face2face_00001_")
+    const baseNameWithoutIndex = fileBaseName.replace(/_\d+_$/, "");
+
+    // Find the highest existing index in the output directory
+    let highestIndex = 0;
+    if (fs.existsSync(outputDir)) {
+      const files = fs.readdirSync(outputDir);
+      const pattern = new RegExp(
+        `^${baseNameWithoutIndex}_(\\d{5})_${fileExt}$`
+      );
+
+      for (const file of files) {
+        const match = file.match(pattern);
+        if (match && match[1]) {
+          const index = parseInt(match[1], 10);
+          if (index > highestIndex) {
+            highestIndex = index;
+          }
+        }
+      }
+    }
+
+    // Create a new filename with the next index
+    const newIndex = highestIndex + 1;
+    const newFileName = `${baseNameWithoutIndex}_${String(newIndex).padStart(5, "0")}_${fileExt}`;
+    const newTargetPath = path.join(outputDir, newFileName);
+
+    // Copy the file to the target path with the new filename
+    fs.copyFileSync(comfyUIImagePath, newTargetPath);
+
+    // Delete the original file from ComfyUI output directory
+    try {
+      fs.unlinkSync(comfyUIImagePath);
+      debug(`Deleted original file from ComfyUI output: ${comfyUIImagePath}`);
+    } catch (error) {
+      console.warn(
+        `Warning: Could not delete original file from ComfyUI output: ${error}`
+      );
+    }
+
+    console.log(`Generated image saved to ${newTargetPath}`);
+    return newTargetPath;
   } catch (error: any) {
     if (axios.isAxiosError(error) && error.response) {
       console.error(

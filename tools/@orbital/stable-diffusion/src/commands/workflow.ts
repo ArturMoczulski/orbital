@@ -263,10 +263,11 @@ async function runWorkflow() {
           };
 
           // Run the orchestrator with the workflow
+          // Pass empty string for outputNodeId to let the orchestrator determine it dynamically
           const result = await orchestrator(
             workflowOptions,
             createWorkflow,
-            "8",
+            "",
             workflowName
           );
 
