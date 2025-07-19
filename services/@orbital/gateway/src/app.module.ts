@@ -6,6 +6,7 @@ import { ClientsModule, Transport } from "@nestjs/microservices";
 import { MongooseModule } from "@nestjs/mongoose";
 import { AuthModule } from "./auth/auth.module";
 import { LoggingInterceptor } from "./common/logging.interceptor";
+import { ConversationsModule } from "./conversations/conversations.module";
 import { PingController } from "./ping/ping.controller";
 import { UsersModule } from "./users/users.module";
 
@@ -42,7 +43,7 @@ import { UsersModule } from "./users/users.module";
     ]),
     AuthModule,
     UsersModule,
-    WorldsModule,
+    ConversationsModule,
   ],
   controllers: [PingController],
   providers: [

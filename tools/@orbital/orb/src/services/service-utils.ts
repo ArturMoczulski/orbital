@@ -58,6 +58,12 @@ export function getAvailableServices(): ServiceInfo[] {
         );
 
       for (const subEntry of subEntries) {
+        // Skip ComfyUI service to prevent errors when running yarn watch
+        if (entry === "@comfyanonymous" && subEntry === "ComfyUI") {
+          console.log("Skipping ComfyUI service as requested");
+          continue;
+        }
+
         const packagePath = path.join(servicePath, subEntry, "package.json");
         if (fs.existsSync(packagePath)) {
           try {
@@ -68,14 +74,55 @@ export function getAvailableServices(): ServiceInfo[] {
               ? fullName.split("/").pop()
               : fullName;
 
+            // Default process names
+            let watchName = `${monorepoName}/${name}-watch`;
+            let debugName = `${monorepoName}/${name}-debug`;
+            let prodName = `${monorepoName}/${name}`;
+
+            // Check if ecosystem.config.js exists and read actual process names
+            const ecosystemConfigPath = path.join(
+              servicePath,
+              subEntry,
+              "ecosystem.config.js"
+            );
+            if (fs.existsSync(ecosystemConfigPath)) {
+              try {
+                // Read the ecosystem.config.js file as a string
+                const ecosystemConfigContent = fs.readFileSync(
+                  ecosystemConfigPath,
+                  "utf8"
+                );
+
+                // Extract process names using regex
+                const watchMatch = ecosystemConfigContent.match(
+                  /name:\s*["']([^"']*-watch)["']/
+                );
+                const debugMatch = ecosystemConfigContent.match(
+                  /name:\s*["']([^"']*-debug)["']/
+                );
+                const prodMatch = ecosystemConfigContent.match(
+                  /name:\s*["']([^"']*?)["'](?!.*-watch|.*-debug)/
+                );
+
+                if (watchMatch && watchMatch[1]) watchName = watchMatch[1];
+                if (debugMatch && debugMatch[1]) debugName = debugMatch[1];
+                if (prodMatch && prodMatch[1]) prodName = prodMatch[1];
+              } catch (error) {
+                console.warn(
+                  `Error reading ecosystem.config.js at ${ecosystemConfigPath}:`,
+                  error
+                );
+              }
+            }
+
             services.push({
               name,
               fullName,
               type: "service",
               path: path.join(servicePath, subEntry),
-              watchName: `${monorepoName}/${name}-watch`,
-              debugName: `${monorepoName}/${name}-debug`,
-              prodName: `${monorepoName}/${name}`,
+              watchName,
+              debugName,
+              prodName,
             });
           } catch (error) {
             console.warn(
@@ -116,14 +163,55 @@ export function getAvailableServices(): ServiceInfo[] {
               ? fullName.split("/").pop()
               : fullName;
 
+            // Default process names
+            let watchName = `${monorepoName}/${name}-watch`;
+            let debugName = `${monorepoName}/${name}-debug`;
+            let prodName = `${monorepoName}/${name}`;
+
+            // Check if ecosystem.config.js exists and read actual process names
+            const ecosystemConfigPath = path.join(
+              clientPath,
+              subEntry,
+              "ecosystem.config.js"
+            );
+            if (fs.existsSync(ecosystemConfigPath)) {
+              try {
+                // Read the ecosystem.config.js file as a string
+                const ecosystemConfigContent = fs.readFileSync(
+                  ecosystemConfigPath,
+                  "utf8"
+                );
+
+                // Extract process names using regex
+                const watchMatch = ecosystemConfigContent.match(
+                  /name:\s*["']([^"']*-watch)["']/
+                );
+                const debugMatch = ecosystemConfigContent.match(
+                  /name:\s*["']([^"']*-debug)["']/
+                );
+                const prodMatch = ecosystemConfigContent.match(
+                  /name:\s*["']([^"']*?)["'](?!.*-watch|.*-debug)/
+                );
+
+                if (watchMatch && watchMatch[1]) watchName = watchMatch[1];
+                if (debugMatch && debugMatch[1]) debugName = debugMatch[1];
+                if (prodMatch && prodMatch[1]) prodName = prodMatch[1];
+              } catch (error) {
+                console.warn(
+                  `Error reading ecosystem.config.js at ${ecosystemConfigPath}:`,
+                  error
+                );
+              }
+            }
+
             services.push({
               name,
               fullName,
               type: "client",
               path: path.join(clientPath, subEntry),
-              watchName: `${monorepoName}/${name}-watch`,
-              debugName: `${monorepoName}/${name}-debug`,
-              prodName: `${monorepoName}/${name}`,
+              watchName,
+              debugName,
+              prodName,
             });
           } catch (error) {
             console.warn(
@@ -238,12 +326,22 @@ export function startServices(
             `${service.fullName} started in background. Check http://localhost:4052`
           );
         } else {
-          const processName = getProcessName(service, mode);
-          execSync(
-            `cd ${service.path} && npx pm2 start ecosystem.config.js --only ${processName}`,
-            { stdio: "inherit", cwd: root }
+          const ecosystemConfigPath = path.join(
+            service.path,
+            "ecosystem.config.js"
           );
-          console.log(`${service.fullName} started in ${modeName} mode.`);
+          if (fs.existsSync(ecosystemConfigPath)) {
+            const processName = getProcessName(service, mode);
+            execSync(
+              `cd ${service.path} && npx pm2 start ecosystem.config.js --only ${processName}`,
+              { stdio: "inherit", cwd: root }
+            );
+            console.log(`${service.fullName} started in ${modeName} mode.`);
+          } else {
+            console.log(
+              `Skipping ${service.fullName}: ecosystem.config.js not found`
+            );
+          }
         }
       } catch (error) {
         console.error(`Error starting ${service.fullName}:`, error);

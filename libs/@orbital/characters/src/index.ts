@@ -21,6 +21,9 @@ export * from "./types/mobile";
 export * from "./types/psychological-profile";
 export * from "./types/relation";
 
+// Conversations
+export * from "./conversations/conversation";
+
 // Skill infrastructure
 export * from "./skills/abstract/skill";
 export * from "./skills/registry";

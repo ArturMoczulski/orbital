@@ -1,18 +1,18 @@
 // PM2 Log Behavior:
 // - Logs are appended by default and not cleared on restart
 // - Log rotation is enabled (max_size: "10M", max_files: 10)
-// - All modes write to the same combined log file (world.log)
+// - All modes write to the same combined log file (characters.log)
 // - Both stdout and stderr are merged into a single log file
 // - PM2 also maintains process-specific log files with the process name prefix
 //
 // Process Management:
-// - Only one mode should run at a time (world, world-watch, or world-debug)
+// - Only one mode should run at a time (characters, characters-watch, or characters-debug)
 // - All modes use the same HTTP port (4053)
 // - Each script stops any existing processes before starting
 module.exports = {
   apps: [
     {
-      name: "world",
+      name: "characters",
       script: "nest",
       args: "start",
       watch: false,
@@ -22,14 +22,14 @@ module.exports = {
         PORT: "4053",
       },
       log_date_format: "YYYY-MM-DD HH:mm:ss",
-      error_file: "logs/world.log",
-      out_file: "logs/world.log",
+      error_file: "logs/characters.log",
+      out_file: "logs/characters.log",
       merge_logs: true,
       max_size: "10M",
       max_files: 10,
     },
     {
-      name: "world-watch",
+      name: "characters-watch",
       script: "nest",
       args: "start --watch --preserveWatchOutput",
       watch: false,
@@ -43,14 +43,14 @@ module.exports = {
         PORT: "4053",
       },
       log_date_format: "YYYY-MM-DD HH:mm:ss",
-      error_file: "logs/world.log",
-      out_file: "logs/world.log",
+      error_file: "logs/characters.log",
+      out_file: "logs/characters.log",
       merge_logs: true,
       max_size: "10M",
       max_files: 10,
     },
     {
-      name: "world-debug",
+      name: "characters-debug",
       script: "nest",
       args: "start --preserveWatchOutput",
       watch: false,
@@ -69,8 +69,8 @@ module.exports = {
         PORT: "4053",
       },
       log_date_format: "YYYY-MM-DD HH:mm:ss",
-      error_file: "logs/world.log",
-      out_file: "logs/world.log",
+      error_file: "logs/characters.log",
+      out_file: "logs/characters.log",
       merge_logs: true,
       max_size: "10M",
       max_files: 10,

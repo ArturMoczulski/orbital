@@ -27,3 +27,6 @@ export * from "./models/world.model";
 
 // Area model
 export * from "./models/area.model";
+
+// Conversation model
+export * from "./models/conversation.model";
