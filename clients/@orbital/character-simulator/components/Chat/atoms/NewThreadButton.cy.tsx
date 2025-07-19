@@ -27,10 +27,10 @@ describe("NewThreadButton Component", () => {
     );
 
     // Check that the button exists
-    cy.get("button").should("exist");
+    cy.get("button[aria-label='New Conversation']").should("exist");
 
     // Check that the button has the correct icon
-    cy.get("button svg").should("exist");
+    cy.get("button[aria-label='New Conversation'] svg").should("exist");
   });
 
   it("should open the dialog when clicked", () => {
@@ -47,7 +47,7 @@ describe("NewThreadButton Component", () => {
     );
 
     // Click the button
-    cy.get("button").click();
+    cy.get("button[aria-label='New Conversation']").click();
 
     // Check that the dialog is open
     cy.contains("Create New Conversation").should("be.visible");
@@ -70,7 +70,7 @@ describe("NewThreadButton Component", () => {
     );
 
     // Click the button to open the dialog
-    cy.get("button").click();
+    cy.get("button[aria-label='New Conversation']").click();
 
     // Click the Cancel button
     cy.contains("Cancel").click();
@@ -96,7 +96,7 @@ describe("NewThreadButton Component", () => {
     );
 
     // Click the button to open the dialog
-    cy.get("button").click();
+    cy.get("button[aria-label='New Conversation']").click();
 
     // Type a valid thread name
     cy.get("input").type("test_thread");
@@ -125,7 +125,7 @@ describe("NewThreadButton Component", () => {
     );
 
     // Click the button to open the dialog
-    cy.get("button").click();
+    cy.get("button[aria-label='New Conversation']").click();
 
     // Click the Create button without entering a name
     cy.contains("Create").click();
@@ -154,7 +154,7 @@ describe("NewThreadButton Component", () => {
     );
 
     // Click the button to open the dialog
-    cy.get("button").click();
+    cy.get("button[aria-label='New Conversation']").click();
 
     // Type an invalid thread name (with spaces)
     cy.get("input").type("invalid thread name");
@@ -188,6 +188,6 @@ describe("NewThreadButton Component", () => {
     );
 
     // Check that the button is disabled
-    cy.get("button").should("be.disabled");
+    cy.get("button[aria-label='New Conversation']").should("be.disabled");
   });
 });

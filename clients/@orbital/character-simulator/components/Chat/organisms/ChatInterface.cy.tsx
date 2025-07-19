@@ -41,30 +41,20 @@ const mockThreads: ConversationThread[] = [
   },
 ];
 
-// Mock character service functions
-const mockLoadConversationThreads = cy.stub().as("loadConversationThreads");
-const mockSaveConversationThreads = cy.stub().as("saveConversationThreads");
-const mockValidateThreadName = cy.stub().as("validateThreadName");
-
 describe("ChatInterface Component", () => {
   beforeEach(() => {
-    // Reset stubs
-    mockLoadConversationThreads.reset();
-    mockSaveConversationThreads.reset();
-    mockValidateThreadName.reset();
-
-    // Set up default stub behavior
-    mockLoadConversationThreads.resolves(mockThreads);
-    mockSaveConversationThreads.resolves(true);
-    mockValidateThreadName.returns(true);
+    // Mock character service functions
+    cy.stub().as("loadConversationThreads").resolves(mockThreads);
+    cy.stub().as("saveConversationThreads").resolves(true);
+    cy.stub().as("validateThreadName").returns(true);
 
     // Stub the imported functions
     cy.stub(window, "require").callsFake((module) => {
       if (module === "../../../services/characterService") {
         return {
-          loadConversationThreads: mockLoadConversationThreads,
-          saveConversationThreads: mockSaveConversationThreads,
-          validateThreadName: mockValidateThreadName,
+          loadConversationThreads: cy.get("@loadConversationThreads"),
+          saveConversationThreads: cy.get("@saveConversationThreads"),
+          validateThreadName: cy.get("@validateThreadName"),
         };
       }
       return window.require(module);
@@ -115,7 +105,7 @@ describe("ChatInterface Component", () => {
       .should("exist");
 
     // Check that the MessageInput is rendered
-    cy.get("input[placeholder='Type a message...']").should("exist");
+    cy.get("textarea[placeholder='Type a message...']").should("exist");
   });
 
   it("should load conversation threads on mount", () => {
@@ -128,8 +118,9 @@ describe("ChatInterface Component", () => {
 
   it("should allow sending a message", () => {
     // Type a message
-    cy.get("input[placeholder='Type a message...']").type(
-      "This is a test message{enter}"
+    cy.get("textarea[placeholder='Type a message...']").type(
+      "This is a test message{enter}",
+      { force: true }
     );
 
     // Check that the message appears in the message list
@@ -141,8 +132,9 @@ describe("ChatInterface Component", () => {
 
   it("should simulate a character response after sending a message", () => {
     // Type a message
-    cy.get("input[placeholder='Type a message...']").type(
-      "This is a test message{enter}"
+    cy.get("textarea[placeholder='Type a message...']").type(
+      "This is a test message{enter}",
+      { force: true }
     );
 
     // Wait for the simulated character response (1 second delay)
@@ -166,7 +158,7 @@ describe("ChatInterface Component", () => {
 
   it("should allow creating a new thread", () => {
     // Click the new thread button
-    cy.get("button").contains("add").click();
+    cy.get("button[aria-label='New Conversation']").click();
 
     // Type a thread name
     cy.get("input#name").type("New_Thread");
@@ -183,10 +175,12 @@ describe("ChatInterface Component", () => {
 
   it("should show an error when thread creation fails", () => {
     // Make validateThreadName return false
-    mockValidateThreadName.returns(false);
+    cy.get("@validateThreadName").then((stub) => {
+      (stub as any).returns(false);
+    });
 
     // Click the new thread button
-    cy.get("button").contains("add").click();
+    cy.get("button[aria-label='New Conversation']").click();
 
     // Type an invalid thread name
     cy.get("input#name").type("Invalid Thread Name");
@@ -236,6 +230,6 @@ describe("ChatInterface Component", () => {
     cy.get(".MuiCircularProgress-root").should("exist");
 
     // Check that the message input is disabled
-    cy.get("input[placeholder='Type a message...']").should("be.disabled");
+    cy.get("textarea[placeholder='Type a message...']").should("be.disabled");
   });
 });

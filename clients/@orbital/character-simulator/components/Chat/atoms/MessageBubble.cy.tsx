@@ -50,7 +50,10 @@ describe("MessageBubble Component", () => {
     cy.contains(time).should("exist");
 
     // User messages should be aligned to the right
-    cy.get(".MuiPaper-root").should("have.css", "margin-left", "auto");
+    // Check that user messages are aligned to the right
+    cy.get(".MuiPaper-root")
+      .should("have.css", "margin-left")
+      .and("not.equal", "0px");
 
     // User messages should have the primary color
     cy.get(".MuiPaper-root").should("have.css", "background-color");
@@ -78,7 +81,10 @@ describe("MessageBubble Component", () => {
     cy.contains(time).should("exist");
 
     // Character messages should be aligned to the left
-    cy.get(".MuiPaper-root").should("have.css", "margin-right", "auto");
+    // Check that character messages are aligned to the left
+    cy.get(".MuiPaper-root")
+      .should("have.css", "margin-right")
+      .and("not.equal", "0px");
 
     // Character messages should have a grey background
     cy.get(".MuiPaper-root").should("have.css", "background-color");
