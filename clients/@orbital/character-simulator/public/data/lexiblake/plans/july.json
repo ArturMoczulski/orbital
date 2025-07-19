@@ -1,0 +1,133 @@
+{
+  "periodOverview": "In the latter half of July 2025 Lexi enters a high-energy two-week sprint focused on maximizing summer opportunities before the start of the fall school semester. The period blends intensive content creation, automotive events, and nightlife with moments of reflection about long-term career direction and personal relationships. Financial stability and follower growth remain top of mind, while a budding romantic prospect introduces excitement and uncertainty.",
+  "majorEvents": [
+    {
+      "date": "2025-07-18",
+      "title": "Summer Series Kick-off Shoot",
+      "description": "Full-day bikini + car shoot with photographer Amber at Gulf Shores beach to launch Lexi’s 'Coastal Horsepower' Instagram series."
+    },
+    {
+      "date": "2025-07-19",
+      "title": "VIP Bartending Shift – Garage Lounge",
+      "description": "High-earning Saturday night shift; potential networking with visiting automotive YouTuber ‘BoostedBill’."
+    },
+    {
+      "date": "2025-07-20",
+      "title": "Lafayette Cars & Coffee Feature",
+      "description": "Displays Corvette; interviews for local news segment and records collaboration reel with car club."
+    },
+    {
+      "date": "2025-07-22",
+      "title": "Brand Pitch Meeting – RevWear",
+      "description": "Virtual meeting to negotiate apparel sponsorship for upcoming merchandise line."
+    },
+    {
+      "date": "2025-07-23",
+      "title": "Family Dinner & Vehicle Service",
+      "description": "Weekly dinner; drop Raptor for oil change at father’s shop, bonding time with family."
+    },
+    {
+      "date": "2025-07-25",
+      "title": "Houston Road-Trip Collaboration",
+      "description": "Drives to Houston with Tyler for joint shoot with rival-friend Brittany Carter at Texas Motorplex."
+    },
+    {
+      "date": "2025-07-27",
+      "title": "Nightlife Event – ‘Summer Nights’ Party",
+      "description": "Paid appearance hosting nightclub event; opportunity for cross-promotion and follower growth."
+    },
+    {
+      "date": "2025-07-29",
+      "title": "University Advising Session",
+      "description": "Meets counselor to discuss course load and long-term marketing degree plan."
+    },
+    {
+      "date": "2025-07-30",
+      "title": "Reflection & Planning Retreat",
+      "description": "Solo day at Lake Martin boardwalk to journal, review analytics, and outline August content/merch strategy."
+    }
+  ],
+  "routines": {
+    "weekdays": {
+      "morning": "6:30 AM gym, protein smoothie, check overnight engagement metrics, update content calendar.",
+      "afternoon": "11 AM – 4 PM photoshoots, editing, brand emails, or part-time marketing class (Mon/Wed).",
+      "evening": "6 PM social events or car meets; 9 PM light meal and TikTok live; midnight wind-down with reality TV."
+    },
+    "weekends": {
+      "day": "Saturday content capture or car shows; Sunday family brunch or ride alongs.",
+      "night": "VIP bartending shifts (Fri/Sat) 8 PM-2 AM followed by post-shift debrief with staff."
+    },
+    "selfCare": "Three gym sessions per week, skincare nightly, Sunday evening digital detox bath.",
+    "maintenance": "Tuesday vehicle wash/detail; Thursday digital file organization.",
+    "education": "Online marketing module review Tuesday/Thursday 8 PM."
+  },
+  "emotionalArcs": [
+    {
+      "phase": "Performance High",
+      "period": "07-18 → 07-22",
+      "summary": "Motivated by strong engagement from new series; confidence peaks, risk of overcommitment."
+    },
+    {
+      "phase": "Comparison & Doubt",
+      "period": "07-23 → 07-26",
+      "summary": "Collaboration with Brittany triggers competitiveness; worries about unique value and aging curve."
+    },
+    {
+      "phase": "Grounding & Insight",
+      "period": "07-27 → 07-30",
+      "summary": "Family, counseling, and solo retreat redirect focus to long-term goals and internal validation."
+    }
+  ],
+  "socialFocus": {
+    "family": "Weekly dinner strengthens bonds; father provides advice on merchandise logistics.",
+    "friends": "Amber (creative ally) and Madison (voice of reason) take active roles in shoots and academics.",
+    "community": "Increased presence in local car scene; leverages BoostedBill and Brittany for network expansion."
+  },
+  "goalProgress": {
+    "followers": "Target +15 k net gain by consistent summer series and collaborations.",
+    "merchLine": "Finalize RevWear partnership terms and begin sample review.",
+    "financial": "Allocate 20% of July sponsorship income to Corvette payoff.",
+    "education": "Register for fall semester courses after advising session."
+  },
+  "contentStrategy": {
+    "themes": [
+      "Coastal Horsepower",
+      "Behind-the-Bar Glam",
+      "Road-Trip Reels"
+    ],
+    "schedule": "Daily IG stories, 4 feed posts/week, 2 TikTok uploads, 1 YouTube vlog.",
+    "collaborations": [
+      "BoostedBill",
+      "Brittany Carter",
+      "RevWear Apparel"
+    ],
+    "growthTactics": "Cross-posting, giveaway during nightclub event, authentic Q&A live sessions."
+  },
+  "romanticLife": {
+    "status": "Single with emerging interest",
+    "prospects": [
+      {
+        "name": "Ethan Carter",
+        "context": "RevWear junior marketing exec met during pitch call",
+        "dynamic": "Flirtatious professional banter; possible date after Houston trip."
+      }
+    ],
+    "patterns": "Attraction to ambitious industry men balanced by caution over mixing business with romance.",
+    "intimacy": "No committed relationship yet; playful DMs and testing compatibility.",
+    "conflicts": "Fear of vulnerability vs. desire for emotional stability."
+  },
+  "unexpectedElements": [
+    {
+      "trigger": "Weather",
+      "impact": "Tropical storm could postpone coastal shoot, forcing improvised indoor set."
+    },
+    {
+      "trigger": "Vehicle Issue",
+      "impact": "Corvette check-engine light mid-trip may create roadside content opportunity but adds stress."
+    },
+    {
+      "trigger": "Viral Clip",
+      "impact": "Behind-the-scenes blooper from Cars & Coffee unexpectedly goes viral, spiking followers but invites trolls."
+    }
+  ]
+}

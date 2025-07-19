@@ -1,0 +1,91 @@
+[
+  {
+    "timestamp": "2025-07-21T06:30:00-05:00",
+    "location": "Sunrise Fitness Gym, Lafayette, Louisiana",
+    "activity": "Gym session and cardio warm-up",
+    "emotionalState": "Focused and determined",
+    "thoughts": "Consistency is key to maintain physique for shoots",
+    "decisions": "Record short clip for Instagram Story workout highlight",
+    "needsFulfilled": [
+      "Physiological: Exercise",
+      "Esteem: Social media validation"
+    ],
+    "socialMediaContent": {
+      "postType": "story",
+      "promptImage": "Lexi doing a squat with gym backdrop",
+      "caption": "Leg day grind! 💪 #FitnessRoutine"
+    }
+  },
+  {
+    "timestamp": "2025-07-21T08:00:00-05:00",
+    "location": "Lexi's Home Studio",
+    "activity": "Check engagement metrics and refine content calendar",
+    "emotionalState": "Analytical and proactive",
+    "thoughts": "Need to slot in stories around upcoming events",
+    "decisions": "Schedule a teaser post for Brand Pitch Meeting tomorrow",
+    "needsFulfilled": [
+      "Esteem: Social media validation",
+      "Self-Actualization: Career growth"
+    ]
+  },
+  {
+    "timestamp": "2025-07-21T10:30:00-05:00",
+    "location": "Local Photo Studio",
+    "activity": "Lifestyle photoshoot for merchandise lookbook",
+    "emotionalState": "Creative and playful",
+    "thoughts": "Experiment with southern wardrobe themes",
+    "decisions": "Select 5 best shots for RevWear sample review",
+    "needsFulfilled": [
+      "Self-Actualization: Skill development",
+      "Esteem: Recognition in automotive community"
+    ]
+  },
+  {
+    "timestamp": "2025-07-21T13:00:00-05:00",
+    "location": "University of Louisiana, Marketing Class",
+    "activity": "Attend part-time marketing lecture",
+    "emotionalState": "Engaged and curious",
+    "thoughts": "Take notes on branding strategies for merchandise line",
+    "decisions": "Use class insights in RevWear pitch tomorrow",
+    "needsFulfilled": [
+      "Self-Actualization: Education",
+      "Esteem: Skill development"
+    ]
+  },
+  {
+    "timestamp": "2025-07-21T17:30:00-05:00",
+    "location": "Downtown Lafayette Car Meet",
+    "activity": "Social car gathering with Tyler Williams and friends",
+    "emotionalState": "Sociable and enthusiastic",
+    "thoughts": "Gauge interest in summer series among local fans",
+    "decisions": "Invite attendees to upcoming Gulf Shores shoot",
+    "needsFulfilled": [
+      "Social: Community belonging",
+      "Esteem: Social media validation"
+    ]
+  },
+  {
+    "timestamp": "2025-07-21T19:30:00-05:00",
+    "location": "Lexi's Apartment",
+    "activity": "Content editing and draft captions",
+    "emotionalState": "Productive and creative",
+    "thoughts": "Need compelling captions to boost engagement",
+    "decisions": "Finalize 2 feed posts for the week",
+    "needsFulfilled": [
+      "Self-Actualization: Career growth",
+      "Esteem: Social media validation"
+    ]
+  },
+  {
+    "timestamp": "2025-07-21T22:00:00-05:00",
+    "location": "Living Room, Lexi's Apartment",
+    "activity": "Downtime watching reality TV",
+    "emotionalState": "Relaxed and amused",
+    "thoughts": "Look for inspiration for next day’s social media content",
+    "decisions": "Set morning alarm for Brand Pitch prep",
+    "needsFulfilled": [
+      "Physiological: Downtime",
+      "Self-Actualization: Leisure and enjoyment"
+    ]
+  }
+]

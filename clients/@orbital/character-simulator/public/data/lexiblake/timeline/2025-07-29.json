@@ -1,0 +1,95 @@
+[
+  {
+    "timestamp": "2025-07-29T06:30:00-05:00",
+    "location": "Sunrise Fitness Gym, Lafayette, Louisiana",
+    "activity": "Gym session and core workout",
+    "emotionalState": "Energized and focused",
+    "thoughts": "Keep momentum going before advising session",
+    "decisions": "Capture a quick plank challenge clip for stories",
+    "needsFulfilled": [
+      "Physiological: Exercise",
+      "Esteem: Social media validation"
+    ],
+    "socialMediaContent": {
+      "postType": "story",
+      "promptImage": "Lexi holding a plank pose in the gym",
+      "caption": "Here’s to strong foundations! 💪 #CoreGoals"
+    }
+  },
+  {
+    "timestamp": "2025-07-29T08:00:00-05:00",
+    "location": "Lexi’s Home Studio",
+    "activity": "Check engagement metrics and update content calendar",
+    "emotionalState": "Analytical and proactive",
+    "thoughts": "Prepare feed teaser for tomorrow’s family feature",
+    "decisions": "Schedule teaser post for 7 PM",
+    "needsFulfilled": [
+      "Esteem: Social media validation"
+    ]
+  },
+  {
+    "timestamp": "2025-07-29T10:00:00-05:00",
+    "location": "University Advising Office, University of Louisiana",
+    "activity": "Advising session to register for fall semester courses",
+    "emotionalState": "Calm but slightly anxious",
+    "thoughts": "Balancing course load with content creation will be critical",
+    "decisions": "Register for two marketing electives and one media production class",
+    "needsFulfilled": [
+      "Self-Actualization: Education",
+      "Self-Actualization: Future planning"
+    ]
+  },
+  {
+    "timestamp": "2025-07-29T12:30:00-05:00",
+    "location": "Campus Café Patio",
+    "activity": "Lunch and reflection on academic plans",
+    "emotionalState": "Reflective and content",
+    "thoughts": "Excited for new classes and networking opportunities",
+    "decisions": "Take notes on faculty LinkedIn profiles for networking",
+    "needsFulfilled": [
+      "Physiological: Food",
+      "Self-Actualization: Future planning"
+    ]
+  },
+  {
+    "timestamp": "2025-07-29T14:00:00-05:00",
+    "location": "Lexi’s Home Studio",
+    "activity": "Edit advising session recap for YouTube vlog",
+    "emotionalState": "Creative and focused",
+    "thoughts": "Highlight study-life balance tips for followers",
+    "decisions": "Include B-roll of campus and study notes",
+    "needsFulfilled": [
+      "Self-Actualization: Skill development",
+      "Esteem: Social media validation"
+    ]
+  },
+  {
+    "timestamp": "2025-07-29T18:00:00-05:00",
+    "location": "Lexi’s Apartment Living Room",
+    "activity": "Family photo teaser prep and story draft",
+    "emotionalState": "Warm and connected",
+    "thoughts": "Followers love behind-the-scenes family moments",
+    "decisions": "Post teaser at 7 PM featuring parents",
+    "needsFulfilled": [
+      "Social: Family connection",
+      "Esteem: Social media validation"
+    ],
+    "socialMediaContent": {
+      "postType": "story",
+      "promptImage": "Lexi and her parents smiling on the porch",
+      "caption": "Family first ❤️ Stay tuned for tomorrow’s dinner post!"
+    }
+  },
+  {
+    "timestamp": "2025-07-29T21:00:00-05:00",
+    "location": "Bathroom, Lexi’s Apartment",
+    "activity": "Evening skincare routine and journaling",
+    "emotionalState": "Calm and reflective",
+    "thoughts": "Jot down tomorrow’s dinner highlights and goals",
+    "decisions": "Set reminder to pack camera gear for family dinner",
+    "needsFulfilled": [
+      "Physiological: Downtime",
+      "Self-Actualization: Personal authenticity"
+    ]
+  }
+]

@@ -1,0 +1,57 @@
+Based on this character profile, build a detailed timeline of events in the character's life from {{startDate}} to {{endDate}}, formatted as a JSON event object array. The timeline should capture:
+
+1. A realistic day-to-day life that balances:
+   - Character-specific activities related to their interests
+   - Basic human needs (sleeping, eating, personal care)
+   - Social interactions (family, friends, networking)
+   - Work responsibilities
+   - Mundane activities (household chores, errands, downtime)
+
+2. Each event should include:
+   - Timestamp (date and time range)
+   - Location
+   - Activity description
+   - Emotional state
+   - Thoughts/reflections
+   - Any decisions or plans made
+   - Which needs from their hierarchy are being fulfilled
+
+3. The timeline should reflect:
+   - Their personality traits
+   - Their goals and desires
+   - Their needs hierarchy (prioritizing high-priority needs)
+   - Realistic pacing (not every moment is exciting or productive)
+   - Natural flow between events (one event influencing the next)
+
+4. For social media content:
+   - Include a "socialMediaContent" field when relevant
+   - Not every event results in a post (based on their personality and priorities)
+   - Specify post type (feed post or story)
+   - Include prompt for image generation
+   - Include suggested caption text
+
+5. Format requirements:
+   - Create separate JSON files for each day named YYYY-MM-DD.json
+   - Each file should contain an array of event objects for that day
+   - Events should be chronologically ordered
+   - Include all fields mentioned above
+
+The character should experience a mix of:
+- Routine activities (regular meals, work, exercise)
+- Special events (social gatherings, important work tasks)
+- Unexpected occurrences (problems, spontaneous plans)
+- Quiet moments (reflection, relaxation, mundane tasks)
+- Emotional variations (excitement, frustration, contentment, boredom)
+
+Remember that even an influencer or celebrity spends time on ordinary activities like:
+- Preparing and eating meals
+- Showering and personal grooming
+- Cleaning their living space
+- Doing laundry
+- Grocery shopping
+- Watching TV or browsing social media
+- Dealing with minor inconveniences
+- Casual conversations
+- Moments of boredom or relaxation
+
+The timeline should feel authentic to a real person balancing their career, social life, and personal needs.

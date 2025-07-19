@@ -1,0 +1,16 @@
+[
+  {
+    "id": "default-thread",
+    "name": "default",
+    "messages": [
+      {
+        "id": "welcome-message",
+        "content": "Hello! I'm Lexi Blake. How can I help you today?",
+        "sender": "character",
+        "timestamp": "2025-07-19T12:00:00.000Z"
+      }
+    ],
+    "createdAt": "2025-07-19T12:00:00.000Z",
+    "updatedAt": "2025-07-19T12:00:00.000Z"
+  }
+]

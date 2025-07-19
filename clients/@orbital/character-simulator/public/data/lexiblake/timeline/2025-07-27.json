@@ -1,0 +1,96 @@
+[
+  {
+    "timestamp": "2025-07-27T06:30:00-05:00",
+    "location": "Sunrise Fitness Gym, Lafayette, Louisiana",
+    "activity": "Gym session and HIIT workout",
+    "emotionalState": "Focused and strong",
+    "thoughts": "Need to maintain energy for series events and tonight’s party",
+    "decisions": "Plan a morning workout snippet for Instagram Story",
+    "needsFulfilled": [
+      "Physiological: Exercise",
+      "Esteem: Social media validation"
+    ]
+  },
+  {
+    "timestamp": "2025-07-27T09:00:00-05:00",
+    "location": "Bayou Road, Lafayette, Louisiana",
+    "activity": "Ride along with Tyler Williams on Suzuki GSXR",
+    "emotionalState": "Adventurous and exhilarated",
+    "thoughts": "Wind in my hair reminds me why I adore the ride",
+    "decisions": "Film helmet-cam POV for Road-Trip Reel highlights",
+    "needsFulfilled": [
+      "Self-Actualization: Leisure and enjoyment",
+      "Social: Community belonging"
+    ],
+    "socialMediaContent": {
+      "postType": "story",
+      "promptImage": "Lexi as passenger on Tyler’s GSXR with bayou backdrop",
+      "caption": "Sunday ride therapy 🏍️💨 #MotorcycleLifestyle"
+    }
+  },
+  {
+    "timestamp": "2025-07-27T11:30:00-05:00",
+    "location": "The Southern Spoon Café, Lafayette, Louisiana",
+    "activity": "Brunch with Madison Broussard",
+    "emotionalState": "Cheerful and connected",
+    "thoughts": "Madison’s grounded perspective always helps",
+    "decisions": "Plan a mentorship Q&A live session",
+    "needsFulfilled": [
+      "Social: Friendship",
+      "Physiological: Food"
+    ]
+  },
+  {
+    "timestamp": "2025-07-27T14:00:00-05:00",
+    "location": "Lexi’s Home Studio, Lafayette, Louisiana",
+    "activity": "Edit weekend ride and brunch content",
+    "emotionalState": "Creative and reflective",
+    "thoughts": "Blend authenticity with my brand aesthetic",
+    "decisions": "Schedule two feed posts for midweek",
+    "needsFulfilled": [
+      "Self-Actualization: Skill development",
+      "Esteem: Social media validation"
+    ]
+  },
+  {
+    "timestamp": "2025-07-27T17:00:00-05:00",
+    "location": "Phone Call – Robert Blake",
+    "activity": "Discuss merchandise logistics with Dad",
+    "emotionalState": "Grateful and focused",
+    "thoughts": "His shop insights will streamline the merchandising timeline",
+    "decisions": "Incorporate his manufacturing schedule into the plan",
+    "needsFulfilled": [
+      "Social: Family connection",
+      "Safety: Financial security"
+    ]
+  },
+  {
+    "timestamp": "2025-07-27T20:00:00-05:00",
+    "location": "The Garage Lounge – ‘Summer Nights’ Party, Lafayette, Louisiana",
+    "activity": "Host nightclub event and network",
+    "emotionalState": "Energetic and sociable",
+    "thoughts": "Maximize cross-promotion and follower engagement",
+    "decisions": "Announce giveaway live during the event",
+    "needsFulfilled": [
+      "Social: Community belonging",
+      "Esteem: Social media validation"
+    ],
+    "socialMediaContent": {
+      "postType": "feed",
+      "promptImage": "Lexi hosting the ‘Summer Nights’ party under neon lights",
+      "caption": "Bringing the heat to #SummerNights! 🎉🔥 #CommunityNightlife"
+    }
+  },
+  {
+    "timestamp": "2025-07-28T02:00:00-05:00",
+    "location": "Lexi’s Apartment, Lafayette, Louisiana",
+    "activity": "Post-event debrief and journaling",
+    "emotionalState": "Reflective and tired",
+    "thoughts": "Capturing takeaways from tonight’s party for upcoming content",
+    "decisions": "Note ideas for August ‘Streetlight Sessions’",
+    "needsFulfilled": [
+      "Physiological: Sleep",
+      "Self-Actualization: Future planning"
+    ]
+  }
+]

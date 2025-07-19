@@ -1,0 +1,70 @@
+Based on this character profile, create a high-level plan of activities, events, and experiences for the character from {{startDate}} to {{endDate}}. This plan will serve as a framework for generating detailed timeline events.
+
+The plan should include:
+
+1. Major Events and Activities:
+   - Significant planned events (work commitments, social gatherings, trips)
+   - Recurring activities (work schedule, regular commitments, routines)
+   - Potential unexpected occurrences or disruptions
+   - Special occasions or opportunities that might arise
+
+2. Character Development:
+   - Emotional arcs or journeys the character might experience
+   - Progress toward or setbacks related to their goals
+   - Challenges they might face and how they respond
+   - Relationships that might develop, strengthen, or face tension
+
+3. Daily Patterns:
+   - General work/life balance
+   - How they typically spend weekdays vs. weekends
+   - Morning, afternoon, and evening patterns
+   - How their needs hierarchy influences their time allocation
+
+4. Social Interactions:
+   - Which relationships receive focus during this period
+   - Family interactions and obligations
+   - Friend gatherings and social events
+   - Professional networking or collaborations
+   - Potential new connections or relationships
+
+5. Romantic and Intimate Life:
+   - Current romantic status and developments (single, dating, in relationship)
+   - Potential romantic interests or encounters
+   - Development of existing romantic relationships
+   - Sexual interests, activities, or desires based on character's personality
+   - Dating experiences or opportunities
+   - Romantic conflicts, tensions, or resolutions
+   - How attraction patterns influence social interactions
+   - Balance between romantic life and other priorities
+
+6. Need Fulfillment Strategy:
+   - How the character balances their various needs
+   - Which needs might be prioritized or neglected during this period
+   - Potential conflicts between different needs
+   - Strategies for addressing high-priority needs
+
+7. Goal Advancement:
+   - Specific actions taken toward long-term goals
+   - Short-term objectives that might be accomplished
+   - Obstacles that might arise related to goals
+   - Adjustments to goals or strategies
+
+8. Content Creation and Social Media:
+   - General themes for social media content during this period
+   - Potential opportunities for creating engaging content
+   - Balance between authentic life and curated social media presence
+   - Strategic posting related to partnerships or growth objectives
+
+Output Format:
+Provide this plan as a structured JSON object with the following sections:
+- periodOverview: A general summary of the character's life during this period
+- majorEvents: An array of significant events with approximate dates
+- routines: Regular patterns and recurring activities
+- emotionalArcs: Emotional journeys or developments
+- socialFocus: Key relationships and social interactions
+- goalProgress: Advancement toward stated goals
+- contentStrategy: Approach to social media and content creation
+- romanticLife: Romantic relationships, attraction patterns, and intimate experiences
+- unexpectedElements: Potential surprises or disruptions
+
+This high-level plan should be realistic and aligned with the character's personality, needs, desires, and circumstances. It should provide enough structure to guide the generation of detailed timeline events while allowing flexibility for day-to-day variations and spontaneity.

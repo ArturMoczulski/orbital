@@ -1,0 +1,99 @@
+[
+  {
+    "timestamp": "2025-07-22T06:30:00-05:00",
+    "location": "Sunrise Fitness Gym, Lafayette, Louisiana",
+    "activity": "Gym session and protein smoothie",
+    "emotionalState": "Energized and focused",
+    "thoughts": "Need peak performance before the RevWear pitch",
+    "decisions": "Share a quick workout tip in today’s story",
+    "needsFulfilled": [
+      "Physiological: Exercise",
+      "Esteem: Social media validation"
+    ],
+    "socialMediaContent": {
+      "postType": "story",
+      "promptImage": "Lexi finishing a deadlift in gym",
+      "caption": "Pre-pitch power session! 🚀 #MorningMotivation"
+    }
+  },
+  {
+    "timestamp": "2025-07-22T08:00:00-05:00",
+    "location": "Lexi’s Home Office",
+    "activity": "Check engagement metrics and finalize pitch deck",
+    "emotionalState": "Nervous but determined",
+    "thoughts": "Ensure statistics highlight summer series success",
+    "decisions": "Print key slides for meeting",
+    "needsFulfilled": [
+      "Self-Actualization: Career growth"
+    ]
+  },
+  {
+    "timestamp": "2025-07-22T10:00:00-05:00",
+    "location": "Virtual – Brand Pitch Meeting with RevWear",
+    "activity": "Negotiate apparel sponsorship terms",
+    "emotionalState": "Confident with moments of anxiety",
+    "thoughts": "Aim to secure favorable royalty percentage",
+    "decisions": "Propose sample review timeline and pricing model",
+    "needsFulfilled": [
+      "Safety: Financial security",
+      "Esteem: Recognition in automotive community"
+    ]
+  },
+  {
+    "timestamp": "2025-07-22T12:30:00-05:00",
+    "location": "Local Bistro Patio",
+    "activity": "Lunch and debrief with Madison Broussard via call",
+    "emotionalState": "Relieved and reflective",
+    "thoughts": "Madison’s feedback will refine sample direction",
+    "decisions": "Adjust visual concept to include traditional southern motifs",
+    "needsFulfilled": [
+      "Social: Friendship",
+      "Physiological: Food"
+    ]
+  },
+  {
+    "timestamp": "2025-07-22T14:30:00-05:00",
+    "location": "Lexi’s Home Studio",
+    "activity": "Review RevWear sample designs and provide feedback",
+    "emotionalState": "Creative and critical",
+    "thoughts": "Balance functionality with Lexi’s adventurous style",
+    "decisions": "Approve color palette and request logo placement mockups",
+    "needsFulfilled": [
+      "Self-Actualization: Skill development"
+    ]
+  },
+  {
+    "timestamp": "2025-07-22T17:00:00-05:00",
+    "location": "On a call with photographer Amber",
+    "activity": "Schedule merchandise lookbook shoot",
+    "emotionalState": "Excited and collaborative",
+    "thoughts": "Need beach and garage backdrops",
+    "decisions": "Book Gulf Shores for next weekend shoot",
+    "needsFulfilled": [
+      "Social: Community belonging",
+      "Self-Actualization: Career growth"
+    ]
+  },
+  {
+    "timestamp": "2025-07-22T19:00:00-05:00",
+    "location": "Lexi’s Apartment",
+    "activity": "Preview story and feed drafts for tomorrow’s family dinner post",
+    "emotionalState": "Calm and prepared",
+    "thoughts": "Family content resonates well with followers",
+    "decisions": "Schedule story reminder for 7 PM tomorrow",
+    "needsFulfilled": [
+      "Esteem: Social media validation"
+    ]
+  },
+  {
+    "timestamp": "2025-07-22T21:30:00-05:00",
+    "location": "Living Room, Lexi’s Apartment",
+    "activity": "Wind-down with reality TV and light snacks",
+    "emotionalState": "Relaxed and content",
+    "thoughts": "Recharge before family dinner and service tomorrow",
+    "decisions": "Set alarm for 7 AM",
+    "needsFulfilled": [
+      "Physiological: Downtime"
+    ]
+  }
+]

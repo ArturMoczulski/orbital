@@ -1,0 +1,93 @@
+[
+  {
+    "timestamp": "2025-07-26T07:00:00-05:00",
+    "location": "Sunrise Fitness Gym, Lafayette, Louisiana",
+    "activity": "Morning gym session and stretching",
+    "emotionalState": "Disciplined and motivated",
+    "thoughts": "Consistency will keep momentum high after intense week",
+    "decisions": "Share workout highlight clip",
+    "needsFulfilled": [
+      "Physiological: Exercise",
+      "Esteem: Social media validation"
+    ],
+    "socialMediaContent": {
+      "postType": "story",
+      "promptImage": "Lexi finishing a set of push-ups in gym",
+      "caption": "Pushing through week three of #CoastalHorsepower 💪"
+    }
+  },
+  {
+    "timestamp": "2025-07-26T08:30:00-05:00",
+    "location": "Lexi’s Home Studio",
+    "activity": "Review metrics and plan day’s feed content",
+    "emotionalState": "Analytical and proactive",
+    "thoughts": "Engagement dipped; need fresh angles to maintain interest",
+    "decisions": "Draft behind-the-scenes carousel for next feed post",
+    "needsFulfilled": [
+      "Esteem: Social media validation"
+    ]
+  },
+  {
+    "timestamp": "2025-07-26T11:00:00-05:00",
+    "location": "Local Garage Workshop",
+    "activity": "Assist Jason Blake with minor maintenance on Suzuki GSXR",
+    "emotionalState": "Nostalgic and engaged",
+    "thoughts": "Hands-on time reminds me of childhood rides",
+    "decisions": "Capture tool-check reel for TikTok",
+    "needsFulfilled": [
+      "Daily Necessities: Vehicle maintenance",
+      "Self-Actualization: Skill development"
+    ],
+    "socialMediaContent": {
+      "postType": "feed",
+      "promptImage": "Lexi and Jason working on a motorcycle engine",
+      "caption": "Throwback to where it all began 🏍️🔧 #MechanicLife"
+    }
+  },
+  {
+    "timestamp": "2025-07-26T13:00:00-05:00",
+    "location": "The Southern Spoon Café",
+    "activity": "Lunch with Madison Broussard",
+    "emotionalState": "Cheerful and collaborative",
+    "thoughts": "Brainstorm interactive Q&A session for Instagram",
+    "decisions": "Schedule live Q&A for Thursday evening",
+    "needsFulfilled": [
+      "Social: Friendship",
+      "Physiological: Food"
+    ]
+  },
+  {
+    "timestamp": "2025-07-26T15:00:00-05:00",
+    "location": "Lexi’s Apartment",
+    "activity": "Edit motorcycle maintenance reel",
+    "emotionalState": "Focused and creative",
+    "thoughts": "Need concise captions to explain steps",
+    "decisions": "Include tips on basic upkeep",
+    "needsFulfilled": [
+      "Self-Actualization: Skill development",
+      "Esteem: Social media validation"
+    ]
+  },
+  {
+    "timestamp": "2025-07-26T18:00:00-05:00",
+    "location": "The Garage Lounge",
+    "activity": "Casual car meet with influencer friends (no formal event)",
+    "emotionalState": "Relaxed and sociable",
+    "thoughts": "Unplanned snaps often feel most authentic",
+    "decisions": "Tag attendees in story",
+    "needsFulfilled": [
+      "Social: Community belonging"
+    ]
+  },
+  {
+    "timestamp": "2025-07-26T21:30:00-05:00",
+    "location": "Living Room, Lexi’s Apartment",
+    "activity": "Downtime watching reality TV",
+    "emotionalState": "Relaxed and amused",
+    "thoughts": "Recharge for busy weekend ahead",
+    "decisions": "Set tomorrow’s alarm for early start",
+    "needsFulfilled": [
+      "Physiological: Downtime"
+    ]
+  }
+]

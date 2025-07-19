@@ -1,0 +1,77 @@
+[
+  {
+    "timestamp": "2025-07-23T06:30:00-05:00",
+    "location": "Sunrise Fitness Gym, Lafayette, Louisiana",
+    "activity": "Morning gym session and protein shake",
+    "emotionalState": "Focused and refreshed",
+    "thoughts": "Keep momentum going midweek",
+    "decisions": "Share a quick gym tip in story later",
+    "needsFulfilled": [
+      "Physiological: Exercise",
+      "Esteem: Social media validation"
+    ]
+  },
+  {
+    "timestamp": "2025-07-23T08:00:00-05:00",
+    "location": "Lexi’s Home Office",
+    "activity": "Check engagement metrics and prep for virtual call",
+    "emotionalState": "Analytical and proactive",
+    "thoughts": "Engagement steady; need to highlight family content tomorrow",
+    "decisions": "Draft teaser for family dinner post",
+    "needsFulfilled": [
+      "Esteem: Social media validation"
+    ]
+  },
+  {
+    "timestamp": "2025-07-23T11:00:00-05:00",
+    "location": "University of Louisiana – Marketing Class",
+    "activity": "Attend part-time marketing lecture",
+    "emotionalState": "Engaged and curious",
+    "thoughts": "Note tactics for long-term brand growth",
+    "decisions": "Incorporate class insights into content strategy",
+    "needsFulfilled": [
+      "Self-Actualization: Education",
+      "Esteem: Skill development"
+    ]
+  },
+  {
+    "timestamp": "2025-07-23T17:00:00-05:00",
+    "location": "Robert’s Auto Shop, Lafayette, Louisiana",
+    "activity": "Drop off Ford Raptor for oil change and family dinner",
+    "emotionalState": "Warm and connected",
+    "thoughts": "Quality time with family reminds me of my roots",
+    "decisions": "Capture a photo with dad for Instagram",
+    "needsFulfilled": [
+      "Social: Family connection",
+      "Daily Necessities: Vehicle maintenance"
+    ],
+    "socialMediaContent": {
+      "postType": "feed",
+      "promptImage": "Lexi and her father standing by the Raptor at the shop",
+      "caption": "Nothing beats quality time and car care with Dad 🛠️❤️ #FamilyFirst"
+    }
+  },
+  {
+    "timestamp": "2025-07-23T19:30:00-05:00",
+    "location": "Blake Family Kitchen",
+    "activity": "Weekly family dinner",
+    "emotionalState": "Content and grateful",
+    "thoughts": "Appreciate supportive family, recharges my spirit",
+    "decisions": "Plan next week’s content featuring family snaps",
+    "needsFulfilled": [
+      "Social: Family connection",
+      "Physiological: Food"
+    ]
+  },
+  {
+    "timestamp": "2025-07-23T21:30:00-05:00",
+    "location": "Living Room, Lexi’s Apartment",
+    "activity": "Wind-down with reality TV",
+    "emotionalState": "Relaxed and entertained",
+    "thoughts": "Need to rest for Houston trip tomorrow",
+    "decisions": "Pack wardrobe and camera gear",
+    "needsFulfilled": [
+      "Physiological: Downtime"
+    ]
+  }
+]

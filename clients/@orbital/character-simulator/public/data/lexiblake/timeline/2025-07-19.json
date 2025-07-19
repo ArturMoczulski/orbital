@@ -1,0 +1,103 @@
+[
+  {
+    "timestamp": "2025-07-19T07:00:00-05:00",
+    "location": "Sunrise Fitness Gym, Lafayette, Louisiana",
+    "activity": "Morning gym session and protein shake",
+    "emotionalState": "Motivated and refreshed",
+    "thoughts": "Need to maintain consistency even on weekends",
+    "decisions": "Share gym routine as a reel later",
+    "needsFulfilled": [
+      "Physiological: Exercise"
+    ]
+  },
+  {
+    "timestamp": "2025-07-19T08:15:00-05:00",
+    "location": "Lexi's Home Studio",
+    "activity": "Check social media metrics and plan weekend content",
+    "emotionalState": "Curious and proactive",
+    "thoughts": "Engagement dipped slightly overnight; adjust posting times",
+    "decisions": "Draft afternoon car show story sequence",
+    "needsFulfilled": [
+      "Esteem: Social media validation"
+    ]
+  },
+  {
+    "timestamp": "2025-07-19T10:00:00-05:00",
+    "location": "Downtown Lafayette Car Show",
+    "activity": "Attend local car show and capture footage",
+    "emotionalState": "Excited and sociable",
+    "thoughts": "Opportunity to network with car enthusiasts and potential sponsors",
+    "decisions": "Tag local vendors in Instagram stories",
+    "needsFulfilled": [
+      "Social: Community belonging",
+      "Self-Actualization: Career growth"
+    ]
+  },
+  {
+    "timestamp": "2025-07-19T12:30:00-05:00",
+    "location": "The Southern Spoon Café",
+    "activity": "Brunch with Amber Johnson",
+    "emotionalState": "Cheerful and chatty",
+    "thoughts": "Discuss creative ideas for upcoming shoots",
+    "decisions": "Schedule bikini shoot location scouting next week",
+    "needsFulfilled": [
+      "Social: Friendship",
+      "Physiological: Food"
+    ]
+  },
+  {
+    "timestamp": "2025-07-19T15:00:00-05:00",
+    "location": "Lexi's Apartment",
+    "activity": "Quick nap and skincare routine",
+    "emotionalState": "Relaxed but a bit tired",
+    "thoughts": "Must recharge before evening shift",
+    "decisions": "Set alarm for prep time",
+    "needsFulfilled": [
+      "Physiological: Downtime"
+    ]
+  },
+  {
+    "timestamp": "2025-07-19T19:00:00-05:00",
+    "location": "Lexi's Apartment",
+    "activity": "Get ready for VIP bartending shift – outfit and makeup",
+    "emotionalState": "Focused and confident",
+    "thoughts": "Presentation matters for networking",
+    "decisions": "Post a pre-shift selfie on Instagram story",
+    "needsFulfilled": [
+      "Esteem: Social media validation"
+    ],
+    "socialMediaContent": {
+      "postType": "story",
+      "promptImage": "Lexi in her VIP bartender outfit, styling hair in mirror",
+      "caption": "Ready to serve and network tonight! 🍸 #BehindTheBarGlam"
+    }
+  },
+  {
+    "timestamp": "2025-07-19T20:00:00-05:00",
+    "location": "The Garage Lounge, Lafayette, Louisiana",
+    "activity": "VIP bartending shift with BoostedBill visiting",
+    "emotionalState": "Energetic and alert",
+    "thoughts": "Engage with patrons and YouTuber for content opportunities",
+    "decisions": "Plan a short interview clip for TikTok",
+    "needsFulfilled": [
+      "Social: Community belonging",
+      "Esteem: Recognition in automotive community"
+    ],
+    "socialMediaContent": {
+      "postType": "feed",
+      "promptImage": "Lexi behind the bar, mixing a signature cocktail with car posters in background",
+      "caption": "Bartending vibes and horsepower discussions with @BoostedBill! 🍹🏎️"
+    }
+  },
+  {
+    "timestamp": "2025-07-20T02:30:00-05:00",
+    "location": "Lexi's Apartment",
+    "activity": "Post-shift debrief and plan next day",
+    "emotionalState": "Content but sleepy",
+    "thoughts": "Review clips and outline Cars & Coffee feature tomorrow",
+    "decisions": "Charge camera batteries overnight",
+    "needsFulfilled": [
+      "Physiological: Sleep"
+    ]
+  }
+]

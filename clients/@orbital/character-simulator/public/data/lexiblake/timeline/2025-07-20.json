@@ -1,0 +1,89 @@
+[
+  {
+    "timestamp": "2025-07-20T08:30:00-05:00",
+    "location": "Sunrise Fitness Gym, Lafayette, Louisiana",
+    "activity": "Morning gym session and stretching",
+    "emotionalState": "Focused and strong",
+    "thoughts": "Need energy for Cars & Coffee feature today",
+    "decisions": "Share workout highlights on Instagram Story",
+    "needsFulfilled": [
+      "Physiological: Exercise",
+      "Esteem: Social media validation"
+    ]
+  },
+  {
+    "timestamp": "2025-07-20T10:00:00-05:00",
+    "location": "Lafayette Cars & Coffee, Downtown Lafayette",
+    "activity": "Showcase Corvette for local news segment and collaborate on reel with car club",
+    "emotionalState": "Proud and energized",
+    "thoughts": "Excited to represent the automotive community; ensure authentic enthusiasm shines through",
+    "decisions": "Post a feed image of the Corvette with a shout-out to the club",
+    "needsFulfilled": [
+      "Social: Community belonging",
+      "Esteem: Recognition in automotive community"
+    ],
+    "socialMediaContent": {
+      "postType": "feed",
+      "promptImage": "Lexi standing beside her Corvette at the Cars & Coffee event, morning light",
+      "caption": "Morning horsepower with my C6 Z06 at #LafayetteCarsAndCoffee 🚗☕️ #CommunityCruise"
+    }
+  },
+  {
+    "timestamp": "2025-07-20T12:00:00-05:00",
+    "location": "Local Café Patio",
+    "activity": "Brunch and quick interview recording for local news",
+    "emotionalState": "Cheerful and conversational",
+    "thoughts": "Balance professionalism and personality for the segment",
+    "decisions": "Save interview clips for YouTube vlog",
+    "needsFulfilled": [
+      "Physiological: Food",
+      "Self-Actualization: Career growth"
+    ]
+  },
+  {
+    "timestamp": "2025-07-20T14:00:00-05:00",
+    "location": "Lexi's Home Studio",
+    "activity": "Edit reel and write caption drafts",
+    "emotionalState": "Creative and productive",
+    "thoughts": "Need compelling call-to-action to boost engagement",
+    "decisions": "Schedule reel for 5 PM posting",
+    "needsFulfilled": [
+      "Self-Actualization: Skill development",
+      "Esteem: Social media validation"
+    ]
+  },
+  {
+    "timestamp": "2025-07-20T17:00:00-05:00",
+    "location": "Lexi's Apartment",
+    "activity": "Light snack and hydration break",
+    "emotionalState": "Refreshed but contemplative",
+    "thoughts": "Consider how this feature advances merch line pitch",
+    "decisions": "Prepare highlights for RevWear meeting",
+    "needsFulfilled": [
+      "Physiological: Hydration",
+      "Safety: Financial security"
+    ]
+  },
+  {
+    "timestamp": "2025-07-20T18:00:00-05:00",
+    "location": "Lexi's Apartment",
+    "activity": "Review and approve reel, post at peak engagement time",
+    "emotionalState": "Anxious but excited",
+    "thoughts": "Hope the reel attracts new followers and engagement",
+    "decisions": "Monitor metrics closely for the next hour",
+    "needsFulfilled": [
+      "Esteem: Social media validation"
+    ]
+  },
+  {
+    "timestamp": "2025-07-20T20:00:00-05:00",
+    "location": "Living Room, Lexi's Apartment",
+    "activity": "Recharge with reality TV episode",
+    "emotionalState": "Relaxed and entertained",
+    "thoughts": "Enjoy this downtime before tomorrow’s pitch meeting",
+    "decisions": "Set reminder for pitch notes",
+    "needsFulfilled": [
+      "Physiological: Downtime"
+    ]
+  }
+]

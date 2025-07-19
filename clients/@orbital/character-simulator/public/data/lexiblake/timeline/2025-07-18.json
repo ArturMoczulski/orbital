@@ -1,0 +1,91 @@
+[
+  {
+    "timestamp": "2025-07-18T06:30:00-05:00",
+    "location": "Sunrise Fitness Gym, Lafayette, Louisiana",
+    "activity": "Gym session and protein smoothie",
+    "emotionalState": "Energized and determined",
+    "thoughts": "Excited to start the 'Coastal Horsepower' series and optimize workout performance",
+    "decisions": "Plan to share workout routine on Instagram story",
+    "needsFulfilled": [
+      "Physiological: Exercise",
+      "Self-Actualization: Leisure and enjoyment"
+    ]
+  },
+  {
+    "timestamp": "2025-07-18T08:15:00-05:00",
+    "location": "Lexi's Home Studio, Lafayette, Louisiana",
+    "activity": "Check overnight engagement metrics and update content calendar",
+    "emotionalState": "Focused and optimistic",
+    "thoughts": "Engagement from last post is strong; schedule teaser post for evening",
+    "decisions": "Draft story content for teaser",
+    "needsFulfilled": [
+      "Esteem: Social media validation",
+      "Self-Actualization: Career growth"
+    ]
+  },
+  {
+    "timestamp": "2025-07-18T09:30:00-05:00",
+    "location": "Gulf Shores Beach, Alabama",
+    "activity": "Summer Series Kick-off photoshoot with photographer Amber Johnson",
+    "emotionalState": "Exhilarated with bursts of fatigue",
+    "thoughts": "Assessing lighting and backdrops; considering creative angles for car and bikini shots",
+    "decisions": "Capture behind-the-scenes video for TikTok",
+    "needsFulfilled": [
+      "Self-Actualization: Leisure and enjoyment",
+      "Esteem: Recognition in automotive community"
+    ],
+    "socialMediaContent": {
+      "postType": "story",
+      "promptImage": "Lexi posing by a C6 Z06 convertible on the beach at golden hour",
+      "caption": "Day 1 of #CoastalHorsepower ☀️🏎️ Stay tuned for full reel later! @AmberShots"
+    }
+  },
+  {
+    "timestamp": "2025-07-18T17:30:00-05:00",
+    "location": "On the road, Gulf Shores → Lafayette",
+    "activity": "Drive back home and grab a light meal",
+    "emotionalState": "Content but hungry",
+    "thoughts": "Reviewing quick shots on phone; consider best clips for feed post",
+    "decisions": "Order grilled chicken salad and water",
+    "needsFulfilled": [
+      "Physiological: Food",
+      "Daily Necessities: Downtime"
+    ]
+  },
+  {
+    "timestamp": "2025-07-18T19:00:00-05:00",
+    "location": "Lexi's Apartment, Lafayette, Louisiana",
+    "activity": "TikTok live Q&A session",
+    "emotionalState": "Confident and sociable",
+    "thoughts": "Engaging followers with behind-the-scenes stories; planning a giveaway announcement",
+    "decisions": "Announce upcoming tire giveaway during 'Summer Nights' party",
+    "needsFulfilled": [
+      "Social: Community belonging",
+      "Esteem: Social media validation"
+    ]
+  },
+  {
+    "timestamp": "2025-07-18T21:00:00-05:00",
+    "location": "Living Room, Lexi's Apartment",
+    "activity": "Light dinner and reality TV wind-down",
+    "emotionalState": "Relaxed and entertained",
+    "thoughts": "Noting which shows inspire future content ideas",
+    "decisions": "Set reminder for screening edits",
+    "needsFulfilled": [
+      "Physiological: Downtime",
+      "Self-Actualization: Leisure and enjoyment"
+    ]
+  },
+  {
+    "timestamp": "2025-07-18T23:00:00-05:00",
+    "location": "Bathroom, Lexi's Apartment",
+    "activity": "Skincare routine",
+    "emotionalState": "Calm and reflective",
+    "thoughts": "Reviewing tomorrow's shoot schedule; set gear out",
+    "decisions": "Pack camera batteries and extra lenses",
+    "needsFulfilled": [
+      "Daily Necessities: Downtime",
+      "Safety: Health maintenance"
+    ]
+  }
+]
