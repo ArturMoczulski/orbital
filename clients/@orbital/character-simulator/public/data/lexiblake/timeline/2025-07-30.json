@@ -1,0 +1,94 @@
+[
+  {
+    "timestamp": "2025-07-30T06:30:00-05:00",
+    "location": "Sunrise Fitness Gym, Lafayette, Louisiana",
+    "activity": "Morning gym session and yoga stretch",
+    "emotionalState": "Calm and centered",
+    "thoughts": "Final day of sprint—need balanced start",
+    "decisions": "Share a quick breathing exercise on story",
+    "needsFulfilled": [
+      "Physiological: Exercise",
+      "Esteem: Social media validation"
+    ],
+    "socialMediaContent": {
+      "postType": "story",
+      "promptImage": "Lexi in yoga pose at the gym",
+      "caption": "Centering for the day ahead 🌅 #MindfulMorning"
+    }
+  },
+  {
+    "timestamp": "2025-07-30T08:00:00-05:00",
+    "location": "Lake Martin Boardwalk, Louisiana",
+    "activity": "Solo reflection & planning retreat—journaling and analytics review",
+    "emotionalState": "Reflective and inspired",
+    "thoughts": "Assess summer series performance and refine August strategy",
+    "decisions": "Outline content calendar and merch roadmap",
+    "needsFulfilled": [
+      "Self-Actualization: Future planning",
+      "Esteem: Social media validation"
+    ],
+    "socialMediaContent": {
+      "postType": "feed",
+      "promptImage": "Lexi seated at a boardwalk bench under morning light, journal open",
+      "caption": "Finding clarity by the water 💭✍️ #PlanningRetreat"
+    }
+  },
+  {
+    "timestamp": "2025-07-30T12:00:00-05:00",
+    "location": "Lake Martin Café",
+    "activity": "Light lunch and mental break",
+    "emotionalState": "Content and thoughtful",
+    "thoughts": "Nutrition fuels creativity—keep choices light",
+    "decisions": "Save café aesthetic shots for story",
+    "needsFulfilled": [
+      "Physiological: Food",
+      "Self-Actualization: Leisure and enjoyment"
+    ]
+  },
+  {
+    "timestamp": "2025-07-30T14:00:00-05:00",
+    "location": "Lake Martin Boardwalk",
+    "activity": "Walk & vision boarding session",
+    "emotionalState": "Hopeful and motivated",
+    "thoughts": "Visualizing next milestones—follower growth, merch launch",
+    "decisions": "Create vision board assets for Instagram post",
+    "needsFulfilled": [
+      "Self-Actualization: Personal authenticity",
+      "Esteem: Recognition in automotive community"
+    ]
+  },
+  {
+    "timestamp": "2025-07-30T17:00:00-05:00",
+    "location": "Drive home, Lake Martin → Lafayette",
+    "activity": "Road trip with favorite playlist",
+    "emotionalState": "Relaxed and reflective",
+    "thoughts": "Review retreat notes and pick top three action items",
+    "decisions": "Schedule planning follow-up meeting with Madison",
+    "needsFulfilled": [
+      "Daily Necessities: Downtime"
+    ]
+  },
+  {
+    "timestamp": "2025-07-30T19:00:00-05:00",
+    "location": "Lexi’s Apartment",
+    "activity": "Evening review—organize notes and set up calendar reminders",
+    "emotionalState": "Productive and satisfied",
+    "thoughts": "Retreat provided clarity—time to execute",
+    "decisions": "Set reminder for August content kickoff",
+    "needsFulfilled": [
+      "Self-Actualization: Future planning"
+    ]
+  },
+  {
+    "timestamp": "2025-07-30T21:00:00-05:00",
+    "location": "Bathroom, Lexi’s Apartment",
+    "activity": "Skincare routine and light reading",
+    "emotionalState": "Calm and ready for rest",
+    "thoughts": "Recharge for tomorrow’s semester start",
+    "decisions": "Unplug devices and journal tomorrow’s priorities",
+    "needsFulfilled": [
+      "Physiological: Downtime",
+      "Safety: Health maintenance"
+    ]
+  }
+]

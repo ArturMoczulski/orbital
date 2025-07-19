@@ -1,0 +1,89 @@
+[
+  {
+    "timestamp": "2025-07-28T06:30:00-05:00",
+    "location": "Sunrise Fitness Gym, Lafayette, Louisiana",
+    "activity": "Morning gym session and cardio",
+    "emotionalState": "Focused and renewed",
+    "thoughts": "Need grounding after weekend events",
+    "decisions": "Share morning routine in story",
+    "needsFulfilled": [
+      "Physiological: Exercise",
+      "Esteem: Social media validation"
+    ],
+    "socialMediaContent": {
+      "postType": "story",
+      "promptImage": "Lexi doing lunges in gym with focused expression",
+      "caption": "Grounding week start with some workout 💪 #MondayMotivation"
+    }
+  },
+  {
+    "timestamp": "2025-07-28T08:00:00-05:00",
+    "location": "Lexi's Home Studio",
+    "activity": "Check engagement metrics and content calendar review",
+    "emotionalState": "Analytical and attentive",
+    "thoughts": "Planning midweek posts around advising session",
+    "decisions": "Schedule family photo teaser for Wednesday",
+    "needsFulfilled": [
+      "Esteem: Social media validation"
+    ]
+  },
+  {
+    "timestamp": "2025-07-28T10:30:00-05:00",
+    "location": "Virtual Counseling Session",
+    "activity": "Phone check-in with mental health counselor",
+    "emotionalState": "Reflective and calm",
+    "thoughts": "Discuss handling stress during busy periods",
+    "decisions": "Incorporate mindfulness break into daily routine",
+    "needsFulfilled": [
+      "Safety: Health maintenance",
+      "Self-Actualization: Personal authenticity"
+    ]
+  },
+  {
+    "timestamp": "2025-07-28T14:00:00-05:00",
+    "location": "Home Office, Lexi's Apartment",
+    "activity": "Journal reflection and analytics review",
+    "emotionalState": "Thoughtful and motivated",
+    "thoughts": "Evaluate performance high phase insights",
+    "decisions": "List content ideas for August strategy",
+    "needsFulfilled": [
+      "Self-Actualization: Future planning",
+      "Esteem: Social media validation"
+    ]
+  },
+  {
+    "timestamp": "2025-07-28T17:00:00-05:00",
+    "location": "Local Grocery Store",
+    "activity": "Grocery shopping for healthy meals",
+    "emotionalState": "Practical and focused",
+    "thoughts": "Stock up on meal prep ingredients",
+    "decisions": "Buy fresh produce and protein",
+    "needsFulfilled": [
+      "Physiological: Food",
+      "Daily Necessities: Household maintenance"
+    ]
+  },
+  {
+    "timestamp": "2025-07-28T19:00:00-05:00",
+    "location": "Lexi's Apartment Kitchen",
+    "activity": "Prepare dinner and review video clips",
+    "emotionalState": "Content and productive",
+    "thoughts": "Combine highlights into upcoming reel",
+    "decisions": "Organize footage for editing tomorrow",
+    "needsFulfilled": [
+      "Physiological: Food"
+    ]
+  },
+  {
+    "timestamp": "2025-07-28T21:00:00-05:00",
+    "location": "Bathroom, Lexi's Apartment",
+    "activity": "Digital detox bath with music",
+    "emotionalState": "Calm and recharged",
+    "thoughts": "Unplugging helps maintain authenticity",
+    "decisions": "Set phone to do-not-disturb",
+    "needsFulfilled": [
+      "Self-Actualization: Personal authenticity",
+      "Physiological: Downtime"
+    ]
+  }
+]

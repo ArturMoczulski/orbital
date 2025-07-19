@@ -1,0 +1,80 @@
+[
+  {
+    "timestamp": "2025-07-24T07:00:00-05:00",
+    "location": "Lexi’s Apartment Kitchen",
+    "activity": "Protein smoothie and morning stretch",
+    "emotionalState": "Calm and ready",
+    "thoughts": "Fuel up before maintenance day",
+    "decisions": "Share recipe as a story later",
+    "needsFulfilled": [
+      "Physiological: Food"
+    ]
+  },
+  {
+    "timestamp": "2025-07-24T08:00:00-05:00",
+    "location": "Robert’s Auto Shop, Lafayette, Louisiana",
+    "activity": "Tuesday vehicle wash and detail",
+    "emotionalState": "Content and meticulous",
+    "thoughts": "Clean vehicles for better photo ops",
+    "decisions": "Capture before-and-after shots",
+    "needsFulfilled": [
+      "Daily Necessities: Vehicle maintenance"
+    ]
+  },
+  {
+    "timestamp": "2025-07-24T10:30:00-05:00",
+    "location": "Lexi’s Home Office",
+    "activity": "Digital file organization and email management",
+    "emotionalState": "Focused and productive",
+    "thoughts": "Clear inbox for upcoming brand communications",
+    "decisions": "Archive old drafts and reply to RevWear",
+    "needsFulfilled": [
+      "Daily Necessities: Digital maintenance"
+    ]
+  },
+  {
+    "timestamp": "2025-07-24T12:00:00-05:00",
+    "location": "Local Café",
+    "activity": "Lunch with Madison Broussard",
+    "emotionalState": "Cheerful and connected",
+    "thoughts": "Brainstorm social media engagement ideas",
+    "decisions": "Plan one interactive Q&A session",
+    "needsFulfilled": [
+      "Social: Friendship",
+      "Physiological: Food"
+    ]
+  },
+  {
+    "timestamp": "2025-07-24T14:00:00-05:00",
+    "location": "Lexi’s Home Studio",
+    "activity": "Check engagement metrics and adjust content calendar",
+    "emotionalState": "Analytical and attentive",
+    "thoughts": "Ensure timing aligns with follower activity",
+    "decisions": "Reschedule a feed post for evening",
+    "needsFulfilled": [
+      "Esteem: Social media validation"
+    ]
+  },
+  {
+    "timestamp": "2025-07-24T20:00:00-05:00",
+    "location": "Lexi’s Home Office",
+    "activity": "Online marketing module review",
+    "emotionalState": "Engaged and curious",
+    "thoughts": "Absorb branding tactics for merchandise line",
+    "decisions": "Take notes for sample review session",
+    "needsFulfilled": [
+      "Self-Actualization: Education"
+    ]
+  },
+  {
+    "timestamp": "2025-07-24T22:00:00-05:00",
+    "location": "Living Room, Lexi’s Apartment",
+    "activity": "Downtime watching reality TV",
+    "emotionalState": "Relaxed and entertained",
+    "thoughts": "Recharge before the Houston trip",
+    "decisions": "Set alarm early for packing",
+    "needsFulfilled": [
+      "Physiological: Downtime"
+    ]
+  }
+]

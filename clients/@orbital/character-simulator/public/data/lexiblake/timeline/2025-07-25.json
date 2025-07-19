@@ -1,0 +1,87 @@
+[
+  {
+    "timestamp": "2025-07-25T06:45:00-05:00",
+    "location": "Lexi’s Apartment, Lafayette, Louisiana",
+    "activity": "Morning stretch and green smoothie",
+    "emotionalState": "Calm and prepared",
+    "thoughts": "Big Houston trip today—need fuel and focus",
+    "decisions": "Pack camera gear and snacks for the road",
+    "needsFulfilled": [
+      "Physiological: Food"
+    ]
+  },
+  {
+    "timestamp": "2025-07-25T08:00:00-05:00",
+    "location": "On the road, Lafayette → Houston",
+    "activity": "Drive with Tyler Williams",
+    "emotionalState": "Excited and anticipatory",
+    "thoughts": "Looking forward to collaborating with Brittany at Texas Motorplex",
+    "decisions": "Record travel montage for Road-Trip Reels",
+    "needsFulfilled": [
+      "Self-Actualization: Leisure and enjoyment"
+    ]
+  },
+  {
+    "timestamp": "2025-07-25T11:30:00-05:00",
+    "location": "Texas Motorplex, Houston, Texas",
+    "activity": "Houston Road-Trip Collaboration shoot",
+    "emotionalState": "Energized and sociable",
+    "thoughts": "Balancing rivalry and camaraderie with Brittany Carter",
+    "decisions": "Capture dynamic shots of both cars and group BTS footage",
+    "needsFulfilled": [
+      "Self-Actualization: Skill development",
+      "Social: Community belonging"
+    ],
+    "socialMediaContent": {
+      "postType": "feed",
+      "promptImage": "Lexi and Brittany Carter posing by Ford Raptor and Corvette on racetrack",
+      "caption": "Rivalry on track meets friendship off-track 🚗💨 @BrittanyCarter #RoadTripReels"
+    }
+  },
+  {
+    "timestamp": "2025-07-25T15:00:00-05:00",
+    "location": "Houston Diner",
+    "activity": "Late lunch with Tyler and Brittany",
+    "emotionalState": "Relaxed and friendly",
+    "thoughts": "Discuss cross-promotion ideas and future collabs",
+    "decisions": "Plan Instagram Live session next week",
+    "needsFulfilled": [
+      "Social: Friendship",
+      "Physiological: Food"
+    ]
+  },
+  {
+    "timestamp": "2025-07-25T17:30:00-05:00",
+    "location": "On the road, Houston → Lafayette",
+    "activity": "Drive home and quick hydration break",
+    "emotionalState": "Satisfied and tired",
+    "thoughts": "Review footage and select best clips",
+    "decisions": "Unload clips for editing tonight",
+    "needsFulfilled": [
+      "Physiological: Hydration"
+    ]
+  },
+  {
+    "timestamp": "2025-07-25T20:00:00-05:00",
+    "location": "Lexi’s Home Studio",
+    "activity": "Edit road-trip montage and schedule for TikTok",
+    "emotionalState": "Creative and focused",
+    "thoughts": "Montage needs pacing to hold attention",
+    "decisions": "Add upbeat soundtrack and text overlays",
+    "needsFulfilled": [
+      "Self-Actualization: Skill development",
+      "Esteem: Social media validation"
+    ]
+  },
+  {
+    "timestamp": "2025-07-25T22:00:00-05:00",
+    "location": "Living Room, Lexi’s Apartment",
+    "activity": "Quiet downtime with reality TV",
+    "emotionalState": "Relaxed and calm",
+    "thoughts": "Recharge before Sunday brunch routine",
+    "decisions": "Set alarm for 8 AM tomorrow",
+    "needsFulfilled": [
+      "Physiological: Downtime"
+    ]
+  }
+]

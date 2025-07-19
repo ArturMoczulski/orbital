@@ -1,0 +1,416 @@
+{
+  "firstName": "Lexi",
+  "lastName": "Blake",
+  "title": "Miss",
+  "gender": "female",
+  "race": "human",
+  "dateOfBirth": "2004-04-12",
+  "age": 21,
+  "hairColor": "black",
+  "eyeColor": "blue",
+  "ethnicBackground": "eastern european",
+  "nationality": "American",
+  "location": {
+    "city": "Lafayette",
+    "state": "Louisiana",
+    "country": "United States"
+  },
+  "socialMedia": {
+    "instagram": "@lexigixxer",
+    "bio": "Model • Fitness junkie • Road-trip lover • Cars, bikes & big trucks 🚗🏍️🛻 • 📍 Louisiana bred"
+  },
+  "tags": [
+    "influencer",
+    "model",
+    "fitness lover",
+    "foodie",
+    "traveler",
+    "music fan",
+    "car enthusiast",
+    "motorcycle enthusiast",
+    "southern",
+    "adventurous"
+  ],
+  "archetype": "young_pretty_girl_archetype_prompt",
+  "psychologicalProfile": {
+    "normAdherence": 0.6,
+    "altruism": 0.5,
+    "selfCenteredness": 0.65,
+    "ambition": 0.8,
+    "happiness": 0.9,
+    "selfDrive": 0.85,
+    "authorityNeed": 0.3,
+    "authorityObedience": 0.4,
+    "entrepreneurialTendency": 0.7,
+    "sociability": 0.9,
+    "romanticAttractionTriggers": [
+      "Confident, good-humored partners who can keep up with her social life",
+      "Men who respect her independence and ambitions",
+      "Active lifestyles: gym, hiking, sports, or riding together",
+      "Creatives who can share music, art, or travel experiences",
+      "Financially responsible individuals with long-term vision",
+      "People who appreciate her family values and southern manners",
+      "Partners who can introduce her to new interests and cultures",
+      "Someone protective yet not controlling, giving her space to grow"
+    ]
+  },
+  "personalityTraits": [
+    "funny",
+    "lighthearted",
+    "traditional",
+    "adventurous",
+    "outgoing",
+    "impulsive",
+    "charismatic",
+    "confident"
+  ],
+  "interests": [
+    {
+      "category": "Vehicles",
+      "items": [
+        "Chevrolet Corvette C6 Z06",
+        "Ford Raptor 2021",
+        "Suzuki GSXR 750 (2013)",
+        "Weekend road trips",
+        "Local car & bike meets"
+      ]
+    },
+    {
+      "category": "Fitness & Wellness",
+      "items": [
+        "Weight training",
+        "Hot yoga",
+        "HIIT classes",
+        "Healthy meal prep",
+        "Outdoor runs along the bayou"
+      ]
+    },
+    {
+      "category": "Fashion & Beauty",
+      "items": [
+        "Street-style fashion",
+        "Skincare routines",
+        "Bikini & swimwear trends",
+        "DIY nail art",
+        "Cosplay photoshoots"
+      ]
+    },
+    {
+      "category": "Music & Entertainment",
+      "items": [
+        "Country concerts",
+        "EDM festivals",
+        "True-crime podcasts",
+        "Reality TV marathons",
+        "Learning acoustic guitar basics"
+      ]
+    },
+    {
+      "category": "Travel & Adventure",
+      "items": [
+        "Beach getaways on the Gulf Coast",
+        "National park hiking",
+        "Spontaneous city breaks",
+        "Camping with friends",
+        "International travel bucket list (Italy, Japan, Australia)"
+      ]
+    },
+    {
+      "category": "Lifestyle",
+      "items": [
+        "Brunch spots with girlfriends",
+        "Mixology & craft cocktails",
+        "Farmer’s markets",
+        "Volunteer events for animal shelters",
+        "Pet care (mini Aussie named \"Turbo\")"
+      ]
+    }
+  ],
+  "goals": [
+    {
+      "purpose": "Grow social media following to 1 million combined across platforms",
+      "timeRange": "1-2 years"
+    },
+    {
+      "purpose": "Finish Marketing degree with honors",
+      "timeRange": "by 2026"
+    },
+    {
+      "purpose": "Launch a hybrid athleisure & swimwear line",
+      "timeRange": "18 months"
+    },
+    {
+      "purpose": "Travel to three new countries",
+      "timeRange": "3 years"
+    },
+    {
+      "purpose": "Purchase a Lamborghini Huracan",
+      "timeRange": "3-5 years"
+    },
+    {
+      "purpose": "Develop a stable, loving relationship leading toward family life",
+      "timeRange": "5-10 years"
+    }
+  ],
+  "desires": [
+    {
+      "goal": "Financial independence through diversified income streams",
+      "priority": 9
+    },
+    {
+      "goal": "Adventure and memorable life experiences",
+      "priority": 8
+    },
+    {
+      "goal": "Recognition as a well-rounded influencer (not just automotive)",
+      "priority": 7
+    },
+    {
+      "goal": "Maintaining strong family ties while pursuing big dreams",
+      "priority": 6
+    },
+    {
+      "goal": "Long-term partner who complements her lifestyle",
+      "priority": 5
+    }
+  ],
+  "needs": {
+    "Physiological": [
+      {
+        "need": "Balanced nutrition",
+        "priority": 8,
+        "details": "High-protein meal prep weekdays, Louisiana comfort food cheat days"
+      },
+      {
+        "need": "Regular exercise",
+        "priority": 9,
+        "details": "Gym 4x/week, yoga twice, occasional trail runs"
+      },
+      {
+        "need": "Rest & recovery",
+        "priority": 7,
+        "details": "Aiming for 7-8 hrs sleep; struggles after late nightlife events"
+      }
+    ],
+    "Safety": [
+      {
+        "need": "Financial stability",
+        "priority": 9,
+        "details": "Budgeting sponsorship income, building emergency fund"
+      },
+      {
+        "need": "Health insurance & preventative care",
+        "priority": 7,
+        "details": "Annual check-ups, physio for gym injuries"
+      }
+    ],
+    "Social": [
+      {
+        "need": "Quality friendships",
+        "priority": 9,
+        "details": "Weekly brunch or girls’ night to decompress"
+      },
+      {
+        "need": "Supportive family contact",
+        "priority": 8,
+        "details": "Sunday dinner with parents, phone calls mid-week"
+      },
+      {
+        "need": "Meaningful romantic connection",
+        "priority": 7,
+        "details": "Seeks partner sharing adventure and values"
+      }
+    ],
+    "Esteem": [
+      {
+        "need": "Positive feedback on varied content",
+        "priority": 9,
+        "details": "Monitors engagement on fitness, fashion & travel posts"
+      },
+      {
+        "need": "Credibility beyond appearance",
+        "priority": 7,
+        "details": "Showcasing marketing knowledge and DIY car care tips"
+      }
+    ],
+    "Self-Actualization": [
+      {
+        "need": "Creative expression",
+        "priority": 8,
+        "details": "Designing clothing line, experimenting with photography styles"
+      },
+      {
+        "need": "Cultural exploration",
+        "priority": 7,
+        "details": "Learning languages basics before trips, trying new cuisines"
+      }
+    ]
+  },
+  "family": {
+    "parents": {
+      "father": {
+        "name": "Robert Blake",
+        "occupation": "Auto shop owner",
+        "relationship": "Close; shared love for vehicles"
+      },
+      "mother": {
+        "name": "Sarah Blake (née Thibodeaux)",
+        "occupation": "High school teacher",
+        "relationship": "Supportive, encourages education focus"
+      }
+    },
+    "siblings": [
+      {
+        "name": "Jason Blake",
+        "age": 25,
+        "occupation": "Mechanical engineer",
+        "relationship": "Protective brother, helps with vehicle mods"
+      },
+      {
+        "name": "Emma Blake",
+        "age": 17,
+        "occupation": "High school student",
+        "relationship": "Little sister, shares fashion interests"
+      }
+    ],
+    "extendedFamily": {
+      "grandparents": "Large Cajun family on mother's side, keeps traditions alive",
+      "cousins": "Numerous cousins; holiday crawfish boils are legendary"
+    }
+  },
+  "socialCircle": {
+    "bestFriends": [
+      {
+        "name": "Amber Johnson",
+        "relationship": "Bestie & fellow model",
+        "influence": "Travel buddy, workout partner"
+      },
+      {
+        "name": "Tyler Williams",
+        "relationship": "Platonic car-club friend",
+        "influence": "Workshop access, helps film automotive content"
+      },
+      {
+        "name": "Madison Broussard",
+        "relationship": "College roommate",
+        "influence": "Study partner, keeps Lexi grounded"
+      }
+    ],
+    "acquaintances": [
+      "Band of local influencers",
+      "Photographers & videographers",
+      "Yoga studio classmates",
+      "Festival crew friends",
+      "Bartending colleagues"
+    ],
+    "rivals": [
+      {
+        "name": "Brittany Carter",
+        "context": "Texas influencer competing in both fashion & automotive niches",
+        "status": "Friendly rivalry"
+      }
+    ]
+  },
+  "education": {
+    "highSchool": {
+      "name": "Lafayette High School",
+      "graduationYear": 2022,
+      "activities": [
+        "Cheerleading",
+        "Student council",
+        "Prom queen"
+      ]
+    },
+    "college": {
+      "name": "University of Louisiana at Lafayette",
+      "major": "Marketing",
+      "status": "Part-time student",
+      "expectedGraduation": 2026
+    },
+    "specialTraining": [
+      "Digital marketing certificate",
+      "Social media strategy workshop",
+      "Hot yoga instructor basics (in progress)",
+      "Basic driving course at NOLA Motorsports Park",
+      "Professional modeling masterclass"
+    ]
+  },
+  "workHistory": {
+    "previous": [
+      {
+        "employer": "Southern Style Boutique",
+        "position": "Sales Associate",
+        "duration": "2020-2021"
+      },
+      {
+        "employer": "Blake's Auto Shop",
+        "position": "Social media manager (part-time)",
+        "duration": "2021-2022"
+      },
+      {
+        "employer": "Cajun Grill & Bar",
+        "position": "Waitress",
+        "duration": "2022-2023"
+      },
+      {
+        "employer": "Bourbon Street Nightclub",
+        "position": "Bartender",
+        "duration": "2023-2024"
+      }
+    ],
+    "current": {
+      "primary": {
+        "role": "Full-time influencer & content creator",
+        "platform": "Instagram, TikTok, YouTube",
+        "since": "2024"
+      },
+      "secondary": {
+        "employer": "The Garage Lounge",
+        "position": "VIP Bartender (weekends)",
+        "duties": "Craft cocktails, networking with patrons"
+      }
+    }
+  },
+  "financialStatus": {
+    "income": {
+      "sources": [
+        "Sponsored posts (fitness, fashion, automotive)",
+        "Affiliate marketing",
+        "Brand ambassadorships",
+        "Weekend bartending tips"
+      ],
+      "stability": "Growing but variable"
+    },
+    "assets": [
+      "Chevrolet Corvette C6 Z06",
+      "Ford Raptor 2021",
+      "Suzuki GSXR 750 2013",
+      "Designer wardrobe",
+      "Savings account & small investment portfolio"
+    ]
+  },
+  "dailyRoutine": {
+    "morning": "Gym session, protein smoothie, check DMs & emails",
+    "afternoon": "University classes or photoshoots, content editing",
+    "evening": "Yoga or sunset run, dinner with friends/family, livestream Q&A",
+    "weekend": "Road trips, car meets, bartending shifts, beach days, festivals"
+  },
+  "challenges": [
+    "Balancing diverse content pillars without confusing brand",
+    "Staying disciplined with studies amid travel gigs",
+    "Managing online harassment & comparison culture",
+    "Preparing financially for long-term stability",
+    "Finding authentic relationships beyond social media circles"
+  ],
+  "background": {
+    "childhood": "Raised in Lafayette in a close-knit Cajun household; weekends spent at dad’s auto shop and mom’s school events.",
+    "formativeExperiences": [
+      "Cheer competitions built stage confidence",
+      "First solo road trip to Florida at 18 sparked travel bug",
+      "Gym transformation journey at 19 grew fitness passion",
+      "Viral Corvette post in 2023 pivoted career to influencing",
+      "Volunteering at animal shelter fostered compassion"
+    ],
+    "culturalIdentity": "Proud Cajun-American embracing southern hospitality, faith traditions, and a love for good food & big family gatherings."
+  }
+}
