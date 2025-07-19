@@ -218,6 +218,216 @@ src/
   orchestrators/   # Workflow orchestrators
 ```
 
+## LoRA Training with ComfyUI
+
+This project supports training LoRA models directly through ComfyUI using the `trainModel` orchestrator.
+
+### Prerequisites
+
+Before training LoRA models with ComfyUI, you need to install the required custom nodes:
+
+```bash
+# Navigate to your ComfyUI directory
+cd /path/to/your/ComfyUI
+
+# Install Lora Training in ComfyUI
+git clone https://github.com/FizzleDorf/Lora-Training-in-Comfy custom_nodes/Lora-Training-in-Comfy
+
+# Install dependencies
+pip install -r custom_nodes/Lora-Training-in-Comfy/requirements.txt
+
+# Install accelerate module (required for training)
+pip install accelerate
+
+# Restart ComfyUI after installing the custom nodes
+```
+
+> **Note**: If you see an error about 'accelerate.commands.launch' module not found during training, install the accelerate module with: `pip install accelerate`. This error may prevent proper training, so it's strongly recommended to install the module.
+
+### Dataset Requirements for LoRA Training
+
+For successful LoRA training, your dataset directory should:
+
+1. Contain image files (JPG, PNG, WEBP)
+2. Include caption files (TXT) with the same base name as the images
+3. Be properly structured according to the LoRA training node requirements
+
+Example of a properly structured dataset:
+
+```
+dataset_directory/
+  ├── image1.jpg
+  ├── image1.txt  # Caption file for image1.jpg
+  ├── image2.jpg
+  ├── image2.txt  # Caption file for image2.jpg
+  └── ...
+```
+
+The caption files should contain text descriptions of the images, which will be used during training to associate the images with text prompts.
+
+### The trainModel Orchestrator
+
+The `trainModel` orchestrator is designed to handle the training process for LoRA models. It:
+
+1. Verifies that the dataset path exists and contains images
+2. Checks that the required custom nodes are installed
+3. Submits the training workflow to ComfyUI
+4. Monitors the training progress with a progress bar
+5. Attempts to locate the trained model file after completion
+6. Copies the model file to the specified output directory
+
+**Known Issues and Fixes:**
+
+- **Path Resolution**: The orchestrator now correctly handles paths to avoid nested directory structures
+- **Node Configuration**: Additional parameters have been added to the LoRA training node for better compatibility
+- **Placeholder Detection**: The orchestrator now checks file sizes to distinguish between actual model files and placeholders
+- **Dataset Validation**: The orchestrator verifies that the dataset directory contains images before starting training
+
+### Training a Face LoRA
+
+To train a face LoRA model:
+
+```bash
+# Using the test script
+node scripts/test-train-face-lora.js data/source/instagram.com/username/face
+
+# Using the workflow command
+yarn workflow trainModel trainFaceLora --options='{"datasetPath":"data/source/instagram.com/username/face","output":"models/loras/username_lora","networkDim":32,"trainingSteps":100}'
+```
+
+### Training Options
+
+The `trainFaceLora` workflow supports the following options:
+
+- `datasetPath`: Path to the directory containing the training dataset (required)
+- `output`: Output directory for the trained model (default: "models/loras")
+- `networkDim`: Dimension of the LoRA network (4-128, default: 64)
+- `trainingSteps`: Number of training steps (default: 1000)
+- `batchSize`: Batch size for training (default: 1)
+- `saveEveryNSteps`: Save checkpoint every N steps (default: 100)
+- `clipSkip`: Number of CLIP layers to skip (default: 2)
+- `learningRate`: Learning rate for training (default: 0.0001)
+
+### Mac-Specific Optimizations
+
+For optimal performance on Mac with MPS:
+
+1. Launch ComfyUI with these flags and environment variables:
+
+   ```bash
+   PYTORCH_ENABLE_MPS_FALLBACK=1 python main.py --listen 127.0.0.1
+   ```
+
+   The `PYTORCH_ENABLE_MPS_FALLBACK=1` environment variable allows operations that exceed MPS memory limits to run on the CPU instead, which helps prevent crashes with large models or complex workflows.
+
+2. Avoid problematic image resolutions that can cause memory errors:
+   - 1024x1024
+   - 2048x512
+   - 512x2048
+   - 1024x512
+   - 512x1024
+
+   These resolutions can trigger the error: `failed assertion [MPSTemporaryNDArray initWithDevice:descriptor:] Error: total bytes of NDArray > 2**32`
+
+   This error occurs due to a 32-bit integer limitation (2^31 = 2,147,483,648) in the Metal Performance Shaders (MPS) implementation. When processing images with these dimensions, internal tensor operations can create arrays with dimensions that exceed this 32-bit limit. This is a software limitation, not an actual memory limitation - even on high-end Apple Silicon chips with plenty of RAM, the same error occurs.
+
+   Use slightly different dimensions (e.g., 1023x1023 instead of 1024x1024) to avoid this issue. This small change keeps the tensor dimensions just under the limit that would trigger the error.
+
+3. Use these recommended settings:
+   - `networkDim`: 32-64 (lower is faster)
+   - `batchSize`: 1
+   - `trainingSteps`: 500-1000 for initial testing
+
+### Troubleshooting
+
+If you encounter issues with LoRA training:
+
+1. **Model file not found**: The trained model file might be saved in one of these locations:
+   - The specified output directory (e.g., `models/loras/test-lora`)
+   - ComfyUI's models directory: `/path/to/ComfyUI/models/loras`
+   - Custom node directories: `/path/to/ComfyUI/custom_nodes/Lora-Training-in-Comfy/output`
+
+2. **Accelerate module error**: If you see an error about 'accelerate.commands.launch' module not found:
+
+   ```
+   Error while finding module specification for 'accelerate.commands.launch' (ModuleNotFoundError: No module named 'accelerate')
+   ```
+
+   This error will likely prevent proper training. Install the accelerate module:
+
+   ```bash
+   pip install accelerate
+   ```
+
+3. **Training appears to complete but no model file is generated**: This could be due to several issues:
+   - **Missing caption files**: Ensure your dataset directory contains .txt caption files for each image
+   - **Path resolution issues**: Use simple paths for the output directory (e.g., "test-lora" instead of "models/loras/test-lora")
+   - **Node configuration**: The LoRA training node might need additional parameters. Try using the advanced version of the node
+   - **ComfyUI configuration**: Ensure ComfyUI is properly configured for your system (e.g., MPS for Mac)
+
+4. **Placeholder files instead of actual models**: The orchestrator now checks file sizes to distinguish between actual model files and placeholders. If you only see small placeholder files (< 1KB), the training process likely failed silently.
+
+5. **Debugging the training process**: Run the check-comfyui-nodes.js script to verify that the LoRA training node is properly installed:
+
+   ```bash
+   node tools/@orbital/stable-diffusion/scripts/check-comfyui-nodes.js
+   ```
+
+   This will list all available nodes, including the LoRA training nodes.
+
+6. **Environment variables for Mac**: Make sure to set these environment variables before launching ComfyUI:
+   ```bash
+   export PYTORCH_ENABLE_MPS_FALLBACK=1
+   ```
+
+## ComfyUI Custom Nodes on macOS with Apple Silicon
+
+If you're using ComfyUI on macOS with Apple Silicon (M1/M2/M3), you may encounter issues with custom nodes installation and compatibility. We've created resources to help troubleshoot and fix these issues.
+
+### Common Issues
+
+- Version conflicts between packages (huggingface_hub, diffusers, numpy)
+- Missing dependencies
+- Incompatible packages with Apple Silicon
+- Security policy restrictions
+
+### Automated Fix Script
+
+We've created a script that automates the process of fixing ComfyUI custom nodes issues on macOS with Apple Silicon:
+
+```bash
+# Navigate to your ComfyUI directory
+cd /path/to/your/ComfyUI
+
+# Make the script executable
+chmod +x /path/to/orbital/tools/@orbital/stable-diffusion/scripts/fix-comfyui-nodes-macos.sh
+
+# Run the script
+/path/to/orbital/tools/@orbital/stable-diffusion/scripts/fix-comfyui-nodes-macos.sh
+```
+
+The script performs the following actions:
+
+- Upgrades huggingface_hub to version 0.33.4
+- Upgrades diffusers to version 0.34.0
+- Downgrades NumPy to version 1.26.4 for compatibility
+- Reinstalls torch for Apple Silicon
+- Installs dghs-imgutils for comfyui-logicutils
+- Fixes comfyui-mvadapter requirements
+- Manually installs comfyui_controlnet_aux
+
+### Running ComfyUI Securely
+
+To avoid security policy issues, always run ComfyUI with the `--listen 127.0.0.1` parameter:
+
+```bash
+python main.py --listen 127.0.0.1
+```
+
+### Detailed Documentation
+
+For more detailed information about troubleshooting ComfyUI custom nodes on macOS with Apple Silicon, see the [ComfyUI macOS Troubleshooting Guide](docs/comfyui-macos-troubleshooting.md).
+
 ## LoRA Training (Python)
 
 After preparing your dataset, you can train a LoRA using kohya-ss:

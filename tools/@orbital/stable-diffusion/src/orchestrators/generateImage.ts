@@ -514,3 +514,121 @@ async function generateImageImpl<T>(
 
 // Export the function with the same name as the file for dynamic imports
 export const generateImage = generateImageImpl;
+
+/**
+ * Uploads an image to ComfyUI and then generates a new image using the uploaded image
+ * This is useful when ComfyUI doesn't have direct filesystem access to the input image
+ *
+ * @param imagePath Path to the local image file to upload
+ * @param options Options for the workflow
+ * @param createWorkflow Function to create the workflow
+ * @param outputNodeId Optional ID of the SaveImage node
+ * @param workflowName Optional name for the workflow
+ * @returns Path to the generated image or null if generation failed
+ */
+export async function generateFromImage<T>(
+  imagePath: string,
+  options: T & {
+    output?: string;
+    seed?: number;
+  },
+  createWorkflow: (
+    options: T,
+    models: {
+      checkpoints: string[];
+      vaes: string[];
+    }
+  ) => { prompt: Record<string, any> },
+  outputNodeId: string = "",
+  workflowName: string = "generated"
+): Promise<string | null> {
+  try {
+    debug("Starting image upload and generation process");
+    debug("Input image path:", imagePath);
+
+    // Check if the input file exists
+    if (!fs.existsSync(imagePath)) {
+      throw new Error(`Input image not found at ${imagePath}`);
+    }
+
+    // Generate a random ID for the uploaded file to prevent name collisions
+    const randomId = Math.random().toString(36).substring(2, 15);
+    const fileExt = path.extname(imagePath);
+    const fileName = `uploaded_${randomId}${fileExt}`;
+
+    debug(`Reading file from ${imagePath}`);
+    const fileBuffer = fs.readFileSync(imagePath);
+
+    // Create form data for the upload
+    const formData = new FormData();
+    formData.append("image", new Blob([fileBuffer]), fileName);
+    formData.append("overwrite", "true");
+
+    debug(`Uploading file to ComfyUI as ${fileName}`);
+
+    // Upload the file to ComfyUI
+    const uploadResponse = await axios.post(
+      `${comfyUIUrl}/upload/image`,
+      formData,
+      {
+        headers: {
+          // FormData automatically sets the correct Content-Type header with boundary
+          // No need to manually set it as it can cause issues with multipart uploads
+        },
+      }
+    );
+
+    debug("Upload response:", uploadResponse.data);
+
+    // Check if the upload was successful
+    if (!uploadResponse.data || uploadResponse.status !== 200) {
+      throw new Error(
+        `Failed to upload image: ${JSON.stringify(uploadResponse.data)}`
+      );
+    }
+
+    // Get the uploaded file name from the response
+    // ComfyUI typically returns the file name in the response
+    // The exact format depends on the ComfyUI version
+    let uploadedFileName = fileName;
+    if (uploadResponse.data.name) {
+      uploadedFileName = uploadResponse.data.name;
+    } else if (uploadResponse.data.filename) {
+      uploadedFileName = uploadResponse.data.filename;
+    } else if (
+      uploadResponse.data.files &&
+      uploadResponse.data.files.length > 0
+    ) {
+      uploadedFileName =
+        uploadResponse.data.files[0].name || uploadResponse.data.files[0];
+    }
+
+    debug(`File uploaded successfully as ${uploadedFileName}`);
+
+    // Create a copy of the options with the input set to the uploaded file
+    const modifiedOptions = {
+      ...options,
+      input: uploadedFileName, // Use the uploaded file name
+    };
+
+    debug("Calling generateImage with uploaded file");
+
+    // Call the original generateImage function with the modified options
+    return await generateImageImpl(
+      modifiedOptions,
+      createWorkflow,
+      outputNodeId,
+      workflowName
+    );
+  } catch (error: any) {
+    if (axios.isAxiosError(error) && error.response) {
+      console.error(
+        `HTTP Error during upload or generation: ${error.response.status} ${error.response.statusText}`
+      );
+      console.error(`Details: ${JSON.stringify(error.response.data)}`);
+    } else {
+      console.error(`Unexpected error: ${error.message}`);
+    }
+    return null;
+  }
+}

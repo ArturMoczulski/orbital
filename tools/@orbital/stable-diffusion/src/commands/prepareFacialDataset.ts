@@ -29,7 +29,7 @@ const DEFAULT_CONFIG = {
   FACE_OUTPUT_DIR: "data/source/instagram.com/arturinvegas/face",
 
   // Face detection parameters
-  MIN_FACE_SIZE: 160, // Skip faces smaller than this (too blurry)
+  MIN_FACE_SIZE: 50, // Skip faces smaller than this (too blurry)
   FACE_PADDING: 0.2, // 20% padding around detected face
 
   // Output parameters
@@ -258,12 +258,11 @@ async function processImage(
     // Get face box
     const { x, y, width, height } = detection.box;
 
-    // Check if face is too small
+    // Log face size but don't skip based on size
     if (Math.min(width, height) < options.minFaceSize) {
       console.log(
-        `Face too small in ${fileName} (${width}x${height}), skipping`
+        `Small face detected in ${fileName} (${width}x${height}), processing anyway`
       );
-      return;
     }
 
     // Calculate padding (keeping aspect ratio square)
@@ -292,21 +291,40 @@ async function processImage(
     const baseName = path.basename(filePath, path.extname(filePath));
     const faceOutputPath = path.join(options.faceOutputDir, `${baseName}.png`);
 
-    // Check if face crop is small and needs upscaling
-    const needsUpscale =
-      Math.min(crop.width, crop.height) < options.upscaleThreshold;
+    // Determine the longest dimension of the crop
+    const LONG = Math.max(crop.width, crop.height);
+    const hasRealESRGAN = checkRealESRGAN();
 
-    if (needsUpscale && checkRealESRGAN()) {
-      // For small faces, save the crop first
-      const tempCropPath = path.join(
-        options.faceOutputDir,
-        `.temp_${baseName}.png`
+    // Temporary path for intermediate processing
+    const tempCropPath = path.join(
+      options.faceOutputDir,
+      `.temp_${baseName}.png`
+    );
+
+    if (LONG >= options.targetSize) {
+      // Case 1: Crop is larger than target size
+      // Down-scale with Lanczos so the longest edge = target
+      console.log(
+        `Face crop is large (${LONG}px), downscaling to ${options.targetSize}px`
+      );
+      await sharp(filePath)
+        .extract(crop)
+        .resize(options.targetSize, options.targetSize, {
+          fit: "cover",
+          kernel: "lanczos3",
+        })
+        .toFile(faceOutputPath);
+    } else if (LONG < options.upscaleThreshold && hasRealESRGAN) {
+      // Case 3: Crop is very small (< 200px) or visibly blurry
+      // Use 2× RealESRGAN → then resize/center-crop to target
+      console.log(
+        `Face crop is very small (${LONG}px), upscaling with RealESRGAN`
       );
 
-      // Extract the crop
+      // ❶ save the raw crop
       await sharp(filePath).extract(crop).toFile(tempCropPath);
 
-      // Upscale the crop
+      // ❷ run realesrgan-x2plus
       const upscaleSuccess = await upscaleImage(
         tempCropPath,
         faceOutputPath,
@@ -316,7 +334,10 @@ async function processImage(
       if (upscaleSuccess) {
         // Resize the upscaled image to target size
         await sharp(faceOutputPath)
-          .resize(options.targetSize, options.targetSize, { fit: "cover" })
+          .resize(options.targetSize, options.targetSize, {
+            fit: "cover",
+            kernel: "lanczos3",
+          })
           .toFile(faceOutputPath + ".tmp");
 
         // Replace original with resized
@@ -326,16 +347,29 @@ async function processImage(
         await fs.unlink(tempCropPath);
       } else {
         // Fallback to normal processing if upscaling fails
+        console.log(
+          "RealESRGAN upscaling failed, falling back to direct resize"
+        );
         await sharp(filePath)
           .extract(crop)
-          .resize(options.targetSize, options.targetSize, { fit: "cover" })
+          .resize(options.targetSize, options.targetSize, {
+            fit: "cover",
+            kernel: "lanczos3",
+          })
           .toFile(faceOutputPath);
       }
     } else {
-      // Normal processing for adequately sized faces
+      // Case 2: Crop is between upscaleThreshold and target size
+      // Exact resize to target (Lanczos)
+      console.log(
+        `Face crop is medium-sized (${LONG}px), direct resize to ${options.targetSize}px`
+      );
       await sharp(filePath)
         .extract(crop)
-        .resize(options.targetSize, options.targetSize, { fit: "cover" })
+        .resize(options.targetSize, options.targetSize, {
+          fit: "cover",
+          kernel: "lanczos3",
+        })
         .toFile(faceOutputPath);
     }
 
