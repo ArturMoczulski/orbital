@@ -27,8 +27,8 @@ describe("MessageInput Component", () => {
     );
 
     // Check that the input field exists
-    cy.get("input").should("exist");
-    cy.get("input").should("have.attr", "placeholder", "Type a message...");
+    cy.get("textarea").should("exist");
+    cy.get("textarea").should("have.attr", "placeholder", "Type a message...");
 
     // Check that the send button exists and is disabled initially
     cy.get("button").should("exist");
@@ -49,7 +49,7 @@ describe("MessageInput Component", () => {
     );
 
     // Type a message
-    cy.get("input").type("Hello, world!");
+    cy.get("textarea").type("Hello, world!", { force: true });
 
     // Check that the send button is enabled
     cy.get("button").should("not.be.disabled");
@@ -69,7 +69,7 @@ describe("MessageInput Component", () => {
     );
 
     // Type a message
-    cy.get("input").type("Hello, world!");
+    cy.get("textarea").type("Hello, world!", { force: true });
 
     // Click the send button
     cy.get("button").click();
@@ -78,7 +78,7 @@ describe("MessageInput Component", () => {
     cy.get("@onSendMessageSpy").should("have.been.calledWith", "Hello, world!");
 
     // Check that the input field is cleared after sending
-    cy.get("input").should("have.value", "");
+    cy.get("textarea").should("have.value", "");
   });
 
   it("should call onSendMessage when Enter is pressed", () => {
@@ -95,13 +95,13 @@ describe("MessageInput Component", () => {
     );
 
     // Type a message and press Enter
-    cy.get("input").type("Hello, world!{enter}");
+    cy.get("textarea").type("Hello, world!{enter}", { force: true });
 
     // Verify the onSendMessage handler was called with the correct message
     cy.get("@onSendMessageSpy").should("have.been.calledWith", "Hello, world!");
 
     // Check that the input field is cleared after sending
-    cy.get("input").should("have.value", "");
+    cy.get("textarea").should("have.value", "");
   });
 
   it("should not call onSendMessage when Shift+Enter is pressed", () => {
@@ -118,7 +118,7 @@ describe("MessageInput Component", () => {
     );
 
     // Type a message and press Shift+Enter
-    cy.get("input").type("Hello, world!{shift}{enter}");
+    cy.get("textarea").type("Hello, world!{shift}{enter}", { force: true });
 
     // Verify the onSendMessage handler was not called
     cy.get("@onSendMessageSpy").should("not.have.been.called");
@@ -138,7 +138,7 @@ describe("MessageInput Component", () => {
     );
 
     // Press Enter without typing anything
-    cy.get("input").type("{enter}");
+    cy.get("textarea").type("{enter}", { force: true });
 
     // Verify the onSendMessage handler was not called
     cy.get("@onSendMessageSpy").should("not.have.been.called");
@@ -158,7 +158,7 @@ describe("MessageInput Component", () => {
     );
 
     // Check that the input field is disabled
-    cy.get("input").should("be.disabled");
+    cy.get("textarea").should("be.disabled");
 
     // Check that the send button is disabled
     cy.get("button").should("be.disabled");

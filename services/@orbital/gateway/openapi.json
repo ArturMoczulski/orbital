@@ -1,0 +1,620 @@
+{
+  "openapi": "3.0.0",
+  "paths": {
+    "/api/ping": {
+      "get": {
+        "operationId": "PingController_ping",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Ping"
+        ]
+      }
+    },
+    "/api/auth/signup": {
+      "post": {
+        "operationId": "AuthController_signup",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/api/auth/login": {
+      "post": {
+        "operationId": "AuthController_login",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/users": {
+      "post": {
+        "operationId": "UsersController_create",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Users"
+        ]
+      }
+    },
+    "/users/{username}": {
+      "get": {
+        "operationId": "UsersController_findByUsername",
+        "parameters": [
+          {
+            "name": "username",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Users"
+        ]
+      }
+    },
+    "/areas": {
+      "get": {
+        "operationId": "AreasController_find",
+        "parameters": [
+          {
+            "name": "worldId",
+            "required": false,
+            "in": "query",
+            "description": "Filter areas by world ID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Returns all areas"
+          }
+        },
+        "summary": "Get all areas",
+        "tags": [
+          "areas"
+        ]
+      },
+      "post": {
+        "operationId": "AreasController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateAreaDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "The area has been successfully created."
+          }
+        },
+        "summary": "Create a new area",
+        "tags": [
+          "areas"
+        ]
+      }
+    },
+    "/areas/{_id}": {
+      "get": {
+        "operationId": "AreasController_findById",
+        "parameters": [
+          {
+            "name": "_id",
+            "required": true,
+            "in": "path",
+            "description": "The ID of the area to retrieve",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Returns the area with the specified ID"
+          },
+          "404": {
+            "description": "Area not found"
+          }
+        },
+        "summary": "Get area by ID",
+        "tags": [
+          "areas"
+        ]
+      },
+      "put": {
+        "operationId": "AreasController_update",
+        "parameters": [
+          {
+            "name": "_id",
+            "required": true,
+            "in": "path",
+            "description": "The ID of the area to update",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateAreaDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The area has been successfully updated."
+          }
+        },
+        "summary": "Update an existing area",
+        "tags": [
+          "areas"
+        ]
+      },
+      "delete": {
+        "operationId": "AreasController_delete",
+        "parameters": [
+          {
+            "name": "_id",
+            "required": true,
+            "in": "path",
+            "description": "The ID of the area to delete",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The area has been successfully deleted"
+          },
+          "404": {
+            "description": "Area not found"
+          }
+        },
+        "summary": "Delete an area",
+        "tags": [
+          "areas"
+        ]
+      }
+    },
+    "/areas/{_id}/map": {
+      "get": {
+        "operationId": "AreasController_getMap",
+        "parameters": [
+          {
+            "name": "_id",
+            "required": true,
+            "in": "path",
+            "description": "The ID of the area to get the map for",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Returns the map for the specified area"
+          }
+        },
+        "summary": "Get map for an area",
+        "tags": [
+          "areas"
+        ]
+      }
+    },
+    "/worlds": {
+      "get": {
+        "operationId": "WorldsController_find",
+        "parameters": [
+          {
+            "name": "shard",
+            "required": false,
+            "in": "query",
+            "description": "Filter worlds by shard",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "techLevel",
+            "required": false,
+            "in": "query",
+            "description": "Filter worlds by tech level",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Returns all worlds"
+          }
+        },
+        "summary": "Get all worlds",
+        "tags": [
+          "worlds"
+        ]
+      },
+      "post": {
+        "operationId": "WorldsController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateWorldDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "The world has been successfully created."
+          }
+        },
+        "summary": "Create a new world",
+        "tags": [
+          "worlds"
+        ]
+      }
+    },
+    "/worlds/{_id}": {
+      "get": {
+        "operationId": "WorldsController_findById",
+        "parameters": [
+          {
+            "name": "_id",
+            "required": true,
+            "in": "path",
+            "description": "The ID of the world to retrieve",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Returns the world with the specified ID"
+          },
+          "404": {
+            "description": "World not found"
+          }
+        },
+        "summary": "Get world by ID",
+        "tags": [
+          "worlds"
+        ]
+      },
+      "put": {
+        "operationId": "WorldsController_update",
+        "parameters": [
+          {
+            "name": "_id",
+            "required": true,
+            "in": "path",
+            "description": "The ID of the world to update",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateWorldDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The world has been successfully updated."
+          }
+        },
+        "summary": "Update an existing world",
+        "tags": [
+          "worlds"
+        ]
+      },
+      "delete": {
+        "operationId": "WorldsController_delete",
+        "parameters": [
+          {
+            "name": "_id",
+            "required": true,
+            "in": "path",
+            "description": "The ID of the world to delete",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The world has been successfully deleted"
+          },
+          "404": {
+            "description": "World not found"
+          }
+        },
+        "summary": "Delete a world",
+        "tags": [
+          "worlds"
+        ]
+      }
+    }
+  },
+  "info": {
+    "title": "Admin Gateway API",
+    "description": "The Admin Gateway API provides access to administrative functions",
+    "version": "1.0",
+    "contact": {}
+  },
+  "tags": [
+    {
+      "name": "admin",
+      "description": ""
+    },
+    {
+      "name": "areas",
+      "description": ""
+    }
+  ],
+  "servers": [],
+  "components": {
+    "schemas": {
+      "CreateAreaDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Descriptive name of the area"
+          },
+          "worldId": {
+            "type": "string",
+            "description": "Identifier of the world this area belongs to"
+          },
+          "parentId": {
+            "type": "object",
+            "description": "Identifier of the parent area, if any"
+          },
+          "position": {
+            "type": "object",
+            "description": "Central position of the area in 3D space",
+            "properties": {
+              "x": {
+                "type": "number",
+                "description": "X coordinate of the position, in meters from origin"
+              },
+              "y": {
+                "type": "number",
+                "description": "Y coordinate of the position, in meters from origin"
+              },
+              "z": {
+                "type": "number",
+                "description": "Z coordinate (height), in meters above ground"
+              }
+            }
+          },
+          "areaMap": {
+            "type": "object",
+            "description": "Map representation of this area",
+            "properties": {
+              "width": {
+                "type": "number",
+                "description": "Width of the map in cells"
+              },
+              "height": {
+                "type": "number",
+                "description": "Height of the map in cells"
+              },
+              "grid": {
+                "type": "array",
+                "description": "2D grid of map tiles",
+                "items": {
+                  "type": "array",
+                  "items": {
+                    "type": "number"
+                  }
+                }
+              }
+            }
+          },
+          "tags": {
+            "type": "array",
+            "description": "Tags for categorizing the area",
+            "items": {
+              "type": "string"
+            }
+          },
+          "description": {
+            "type": "string",
+            "description": "Detailed description of the area"
+          },
+          "landmarks": {
+            "type": "array",
+            "description": "Notable landmarks or features in this area",
+            "items": {
+              "type": "string"
+            }
+          },
+          "connections": {
+            "type": "array",
+            "description": "Names of other areas this area connects to",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "name",
+          "worldId"
+        ]
+      },
+      "UpdateAreaDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Descriptive name of the area"
+          },
+          "worldId": {
+            "type": "string",
+            "description": "Identifier of the world this area belongs to"
+          },
+          "parentId": {
+            "type": "object",
+            "description": "Identifier of the parent area, if any"
+          },
+          "position": {
+            "type": "object",
+            "description": "Central position of the area in 3D space",
+            "properties": {
+              "x": {
+                "type": "number",
+                "description": "X coordinate of the position, in meters from origin"
+              },
+              "y": {
+                "type": "number",
+                "description": "Y coordinate of the position, in meters from origin"
+              },
+              "z": {
+                "type": "number",
+                "description": "Z coordinate (height), in meters above ground"
+              }
+            }
+          },
+          "areaMap": {
+            "type": "object",
+            "description": "Map representation of this area",
+            "properties": {
+              "width": {
+                "type": "number",
+                "description": "Width of the map in cells"
+              },
+              "height": {
+                "type": "number",
+                "description": "Height of the map in cells"
+              },
+              "grid": {
+                "type": "array",
+                "description": "2D grid of map tiles",
+                "items": {
+                  "type": "array",
+                  "items": {
+                    "type": "number"
+                  }
+                }
+              }
+            }
+          },
+          "tags": {
+            "type": "array",
+            "description": "Tags for categorizing the area",
+            "items": {
+              "type": "string"
+            }
+          },
+          "description": {
+            "type": "string",
+            "description": "Detailed description of the area"
+          },
+          "landmarks": {
+            "type": "array",
+            "description": "Notable landmarks or features in this area",
+            "items": {
+              "type": "string"
+            }
+          },
+          "connections": {
+            "type": "array",
+            "description": "Names of other areas this area connects to",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "CreateWorldDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Descriptive name of the world"
+          },
+          "shard": {
+            "type": "string",
+            "description": "Shard identifier for the world"
+          },
+          "techLevel": {
+            "type": "number",
+            "description": "Technology level of the world"
+          }
+        },
+        "required": [
+          "name",
+          "shard",
+          "techLevel"
+        ]
+      },
+      "UpdateWorldDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Descriptive name of the world"
+          },
+          "shard": {
+            "type": "string",
+            "description": "Shard identifier for the world"
+          },
+          "techLevel": {
+            "type": "number",
+            "description": "Technology level of the world"
+          }
+        }
+      }
+    }
+  }
+}

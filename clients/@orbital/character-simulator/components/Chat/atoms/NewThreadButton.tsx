@@ -66,6 +66,7 @@ const NewThreadButton = ({
           color="primary"
           onClick={handleOpen}
           disabled={disabled}
+          aria-label="New Conversation"
           sx={{
             borderRadius: "50%",
             backgroundColor: disabled ? "grey.400" : "primary.main",

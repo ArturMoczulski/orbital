@@ -1,0 +1,62 @@
+{
+  "compilerOptions": {
+    "target": "ES6",
+    "module": "commonjs",
+    "rootDir": "src",
+    "outDir": "dist",
+    "strict": false,
+    "strictFunctionTypes": true,
+    "strictBindCallApply": true,
+    "noImplicitThis": true,
+    "strictNullChecks": false,
+    "skipLibCheck": true,
+    "noEmitOnError": false,
+    "noImplicitAny": false,
+    "allowJs": true,
+    "checkJs": false,
+    "strictPropertyInitialization": false,
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
+    "moduleResolution": "node",
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "resolveJsonModule": true,
+    "allowUmdGlobalAccess": true,
+    "sourceMap": true,
+    "inlineSources": true,
+    "sourceRoot": "",
+    "declaration": true,
+    "baseUrl": ".",
+    "paths": {
+      "@orbital/characters": ["../../../libs/@orbital/characters/dist"],
+      "@orbital/characters/*": ["../../../libs/@orbital/characters/dist/*"],
+      "@orbital/core": ["../../../libs/@orbital/core/dist"],
+      "@orbital/core/*": ["../../../libs/@orbital/core/dist/*"],
+      "@orbital/typegoose": ["../../../libs/@orbital/typegoose/dist"],
+      "@orbital/typegoose/*": ["../../../libs/@orbital/typegoose/dist/*"],
+      "@orbital/microservices": ["../../../libs/@orbital/microservices/dist"],
+      "@orbital/microservices/*": [
+        "../../../libs/@orbital/microservices/dist/*"
+      ],
+      "@orbital/nest": ["../../../libs/@orbital/nest/dist"],
+      "@orbital/nest/*": ["../../../libs/@orbital/nest/dist/*"],
+      "@orbital/bulk-operations": [
+        "../../../libs/@orbital/bulk-operations/dist"
+      ],
+      "@orbital/bulk-operations/*": [
+        "../../../libs/@orbital/bulk-operations/dist/*"
+      ],
+      "@orbital/contracts": [
+        "../../../libs/@orbital/contracts/src",
+        "../../../libs/@orbital/contracts/dist"
+      ],
+      "@orbital/contracts/*": [
+        "../../../libs/@orbital/contracts/src/*",
+        "../../../libs/@orbital/contracts/dist/*"
+      ],
+      "@orbital/contracts": ["../../../libs/@orbital/contracts/dist"],
+      "@orbital/contracts/*": ["../../../libs/@orbital/contracts/dist/*"]
+    }
+  },
+  "include": ["src/**/*"]
+}
