@@ -9,8 +9,10 @@ import {
 import { CharacterActionsButtons } from "./CharacterActionsButtons";
 
 // Define an interface that extends Character to include the required name property
+// and ensure beliefs property matches the updated Character class
 interface CharacterWithName extends Character {
   name: string;
+  beliefs?: { statement: string; certainty: number }[];
 }
 
 interface CharactersExplorerProps {
@@ -82,11 +84,24 @@ export default function CharactersExplorer({
             ...typedCharactersResult,
             data: typedCharactersResult.data
               .filter((character: Character) => character.worldId === worldId)
-              .map((character: Character) => ({
-                ...character,
+              .map((character: Character) => {
+                // Ensure beliefs have required properties
+                const processedCharacter = { ...character };
+                if (processedCharacter.beliefs) {
+                  processedCharacter.beliefs = processedCharacter.beliefs.map(
+                    (belief) => ({
+                      statement: belief.statement || "Unknown belief",
+                      certainty: belief.certainty ?? 0,
+                    })
+                  );
+                }
+
                 // Create a name property from firstName and lastName
-                name: `${character.firstName} ${character.lastName}`,
-              })) as CharacterWithName[],
+                return {
+                  ...processedCharacter,
+                  name: `${character.firstName} ${character.lastName}`,
+                };
+              }) as CharacterWithName[],
           };
         }
 
@@ -94,10 +109,24 @@ export default function CharactersExplorer({
         if (typedCharactersResult.data) {
           return {
             ...typedCharactersResult,
-            data: typedCharactersResult.data.map((character: Character) => ({
-              ...character,
-              name: `${character.firstName} ${character.lastName}`,
-            })) as CharacterWithName[],
+            data: typedCharactersResult.data.map((character: Character) => {
+              // Ensure beliefs have required properties
+              const processedCharacter = { ...character };
+              if (processedCharacter.beliefs) {
+                processedCharacter.beliefs = processedCharacter.beliefs.map(
+                  (belief) => ({
+                    statement: belief.statement || "Unknown belief",
+                    certainty: belief.certainty ?? 0,
+                  })
+                );
+              }
+
+              // Create a name property from firstName and lastName
+              return {
+                ...processedCharacter,
+                name: `${character.firstName} ${character.lastName}`,
+              };
+            }) as CharacterWithName[],
           };
         }
 

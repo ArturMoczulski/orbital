@@ -264,16 +264,25 @@ export class DocumentRepository<
   }
 
   /**
-   * Find a domain object by ID
-   * @param id The entity ID
+   * Find domain objects by ID(s)
+   * @param id The entity ID or array of IDs
    * @param projection Optional fields to project
-   * @returns The found entity or null
+   * @returns The found entity, array of entities, or null if not found
    */
   async findById(
-    id: string,
+    id: string | string[],
     projection?: Record<string, any>
-  ): Promise<TDomainEntity | null> {
-    return this.findOne({ _id: id }, projection);
+  ): Promise<TDomainEntity | TDomainEntity[] | null> {
+    const isSingular = !Array.isArray(id);
+    const ids = isSingular ? [id] : id;
+
+    const results = await this.find({ _id: { $in: ids } }, projection);
+
+    if (results.length === 0) {
+      return null;
+    }
+
+    return isSingular ? results[0] : results;
   }
 
   /**

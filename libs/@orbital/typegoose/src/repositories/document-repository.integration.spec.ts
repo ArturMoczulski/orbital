@@ -346,7 +346,7 @@ describe("DocumentRepository Integration Tests", () => {
       const created = await TestEntityModel.create(testEntity);
 
       // Act
-      const result = await repository.findById(created._id);
+      const result = (await repository.findById(created._id)) as TestEntity;
 
       // Assert
       expect(result).toBeDefined();

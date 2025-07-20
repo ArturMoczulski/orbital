@@ -1,6 +1,7 @@
 import { Controller, UseFilters } from "@nestjs/common";
 import { MessagePattern } from "@nestjs/microservices";
 import { Conversation, ConversationProps } from "@orbital/characters";
+import { OrbitalMicroservices } from "@orbital/contracts";
 import { WithId, WithoutId } from "@orbital/core";
 import { PassThroughRpcExceptionFilter } from "@orbital/microservices";
 import { CRUDController } from "@orbital/nest";
@@ -8,7 +9,7 @@ import { ConversationService } from "./conversation.service";
 import { ConversationsCRUDService } from "./conversations.crud.service";
 
 @Controller()
-@UseFilters(new PassThroughRpcExceptionFilter("conversation"))
+@UseFilters(new PassThroughRpcExceptionFilter(OrbitalMicroservices.Characters))
 export class ConversationsMicroserviceController extends CRUDController<
   Conversation,
   ConversationProps,
@@ -40,15 +41,11 @@ export class ConversationsMicroserviceController extends CRUDController<
   @MessagePattern(
     "characters-service.ConversationsMicroserviceController.findById"
   )
-  async findById(payload: { id: string; projection?: Record<string, any> }) {
+  async findById(payload: {
+    id: string | string[];
+    projection?: Record<string, any>;
+  }) {
     return super.findById(payload);
-  }
-
-  @MessagePattern(
-    "characters-service.ConversationsMicroserviceController.findByIds"
-  )
-  async findByIds(ids: string[]): Promise<Conversation[]> {
-    return this.service.findByIds(ids);
   }
 
   @MessagePattern(

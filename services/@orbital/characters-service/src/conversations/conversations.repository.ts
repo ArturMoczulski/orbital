@@ -33,7 +33,7 @@ export class ConversationsRepository extends DocumentRepository<
       characterId?: string;
     }
   ): Promise<Conversation | null> {
-    const conversation = await this.findById(id);
+    const conversation = (await this.findById(id)) as Conversation;
     if (!conversation) {
       return null;
     }

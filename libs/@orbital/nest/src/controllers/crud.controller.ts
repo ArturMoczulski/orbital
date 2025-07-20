@@ -48,7 +48,10 @@ export abstract class CRUDController<
    * @param projection Optional fields to project
    * @returns The found entity or null
    */
-  async findById(payload: { id: string; projection?: Record<string, any> }) {
+  async findById(payload: {
+    id: string | string[];
+    projection?: Record<string, any>;
+  }) {
     const { id, projection } = payload;
     // If projection is undefined, don't pass it to match test expectations
     return projection

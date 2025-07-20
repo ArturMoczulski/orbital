@@ -1,4 +1,4 @@
-import { IdentityAccount } from "@orbital/identity-types";
+import { IdentityAccount, IdentityProviderEnum } from "@orbital/identity-types";
 import { DocumentRepository } from "@orbital/typegoose";
 import type { ReturnModelType } from "@typegoose/typegoose";
 import { Document } from "mongoose";
@@ -16,7 +16,7 @@ describe("IdentitiesRepository", () => {
     // Create a mock identity account directly
     mockIdentityAccount = {
       characterId: "test-character-id",
-      provider: "local",
+      provider: IdentityProviderEnum.LOCAL,
       identifier: "test-user@example.com",
       credentials: [],
       createdAt: new Date(),
@@ -77,7 +77,7 @@ describe("IdentitiesRepository", () => {
       // Arrange
       const identityData = {
         characterId: "new-character-id",
-        provider: "google",
+        provider: IdentityProviderEnum.GOOGLE,
         identifier: "new-user@gmail.com",
         credentials: [],
       } as unknown as Omit<IdentityAccountProps, "_id">;
@@ -102,18 +102,18 @@ describe("IdentitiesRepository", () => {
   describe("find", () => {
     it("should find identity accounts with filter", async () => {
       // Arrange
-      const filter = { provider: "local" };
+      const filter = { provider: IdentityProviderEnum.LOCAL };
       const mockIdentities = [
         {
           _id: "identity-1",
           characterId: "char-1",
-          provider: "local",
+          provider: IdentityProviderEnum.LOCAL,
           identifier: "user1@example.com",
         },
         {
           _id: "identity-2",
           characterId: "char-2",
-          provider: "local",
+          provider: IdentityProviderEnum.LOCAL,
           identifier: "user2@example.com",
         },
       ];
@@ -164,7 +164,8 @@ describe("IdentitiesRepository", () => {
 
       // Assert
       expect(result).toEqual(mockIdentityWithId);
-      expect(result?._id).toBe(identityId);
+      // Type assertion to handle the union return type
+      expect((result as IdentityAccount)?._id).toBe(identityId);
     });
   });
 
@@ -174,7 +175,7 @@ describe("IdentitiesRepository", () => {
       const identityToUpdate = {
         _id: "identity-123",
         characterId: "test-character-id",
-        provider: "local",
+        provider: IdentityProviderEnum.LOCAL,
         identifier: "updated-user@example.com",
         credentials: [],
       };
@@ -219,7 +220,7 @@ describe("IdentitiesRepository", () => {
       const mockIdentities = [
         {
           characterId,
-          provider: "local",
+          provider: IdentityProviderEnum.LOCAL,
           identifier: "user1@example.com",
           credentials: [],
           createdAt: new Date(),
@@ -227,7 +228,7 @@ describe("IdentitiesRepository", () => {
         },
         {
           characterId,
-          provider: "google",
+          provider: IdentityProviderEnum.GOOGLE,
           identifier: "user2@gmail.com",
           credentials: [],
           createdAt: new Date(),

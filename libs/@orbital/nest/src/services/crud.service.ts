@@ -51,7 +51,10 @@ export interface ICRUDService<
    * @param projection Optional fields to project
    * @returns The found entity or null
    */
-  findById(id: string, projection?: Record<string, any>): Promise<T | null>;
+  findById(
+    id: string | string[],
+    projection?: Record<string, any>
+  ): Promise<T | T[] | null>;
 
   /**
    * Find entities by parent ID
@@ -153,7 +156,7 @@ export class CRUDService<
    * @param projection Optional fields to project
    * @returns The found entity or null
    */
-  async findById(id: string, projection?: Record<string, any>) {
+  async findById(id: string | string[], projection?: Record<string, any>) {
     return this.repository.findById(id, projection);
   }
 

@@ -1,5 +1,6 @@
 import { Controller, UseFilters } from "@nestjs/common";
 import { MessagePattern } from "@nestjs/microservices";
+import { OrbitalMicroservices } from "@orbital/contracts";
 import { WithId, WithoutId } from "@orbital/core";
 import { IdentityAccount } from "@orbital/identity-types";
 import { PassThroughRpcExceptionFilter } from "@orbital/microservices";
@@ -8,7 +9,7 @@ import { IdentitiesCRUDService } from "./identities.crud.service";
 import { IdentityAccountProps } from "./identities.repository";
 
 @Controller()
-@UseFilters(new PassThroughRpcExceptionFilter("identity"))
+@UseFilters(new PassThroughRpcExceptionFilter(OrbitalMicroservices.Characters))
 export class IdentitiesMicroserviceController extends CRUDController<
   IdentityAccount,
   IdentityAccountProps,

@@ -42,7 +42,8 @@ export class ConversationService {
    * @returns Array of conversations
    */
   async findByIds(ids: string[]): Promise<Conversation[]> {
-    return this.conversationsCRUDService.findByIds(ids);
+    const result = await this.conversationsCRUDService.findById(ids);
+    return result as Conversation[];
   }
 
   /**

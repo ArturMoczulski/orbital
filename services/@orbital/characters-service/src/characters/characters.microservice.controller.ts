@@ -1,6 +1,7 @@
 import { Controller, UseFilters } from "@nestjs/common";
 import { MessagePattern } from "@nestjs/microservices";
 import { Character, CharacterProps } from "@orbital/characters";
+import { OrbitalMicroservices } from "@orbital/contracts";
 import { WithId, WithoutId } from "@orbital/core";
 import { PassThroughRpcExceptionFilter } from "@orbital/microservices";
 import { CRUDController } from "@orbital/nest";
@@ -8,7 +9,7 @@ import { CharacterService } from "./character.service";
 import { CharactersCRUDService } from "./characters.crud.service";
 
 @Controller()
-@UseFilters(new PassThroughRpcExceptionFilter("character"))
+@UseFilters(new PassThroughRpcExceptionFilter(OrbitalMicroservices.Characters))
 export class CharactersMicroserviceController extends CRUDController<
   Character,
   CharacterProps,

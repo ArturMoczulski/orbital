@@ -14,15 +14,6 @@ export class ConversationsCRUDService extends CRUDService<
   }
 
   /**
-   * Find conversations by IDs
-   * @param ids Array of conversation IDs
-   * @returns Array of conversations
-   */
-  async findByIds(ids: string[]): Promise<Conversation[]> {
-    return this.repository.find({ _id: { $in: ids } });
-  }
-
-  /**
    * Add a message to a conversation
    * @param id Conversation ID
    * @param message Message to add

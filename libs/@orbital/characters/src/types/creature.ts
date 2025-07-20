@@ -236,7 +236,7 @@ export class Creature extends Mobile implements CreatureProps {
   inventory?: string[];
 
   /** Beliefs held by the creature */
-  beliefs?: { statement?: string; certainty?: number }[];
+  beliefs?: { statement: string; certainty: number }[];
 
   /** Goals the creature is pursuing */
   goals?: Goal[];
@@ -311,7 +311,13 @@ export class Creature extends Mobile implements CreatureProps {
     if (data.skills !== undefined)
       this.skills = data.skills.map((s) => new CharactersSkill(s));
     if (data.inventory !== undefined) this.inventory = data.inventory;
-    if (data.beliefs !== undefined) this.beliefs = data.beliefs;
+    if (data.beliefs !== undefined) {
+      // Ensure required fields in beliefs
+      this.beliefs = data.beliefs.map((belief) => ({
+        statement: belief.statement || "Unknown belief",
+        certainty: belief.certainty ?? 0, // Use nullish coalescing to handle 0 values
+      }));
+    }
     if (data.goals !== undefined)
       this.goals = data.goals.map((g) => new Goal(g));
     if (data.intentions !== undefined)
