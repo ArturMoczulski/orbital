@@ -227,7 +227,7 @@ export class Creature extends Mobile implements CreatureProps {
   attributes?: Attributes;
 
   /** Psychological profile scales */
-  psychologicalProfile!: PsychologicalProfile;
+  psychologicalProfile?: PsychologicalProfile;
 
   /** Learned skills */
   skills?: CharactersSkill[];

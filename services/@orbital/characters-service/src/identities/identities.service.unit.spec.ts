@@ -1,7 +1,7 @@
 import { Test, TestingModule } from "@nestjs/testing";
 import { BulkCountedResponse } from "@orbital/bulk-operations";
 import { WithoutId } from "@orbital/core";
-import { IdentityAccount } from "@orbital/identity-types";
+import { IdentityAccount, IdentityProviderEnum } from "@orbital/identity-types";
 import { IdentitiesCRUDService } from "./identities.crud.service";
 import { IdentitiesService } from "./identities.service";
 
@@ -139,7 +139,13 @@ describe("IdentitiesService", () => {
 
   describe("update", () => {
     it("should call identitiesCrudService.update with the provided entities", async () => {
-      const entity = { _id: "test-id", identifier: "updated-user" };
+      const entity = {
+        _id: "test-id",
+        characterId: "test-character-id",
+        provider: IdentityProviderEnum.ORBITAL, // Using the enum value
+        identifier: "updated-user",
+        credentials: [], // Empty array for credentials
+      };
       const expectedResult = { ...entity } as unknown as IdentityAccount;
 
       (mockIdentitiesCrudService.update as jest.Mock).mockResolvedValue(

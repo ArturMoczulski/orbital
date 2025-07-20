@@ -3,13 +3,7 @@ import {
   BulkCountedResponse,
   BulkItemizedResponse,
 } from "@orbital/bulk-operations";
-import {
-  Character,
-  CharacterProps,
-  CreatureType,
-  Gender,
-  Race,
-} from "@orbital/characters";
+import { Character, Gender } from "@orbital/characters";
 import { CharacterService } from "./character.service";
 import { CharactersCRUDService } from "./characters.crud.service";
 
@@ -56,17 +50,12 @@ describe("CharacterService", () => {
     it("should call crudService.findById with the correct id", async () => {
       // Arrange
       const id = "character-id-1";
-      const expectedResult = {
+      const expectedResult = Character.mock({
         _id: id,
         firstName: "John",
         lastName: "Doe",
-        creatureType: CreatureType.Humanoid,
-        race: Race.Human,
-        gender: Gender.Male,
-        attributes: {},
-        psychologicalProfile: {},
         worldId: "world-id-1",
-      } as Character;
+      });
 
       jest.spyOn(crudService, "findById").mockResolvedValue(expectedResult);
 
@@ -74,7 +63,7 @@ describe("CharacterService", () => {
       const result = await service.findById(id);
 
       // Assert
-      expect(crudService.findById).toHaveBeenCalledWith(id);
+      expect(crudService.findById).toHaveBeenCalledWith(id, undefined);
       expect(result).toEqual(expectedResult);
     });
   });
@@ -84,29 +73,20 @@ describe("CharacterService", () => {
       // Arrange
       const ids = ["character-id-1", "character-id-2"];
       const expectedResult = [
-        {
+        Character.mock({
           _id: "character-id-1",
           firstName: "John",
           lastName: "Doe",
-          creatureType: CreatureType.Humanoid,
-          race: Race.Human,
-          gender: Gender.Male,
-          attributes: {},
-          psychologicalProfile: {},
           worldId: "world-id-1",
-        },
-        {
+        }),
+        Character.mock({
           _id: "character-id-2",
           firstName: "Jane",
           lastName: "Doe",
-          creatureType: CreatureType.Humanoid,
-          race: Race.Human,
           gender: Gender.Female,
-          attributes: {},
-          psychologicalProfile: {},
           worldId: "world-id-1",
-        },
-      ] as Character[];
+        }),
+      ];
 
       jest.spyOn(crudService, "findByIds").mockResolvedValue(expectedResult);
 
@@ -122,21 +102,18 @@ describe("CharacterService", () => {
   describe("create", () => {
     it("should call crudService.create with the correct character", async () => {
       // Arrange
-      const character = {
+      const character = Character.mock({
         firstName: "John",
         lastName: "Doe",
-        creatureType: CreatureType.Humanoid,
-        race: Race.Human,
-        gender: Gender.Male,
-        attributes: {},
-        psychologicalProfile: {},
         worldId: "world-id-1",
-      } as CharacterProps;
+      });
 
-      const expectedResult = {
+      const expectedResult = Character.mock({
         _id: "new-id",
-        ...character,
-      } as Character;
+        firstName: "John",
+        lastName: "Doe",
+        worldId: "world-id-1",
+      });
 
       jest.spyOn(crudService, "create").mockResolvedValue(expectedResult);
 
@@ -150,21 +127,18 @@ describe("CharacterService", () => {
 
     it("should handle BulkItemizedResponse from crudService.create", async () => {
       // Arrange
-      const character = {
+      const character = Character.mock({
         firstName: "John",
         lastName: "Doe",
-        creatureType: CreatureType.Humanoid,
-        race: Race.Human,
-        gender: Gender.Male,
-        attributes: {},
-        psychologicalProfile: {},
         worldId: "world-id-1",
-      } as CharacterProps;
+      });
 
-      const expectedCharacter = {
+      const expectedCharacter = Character.mock({
         _id: "new-id",
-        ...character,
-      } as Character;
+        firstName: "John",
+        lastName: "Doe",
+        worldId: "world-id-1",
+      });
 
       const bulkResponse = new BulkItemizedResponse();
       bulkResponse.asSingle = jest.fn().mockReturnValue(expectedCharacter);
@@ -184,23 +158,18 @@ describe("CharacterService", () => {
     it("should call crudService.update with the correct character", async () => {
       // Arrange
       const id = "character-id-1";
-      const character = {
+      const character = Character.mock({
         _id: id,
         firstName: "Updated",
         lastName: "Character",
-      };
+      });
 
-      const expectedResult = {
+      const expectedResult = Character.mock({
         _id: id,
         firstName: "Updated",
         lastName: "Character",
-        creatureType: CreatureType.Humanoid,
-        race: Race.Human,
-        gender: Gender.Male,
-        attributes: {},
-        psychologicalProfile: {},
         worldId: "world-id-1",
-      } as Character;
+      });
 
       jest.spyOn(crudService, "update").mockResolvedValue(expectedResult);
 
@@ -215,23 +184,18 @@ describe("CharacterService", () => {
     it("should handle BulkItemizedResponse from crudService.update", async () => {
       // Arrange
       const id = "character-id-1";
-      const character = {
+      const character = Character.mock({
         _id: id,
         firstName: "Updated",
         lastName: "Character",
-      };
+      });
 
-      const expectedCharacter = {
+      const expectedCharacter = Character.mock({
         _id: id,
         firstName: "Updated",
         lastName: "Character",
-        creatureType: CreatureType.Humanoid,
-        race: Race.Human,
-        gender: Gender.Male,
-        attributes: {},
-        psychologicalProfile: {},
         worldId: "world-id-1",
-      } as Character;
+      });
 
       const bulkResponse = new BulkItemizedResponse();
       bulkResponse.asSingle = jest.fn().mockReturnValue(expectedCharacter);
@@ -303,29 +267,20 @@ describe("CharacterService", () => {
       // Arrange
       const filter = { worldId: "world-id-1" };
       const expectedResult = [
-        {
+        Character.mock({
           _id: "character-id-1",
           firstName: "John",
           lastName: "Doe",
-          creatureType: CreatureType.Humanoid,
-          race: Race.Human,
-          gender: Gender.Male,
-          attributes: {},
-          psychologicalProfile: {},
           worldId: "world-id-1",
-        },
-        {
+        }),
+        Character.mock({
           _id: "character-id-2",
           firstName: "Jane",
           lastName: "Doe",
-          creatureType: CreatureType.Humanoid,
-          race: Race.Human,
           gender: Gender.Female,
-          attributes: {},
-          psychologicalProfile: {},
           worldId: "world-id-1",
-        },
-      ] as Character[];
+        }),
+      ];
 
       jest.spyOn(crudService, "find").mockResolvedValue(expectedResult);
 

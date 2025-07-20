@@ -1,4 +1,5 @@
 import { Test, TestingModule } from "@nestjs/testing";
+import { ConversationModel } from "@orbital/characters-typegoose";
 import { ConversationService } from "./conversation.service";
 import { ConversationsCRUDService } from "./conversations.crud.service";
 
@@ -46,7 +47,15 @@ describe("ConversationService", () => {
     it("should call crudService.findById with the correct id", async () => {
       // Arrange
       const id = "conversation-id-1";
-      const expectedResult = { _id: id, name: "Test Conversation" };
+      const expectedResult = {
+        _id: id,
+        name: "Test Conversation",
+        messages: [],
+        characterIds: [],
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        addMessage: jest.fn(),
+      } as unknown as ConversationModel;
       jest.spyOn(crudService, "findById").mockResolvedValue(expectedResult);
 
       // Act
@@ -67,8 +76,13 @@ describe("ConversationService", () => {
       };
       const expectedResult = {
         _id: "new-id",
-        ...conversation,
-      };
+        name: "New Conversation",
+        characterIds: ["character-id-1"],
+        messages: [],
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        addMessage: jest.fn(),
+      } as unknown as ConversationModel;
       jest.spyOn(crudService, "create").mockResolvedValue(expectedResult);
 
       // Act
@@ -91,7 +105,11 @@ describe("ConversationService", () => {
         _id: id,
         name: "Updated Conversation",
         characterIds: ["character-id-1"],
-      };
+        messages: [],
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        addMessage: jest.fn(),
+      } as unknown as ConversationModel;
       jest.spyOn(crudService, "update").mockResolvedValue(expectedResult);
 
       // Act
@@ -110,10 +128,7 @@ describe("ConversationService", () => {
     it("should call crudService.delete with the correct id", async () => {
       // Arrange
       const id = "conversation-id-1";
-      const expectedResult = {
-        _id: id,
-        name: "Deleted Conversation",
-      };
+      const expectedResult = true;
       jest.spyOn(crudService, "delete").mockResolvedValue(expectedResult);
 
       // Act
@@ -146,7 +161,11 @@ describe("ConversationService", () => {
         _id: id,
         name: "Test Conversation",
         messages: [expectedMessage],
-      };
+        characterIds: [],
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        addMessage: jest.fn(),
+      } as unknown as ConversationModel;
 
       jest.spyOn(crudService, "addMessage").mockResolvedValue(expectedResult);
 
@@ -182,7 +201,11 @@ describe("ConversationService", () => {
         _id: id,
         name: "Test Conversation",
         messages: [expectedMessage],
-      };
+        characterIds: [],
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        addMessage: jest.fn(),
+      } as unknown as ConversationModel;
 
       jest.spyOn(crudService, "addMessage").mockResolvedValue(expectedResult);
 
