@@ -31,9 +31,11 @@ export const PsychologicalProfileSchema = z
       .number()
       .describe("Entrepreneurial tendency scale (0.0-1.0)"),
     sociability: z.number().describe("Sociability scale (0.0-1.0)"),
-    romanticAttractionTriggers:
-      RomanticAttractionTriggersSchema.optional().describe(
-        "Mapping of romantic attraction triggers to a 0.0–1.0 numeric value"
+    romanticAttractionTriggers: z
+      .union([RomanticAttractionTriggersSchema, z.array(z.string())])
+      .optional()
+      .describe(
+        "Romantic attraction triggers as either a mapping to numeric values or an array of strings"
       ),
   })
   .describe("GURPS psychological profile scales (0.0–1.0)");
@@ -55,9 +57,9 @@ export class PsychologicalProfile implements PsychologicalProfileProps {
   sociability!: number;
 
   /**
-   * Mapping of romantic attraction triggers to a 0.0–1.0 numeric value.
+   * Romantic attraction triggers as either a mapping to numeric values or an array of strings.
    */
-  romanticAttractionTriggers?: RomanticAttractionTriggers;
+  romanticAttractionTriggers?: RomanticAttractionTriggers | string[];
 
   constructor(data: Partial<PsychologicalProfileProps> = {}) {
     if (data.normAdherence !== undefined)
