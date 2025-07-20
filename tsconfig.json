@@ -2,6 +2,14 @@
   "compilerOptions": {
     "baseUrl": ".",
     "paths": {
+      "@orbital/react-ui/*": [
+        "libs/@orbital/react-ui/src/*",
+        "libs/@orbital/react-ui/dist/react-ui/src/*"
+      ],
+      "@orbital/react-ui": [
+        "libs/@orbital/react-ui/src",
+        "libs/@orbital/react-ui/dist/react-ui/src"
+      ],
       "@orbital/core/*": [
         "libs/@orbital/core/src/*",
         "libs/@orbital/core/dist/*"
@@ -66,6 +74,7 @@
     { "path": "libs/@orbital/typegoose" },
     { "path": "libs/@orbital/characters" },
     { "path": "libs/@orbital/world-rpc" },
+    { "path": "libs/@orbital/react-ui" },
     { "path": "services/@orbital/admin-gateway" },
     { "path": "services/@orbital/world" }
   ]

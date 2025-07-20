@@ -12,5 +12,6 @@ export * from "./types/location";
 export * from "./types/position";
 export * from "./types/world";
 export * from "./types/world-object";
+export * from "./utils/data-generators";
 export * from "./world-history";
 export * from "./zod";

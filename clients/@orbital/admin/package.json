@@ -56,7 +56,10 @@
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-redux": "^9.2.0",
-    "reflect-metadata": "^0.2.2"
+    "reflect-metadata": "^0.2.2",
+    "uniforms": "^4.0.0",
+    "uniforms-bridge-zod": "^4.0.0",
+    "zod": "^3.22.4"
   },
   "devDependencies": {
     "@rtk-query/codegen-openapi": "^2.0.0",

@@ -94,7 +94,7 @@ export class CharactersExplorerInteractable extends TreeExplorerInteractable<
     const expectedName = `${character.firstName} ${character.lastName}`;
 
     // Check that a tree node with this name exists
-    this.item(expectedName).getElement().should("exist");
+    this.item(expectedName).get().should("exist");
 
     return this;
   }

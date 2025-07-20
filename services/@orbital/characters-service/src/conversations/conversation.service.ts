@@ -1,5 +1,5 @@
 import { Injectable } from "@nestjs/common";
-import { Conversation } from "@orbital/characters";
+import { ConversationModel } from "@orbital/characters-typegoose";
 import { ConversationsCRUDService } from "./conversations.crud.service";
 
 @Injectable()
@@ -12,13 +12,15 @@ export class ConversationService {
     return this.conversationsCRUDService.findById(id);
   }
 
-  async createConversation(conversation: Partial<Conversation>): Promise<any> {
+  async createConversation(
+    conversation: Partial<ConversationModel>
+  ): Promise<any> {
     return this.conversationsCRUDService.create(conversation);
   }
 
   async updateConversation(
     id: string,
-    conversation: Partial<Conversation>
+    conversation: Partial<ConversationModel>
   ): Promise<any | null> {
     return this.conversationsCRUDService.update(id, conversation);
   }

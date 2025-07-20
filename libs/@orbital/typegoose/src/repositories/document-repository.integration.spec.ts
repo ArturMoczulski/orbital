@@ -2,7 +2,7 @@ import {
   BulkCountedResponse,
   BulkItemizedResponse,
 } from "@orbital/bulk-operations";
-import { IdentifiableObject, WithId } from "@orbital/core";
+import { IdentifiableObject } from "@orbital/core";
 import * as mongoose from "mongoose";
 import { Schema } from "mongoose";
 import * as z from "zod";
@@ -551,21 +551,19 @@ describe("DocumentRepository Integration Tests", () => {
       const originalUpdate = repositoryWithSchema.update;
       jest
         .spyOn(repositoryWithSchema, "update")
-        .mockImplementation(
-          async (data: WithId<TestEntityProps> | WithId<TestEntityProps>[]) => {
-            if (Array.isArray(data)) {
-              return originalUpdate.call(repositoryWithSchema, data);
-            }
-
-            // Explicitly cast data to TestEntity to access the name property
-            const entityData = data as TestEntity;
-            if (entityData.name === "") {
-              throw new Error("Name is required");
-            }
-
+        .mockImplementation(async (data: any) => {
+          if (Array.isArray(data)) {
             return originalUpdate.call(repositoryWithSchema, data);
           }
-        );
+
+          // Explicitly cast data to TestEntity to access the name property
+          const entityData = data as TestEntity;
+          if (entityData.name === "") {
+            throw new Error("Name is required");
+          }
+
+          return originalUpdate.call(repositoryWithSchema, data);
+        });
 
       // Act & Assert - Invalid update should throw validation error
       await expect(repositoryWithSchema.update(invalidUpdate)).rejects.toThrow(
@@ -647,7 +645,7 @@ describe("DocumentRepository Integration Tests", () => {
     type ChildEntityProps = {
       _id?: string;
       name: string;
-      parentId: string;
+      parentId?: string;
       optionalRefId?: string;
       createdAt?: Date;
       updatedAt?: Date;
@@ -944,7 +942,7 @@ describe("DocumentRepository Integration Tests", () => {
         _id: createdChild._id,
         name: "Updated Child with Missing Reference",
         // parentId is intentionally missing to test validation
-      } as Partial<ChildEntityProps> & { _id: string };
+      };
 
       // Act & Assert
       await expect(childRepository.update(updateData)).rejects.toThrow(

@@ -1,11 +1,7 @@
 import { Inject, Injectable } from "@nestjs/common";
 import { Area, AreaProps } from "@orbital/core";
-import {
-  AreaModel,
-  DocumentRepository,
-  ModelReferences,
-  WorldModel,
-} from "@orbital/typegoose";
+import { DocumentRepository, ModelReferences } from "@orbital/typegoose";
+import { AreaModel, WorldModel } from "@orbital/world-typegoose";
 import type { ReturnModelType } from "@typegoose/typegoose";
 import { getModelToken } from "nestjs-typegoose";
 

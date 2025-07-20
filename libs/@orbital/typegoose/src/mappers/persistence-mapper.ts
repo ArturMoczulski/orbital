@@ -1,4 +1,10 @@
-import { IdentifiableObject } from "@orbital/core";
+/**
+ * Simple interface for identifiable objects to avoid dependency on @orbital/core
+ */
+interface IdentifiableObject {
+  _id: string;
+  [key: string]: any;
+}
 
 /**
  * PersistenceMapper provides automatic mapping between domain objects and persistence models
@@ -28,22 +34,26 @@ export class PersistenceMapper {
       }
 
       // Handle nested domain objects
-      if (value instanceof IdentifiableObject) {
+      if (value && typeof value === "object" && "_id" in value) {
         result[key] = this.toPersistence(value);
       }
       // Handle arrays of domain objects
       else if (
         Array.isArray(value) &&
         value.length > 0 &&
-        value[0] instanceof IdentifiableObject
+        value[0] &&
+        typeof value[0] === "object" &&
+        "_id" in value[0]
       ) {
-        result[key] = value.map((item) =>
-          item instanceof IdentifiableObject ? this.toPersistence(item) : item
+        result[key] = value.map((item: any) =>
+          item && typeof item === "object" && "_id" in item
+            ? this.toPersistence(item)
+            : item
         );
       }
       // Handle arrays of IDs (strings)
       else if (Array.isArray(value) && key.endsWith("Ids")) {
-        result[key] = value.map((item) => String(item));
+        result[key] = value.map((item: any) => String(item));
       }
       // Handle primitive values
       else {
@@ -57,7 +67,7 @@ export class PersistenceMapper {
   /**
    * Convert a persistence model to a domain object
    */
-  static toDomain<TDomainEntity extends IdentifiableObject>(
+  static toDomain<TDomainEntity>(
     DomainClass: new (data: any) => TDomainEntity,
     document: Document & { toObject?: () => any }
   ): TDomainEntity {

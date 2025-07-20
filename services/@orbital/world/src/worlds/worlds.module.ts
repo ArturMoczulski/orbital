@@ -1,5 +1,5 @@
 import { Module } from "@nestjs/common";
-import { WorldModel } from "@orbital/typegoose";
+import { WorldModel } from "@orbital/world-typegoose";
 import { TypegooseModule } from "nestjs-typegoose";
 import { WorldService } from "./world.service";
 import { WorldsCRUDService } from "./worlds.crud.service";

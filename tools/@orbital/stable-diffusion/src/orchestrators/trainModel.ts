@@ -203,6 +203,7 @@ async function pollTrainingCompletion(promptId: string): Promise<any> {
 async function trainModelImpl<T>(
   options: T & {
     output?: string;
+    datasetPath?: string;
   },
   createWorkflow: (
     options: T,

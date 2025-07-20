@@ -4,6 +4,8 @@
     "paths": {
       "@orbital/contracts": ["../contracts/dist"],
       "@orbital/contracts/*": ["../contracts/dist/*"],
+      "@orbital/core": ["../core/dist"],
+      "@orbital/core/*": ["../core/dist/*"],
       "@orbital/bulk-operations": [
         "../../@orbital/bulk-operations/dist",
         "../../@orbital/bulk-operations/src"

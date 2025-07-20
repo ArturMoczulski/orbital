@@ -19,6 +19,14 @@ export default function AreaExplorer({ onSelect }: AreaExplorerProps) {
   const { worldId } = useWorld();
   const [selectedArea, setSelectedArea] = useState<Area | null>(null);
 
+  // Move the query hook to the top level of the component
+  const areasQueryResult = useAreasControllerFindQuery({});
+  const typedAreasResult = areasQueryResult as unknown as {
+    data?: Area[];
+    isLoading: boolean;
+    error?: any;
+  };
+
   const {
     data: mapData,
     isLoading: isMapLoading,
@@ -50,27 +58,17 @@ export default function AreaExplorer({ onSelect }: AreaExplorerProps) {
       )}
       // Custom query function to filter by worldId
       query={() => {
-        // Use the built-in query hook
-        const result = useAreasControllerFindQuery({});
-
-        // Create a properly typed version of the query result
-        const typedResult = result as unknown as {
-          data?: Area[];
-          isLoading: boolean;
-          error?: any;
-        };
-
         // If we have data and a worldId, filter the areas by worldId
-        if (typedResult.data && worldId) {
+        if (typedAreasResult.data && worldId) {
           return {
-            ...typedResult,
-            data: typedResult.data.filter(
+            ...typedAreasResult,
+            data: typedAreasResult.data.filter(
               (area: Area) => area.worldId === worldId
             ),
           };
         }
 
-        return typedResult;
+        return typedAreasResult;
       }}
     />
   );

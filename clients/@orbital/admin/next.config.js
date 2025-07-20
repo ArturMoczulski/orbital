@@ -32,7 +32,7 @@ const nextConfig = withTM({
         __dirname,
         dev
           ? "../../../libs/@orbital/react-ui/src"
-          : "../../../libs/@orbital/react-ui/dist/src"
+          : "../../../libs/@orbital/react-ui/dist/react-ui/src"
       ),
       "@orbital/characters": path.resolve(
         __dirname,
@@ -45,6 +45,18 @@ const nextConfig = withTM({
         dev
           ? "../../../libs/@orbital/core/src"
           : "../../../libs/@orbital/core/dist"
+      ),
+      "@orbital/core/src": path.resolve(
+        __dirname,
+        dev
+          ? "../../../libs/@orbital/core/src"
+          : "../../../libs/@orbital/core/dist"
+      ),
+      "@orbital/core/src/zod/reference/reference": path.resolve(
+        __dirname,
+        dev
+          ? "../../../libs/@orbital/core/src/zod/reference/reference"
+          : "../../../libs/@orbital/core/dist/zod/reference/reference"
       ),
       // force every import to hit the *one* hoisted copy
       "@emotion/react": path.resolve(

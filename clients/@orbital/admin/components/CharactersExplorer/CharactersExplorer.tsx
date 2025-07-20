@@ -29,6 +29,18 @@ export default function CharactersExplorer({
     null
   );
 
+  // Move the query hook to the top level of the component
+  const charactersQueryResult = useCharactersControllerFindQuery({
+    worldId: worldId || undefined,
+  });
+
+  // Create a properly typed version of the query result
+  const typedCharactersResult = charactersQueryResult as unknown as {
+    data?: Character[];
+    isLoading: boolean;
+    error?: any;
+  };
+
   const {
     data: characterDetails,
     isLoading: isDetailsLoading,
@@ -64,23 +76,11 @@ export default function CharactersExplorer({
       )}
       // Custom query function to filter by worldId
       query={() => {
-        // Use the built-in query hook
-        const result = useCharactersControllerFindQuery({
-          worldId: worldId || undefined,
-        });
-
-        // Create a properly typed version of the query result
-        const typedResult = result as unknown as {
-          data?: Character[];
-          isLoading: boolean;
-          error?: any;
-        };
-
         // If we have data and a worldId, filter the characters by worldId and add name property
-        if (typedResult.data && worldId) {
+        if (typedCharactersResult.data && worldId) {
           return {
-            ...typedResult,
-            data: typedResult.data
+            ...typedCharactersResult,
+            data: typedCharactersResult.data
               .filter((character: Character) => character.worldId === worldId)
               .map((character: Character) => ({
                 ...character,
@@ -91,10 +91,10 @@ export default function CharactersExplorer({
         }
 
         // If we have data but no worldId filter, still need to add name property
-        if (typedResult.data) {
+        if (typedCharactersResult.data) {
           return {
-            ...typedResult,
-            data: typedResult.data.map((character: Character) => ({
+            ...typedCharactersResult,
+            data: typedCharactersResult.data.map((character: Character) => ({
               ...character,
               name: `${character.firstName} ${character.lastName}`,
             })) as CharacterWithName[],
@@ -102,7 +102,7 @@ export default function CharactersExplorer({
         }
 
         return {
-          ...typedResult,
+          ...typedCharactersResult,
           data: [],
         };
       }}

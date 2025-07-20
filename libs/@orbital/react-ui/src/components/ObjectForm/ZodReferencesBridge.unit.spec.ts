@@ -1,5 +1,5 @@
 // @ts-nocheck
-import { RelationshipType } from "@orbital/core/src/zod/reference/reference";
+import { RelationshipType } from "@orbital/core";
 import { z } from "zod";
 import { ZodReferencesBridge } from "./ZodReferencesBridge";
 

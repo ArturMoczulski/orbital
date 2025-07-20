@@ -11,8 +11,15 @@
     "moduleResolution": "node",
     "forceConsistentCasingInFileNames": true,
     "experimentalDecorators": true,
-    "emitDecoratorMetadata": true
+    "emitDecoratorMetadata": true,
+    "composite": true,
+    "baseUrl": "../../..",
+    "paths": {
+      "@orbital/core": ["libs/@orbital/core/src"],
+      "@orbital/core/*": ["libs/@orbital/core/src/*"]
+    }
   },
   "include": ["src/**/*"],
-  "exclude": ["src/__mocks__/**/*.js"]
+  "exclude": ["src/__mocks__/**/*.js"],
+  "references": [{ "path": "../core" }]
 }

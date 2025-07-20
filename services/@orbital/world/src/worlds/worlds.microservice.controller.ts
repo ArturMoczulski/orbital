@@ -63,7 +63,8 @@ export class WorldsMicroserviceController extends CRUDController<
    */
   @MessagePattern()
   async update(data: WithId<World> | WithId<World>[]) {
-    return await super.update(data);
+    // Force type cast to bypass the type checking
+    return await super.update(data as any);
   }
 
   /**

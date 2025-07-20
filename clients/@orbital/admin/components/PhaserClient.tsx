@@ -71,7 +71,7 @@ export default function PhaserClient({
       gameInstanceRef.current?.destroy(true);
       gameInstanceRef.current = null;
     };
-  }, []);
+  }, [areaMap]); // Add areaMap as a dependency
 
   // Update map when data changes
   useEffect(() => {

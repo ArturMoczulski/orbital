@@ -1,7 +1,7 @@
 import { ConfigModule, ConfigService } from "@nestjs/config";
 import { ClientProxy, ClientsModule, Transport } from "@nestjs/microservices";
 import { Test, TestingModule } from "@nestjs/testing";
-import { Conversation } from "@orbital/characters";
+import { ConversationModel } from "@orbital/characters-typegoose";
 import { firstValueFrom } from "rxjs";
 
 describe("ConversationsMicroserviceController (e2e)", () => {
@@ -59,7 +59,7 @@ describe("ConversationsMicroserviceController (e2e)", () => {
   describe("CRUD operations", () => {
     it("should create a conversation", async () => {
       // Arrange
-      const conversation: Partial<Conversation> = {
+      const conversation: Partial<ConversationModel> = {
         name: "E2E Test Conversation",
         characterIds: ["test-character-id"],
         messages: [],

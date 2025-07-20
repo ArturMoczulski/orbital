@@ -29,7 +29,11 @@
       "@orbital/phaser": ["../../libs/@orbital/phaser/src"],
       "@orbital/phaser/*": ["../../libs/@orbital/phaser/src/*"],
       "@orbital/react-ui": ["../../libs/@orbital/react-ui/src"],
-      "@orbital/react-ui/*": ["../../libs/@orbital/react-ui/src/*"]
+      "@orbital/react-ui/*": ["../../libs/@orbital/react-ui/src/*"],
+      "@orbital/characters": ["../../libs/@orbital/characters/src"],
+      "@orbital/characters/*": ["../../libs/@orbital/characters/src/*"],
+      "@orbital/core": ["../../libs/@orbital/core/src"],
+      "@orbital/core/*": ["../../libs/@orbital/core/src/*"]
     }
   },
   "include": [
@@ -40,7 +44,9 @@
     ".next/types/**/*.ts",
     "../../../libs/@orbital/phaser-ui/src/organisms/GameSettingsPopup.ts",
     "../../libs/@orbital/phaser/src/**/*",
-    "../../libs/@orbital/react-ui/src/**/*"
+    "../../libs/@orbital/react-ui/src/**/*",
+    "../../libs/@orbital/characters/src/**/*",
+    "../../libs/@orbital/core/src/**/*"
   ],
   "exclude": ["node_modules"]
 }

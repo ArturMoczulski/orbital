@@ -1,6 +1,6 @@
 import { Controller } from "@nestjs/common";
 import { MessagePattern } from "@nestjs/microservices";
-import { Conversation } from "@orbital/characters";
+import { ConversationModel } from "@orbital/characters-typegoose";
 import { ConversationService } from "./conversation.service";
 import { ConversationsCRUDService } from "./conversations.crud.service";
 
@@ -27,14 +27,14 @@ export class ConversationsMicroserviceController {
   }
 
   @MessagePattern({ cmd: "createConversation" })
-  async create(conversation: Partial<Conversation>): Promise<any> {
+  async create(conversation: Partial<ConversationModel>): Promise<any> {
     return this.conversationsCRUDService.create(conversation);
   }
 
   @MessagePattern({ cmd: "updateConversation" })
   async update(data: {
     id: string;
-    conversation: Partial<Conversation>;
+    conversation: Partial<ConversationModel>;
   }): Promise<any | null> {
     return this.conversationsCRUDService.update(data.id, data.conversation);
   }

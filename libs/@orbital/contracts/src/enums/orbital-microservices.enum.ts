@@ -17,4 +17,9 @@ export enum OrbitalMicroservices {
    * Identity microservice
    */
   Identity = "identity",
+
+  /**
+   * Characters microservice
+   */
+  Characters = "characters",
 }

@@ -3,7 +3,7 @@ import {
   getDisplayValue,
   ReferenceMetadata,
   RelationshipType,
-} from "@orbital/core/src/zod/reference/reference";
+} from "@orbital/core";
 import { camelCase, startCase } from "lodash";
 import { ZodBridge } from "uniforms-bridge-zod";
 import { AutoField } from "uniforms-mui";

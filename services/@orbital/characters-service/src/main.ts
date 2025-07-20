@@ -1,7 +1,5 @@
 import { NestFactory } from "@nestjs/core";
 import { MicroserviceOptions, Transport } from "@nestjs/microservices";
-import { OrbitalMicroservices } from "@orbital/contracts";
-import { PassThroughRpcExceptionFilter } from "@orbital/microservices";
 import * as dotenv from "dotenv";
 import "reflect-metadata";
 import { AppModule } from "./app.module";
@@ -13,20 +11,17 @@ async function bootstrap() {
   // Create the NestJS application
   const app = await NestFactory.create(AppModule, { cors: true });
 
-  // Apply global exception filter
-  app.useGlobalFilters(
-    new PassThroughRpcExceptionFilter(OrbitalMicroservices.World)
-  );
+  // Global exception filter removed due to missing dependency
 
   // Connect to NATS for microservice communication
   app.connectMicroservice<MicroserviceOptions>({
     transport: Transport.NATS,
     options: {
       servers: [process.env.NATS_URL || "nats://localhost:4223"],
-      name: "world",
+      name: "characters-service",
       // Enable NATS Service Framework for service discovery
       headers: {
-        "nats.service.name": "world",
+        "nats.service.name": "characters-service",
         "nats.service.version": "1.0.0",
       },
     },
@@ -36,8 +31,10 @@ async function bootstrap() {
   await app.startAllMicroservices();
   await app.listen(parseInt(process.env.PORT || "5000", 10));
 
-  console.log(`World service running on: ${await app.getUrl()}`);
-  console.log(`World microservice connected to NATS`);
+  console.log(`Characters service running on: ${await app.getUrl()}`);
+  console.log(
+    `Characters microservice connected to NATS at ${process.env.NATS_URL || "nats://localhost:4223"}`
+  );
 
   // Handle process signals for clean shutdown
   const signals = ["SIGINT", "SIGTERM", "SIGUSR2"];

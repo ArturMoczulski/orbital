@@ -3,19 +3,27 @@ import {
   BulkItemizedResponse,
   BulkOperation,
 } from "@orbital/bulk-operations";
+import { ZodErrorWithStack } from "@orbital/core/src/errors/zod-error-with-stack";
 import {
   ConsoleLogger,
-  IdentifiableObject,
   Logger,
   VerbosityLevel,
-  WithId,
-  WithoutId,
-  ZodErrorWithStack,
-} from "@orbital/core";
+} from "@orbital/core/src/services/logger";
+import { IdentifiableObject } from "@orbital/core/src/types/identifiable-object";
 import { ReturnModelType } from "@typegoose/typegoose";
 import { ZodObject } from "zod";
 import { getReferences } from "../decorators/reference.decorator";
 import { PersistenceMapper } from "../mappers/persistence-mapper";
+
+/**
+ * Simple interface for objects with ID
+ */
+type WithId<T> = T & { _id: string };
+
+/**
+ * Simple interface for objects without ID
+ */
+type WithoutId<T> = Omit<T, "_id">;
 
 /**
  * Interface for model references

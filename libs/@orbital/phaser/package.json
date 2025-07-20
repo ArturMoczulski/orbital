@@ -5,16 +5,18 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
-    "build": "tsc -p tsconfig.json",
+    "build": "tsc -b tsconfig.json",
     "prepare": "npm run build",
     "prepublishOnly": "npm run build",
     "test": "NODE_NO_WARNINGS=1 jest --config jest.config.cjs --passWithNoTests",
     "test:unit": "NODE_NO_WARNINGS=1 jest --config jest.config.cjs --passWithNoTests"
   },
   "peerDependencies": {
-    "@orbital/core": "workspace:*",
     "phaser": "^3.70.0",
     "phaser3-rex-plugins": "^1.80.16"
+  },
+  "dependencies": {
+    "@orbital/core": "workspace:*"
   },
   "devDependencies": {
     "@types/jest": "^29.5.14",

@@ -2,10 +2,10 @@ import {
   getReference,
   getSchemaName,
   hasReference,
+  parseWithReferences,
   RelationshipType,
   z,
 } from "@orbital/core";
-import { parseWithReferences } from "@orbital/core/src/zod/reference/parser";
 import { camelCase, startCase } from "lodash";
 import { ZodBridge } from "uniforms-bridge-zod";
 

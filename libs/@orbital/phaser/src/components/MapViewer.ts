@@ -1,5 +1,5 @@
-import { AreaMapProps, AreaMapTiles } from "@orbital/core";
 import Phaser from "phaser";
+import { AreaMapProps, AreaMapTiles } from "../../../core/src";
 
 const defaultTileColors: Record<AreaMapTiles, number> = {
   [AreaMapTiles.Water]: 0x3366cc,

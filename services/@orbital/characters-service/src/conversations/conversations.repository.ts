@@ -1,14 +1,13 @@
 import { Injectable } from "@nestjs/common";
-import { Conversation } from "@orbital/characters";
+import { ConversationModel } from "@orbital/characters-typegoose";
 import { Model } from "mongoose";
 import { InjectModel } from "nestjs-typegoose";
-import { TempConversationModel } from "./conversations.module";
 
 @Injectable()
 export class ConversationsRepository {
   constructor(
-    @InjectModel(TempConversationModel)
-    private readonly conversationModel: Model<any>
+    @InjectModel(ConversationModel)
+    private readonly conversationModel: Model<ConversationModel>
   ) {}
 
   async findAll() {
@@ -23,12 +22,12 @@ export class ConversationsRepository {
     return this.conversationModel.find({ _id: { $in: ids } }).exec();
   }
 
-  async create(conversation: Partial<Conversation>) {
+  async create(conversation: Partial<ConversationModel>) {
     const createdConversation = new this.conversationModel(conversation);
     return createdConversation.save();
   }
 
-  async update(id: string, conversation: Partial<Conversation>) {
+  async update(id: string, conversation: Partial<ConversationModel>) {
     return this.conversationModel
       .findByIdAndUpdate(id, conversation, { new: true })
       .exec();

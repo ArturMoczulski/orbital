@@ -16,6 +16,7 @@
     "@asyncapi/ts-nats-template": "^0.2.1",
     "@orbital/bulk-operations": "workspace:^1.0.0",
     "@orbital/contracts": "workspace:^1.0.0",
+    "@orbital/core": "workspace:^1.0.0",
     "nestjs-asyncapi": "^1.0.0",
     "react": "^16.14.0",
     "react-dom": "^16.14.0",

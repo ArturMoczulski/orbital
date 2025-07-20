@@ -1,6 +1,7 @@
 import { Inject, Injectable } from "@nestjs/common";
 import { World } from "@orbital/core";
-import { DocumentRepository, WorldModel } from "@orbital/typegoose";
+import { DocumentRepository } from "@orbital/typegoose";
+import { WorldModel } from "@orbital/world-typegoose";
 import type { ReturnModelType } from "@typegoose/typegoose";
 import { getModelToken } from "nestjs-typegoose";
 

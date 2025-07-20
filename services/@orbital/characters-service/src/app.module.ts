@@ -1,7 +1,6 @@
 import { Module } from "@nestjs/common";
 import { ConfigModule, ConfigService } from "@nestjs/config";
 import {
-  APP_FILTER,
   DiscoveryModule,
   DiscoveryService,
   MetadataScanner,
@@ -9,12 +8,8 @@ import {
 } from "@nestjs/core";
 import { EventEmitter2, EventEmitterModule } from "@nestjs/event-emitter";
 import { ClientsModule, Transport } from "@nestjs/microservices";
-import { OrbitalMicroservices } from "@orbital/contracts";
-import { PassThroughRpcExceptionFilter } from "@orbital/microservices";
-import { AreasModule } from "./areas/areas.module";
 import { ConversationsModule } from "./conversations/conversations.module";
 import { DatabaseModule } from "./database.module";
-import { WorldsModule } from "./worlds/worlds.module";
 
 @Module({
   imports: [
@@ -41,21 +36,8 @@ import { WorldsModule } from "./worlds/worlds.module";
       },
     ]),
     DatabaseModule,
-    WorldsModule,
-    AreasModule,
     ConversationsModule,
   ],
-  providers: [
-    EventEmitter2,
-    MetadataScanner,
-    Reflector,
-    DiscoveryService,
-    {
-      provide: APP_FILTER,
-      useFactory: () => {
-        return new PassThroughRpcExceptionFilter(OrbitalMicroservices.World);
-      },
-    },
-  ],
+  providers: [EventEmitter2, MetadataScanner, Reflector, DiscoveryService],
 })
 export class AppModule {}

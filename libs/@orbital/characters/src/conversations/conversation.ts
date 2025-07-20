@@ -1,10 +1,10 @@
-import { ZodSchema } from "@orbital/core/src/decorators/zod-schema.decorator";
 import {
   IdentifiableObject,
   IdentifiableObjectProps,
   IdentifiableObjectSchema,
-} from "@orbital/core/src/types/identifiable-object";
-import { generateUUID } from "@orbital/core/src/utils/data-generators";
+  ZodSchema,
+  generateUUID,
+} from "@orbital/core";
 import { z } from "zod";
 
 /**

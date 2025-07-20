@@ -16,7 +16,6 @@
     "test:coverage": "npx jest --config jest.unit.config.js --coverage"
   },
   "dependencies": {
-    "@orbital/characters": "workspace:^0.1.0",
     "@orbital/core": "workspace:^1.0.0",
     "@orbital/identity-types": "workspace:*",
     "@typegoose/typegoose": "^7.6.3",
