@@ -6,13 +6,6 @@ import {
 } from "@orbital/core";
 import { z } from "zod";
 
-/**
- * Represents a world object that can move.
- */
-export interface MobileProps extends WorldObjectProps {
-  currentLocation?: string;
-}
-
 /** Zod schema for Mobile */
 export const MobileSchema = WorldObjectSchema.extend({
   currentLocation: z
@@ -20,6 +13,11 @@ export const MobileSchema = WorldObjectSchema.extend({
     .optional()
     .describe("Current location ID of the mobile object"),
 }).describe("A world object that can move");
+
+/**
+ * Interface for Mobile properties, inferred from the schema
+ */
+export type MobileProps = z.infer<typeof MobileSchema>;
 
 /**
  * Represents a world object that can move.

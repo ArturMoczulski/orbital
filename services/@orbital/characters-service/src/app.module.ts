@@ -8,10 +8,10 @@ import {
 } from "@nestjs/core";
 import { EventEmitter2, EventEmitterModule } from "@nestjs/event-emitter";
 import { ClientsModule, Transport } from "@nestjs/microservices";
-import { CharactersModule } from "./characters/characters.module.js";
+import { CharactersModule } from "./characters/characters.module";
 import { ConversationsModule } from "./conversations/conversations.module";
 import { DatabaseModule } from "./database.module";
-import { IdentitiesModule } from "./identities/identities.module.js";
+import { IdentitiesModule } from "./identities/identities.module";
 
 @Module({
   imports: [

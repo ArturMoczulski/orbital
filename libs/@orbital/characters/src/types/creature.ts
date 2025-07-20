@@ -9,7 +9,7 @@ import { Desire, DesireSchema } from "./desire";
 import { Goal, GoalSchema } from "./goal";
 import { Intention, IntentionSchema } from "./intention";
 import { Memory, MemorySchema } from "./memory";
-import { Mobile, MobileProps, MobileSchema } from "./mobile";
+import { Mobile, MobileSchema } from "./mobile";
 import {
   PsychologicalProfile,
   PsychologicalProfileSchema,
@@ -17,37 +17,22 @@ import {
 import { Relation, RelationSchema } from "./relation";
 
 /**
- * Type representing a living creature in the world.
- */
-export interface CreatureProps extends MobileProps {
-  creatureType: CreatureType;
-  race: Race;
-  gender: Gender;
-  attributes: Attributes;
-  psychologicalProfile: PsychologicalProfile;
-  skills?: CharactersSkill[];
-  inventory?: string[];
-  beliefs?: { statement: string; certainty: number }[];
-  goals?: Goal[];
-  intentions?: Intention[];
-  desires?: Desire[];
-  memories?: Memory[];
-  relations?: Relation[];
-}
-
-/**
  * Zod schema for Creature.
  */
 export const CreatureSchema = MobileSchema.extend({
   creatureType: z
     .nativeEnum(CreatureType)
+    .optional()
     .describe("Type of creature (e.g., humanoid, animal)"),
-  race: z.nativeEnum(Race).describe("Biological race of the creature"),
-  gender: z.nativeEnum(Gender).describe("Gender of the creature"),
-  attributes: AttributesSchema.describe(
+  race: z
+    .nativeEnum(Race)
+    .optional()
+    .describe("Biological race of the creature"),
+  gender: z.nativeEnum(Gender).optional().describe("Gender of the creature"),
+  attributes: AttributesSchema.optional().describe(
     "Core attributes (e.g., ST, DX, IQ, HT)"
   ),
-  psychologicalProfile: PsychologicalProfileSchema.describe(
+  psychologicalProfile: PsychologicalProfileSchema.optional().describe(
     "Psychological profile scales"
   ),
   skills: z.array(CharactersSkillSchema).optional().describe("Learned skills"),
@@ -84,21 +69,26 @@ export const CreatureSchema = MobileSchema.extend({
 }).describe("A living creature in the world");
 
 /**
+ * Interface for Creature properties, inferred from the schema
+ */
+export type CreatureProps = z.infer<typeof CreatureSchema>;
+
+/**
  * Represents a living creature in the world.
  */
 @ZodSchema(CreatureSchema)
-export class Creature extends Mobile implements CreatureProps, MobileProps {
+export class Creature extends Mobile implements CreatureProps {
   /** Type of creature (e.g., humanoid, animal) */
-  creatureType!: CreatureType;
+  creatureType?: CreatureType;
 
   /** Biological race of the creature */
-  race!: Race;
+  race?: Race;
 
   /** Gender of the creature */
-  gender!: Gender;
+  gender?: Gender;
 
   /** Core attributes (e.g., ST, DX, IQ, HT) */
-  attributes!: Attributes;
+  attributes?: Attributes;
 
   /** Psychological profile scales */
   psychologicalProfile!: PsychologicalProfile;
@@ -110,7 +100,7 @@ export class Creature extends Mobile implements CreatureProps, MobileProps {
   inventory?: string[];
 
   /** Beliefs held by the creature */
-  beliefs?: { statement: string; certainty: number }[];
+  beliefs?: { statement?: string; certainty?: number }[];
 
   /** Goals the creature is pursuing */
   goals?: Goal[];
