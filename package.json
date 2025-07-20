@@ -15,7 +15,7 @@
   "scripts": {
     "build": "turbo run build",
     "dev": "yarn orb dev",
-    "dev:libs": "turbo run dev --filter=libs/** --parallel",
+    "dev:libs": "turbo run build --filter=\"./libs/**\" --parallel -- --watch",
     "dev:scout": "turbo run dev --filter=@scout/* --parallel",
     "test": "jest --config jest.config.cjs",
     "test:unit": "jest --config jest.config.cjs \"unit.spec\"",

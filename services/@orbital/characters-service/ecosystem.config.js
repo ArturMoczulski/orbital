@@ -12,7 +12,7 @@
 module.exports = {
   apps: [
     {
-      name: "characters",
+      name: "orbital/characters-service",
       script: "nest",
       args: "start",
       watch: false,
@@ -29,7 +29,7 @@ module.exports = {
       max_files: 10,
     },
     {
-      name: "characters-watch",
+      name: "orbital/characters-service-watch",
       script: "nest",
       args: "start --watch --preserveWatchOutput",
       watch: false,
@@ -50,7 +50,7 @@ module.exports = {
       max_files: 10,
     },
     {
-      name: "characters-debug",
+      name: "orbital/characters-service-debug",
       script: "nest",
       args: "start --preserveWatchOutput",
       watch: false,
