@@ -1,73 +1,73 @@
-import { ConfigModule, ConfigService } from "@nestjs/config";
-import { ClientProxy, ClientsModule, Transport } from "@nestjs/microservices";
-import { Test, TestingModule } from "@nestjs/testing";
+import { ClientNats, ClientProxy } from "@nestjs/microservices";
 import { ConversationModel } from "@orbital/characters-typegoose";
-import { firstValueFrom } from "rxjs";
+import { randomUUID } from "crypto";
+import { lastValueFrom } from "rxjs";
 
 describe("ConversationsMicroserviceController (e2e)", () => {
-  let clientProxy: ClientProxy;
-  let moduleRef: TestingModule;
+  let client: ClientProxy;
   let createdConversationId: string;
+  let createdConversations: any[] = [];
 
   beforeAll(async () => {
-    // Create a test module with the necessary providers
-    moduleRef = await Test.createTestingModule({
-      imports: [
-        ConfigModule.forRoot({
-          isGlobal: true,
-          envFilePath: ".env.local",
-          expandVariables: true,
-        }),
-        ClientsModule.registerAsync([
-          {
-            name: "NATS_CLIENT",
-            imports: [ConfigModule],
-            useFactory: (configService: ConfigService) => ({
-              transport: Transport.NATS,
-              options: {
-                servers: [
-                  configService.get<string>(
-                    "NATS_URL",
-                    "nats://localhost:4223"
-                  ),
-                ],
-              },
-            }),
-            inject: [ConfigService],
-          },
-        ]),
-      ],
-    }).compile();
+    // Connect directly to the running NATS server
+    client = new ClientNats({
+      servers: [process.env.NATS_URL || "nats://localhost:4223"],
+      queue: "test-client",
+    });
 
-    // Get the client proxy from the test module
-    clientProxy = moduleRef.get<ClientProxy>("NATS_CLIENT");
+    await client.connect();
 
-    // Connect to the NATS server
-    await clientProxy.connect();
+    // Wait a moment for the connection to be fully established
+    await new Promise((resolve) => setTimeout(resolve, 1000));
   });
 
   afterAll(async () => {
-    // Clean up resources
-    await clientProxy.close();
-    await moduleRef.close();
+    // Clean up
+    try {
+      await Promise.all(
+        createdConversations.map((conversation) =>
+          lastValueFrom(
+            client.send(
+              "characters-service.ConversationsMicroserviceController.delete",
+              conversation._id
+            )
+          )
+        )
+      );
+    } catch (error) {
+      // Error cleanup handled silently
+    }
+
+    // Close the client connection
+    await client.close();
   });
 
   it("should be defined", () => {
-    expect(clientProxy).toBeDefined();
+    expect(client).toBeDefined();
+  });
+
+  // Add a test to verify NATS connection
+  it("should connect to NATS server", async () => {
+    // This test just verifies that the client is connected
+    expect(client["natsClient"]).toBeDefined();
   });
 
   describe("CRUD operations", () => {
     it("should create a conversation", async () => {
       // Arrange
       const conversation: Partial<ConversationModel> = {
+        _id: randomUUID(), // Add explicit _id
         name: "E2E Test Conversation",
         characterIds: ["test-character-id"],
         messages: [],
       };
 
       // Act
-      const result = await firstValueFrom(
-        clientProxy.send({ cmd: "createConversation" }, conversation)
+      const result = await lastValueFrom(
+        client.send(
+          "characters-service.ConversationsMicroserviceController.create",
+          conversation
+        )
       );
 
       // Assert
@@ -76,14 +76,18 @@ describe("ConversationsMicroserviceController (e2e)", () => {
       expect(result.name).toEqual(conversation.name);
       expect(result.characterIds).toEqual(conversation.characterIds);
 
-      // Store the ID for later tests
+      // Store the ID and conversation for later tests and cleanup
       createdConversationId = result._id;
+      createdConversations.push(result);
     });
 
     it("should find a conversation by ID", async () => {
       // Act
-      const result = await firstValueFrom(
-        clientProxy.send({ cmd: "findConversationById" }, createdConversationId)
+      const result = await lastValueFrom(
+        client.send(
+          "characters-service.ConversationsMicroserviceController.findById",
+          { id: createdConversationId }
+        )
       );
 
       // Assert
@@ -94,10 +98,11 @@ describe("ConversationsMicroserviceController (e2e)", () => {
 
     it("should find conversations by IDs", async () => {
       // Act
-      const result = await firstValueFrom(
-        clientProxy.send({ cmd: "findConversationsByIds" }, [
-          createdConversationId,
-        ])
+      const result = await lastValueFrom(
+        client.send(
+          "characters-service.ConversationsMicroserviceController.findByIds",
+          [createdConversationId]
+        )
       );
 
       // Assert
@@ -109,8 +114,11 @@ describe("ConversationsMicroserviceController (e2e)", () => {
 
     it("should find all conversations", async () => {
       // Act
-      const result = await firstValueFrom(
-        clientProxy.send({ cmd: "findAllConversations" }, {})
+      const result = await lastValueFrom(
+        client.send(
+          "characters-service.ConversationsMicroserviceController.find",
+          {}
+        )
       );
 
       // Assert
@@ -130,8 +138,14 @@ describe("ConversationsMicroserviceController (e2e)", () => {
       };
 
       // Act
-      const result = await firstValueFrom(
-        clientProxy.send({ cmd: "updateConversation" }, updateData)
+      const result = await lastValueFrom(
+        client.send(
+          "characters-service.ConversationsMicroserviceController.update",
+          {
+            _id: createdConversationId,
+            name: "Updated E2E Test Conversation",
+          }
+        )
       );
 
       // Assert
@@ -149,8 +163,11 @@ describe("ConversationsMicroserviceController (e2e)", () => {
       };
 
       // Act
-      const result = await firstValueFrom(
-        clientProxy.send({ cmd: "addMessageToConversation" }, messageData)
+      const result = await lastValueFrom(
+        client.send(
+          "characters-service.ConversationsMicroserviceController.addMessage",
+          messageData
+        )
       );
 
       // Assert
@@ -170,8 +187,11 @@ describe("ConversationsMicroserviceController (e2e)", () => {
       };
 
       // Act
-      const result = await firstValueFrom(
-        clientProxy.send({ cmd: "addMessageToConversation" }, messageData)
+      const result = await lastValueFrom(
+        client.send(
+          "characters-service.ConversationsMicroserviceController.addMessage",
+          messageData
+        )
       );
 
       // Assert
@@ -185,26 +205,31 @@ describe("ConversationsMicroserviceController (e2e)", () => {
 
     it("should delete a conversation", async () => {
       // Act
-      const result = await firstValueFrom(
-        clientProxy.send({ cmd: "deleteConversation" }, createdConversationId)
+      const result = await lastValueFrom(
+        client.send(
+          "characters-service.ConversationsMicroserviceController.delete",
+          createdConversationId
+        )
       );
 
       // Assert
       expect(result).toBeDefined();
-      expect(result._id).toEqual(createdConversationId);
+      expect(result).toBe(true); // The delete method returns true for successful deletion
 
       // Verify it's deleted
-      try {
-        await firstValueFrom(
-          clientProxy.send(
-            { cmd: "findConversationById" },
-            createdConversationId
-          )
-        );
-        fail("Expected conversation to be deleted");
-      } catch (error) {
-        expect(error).toBeDefined();
-      }
+      // Verify it's deleted
+      const deletedConversation = await lastValueFrom(
+        client.send(
+          "characters-service.ConversationsMicroserviceController.findById",
+          { id: createdConversationId }
+        )
+      );
+      expect(deletedConversation).toBeNull();
+
+      // Remove from our cleanup list since it's already deleted
+      createdConversations = createdConversations.filter(
+        (c) => c._id !== createdConversationId
+      );
     });
   });
 });

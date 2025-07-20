@@ -1,42 +1,29 @@
 import { Injectable } from "@nestjs/common";
+import { Conversation, ConversationProps } from "@orbital/characters";
 import { ConversationModel } from "@orbital/characters-typegoose";
-import { Model } from "mongoose";
+import { DocumentRepository } from "@orbital/typegoose";
+import { ReturnModelType } from "@typegoose/typegoose";
 import { InjectModel } from "nestjs-typegoose";
 
 @Injectable()
-export class ConversationsRepository {
+export class ConversationsRepository extends DocumentRepository<
+  Conversation,
+  ConversationProps,
+  typeof ConversationModel
+> {
   constructor(
     @InjectModel(ConversationModel)
-    private readonly conversationModel: Model<ConversationModel>
-  ) {}
-
-  async findAll() {
-    return this.conversationModel.find().exec();
+    conversationModel: ReturnModelType<typeof ConversationModel>
+  ) {
+    super(conversationModel, Conversation);
   }
 
-  async findById(id: string) {
-    return this.conversationModel.findById(id).exec();
-  }
-
-  async findByIds(ids: string[]) {
-    return this.conversationModel.find({ _id: { $in: ids } }).exec();
-  }
-
-  async create(conversation: Partial<ConversationModel>) {
-    const createdConversation = new this.conversationModel(conversation);
-    return createdConversation.save();
-  }
-
-  async update(id: string, conversation: Partial<ConversationModel>) {
-    return this.conversationModel
-      .findByIdAndUpdate(id, conversation, { new: true })
-      .exec();
-  }
-
-  async delete(id: string) {
-    return this.conversationModel.findByIdAndDelete(id).exec();
-  }
-
+  /**
+   * Add a message to a conversation
+   * @param id Conversation ID
+   * @param message Message to add
+   * @returns Updated conversation
+   */
   async addMessage(
     id: string,
     message: {
@@ -45,9 +32,22 @@ export class ConversationsRepository {
       content: { text: string };
       characterId?: string;
     }
-  ) {
-    return this.conversationModel
-      .findByIdAndUpdate(id, { $push: { messages: message } }, { new: true })
-      .exec();
+  ): Promise<Conversation | null> {
+    const conversation = await this.findById(id);
+    if (!conversation) {
+      return null;
+    }
+
+    // Use the domain model's addMessage method if the message doesn't have an _id
+    if (!message._id) {
+      conversation.addMessage(message.content.text, message.characterId);
+    } else {
+      // Otherwise, add the message directly
+      conversation.messages.push(message);
+    }
+
+    // Update the conversation using the parent method
+    const updated = await this.update(conversation);
+    return updated as Conversation;
   }
 }

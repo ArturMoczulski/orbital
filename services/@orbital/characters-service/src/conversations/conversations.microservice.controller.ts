@@ -1,55 +1,79 @@
-import { Controller } from "@nestjs/common";
+import { Controller, UseFilters } from "@nestjs/common";
 import { MessagePattern } from "@nestjs/microservices";
-import { ConversationModel } from "@orbital/characters-typegoose";
+import { Conversation, ConversationProps } from "@orbital/characters";
+import { WithId, WithoutId } from "@orbital/core";
+import { PassThroughRpcExceptionFilter } from "@orbital/microservices";
+import { CRUDController } from "@orbital/nest";
 import { ConversationService } from "./conversation.service";
 import { ConversationsCRUDService } from "./conversations.crud.service";
 
 @Controller()
-export class ConversationsMicroserviceController {
+@UseFilters(new PassThroughRpcExceptionFilter("conversation"))
+export class ConversationsMicroserviceController extends CRUDController<
+  Conversation,
+  ConversationProps,
+  ConversationsCRUDService
+> {
   constructor(
-    private readonly conversationsCRUDService: ConversationsCRUDService,
+    conversationsCRUDService: ConversationsCRUDService,
     private readonly conversationService: ConversationService
-  ) {}
-
-  @MessagePattern({ cmd: "findAllConversations" })
-  async findAll(): Promise<any[]> {
-    return this.conversationsCRUDService.findAll();
+  ) {
+    super(conversationsCRUDService);
   }
 
-  @MessagePattern({ cmd: "findConversationById" })
-  async findById(id: string): Promise<any | null> {
-    return this.conversationsCRUDService.findById(id);
+  @MessagePattern(
+    "characters-service.ConversationsMicroserviceController.create"
+  )
+  async create(dto: WithoutId<Conversation> | WithoutId<Conversation>[]) {
+    return super.create(dto);
   }
 
-  @MessagePattern({ cmd: "findConversationsByIds" })
-  async findByIds(ids: string[]): Promise<any[]> {
-    return this.conversationsCRUDService.findByIds(ids);
+  @MessagePattern("characters-service.ConversationsMicroserviceController.find")
+  async find(payload: {
+    filter?: Record<string, any>;
+    projection?: Record<string, any>;
+    options?: Record<string, any>;
+  }) {
+    return super.find(payload);
   }
 
-  @MessagePattern({ cmd: "createConversation" })
-  async create(conversation: Partial<ConversationModel>): Promise<any> {
-    return this.conversationsCRUDService.create(conversation);
+  @MessagePattern(
+    "characters-service.ConversationsMicroserviceController.findById"
+  )
+  async findById(payload: { id: string; projection?: Record<string, any> }) {
+    return super.findById(payload);
   }
 
-  @MessagePattern({ cmd: "updateConversation" })
-  async update(data: {
-    id: string;
-    conversation: Partial<ConversationModel>;
-  }): Promise<any | null> {
-    return this.conversationsCRUDService.update(data.id, data.conversation);
+  @MessagePattern(
+    "characters-service.ConversationsMicroserviceController.findByIds"
+  )
+  async findByIds(ids: string[]): Promise<Conversation[]> {
+    return this.service.findByIds(ids);
   }
 
-  @MessagePattern({ cmd: "deleteConversation" })
-  async delete(id: string): Promise<any | null> {
-    return this.conversationsCRUDService.delete(id);
+  @MessagePattern(
+    "characters-service.ConversationsMicroserviceController.update"
+  )
+  async update(data: WithId<Conversation> | WithId<Conversation>[]) {
+    // Force type cast to bypass the type checking
+    return super.update(data as any);
   }
 
-  @MessagePattern({ cmd: "addMessageToConversation" })
+  @MessagePattern(
+    "characters-service.ConversationsMicroserviceController.delete"
+  )
+  async delete(ids: string | string[]) {
+    return super.delete(ids);
+  }
+
+  @MessagePattern(
+    "characters-service.ConversationsMicroserviceController.addMessage"
+  )
   async addMessage(data: {
     id: string;
     text: string;
     characterId?: string;
-  }): Promise<any | null> {
+  }): Promise<Conversation | null> {
     return this.conversationService.addMessage(
       data.id,
       data.text,

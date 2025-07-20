@@ -1,5 +1,5 @@
 import { ClientNats, ClientProxy } from "@nestjs/microservices";
-import { IdentityAccount } from "@orbital/identity-types";
+import { IdentityAccount, IdentityProviderEnum } from "@orbital/identity-types";
 import { randomUUID } from "crypto";
 import { lastValueFrom } from "rxjs";
 
@@ -48,7 +48,7 @@ describe("IdentitiesMicroserviceController (e2e)", () => {
       const createIdentityDto = {
         _id: randomUUID(),
         characterId,
-        provider: "local",
+        provider: IdentityProviderEnum.ORBITAL,
         identifier: "test-user@example.com",
         credentials: [],
       };
@@ -108,7 +108,7 @@ describe("IdentitiesMicroserviceController (e2e)", () => {
       const createIdentityDtos = Array.from({ length: 3 }, (_, i) => ({
         _id: randomUUID(),
         characterId,
-        provider: "local",
+        provider: IdentityProviderEnum.ORBITAL,
         identifier: `test-user-${i}@example.com`,
         credentials: [],
       }));
@@ -166,7 +166,7 @@ describe("IdentitiesMicroserviceController (e2e)", () => {
       const createIdentityDto = {
         _id: randomUUID(),
         characterId,
-        provider: "local",
+        provider: IdentityProviderEnum.ORBITAL,
         identifier: "findbyid-user@example.com",
         credentials: [],
       };
@@ -218,7 +218,7 @@ describe("IdentitiesMicroserviceController (e2e)", () => {
       const createIdentityDto = {
         _id: randomUUID(),
         characterId,
-        provider: "local",
+        provider: IdentityProviderEnum.ORBITAL,
         identifier: "update-user@example.com",
         credentials: [],
       };
@@ -297,7 +297,7 @@ describe("IdentitiesMicroserviceController (e2e)", () => {
       const createIdentityDto = {
         _id: randomUUID(),
         characterId,
-        provider: "local",
+        provider: IdentityProviderEnum.ORBITAL,
         identifier: `delete-user-${randomUUID()}@example.com`,
         credentials: [],
       };
@@ -354,7 +354,10 @@ describe("IdentitiesMicroserviceController (e2e)", () => {
       const createIdentityDtos = Array.from({ length: 3 }, (_, i) => ({
         _id: randomUUID(),
         characterId: testCharacterId,
-        provider: `provider-${i}`,
+        provider:
+          Object.values(IdentityProviderEnum)[
+            i % Object.values(IdentityProviderEnum).length
+          ],
         identifier: `character-user-${i}@example.com`,
         credentials: [],
       }));

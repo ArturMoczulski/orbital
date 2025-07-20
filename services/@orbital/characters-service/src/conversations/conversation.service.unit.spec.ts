@@ -98,7 +98,10 @@ describe("ConversationService", () => {
       const result = await service.updateConversation(id, conversation);
 
       // Assert
-      expect(crudService.update).toHaveBeenCalledWith(id, conversation);
+      expect(crudService.update).toHaveBeenCalledWith({
+        _id: id,
+        ...conversation,
+      });
       expect(result).toEqual(expectedResult);
     });
   });

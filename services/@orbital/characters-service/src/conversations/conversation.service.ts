@@ -22,7 +22,11 @@ export class ConversationService {
     id: string,
     conversation: Partial<ConversationModel>
   ): Promise<any | null> {
-    return this.conversationsCRUDService.update(id, conversation);
+    // Create an object with _id for the update method
+    return this.conversationsCRUDService.update({
+      _id: id,
+      ...conversation,
+    });
   }
 
   async deleteConversation(id: string): Promise<any | null> {

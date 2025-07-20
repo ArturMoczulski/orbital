@@ -8,4 +8,5 @@ export enum IdentityProviderEnum {
   GITHUB = "github",
   DISCORD = "discord",
   EMAIL = "email",
+  ORBITAL = "orbital",
 }

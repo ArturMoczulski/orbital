@@ -1,40 +1,33 @@
 import { Injectable } from "@nestjs/common";
-import { ConversationModel } from "@orbital/characters-typegoose";
+import { Conversation, ConversationProps } from "@orbital/characters";
+import { CRUDService } from "@orbital/nest";
 import { ConversationsRepository } from "./conversations.repository";
 
 @Injectable()
-export class ConversationsCRUDService {
-  constructor(
-    private readonly conversationsRepository: ConversationsRepository
-  ) {}
-
-  async findAll(): Promise<any[]> {
-    return this.conversationsRepository.findAll();
+export class ConversationsCRUDService extends CRUDService<
+  Conversation,
+  ConversationProps,
+  ConversationsRepository
+> {
+  constructor(conversationsRepository: ConversationsRepository) {
+    super(conversationsRepository);
   }
 
-  async findById(id: string): Promise<any | null> {
-    return this.conversationsRepository.findById(id);
+  /**
+   * Find conversations by IDs
+   * @param ids Array of conversation IDs
+   * @returns Array of conversations
+   */
+  async findByIds(ids: string[]): Promise<Conversation[]> {
+    return this.repository.find({ _id: { $in: ids } });
   }
 
-  async findByIds(ids: string[]): Promise<any[]> {
-    return this.conversationsRepository.findByIds(ids);
-  }
-
-  async create(conversation: Partial<ConversationModel>): Promise<any> {
-    return this.conversationsRepository.create(conversation);
-  }
-
-  async update(
-    id: string,
-    conversation: Partial<ConversationModel>
-  ): Promise<any | null> {
-    return this.conversationsRepository.update(id, conversation);
-  }
-
-  async delete(id: string): Promise<any | null> {
-    return this.conversationsRepository.delete(id);
-  }
-
+  /**
+   * Add a message to a conversation
+   * @param id Conversation ID
+   * @param message Message to add
+   * @returns Updated conversation
+   */
   async addMessage(
     id: string,
     message: {
@@ -43,7 +36,7 @@ export class ConversationsCRUDService {
       content: { text: string };
       characterId?: string;
     }
-  ): Promise<any | null> {
-    return this.conversationsRepository.addMessage(id, message);
+  ): Promise<Conversation | null> {
+    return this.repository.addMessage(id, message);
   }
 }
