@@ -1,4 +1,4 @@
-import { Reference } from "@orbital/typegoose/src/decorators/reference.decorator";
+import { Reference } from "@orbital/typegoose/dist/decorators/reference.decorator";
 import { modelOptions, prop } from "@typegoose/typegoose";
 import { AttributesModel } from "./attributes.model";
 import { BeliefModel } from "./belief.model";

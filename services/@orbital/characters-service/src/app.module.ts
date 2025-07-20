@@ -8,8 +8,10 @@ import {
 } from "@nestjs/core";
 import { EventEmitter2, EventEmitterModule } from "@nestjs/event-emitter";
 import { ClientsModule, Transport } from "@nestjs/microservices";
+import { CharactersModule } from "./characters/characters.module.js";
 import { ConversationsModule } from "./conversations/conversations.module";
 import { DatabaseModule } from "./database.module";
+import { IdentitiesModule } from "./identities/identities.module.js";
 
 @Module({
   imports: [
@@ -37,6 +39,8 @@ import { DatabaseModule } from "./database.module";
     ]),
     DatabaseModule,
     ConversationsModule,
+    IdentitiesModule,
+    CharactersModule,
   ],
   providers: [EventEmitter2, MetadataScanner, Reflector, DiscoveryService],
 })

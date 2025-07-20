@@ -1,6 +1,6 @@
-import { Module, Global } from "@nestjs/common";
-import { TypegooseModule } from "nestjs-typegoose";
+import { Global, Module } from "@nestjs/common";
 import { ConfigModule, ConfigService } from "@nestjs/config";
+import { TypegooseModule } from "nestjs-typegoose";
 
 @Global()
 @Module({
@@ -8,9 +8,9 @@ import { ConfigModule, ConfigService } from "@nestjs/config";
     TypegooseModule.forRootAsync({
       imports: [ConfigModule],
       useFactory: (configService: ConfigService) => {
-        const uri = configService.get<string>("WORLD_DB_URI");
+        const uri = configService.get<string>("CHARACTERS_DB_URI");
         if (!uri) {
-          throw new Error("WORLD_DB_URI environment variable is not set");
+          throw new Error("CHARACTERS_DB_URI environment variable is not set");
         }
         return {
           uri,
