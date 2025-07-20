@@ -51,6 +51,8 @@
     "cypress-terminal-report": "^5.3.10",
     "eslint": "^8.56.0",
     "eslint-config-next": "^14.0.0",
+    "ignore-loader": "^0.1.2",
+    "null-loader": "^4.0.1",
     "typescript": "5.8.3"
   },
   "license": "UNLICENSED"

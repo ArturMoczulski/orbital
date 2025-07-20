@@ -104,6 +104,8 @@ describe("CharacterSelector Component", () => {
           lifeEvents: [],
           currentViewDate: null,
           availableDates: [],
+          conversationThreads: [], // Add missing property
+          selectedThreadId: null, // Add missing property
           isLoading: false,
           error: null,
         },

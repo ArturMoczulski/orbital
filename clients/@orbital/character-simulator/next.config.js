@@ -12,8 +12,38 @@ const withTM = require("next-transpile-modules")([
 /** @type {import('next').NextConfig} */
 const nextConfig = withTM({
   reactStrictMode: true,
-  pageExtensions: ["tsx", "ts", "jsx", "js"],
-  webpack(config, { dev }) {
+
+  // Explicitly define which extensions are valid for pages
+  // This is the key configuration to exclude Cypress files
+  pageExtensions: ["tsx", "ts", "jsx", "js"].filter(
+    (ext) => !ext.includes("cy")
+  ),
+
+  webpack(config, { dev, ...options }) {
+    // More aggressive approach to exclude Cypress files
+
+    // Add a rule to exclude all Cypress test files
+    config.module.rules.push({
+      test: /\.(e2e\.cy|cy)\.(ts|tsx|js|jsx)$/,
+      use: "null-loader",
+    });
+
+    // Add a more specific rule for the exact file causing issues
+    config.module.rules.push({
+      test: /pages[\\/]index\.e2e\.cy\.tsx$/,
+      use: "null-loader",
+      include: [path.resolve(__dirname, "pages")],
+    });
+
+    // Use a more specific IgnorePlugin configuration
+    config.plugins.push(
+      new (require("webpack").IgnorePlugin)({
+        resourceRegExp: /index\.e2e\.cy\.tsx$/,
+        contextRegExp: /pages/,
+      })
+    );
+
+    // Continue with the existing webpack config
     config.resolve.alias = {
       ...(config.resolve.alias || {}),
       "@orbital/react-ui": path.resolve(
